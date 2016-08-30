@@ -1,4 +1,6 @@
 # FSGui
+
+QQ群： 293697898 FreeSWITCH+Kamailio+OpenSIPS
 针对FreeSWITCH开发的GUI及更底层的PBX功能扩展,免费二进制
 
 
