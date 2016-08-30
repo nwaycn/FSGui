@@ -1,0 +1,131 @@
+
+		<div class="alert alert-warning alert-dismissible hide" role="alert"></div>
+		
+		<form class="form-horizontal ajax-form" method="post" action="{{urlfor "DialplanDetailController.Modify"}}">
+			<input type="hidden" name="did" value="{{.did}}" /> 
+			<input type="hidden" name="dname" value="{{.dname}}" />  
+			{{$dpd := .dpd}}		
+			<div class="form-group">
+				<label for="name" class="col-sm-2 control-label">Id</label>
+				<div class="col-sm-3">
+					<input type="text" class="form-control" id="id" name="id" value="{{.dpd.Id}}" readonly>
+				</div>
+			</div>			 
+			<div class="form-group">
+				<label for="name" class="col-sm-2 control-label">路由名称</label>
+				<div class="col-sm-3">
+					<input type="text" class="form-control" id="Dialplan_name" name="Dialplan_name" value="{{.dname}}" readonly>
+				</div>
+			</div>
+			
+			<div class="form-group">
+				<label for="ssh_user" class="col-sm-2 control-label">明细名称</label>
+				<div class="col-sm-3">
+					<input type="text" class="form-control" id="Dialplan_detail_tag" name="Dialplan_detail_tag" value="{{.dpd.Dialplan_detail_tag}} ">
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="pub_dir" class="col-sm-2 control-label">操作类型</label>
+				<div class="col-sm-6">
+					<select name="Dialplan_detail_type_id">
+						<option value="0">请选择</option>
+						{{range $k, $v := .ops}}
+							{{if eq $dpd.Dialplan_detail_type_id $v.Id}}
+								<option value="{{$v.Id}}"  selected="selected">{{$v.Name}}</option>
+							{{else}}
+						
+								<option value="{{$v.Id}}">{{$v.Name}}</option>
+							{{end}}
+						{{end}}
+					</select>
+				</div>
+				<div class="help-block col-sm-8 col-sm-reset inline">要操作的类型，如set,playback,answer,bridge等</div>
+			</div> 
+			<div class="form-group">
+				<label for="pub_dir" class="col-sm-2 control-label">明细数据</label>
+				<div class="col-sm-3">
+					<input type="text" class="form-control" id="Dialplan_detail_data" name="Dialplan_detail_data" value="{{.dpd.Dialplan_detail_data}}">
+				</div>
+				<div class="help-block col-sm-8 col-sm-reset inline"></div>
+			</div>
+			  
+			<div class="hr hr-16 hr-dotted"></div>
+			
+			<div class="form-group">
+				<label for="send_mail" class="col-sm-2 control-label">彩铃</label>
+				<div class="col-sm-6">
+					<select name="Ring_id">
+						<option value="0">请选择</option>
+						{{range  $v := .rings}}
+							{{if eqint64 $dpd.Ring_id.Int64 $v.Id}}}
+								<option value="{{$v.Id}}" selected="selected">{{$v.Name}}</option>
+							{{else}}
+							    <option value="{{$v.Id}}" >{{$v.Name}}</option>
+							{{end}}
+						{{end}}
+					</select>
+				</div>
+				<div class="help-block col-sm-8 col-sm-reset inline">只在选择类型为playback时有效</div>
+
+			</div>
+			<div class="form-group">
+				<label for="send_mail" class="col-sm-2 control-label">序号</label>
+				<div class="col-sm-3">
+					<input type="text" class="form-control" id="Orderid" name="Orderid" value="{{.dpd.Orderid}}">
+				</div> 
+			</div>
+			<div class="form-group">
+				<label for="send_mail" class="col-sm-2 control-label">是否外呼</label>
+				<div class="col-sm-5">
+				{{if eq .dpd.Is_callout true}}
+					<input name="Is_callout" id="Is_callout" class="ace ace-switch ace-switch-4 btn-flat" type="checkbox" checked="true" value="1">
+				{{else}}
+				    <input name="Is_callout" id="Is_callout" class="ace ace-switch ace-switch-4 btn-flat" type="checkbox"  value="1">
+				{{end}}	
+					<span class="lbl"></span>
+				</div>
+				<div class="help-block col-sm-8 col-sm-reset inline">用于呼转给外线，而不是内线电话</div>
+			</div>
+			 
+			<div class="form-group">
+				<label for="mail_to" class="col-sm-2 control-label">外呼网关组</label>
+				<div class="col-sm-6">
+					<select name="Gateway_group_id">
+						<option value="0">请选择</option>
+						{{range   $v := .gwgs}}
+							{{if eqint64 $dpd.Gateway_group_id.Int64 $v.Id}}}
+								<option value="{{$v.Id}}"  selected="selected">{{$v.Gateway_group_name}}</option>
+							{{else}}
+								<option value="{{$v.Id}}">{{$v.Gateway_group_name}}</option>
+							{{end}}
+						{{end}}
+					</select>
+				</div>
+			</div>
+			
+			<div class="form-group">
+				<label for="mail_to" class="col-sm-2 control-label">外呼网关</label>
+				<div class="col-sm-6">
+					<select name="Outline_gateway">
+						<option value="0">请选择</option>
+						{{range $k, $v := .gws}}
+							{{if eqint64 $dpd.Outline_gateway.Int64 $v.Id}}}
+								<option value="{{$v.Id}}"  selected="selected">{{$v.Gateway_name}}</option>
+							{{else}}
+								<option value="{{$v.Id}}">{{$v.Gateway_name}}</option>
+							{{end}}
+						{{end}}
+					</select>
+				</div>
+				<div class="help-block col-sm-8 col-sm-reset inline">如果选择了网关组，则外呼网关无效</div>
+
+			</div>
+			
+			
+			<div class="clearfix form-actions">
+				<div class="col-sm-offset-2 col-sm-10">
+					<button type="submit" class="btn btn-info"><i class="ace-icon fa fa-check bigger-110"></i>提交</button>
+					<a href="{{urlfor "DialplanDetailController.List"  "did" .did "dname" .dname}}" class="btn btn-default"><i class="ace-icon fa fa-reply bigger-110"></i>返回</a>
+				</div>
+			</div>
+		</form>

@@ -1,0 +1,132 @@
+
+		<div class="alert alert-warning alert-dismissible hide" role="alert"></div>
+		
+		<form class="form-horizontal ajax-form" method="post" action="{{urlfor "ExtensionController.Modify"}}">
+			<input type="hidden" name="project_id" value="{{.project.Id}}" />
+			{{$ext := .ext}}
+			<div class="form-group">
+				<label for="name" class="col-sm-2 control-label">ID</label>
+				<div class="col-sm-3">
+					<input type="text" class="form-control" id="Id" name="Id" value="{{$ext.Id}}" >
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="name" class="col-sm-2 control-label">分机名称</label>
+				<div class="col-sm-3">
+					<input type="text" class="form-control" id="Extension_name" name="Extension_name"  value="{{$ext.Extension_name}}" >
+				</div>
+			</div>
+			
+			<div class="form-group">
+				<label for="ssh_user" class="col-sm-2 control-label">分机号码</label>
+				<div class="col-sm-3">
+					<input type="text" class="form-control" id="Extension_number" name="Extension_number"  value="{{$ext.Extension_number}}" >
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="ssh_user" class="col-sm-2 control-label">分机类型</label>
+				<div class="col-sm-3">
+				<select name="Extension_type">
+						<option value="0">请选择</option> 
+						{{range  $v := .types}}
+						{{if eqint64 $v.Id $ext.Extension_type}}
+						<option value="{{$v.Id}}"  selected="selected">{{$v.TypeName}}</option>
+						{{else}}
+						<option value="{{$v.Id}}"  >{{$v.TypeName}}</option>
+						{{end}}
+						{{end}}
+				</select>
+					 
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="pub_dir" class="col-sm-2 control-label">分机密码</label>
+				<div class="col-sm-3">
+					<input type="text" class="form-control" id="Extension_pswd" name="Extension_pswd"  value="{{$ext.Extension_pswd}}" >
+				</div>
+				<div class="help-block col-sm-8 col-sm-reset inline"></div>
+			</div>
+			<div class="form-group">
+				<label for="mail_to" class="col-sm-2 control-label">分机所属组</label>
+				<div class="col-sm-6">
+					<select name="Group_id">
+						<option value="">请选择</option>
+						{{range $k, $v := .groups}}
+						{{if eqint64 $v.Id $ext.Group_id}}
+						<option value="{{$v.Id}}"  selected="selected">{{$v.GroupName}}</option>
+						{{else}}
+						<option value="{{$v.Id}}" >{{$v.GroupName}}</option>
+						{{end}}
+						{{end}}
+					</select>
+				</div>
+			</div>
+			
+			
+			
+			 
+			 
+			
+			<div class="hr hr-16 hr-dotted"></div>
+			
+			<div class="form-group">
+				<label for="send_mail" class="col-sm-2 control-label">是否允许外呼</label>
+				<div class="col-sm-5">
+				{{if eq $ext.Is_allow_callout true}}
+					<input name="Is_allow_callout" class="ace ace-switch ace-switch-4 btn-flat" type="checkbox" checked="true" value="1">
+				{{else}}
+					<input name="Is_allow_callout" class="ace ace-switch ace-switch-4 btn-flat" type="checkbox"   value="1">
+				{{end}}
+					<span class="lbl"></span>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="send_mail" class="col-sm-2 control-label">是否录音</label>
+				<div class="col-sm-5">
+				{{if eq $ext.Is_record true}}
+					<input name="Is_record" class="ace ace-switch ace-switch-4 btn-flat" type="checkbox"  checked="true" value="1">
+				{{else}}
+					<input name="Is_record" class="ace ace-switch ace-switch-4 btn-flat" type="checkbox"    value="1">
+				{{end}}
+					<span class="lbl"></span>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="send_mail" class="col-sm-2 control-label">是否即使不在线也可以接听来电</label>
+				<div class="col-sm-5">
+				{{if eq $ext.Answer_without_state true}}
+					<input name="Answer_without_state" class="ace ace-switch ace-switch-4 btn-flat" type="checkbox" checked="true" value="1">
+				{{else}}
+					<input name="Answer_without_state" class="ace ace-switch ace-switch-4 btn-flat" type="checkbox" value="1">
+
+				{{end}}
+					<span class="lbl"></span>
+				</div>
+				<div class="help-block col-sm-8 col-sm-reset inline">诸如企业管理人员等，不需要线上登录也可以接听，而座席人员则需要登录和上线才可以接听来电</div>
+			</div>
+			<div class="form-group">
+				<label for="send_mail" class="col-sm-2 control-label">是否播放工号</label>
+				<div class="col-sm-5">
+				{{if eq $ext.Say_job_number true}}
+					<input name="Say_job_number" class="ace ace-switch ace-switch-4 btn-flat" type="checkbox"  checked="true" value="1">
+				{{else}}
+					<input name="Say_job_number" class="ace ace-switch ace-switch-4 btn-flat" type="checkbox" value="1">
+				{{end}}
+					<span class="lbl"></span>
+				</div>
+			</div> 
+			<div class="form-group">
+				<label for="ssh_port" class="col-sm-2 control-label">工号</label>
+				<div class="col-sm-3">
+					<input type="text" class="form-control" id="Job_number" name="Job_number" value="{{$ext.Job_number}}">
+				</div>
+				<div class="help-block col-sm-8 col-sm-reset inline">在是否播放工号为True时有效</div>
+
+			</div>
+			<div class="clearfix form-actions">
+				<div class="col-sm-offset-2 col-sm-10">
+					<button type="submit" class="btn btn-info"><i class="ace-icon fa fa-check bigger-110"></i>提交</button>
+					<a href="{{urlfor "ExtensionController.List" }}" class="btn btn-default"><i class="ace-icon fa fa-reply bigger-110"></i>返回</a>
+				</div>
+			</div>
+		</form>
