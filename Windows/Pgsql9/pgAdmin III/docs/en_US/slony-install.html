@@ -1,0 +1,133 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=cp1252" />
+    
+    <title>Slony-I administration with pgAdmin III: installation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="top" title="pgAdmin III 1.22.1 documentation" href="index.html" />
+    <link rel="up" title="Slony-I support" href="slony.html" />
+    <link rel="next" title="Creating paths and listens" href="slony-path.html" />
+    <link rel="prev" title="Slony-I with pgAdmin III overview" href="slony-overview.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="slony-path.html" title="Creating paths and listens"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="slony-overview.html" title="Slony-I with pgAdmin III overview"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pgAdmin III 1.22.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="slony.html" accesskey="U">Slony-I support</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="slony-i-administration-with-pgadmin-iii-installation">
+<span id="slony-install"></span><h1><span class="target" id="index-0"></span>Slony-I administration with pgAdmin III: installation</h1>
+<div class="section" id="prerequisites">
+<span id="node"></span><h2>Prerequisites</h2>
+<p>As a prerequisite to running Slony-I on PostgreSQL, the slony modules
+xxid and slony1_funcs must be present on all servers that have to run a
+Slony-I replication node. This is usually done by the Slony-I installation
+routine.</p>
+</div>
+<div class="section" id="overview">
+<span id="id1"></span><h2>Overview</h2>
+<p>Setting up Slony-I for the first time can be a daunting task. The
+following sections of the pgAdmin helpfile will help guide you through
+creation of your first cluster.</p>
+<ul class="simple">
+<li><a class="reference internal" href="#create"><span>Step 1</span></a>: Create the cluster on the master node.</li>
+<li><a class="reference internal" href="#join"><span>Step 2</span></a>: Add slave nodes to the cluster.</li>
+<li><a class="reference internal" href="slony-path.html#path"><span>Step 3</span></a>: Setup paths on each node to all other nodes.</li>
+<li><a class="reference internal" href="slony-path.html#listen"><span>Step 4</span></a>: Setup listens on each node to all other nodes
+(<strong>Note</strong>: Not required with Slony-I v1.1 or later).</li>
+<li><a class="reference internal" href="slony-set.html#set"><span>Step 5</span></a>: Create a replication set.</li>
+<li><a class="reference internal" href="slony-set.html#table"><span>Step 6</span></a>: Add tables and sequences to the set.</li>
+<li><a class="reference internal" href="slony-set.html#subscription"><span>Step 7</span></a>: Subscribe the slaves to the set.</li>
+</ul>
+<p><strong>Note</strong> At this point, the slon daemons (service engines on Windows)
+should be started.</p>
+</div>
+<div class="section" id="create-cluster-and-first-node">
+<span id="create"></span><h2>Create cluster and first node</h2>
+<img alt="_images/slony-create.png" src="_images/slony-create.png" />
+<p>To install a Slony-I cluster on the first database, the &#8220;New Slony-I
+Cluster&#8221; dialog is used. It executes the official Slony-I cluster
+creation SQL scripts, which are located in the directory configured in
+the <a class="reference internal" href="options-browser.html#options-browser"><span>Options</span></a> dialog.</p>
+<p>pgAdmin III needs to store information how to contact each individual
+node in the cluster. To achieve this, pgAdmin III uses the concept of
+&#8220;Administrative nodes&#8221;.</p>
+</div>
+<div class="section" id="join-additional-nodes-to-cluster">
+<span id="join"></span><h2>Join additional nodes to cluster</h2>
+<img alt="_images/slony-join.png" src="_images/slony-join.png" />
+<p>After the first node in the Slony-I replication cluster has been
+successfully created, all subsequent nodes take their configuration and
+procedures from the first nodes. This process is called &#8220;Joining a
+cluster&#8221; in pgAdmin III. Usually, you should also select an existing
+node as admin node, to insure later accessibility from pgAdmin III.</p>
+<p>After you added a new node to the Slony-I cluster, you need to set up
+<a class="reference internal" href="slony-path.html#slony-path"><span>replication paths</span></a> between the nodes, to enable
+communication between the nodes.</p>
+</div>
+<div class="section" id="upgrade-node-to-new-cluster-software">
+<span id="upgrade"></span><h2>Upgrade node to new cluster software</h2>
+<img alt="_images/slony-upgrade.png" src="_images/slony-upgrade.png" />
+<p>When a cluster is to be upgraded to a new version of the Slony-I
+clustering software, the upgrade process has to be run on all nodes of
+the cluster. For each node, the slon daemon needs to be stopped, then
+the upgrade dialog is started and a node with the new software is
+selected (pgAdmin III will extract all software from that node), and
+finally the slon daemon is started again.</p>
+<p>Currently, pgAdmin III does <strong>not</strong> support upgrading from slony creation
+scripts. Instead, create an intermediate cluster from the creation
+scripts, use it as a source for the upgrade dialog, and drop the cluster
+after usage. You may also use the slonik tool to upgrade the first node,
+and then use it as source for subsequent node upgrades.</p>
+</div>
+</div>
+
+
+          </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="slony-path.html" title="Creating paths and listens"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="slony-overview.html" title="Slony-I with pgAdmin III overview"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pgAdmin III 1.22.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="slony.html" >Slony-I support</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2002 - 2016, The pgAdmin Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,604 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Automatic Vacuuming</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Configuration"
+HREF="runtime-config.html"><LINK
+REL="PREVIOUS"
+TITLE="Run-time Statistics"
+HREF="runtime-config-statistics.html"><LINK
+REL="NEXT"
+TITLE="Client Connection Defaults"
+HREF="runtime-config-client.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Run-time Statistics"
+HREF="runtime-config-statistics.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 18. Server Configuration</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Client Connection Defaults"
+HREF="runtime-config-client.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RUNTIME-CONFIG-AUTOVACUUM"
+>18.10. Automatic Vacuuming</A
+></H1
+><P
+>      These settings control the behavior of the <I
+CLASS="FIRSTTERM"
+>autovacuum</I
+>
+      feature.  Refer to <A
+HREF="routine-vacuuming.html#AUTOVACUUM"
+>Section 23.1.6</A
+> for more information.
+      Note that many of these settings can be overridden on a per-table
+      basis; see <A
+HREF="sql-createtable.html#SQL-CREATETABLE-STORAGE-PARAMETERS"
+><I
+>Storage Parameters</I
+></A
+>.
+     </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-AUTOVACUUM"
+></A
+><TT
+CLASS="VARNAME"
+>autovacuum</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        Controls whether the server should run the
+        autovacuum launcher daemon.  This is on by default; however,
+        <A
+HREF="runtime-config-statistics.html#GUC-TRACK-COUNTS"
+>track_counts</A
+> must also be enabled for
+        autovacuum to work.
+        This parameter can only be set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+        file or on the server command line; however, autovacuuming can be
+        disabled for individual tables by changing table storage parameters.
+       </P
+><P
+>        Note that even when this parameter is disabled, the system
+        will launch autovacuum processes if necessary to
+        prevent transaction ID wraparound.  See <A
+HREF="routine-vacuuming.html#VACUUM-FOR-WRAPAROUND"
+>Section 23.1.5</A
+> for more information.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-LOG-AUTOVACUUM-MIN-DURATION"
+></A
+><TT
+CLASS="VARNAME"
+>log_autovacuum_min_duration</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Causes each action executed by autovacuum to be logged if it ran for at
+        least the specified number of milliseconds.  Setting this to zero logs
+        all autovacuum actions. Minus-one (the default) disables logging
+        autovacuum actions.  For example, if you set this to
+        <TT
+CLASS="LITERAL"
+>250ms</TT
+> then all automatic vacuums and analyzes that run
+        250ms or longer will be logged.  In addition, when this parameter is
+        set to any value other than <TT
+CLASS="LITERAL"
+>-1</TT
+>, a message will be
+        logged if an autovacuum action is skipped due to the existence of a
+        conflicting lock.  Enabling this parameter can be helpful
+        in tracking autovacuum activity.  This parameter can only be set in
+        the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> file or on the server command line;
+        but the setting can be overridden for individual tables by
+        changing table storage parameters.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-AUTOVACUUM-MAX-WORKERS"
+></A
+><TT
+CLASS="VARNAME"
+>autovacuum_max_workers</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the maximum number of autovacuum processes (other than the
+        autovacuum launcher) that may be running at any one time.  The default
+        is three.  This parameter can only be set at server start.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-AUTOVACUUM-NAPTIME"
+></A
+><TT
+CLASS="VARNAME"
+>autovacuum_naptime</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the minimum delay between autovacuum runs on any given
+        database.  In each round the daemon examines the
+        database and issues <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> and <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> commands
+        as needed for tables in that database.  The delay is measured
+        in seconds, and the default is one minute (<TT
+CLASS="LITERAL"
+>1min</TT
+>).
+        This parameter can only be set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+        file or on the server command line.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-AUTOVACUUM-VACUUM-THRESHOLD"
+></A
+><TT
+CLASS="VARNAME"
+>autovacuum_vacuum_threshold</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the minimum number of updated or deleted tuples needed
+        to trigger a <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> in any one table.
+        The default is 50 tuples.
+        This parameter can only be set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+        file or on the server command line;
+        but the setting can be overridden for individual tables by
+        changing table storage parameters.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-AUTOVACUUM-ANALYZE-THRESHOLD"
+></A
+><TT
+CLASS="VARNAME"
+>autovacuum_analyze_threshold</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the minimum number of inserted, updated or deleted tuples
+        needed to trigger an <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> in any one table.
+        The default is 50 tuples.
+        This parameter can only be set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+        file or on the server command line;
+        but the setting can be overridden for individual tables by
+        changing table storage parameters.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-AUTOVACUUM-VACUUM-SCALE-FACTOR"
+></A
+><TT
+CLASS="VARNAME"
+>autovacuum_vacuum_scale_factor</TT
+> (<TT
+CLASS="TYPE"
+>floating point</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies a fraction of the table size to add to
+        <TT
+CLASS="VARNAME"
+>autovacuum_vacuum_threshold</TT
+>
+        when deciding whether to trigger a <TT
+CLASS="COMMAND"
+>VACUUM</TT
+>.
+        The default is 0.2 (20% of table size).
+        This parameter can only be set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+        file or on the server command line;
+        but the setting can be overridden for individual tables by
+        changing table storage parameters.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-AUTOVACUUM-ANALYZE-SCALE-FACTOR"
+></A
+><TT
+CLASS="VARNAME"
+>autovacuum_analyze_scale_factor</TT
+> (<TT
+CLASS="TYPE"
+>floating point</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies a fraction of the table size to add to
+        <TT
+CLASS="VARNAME"
+>autovacuum_analyze_threshold</TT
+>
+        when deciding whether to trigger an <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+>.
+        The default is 0.1 (10% of table size).
+        This parameter can only be set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+        file or on the server command line;
+        but the setting can be overridden for individual tables by
+        changing table storage parameters.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-AUTOVACUUM-FREEZE-MAX-AGE"
+></A
+><TT
+CLASS="VARNAME"
+>autovacuum_freeze_max_age</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the maximum age (in transactions) that a table's
+        <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>relfrozenxid</TT
+> field can
+        attain before a <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> operation is forced
+        to prevent transaction ID wraparound within the table.
+        Note that the system will launch autovacuum processes to
+        prevent wraparound even when autovacuum is otherwise disabled.
+       </P
+><P
+>        Vacuum also allows removal of old files from the
+        <TT
+CLASS="FILENAME"
+>pg_clog</TT
+> subdirectory, which is why the default
+        is a relatively low 200 million transactions.
+        This parameter can only be set at server start, but the setting
+        can be reduced for individual tables by
+        changing table storage parameters.
+        For more information see <A
+HREF="routine-vacuuming.html#VACUUM-FOR-WRAPAROUND"
+>Section 23.1.5</A
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-AUTOVACUUM-MULTIXACT-FREEZE-MAX-AGE"
+></A
+><TT
+CLASS="VARNAME"
+>autovacuum_multixact_freeze_max_age</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the maximum age (in multixacts) that a table's
+        <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>relminmxid</TT
+> field can
+        attain before a <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> operation is forced to
+        prevent multixact ID wraparound within the table.
+        Note that the system will launch autovacuum processes to
+        prevent wraparound even when autovacuum is otherwise disabled.
+       </P
+><P
+>        Vacuuming multixacts also allows removal of old files from the
+        <TT
+CLASS="FILENAME"
+>pg_multixact/members</TT
+> and <TT
+CLASS="FILENAME"
+>pg_multixact/offsets</TT
+>
+        subdirectories, which is why the default is a relatively low
+        400 million multixacts.
+        This parameter can only be set at server start, but the setting can
+        be reduced for individual tables by changing table storage parameters.
+        For more information see <A
+HREF="routine-vacuuming.html#VACUUM-FOR-MULTIXACT-WRAPAROUND"
+>Section 23.1.5.1</A
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-AUTOVACUUM-VACUUM-COST-DELAY"
+></A
+><TT
+CLASS="VARNAME"
+>autovacuum_vacuum_cost_delay</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the cost delay value that will be used in automatic
+        <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> operations.  If -1 is specified, the regular
+        <A
+HREF="runtime-config-resource.html#GUC-VACUUM-COST-DELAY"
+>vacuum_cost_delay</A
+> value will be used.
+        The default value is 20 milliseconds.
+        This parameter can only be set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+        file or on the server command line;
+        but the setting can be overridden for individual tables by
+        changing table storage parameters.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-AUTOVACUUM-VACUUM-COST-LIMIT"
+></A
+><TT
+CLASS="VARNAME"
+>autovacuum_vacuum_cost_limit</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the cost limit value that will be used in automatic
+        <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> operations.  If -1 is specified (which is the
+        default), the regular
+        <A
+HREF="runtime-config-resource.html#GUC-VACUUM-COST-LIMIT"
+>vacuum_cost_limit</A
+> value will be used.  Note that
+        the value is distributed proportionally among the running autovacuum
+        workers, if there is more than one, so that the sum of the limits for
+        each worker does not exceed the value of this variable.
+        This parameter can only be set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+        file or on the server command line;
+        but the setting can be overridden for individual tables by
+        changing table storage parameters.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime-config-statistics.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="runtime-config-client.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Run-time Statistics</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="runtime-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Client Connection Defaults</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

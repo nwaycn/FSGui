@@ -1,0 +1,1683 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.3.6</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.3.7"
+HREF="release-9-3-7.html"><LINK
+REL="NEXT"
+TITLE="Release 9.3.5"
+HREF="release-9-3-5.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.3.7"
+HREF="release-9-3-7.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.3.5"
+HREF="release-9-3-5.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-3-6"
+>E.24. Release 9.3.6</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2015-02-05</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 9.3.5.
+   For information about new features in the 9.3 major release, see
+   <A
+HREF="release-9-3.html"
+>Section E.30</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN131783"
+>E.24.1. Migration to Version 9.3.6</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.3.X.
+   </P
+><P
+>    However, if you are a Windows user and are using the <SPAN
+CLASS="QUOTE"
+>"Norwegian
+    (Bokm&aring;l)"</SPAN
+> locale, manual action is needed after the upgrade to
+    replace any <SPAN
+CLASS="QUOTE"
+>"Norwegian (Bokm&aring;l)_Norway"</SPAN
+> locale names stored
+    in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> system catalogs with the plain-ASCII
+    alias <SPAN
+CLASS="QUOTE"
+>"Norwegian_Norway"</SPAN
+>.  For details see
+    <A
+HREF="http://wiki.postgresql.org/wiki/Changes_To_Norwegian_Locale"
+TARGET="_top"
+>http://wiki.postgresql.org/wiki/Changes_To_Norwegian_Locale</A
+>
+   </P
+><P
+>    Also, if you are upgrading from a version earlier than 9.3.5,
+    see <A
+HREF="release-9-3-5.html"
+>Section E.25</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN131794"
+>E.24.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix buffer overruns in <CODE
+CLASS="FUNCTION"
+>to_char()</CODE
+>
+      (Bruce Momjian)
+     </P
+><P
+>      When <CODE
+CLASS="FUNCTION"
+>to_char()</CODE
+> processes a numeric formatting template
+      calling for a large number of digits, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+      would read past the end of a buffer.  When processing a crafted
+      timestamp formatting template, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> would write
+      past the end of a buffer.  Either case could crash the server.
+      We have not ruled out the possibility of attacks that lead to
+      privilege escalation, though they seem unlikely.
+      (CVE-2015-0241)
+     </P
+></LI
+><LI
+><P
+>      Fix buffer overrun in replacement <CODE
+CLASS="FUNCTION"
+>*printf()</CODE
+> functions
+      (Tom Lane)
+     </P
+><P
+>      <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> includes a replacement implementation
+      of <CODE
+CLASS="FUNCTION"
+>printf</CODE
+> and related functions.  This code will overrun
+      a stack buffer when formatting a floating point number (conversion
+      specifiers <TT
+CLASS="LITERAL"
+>e</TT
+>, <TT
+CLASS="LITERAL"
+>E</TT
+>, <TT
+CLASS="LITERAL"
+>f</TT
+>, <TT
+CLASS="LITERAL"
+>F</TT
+>,
+      <TT
+CLASS="LITERAL"
+>g</TT
+> or <TT
+CLASS="LITERAL"
+>G</TT
+>) with requested precision greater than
+      about 500.  This will crash the server, and we have not ruled out the
+      possibility of attacks that lead to privilege escalation.
+      A database user can trigger such a buffer overrun through
+      the <CODE
+CLASS="FUNCTION"
+>to_char()</CODE
+> SQL function.  While that is the only
+      affected core <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> functionality, extension
+      modules that use printf-family functions may be at risk as well.
+     </P
+><P
+>      This issue primarily affects <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> on Windows.
+      <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> uses the system implementation of these
+      functions where adequate, which it is on other modern platforms.
+      (CVE-2015-0242)
+     </P
+></LI
+><LI
+><P
+>      Fix buffer overruns in <TT
+CLASS="FILENAME"
+>contrib/pgcrypto</TT
+>
+      (Marko Tiikkaja, Noah Misch)
+     </P
+><P
+>      Errors in memory size tracking within the <TT
+CLASS="FILENAME"
+>pgcrypto</TT
+>
+      module permitted stack buffer overruns and improper dependence on the
+      contents of uninitialized memory.  The buffer overrun cases can
+      crash the server, and we have not ruled out the possibility of
+      attacks that lead to privilege escalation.
+      (CVE-2015-0243)
+     </P
+></LI
+><LI
+><P
+>      Fix possible loss of frontend/backend protocol synchronization after
+      an error
+      (Heikki Linnakangas)
+     </P
+><P
+>      If any error occurred while the server was in the middle of reading a
+      protocol message from the client, it could lose synchronization and
+      incorrectly try to interpret part of the message's data as a new
+      protocol message.  An attacker able to submit crafted binary data
+      within a command parameter might succeed in injecting his own SQL
+      commands this way.  Statement timeout and query cancellation are the
+      most likely sources of errors triggering this scenario.  Particularly
+      vulnerable are applications that use a timeout and also submit
+      arbitrary user-crafted data as binary query parameters.  Disabling
+      statement timeout will reduce, but not eliminate, the risk of
+      exploit.  Our thanks to Emil Lenngren for reporting this issue.
+      (CVE-2015-0244)
+     </P
+></LI
+><LI
+><P
+>      Fix information leak via constraint-violation error messages
+      (Stephen Frost)
+     </P
+><P
+>      Some server error messages show the values of columns that violate
+      a constraint, such as a unique constraint.  If the user does not have
+      <TT
+CLASS="LITERAL"
+>SELECT</TT
+> privilege on all columns of the table, this could
+      mean exposing values that the user should not be able to see.  Adjust
+      the code so that values are displayed only when they came from the SQL
+      command or could be selected by the user.
+      (CVE-2014-8161)
+     </P
+></LI
+><LI
+><P
+>      Lock down regression testing's temporary installations on Windows
+      (Noah Misch)
+     </P
+><P
+>      Use SSPI authentication to allow connections only from the OS user
+      who launched the test suite.  This closes on Windows the same
+      vulnerability previously closed on other platforms, namely that other
+      users might be able to connect to the test postmaster.
+      (CVE-2014-0067)
+     </P
+></LI
+><LI
+><P
+>      Cope with the Windows locale named <SPAN
+CLASS="QUOTE"
+>"Norwegian (Bokm&aring;l)"</SPAN
+>
+      (Heikki Linnakangas)
+     </P
+><P
+>      Non-ASCII locale names are problematic since it's not clear what
+      encoding they should be represented in.  Map the troublesome locale
+      name to a plain-ASCII alias, <SPAN
+CLASS="QUOTE"
+>"Norwegian_Norway"</SPAN
+>.
+     </P
+></LI
+><LI
+><P
+>      Avoid possible data corruption if <TT
+CLASS="COMMAND"
+>ALTER DATABASE SET
+      TABLESPACE</TT
+> is used to move a database to a new tablespace and then
+      shortly later move it back to its original tablespace (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Avoid corrupting tables when <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> inside a transaction
+      is rolled back (Andres Freund, Tom Lane, Michael Paquier)
+     </P
+><P
+>      If the failing transaction had earlier removed the last index, rule, or
+      trigger from the table, the table would be left in a corrupted state
+      with the relevant <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+> flags not set though they
+      should be.
+     </P
+></LI
+><LI
+><P
+>      Ensure that unlogged tables are copied correctly
+      during <TT
+CLASS="COMMAND"
+>CREATE DATABASE</TT
+> or <TT
+CLASS="COMMAND"
+>ALTER DATABASE SET
+      TABLESPACE</TT
+> (Pavan Deolasee, Andres Freund)
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect processing
+      of <TT
+CLASS="STRUCTNAME"
+>CreateEventTrigStmt</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>eventname</TT
+> (Petr
+      Jelinek)
+     </P
+><P
+>      This could result in misbehavior if <TT
+CLASS="COMMAND"
+>CREATE EVENT TRIGGER</TT
+>
+      were executed as a prepared query, or via extended query protocol.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>DROP</TT
+>'s dependency searching to correctly handle the
+      case where a table column is recursively visited before its table
+      (Petr Jelinek, Tom Lane)
+     </P
+><P
+>      This case is only known to arise when an extension creates both a
+      datatype and a table using that datatype.  The faulty code might
+      refuse a <TT
+CLASS="COMMAND"
+>DROP EXTENSION</TT
+> unless <TT
+CLASS="LITERAL"
+>CASCADE</TT
+> is
+      specified, which should not be required.
+     </P
+></LI
+><LI
+><P
+>      Fix use-of-already-freed-memory problem in EvalPlanQual processing
+      (Tom Lane)
+     </P
+><P
+>      In <TT
+CLASS="LITERAL"
+>READ COMMITTED</TT
+> mode, queries that lock or update
+      recently-updated rows could crash as a result of this bug.
+     </P
+></LI
+><LI
+><P
+>      Avoid possible deadlock while trying to acquire tuple locks
+      in EvalPlanQual processing (&Aacute;lvaro Herrera, Mark Kirkwood)
+     </P
+></LI
+><LI
+><P
+>      Fix failure to wait when a transaction tries to acquire a <TT
+CLASS="LITERAL"
+>FOR
+      NO KEY EXCLUSIVE</TT
+> tuple lock, while multiple other transactions
+      currently hold <TT
+CLASS="LITERAL"
+>FOR SHARE</TT
+> locks (&Aacute;lvaro Herrera)
+     </P
+></LI
+><LI
+><P
+>      Fix planning of <TT
+CLASS="COMMAND"
+>SELECT FOR UPDATE</TT
+> when using a partial
+      index on a child table (Kyotaro Horiguchi)
+     </P
+><P
+>      In <TT
+CLASS="LITERAL"
+>READ COMMITTED</TT
+> mode, <TT
+CLASS="COMMAND"
+>SELECT FOR UPDATE</TT
+> must
+      also recheck the partial index's <TT
+CLASS="LITERAL"
+>WHERE</TT
+> condition when
+      rechecking a recently-updated row to see if it still satisfies the
+      query's <TT
+CLASS="LITERAL"
+>WHERE</TT
+> condition.  This requirement was missed if the
+      index belonged to an inheritance child table, so that it was possible
+      to incorrectly return rows that no longer satisfy the query condition.
+     </P
+></LI
+><LI
+><P
+>      Fix corner case wherein <TT
+CLASS="COMMAND"
+>SELECT FOR UPDATE</TT
+> could return a row
+      twice, and possibly miss returning other rows (Tom Lane)
+     </P
+><P
+>      In <TT
+CLASS="LITERAL"
+>READ COMMITTED</TT
+> mode, a <TT
+CLASS="COMMAND"
+>SELECT FOR UPDATE</TT
+>
+      that is scanning an inheritance tree could incorrectly return a row
+      from a prior child table instead of the one it should return from a
+      later child table.
+     </P
+></LI
+><LI
+><P
+>      Improve performance of <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+> with large range tables
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Reject duplicate column names in the referenced-columns list of
+      a <TT
+CLASS="LITERAL"
+>FOREIGN KEY</TT
+> declaration (David Rowley)
+     </P
+><P
+>      This restriction is per SQL standard.  Previously we did not reject
+      the case explicitly, but later on the code would fail with
+      bizarre-looking errors.
+     </P
+></LI
+><LI
+><P
+>      Re-enable error for <TT
+CLASS="LITERAL"
+>SELECT ... OFFSET -1</TT
+> (Tom Lane)
+     </P
+><P
+>      A negative offset value has been an error since 8.4, but an
+      optimization added in 9.3 accidentally turned the case into a no-op.
+      Restore the expected behavior.
+     </P
+></LI
+><LI
+><P
+>      Restore previous behavior of conversion of domains to JSON
+      (Tom Lane)
+     </P
+><P
+>      This change causes domains over numeric and boolean to be treated
+      like their base types for purposes of conversion to JSON.  It worked
+      like that before 9.3.5 and 9.2.9, but was unintentionally changed
+      while fixing a related problem.
+     </P
+></LI
+><LI
+><P
+>      Fix <CODE
+CLASS="FUNCTION"
+>json_agg()</CODE
+> to not return extra trailing right
+      brackets in its result (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix bugs in raising a <TT
+CLASS="TYPE"
+>numeric</TT
+> value to a large integral power
+      (Tom Lane)
+     </P
+><P
+>      The previous code could get a wrong answer, or consume excessive
+      amounts of time and memory before realizing that the answer must
+      overflow.
+     </P
+></LI
+><LI
+><P
+>      In <CODE
+CLASS="FUNCTION"
+>numeric_recv()</CODE
+>, truncate away any fractional digits
+      that would be hidden according to the value's <TT
+CLASS="LITERAL"
+>dscale</TT
+> field
+      (Tom Lane)
+     </P
+><P
+>      A <TT
+CLASS="TYPE"
+>numeric</TT
+> value's display scale (<TT
+CLASS="LITERAL"
+>dscale</TT
+>) should
+      never be less than the number of nonzero fractional digits; but
+      apparently there's at least one broken client application that
+      transmits binary <TT
+CLASS="TYPE"
+>numeric</TT
+> values in which that's true.
+      This leads to strange behavior since the extra digits are taken into
+      account by arithmetic operations even though they aren't printed.
+      The least risky fix seems to be to truncate away such <SPAN
+CLASS="QUOTE"
+>"hidden"</SPAN
+>
+      digits on receipt, so that the value is indeed what it prints as.
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect search for shortest-first regular expression matches
+      (Tom Lane)
+     </P
+><P
+>      Matching would often fail when the number of allowed iterations is
+      limited by a <TT
+CLASS="LITERAL"
+>?</TT
+> quantifier or a bound expression.
+     </P
+></LI
+><LI
+><P
+>      Reject out-of-range numeric timezone specifications (Tom Lane)
+     </P
+><P
+>      Simple numeric timezone specifications exceeding +/- 168 hours (one
+      week) would be accepted, but could then cause null-pointer dereference
+      crashes in certain operations.  There's no use-case for such large UTC
+      offsets, so reject them.
+     </P
+></LI
+><LI
+><P
+>      Fix bugs in <TT
+CLASS="TYPE"
+>tsquery</TT
+> <TT
+CLASS="LITERAL"
+>@&gt;</TT
+> <TT
+CLASS="TYPE"
+>tsquery</TT
+>
+      operator (Heikki Linnakangas)
+     </P
+><P
+>      Two different terms would be considered to match if they had the same
+      CRC.  Also, if the second operand had more terms than the first, it
+      would be assumed not to be contained in the first; which is wrong
+      since it might contain duplicate terms.
+     </P
+></LI
+><LI
+><P
+>      Improve ispell dictionary's defenses against bad affix files (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Allow more than 64K phrases in a thesaurus dictionary (David Boutin)
+     </P
+><P
+>      The previous coding could crash on an oversize dictionary, so this was
+      deemed a back-patchable bug fix rather than a feature addition.
+     </P
+></LI
+><LI
+><P
+>      Fix namespace handling in <CODE
+CLASS="FUNCTION"
+>xpath()</CODE
+> (Ali Akbar)
+     </P
+><P
+>      Previously, the <TT
+CLASS="TYPE"
+>xml</TT
+> value resulting from
+      an <CODE
+CLASS="FUNCTION"
+>xpath()</CODE
+> call would not have namespace declarations if
+      the namespace declarations were attached to an ancestor element in the
+      input <TT
+CLASS="TYPE"
+>xml</TT
+> value, rather than to the specific element being
+      returned.  Propagate the ancestral declaration so that the result is
+      correct when considered in isolation.
+     </P
+></LI
+><LI
+><P
+>      Ensure that whole-row variables expose nonempty column names
+      to functions that pay attention to column names within composite
+      arguments (Tom Lane)
+     </P
+><P
+>      In some contexts, constructs like <TT
+CLASS="LITERAL"
+>row_to_json(tab.*)</TT
+> may
+      not produce the expected column names.  This is fixed properly as of
+      9.4; in older branches, just ensure that we produce some nonempty
+      name.  (In some cases this will be the underlying table's column name
+      rather than the query-assigned alias that should theoretically be
+      visible.)
+     </P
+></LI
+><LI
+><P
+>      Fix mishandling of system columns,
+      particularly <TT
+CLASS="STRUCTFIELD"
+>tableoid</TT
+>, in FDW queries (Etsuro Fujita)
+     </P
+></LI
+><LI
+><P
+>      Fix assorted oversights in range-operator selectivity estimation
+      (Emre Hasegeli)
+     </P
+><P
+>      This patch fixes corner-case <SPAN
+CLASS="QUOTE"
+>"unexpected operator NNNN"</SPAN
+> planner
+      errors, and improves the selectivity estimates for some other cases.
+     </P
+></LI
+><LI
+><P
+>      Avoid doing <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>indexed_column</I
+></TT
+> = ANY
+      (<TT
+CLASS="REPLACEABLE"
+><I
+>array</I
+></TT
+>)</TT
+> as an index qualifier if that leads
+      to an inferior plan (Andrew Gierth)
+     </P
+><P
+>      In some cases, <TT
+CLASS="LITERAL"
+>= ANY</TT
+> conditions applied to non-first index
+      columns would be done as index conditions even though it would be
+      better to use them as simple filter conditions.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="QUOTE"
+>"variable not found in subplan target list"</SPAN
+> planner
+      failure when an inline-able SQL function taking a composite argument
+      is used in a <TT
+CLASS="LITERAL"
+>LATERAL</TT
+> subselect and the composite argument
+      is a lateral reference (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix planner problems with nested append relations, such as inherited
+      tables within <TT
+CLASS="LITERAL"
+>UNION ALL</TT
+> subqueries (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fail cleanly when a GiST index tuple doesn't fit on a page, rather
+      than going into infinite recursion (Andrew Gierth)
+     </P
+></LI
+><LI
+><P
+>      Exempt tables that have per-table <TT
+CLASS="VARNAME"
+>cost_limit</TT
+>
+      and/or <TT
+CLASS="VARNAME"
+>cost_delay</TT
+> settings from autovacuum's global cost
+      balancing rules (&Aacute;lvaro Herrera)
+     </P
+><P
+>      The previous behavior resulted in basically ignoring these per-table
+      settings, which was unintended.  Now, a table having such settings
+      will be vacuumed using those settings, independently of what is going
+      on in other autovacuum workers.  This may result in heavier total I/O
+      load than before, so such settings should be re-examined for sanity.
+     </P
+></LI
+><LI
+><P
+>      Avoid wholesale autovacuuming when autovacuum is nominally off
+      (Tom Lane)
+     </P
+><P
+>      Even when autovacuum is nominally off, we will still launch autovacuum
+      worker processes to vacuum tables that are at risk of XID wraparound.
+      However, such a worker process then proceeded to vacuum all tables in
+      the target database, if they met the usual thresholds for
+      autovacuuming.  This is at best pretty unexpected; at worst it delays
+      response to the wraparound threat.  Fix it so that if autovacuum is
+      turned off, workers <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>only</I
+></SPAN
+> do anti-wraparound vacuums and
+      not any other work.
+     </P
+></LI
+><LI
+><P
+>      During crash recovery, ensure that unlogged relations are rewritten as
+      empty and are synced to disk before recovery is considered complete
+      (Abhijit Menon-Sen, Andres Freund)
+     </P
+><P
+>      This prevents scenarios in which unlogged relations might contain
+      garbage data following database crash recovery.
+     </P
+></LI
+><LI
+><P
+>      Fix race condition between hot standby queries and replaying a
+      full-page image (Heikki Linnakangas)
+     </P
+><P
+>      This mistake could result in transient errors in queries being
+      executed in hot standby.
+     </P
+></LI
+><LI
+><P
+>      Fix several cases where recovery logic improperly ignored WAL records
+      for <TT
+CLASS="LITERAL"
+>COMMIT/ABORT PREPARED</TT
+> (Heikki Linnakangas)
+     </P
+><P
+>      The most notable oversight was
+      that <TT
+CLASS="VARNAME"
+>recovery_target_xid</TT
+> could not be used to stop at
+      a two-phase commit.
+     </P
+></LI
+><LI
+><P
+>      Prevent latest WAL file from being archived a second time at completion
+      of crash recovery (Fujii Masao)
+     </P
+></LI
+><LI
+><P
+>      Avoid creating unnecessary <TT
+CLASS="FILENAME"
+>.ready</TT
+> marker files for
+      timeline history files (Fujii Masao)
+     </P
+></LI
+><LI
+><P
+>      Fix possible null pointer dereference when an empty prepared statement
+      is used and the <TT
+CLASS="VARNAME"
+>log_statement</TT
+> setting is <TT
+CLASS="LITERAL"
+>mod</TT
+>
+      or <TT
+CLASS="LITERAL"
+>ddl</TT
+> (Fujii Masao)
+     </P
+></LI
+><LI
+><P
+>      Change <SPAN
+CLASS="QUOTE"
+>"pgstat wait timeout"</SPAN
+> warning message to be LOG level,
+      and rephrase it to be more understandable (Tom Lane)
+     </P
+><P
+>      This message was originally thought to be essentially a can't-happen
+      case, but it occurs often enough on our slower buildfarm members to be
+      a nuisance.  Reduce it to LOG level, and expend a bit more effort on
+      the wording: it now reads <SPAN
+CLASS="QUOTE"
+>"using stale statistics instead of
+      current ones because stats collector is not responding"</SPAN
+>.
+     </P
+></LI
+><LI
+><P
+>      Fix possible corruption of postmaster's list of dynamic background
+      workers (Andres Freund)
+     </P
+></LI
+><LI
+><P
+>      Fix SPARC spinlock implementation to ensure correctness if the CPU is
+      being run in a non-TSO coherency mode, as some non-Solaris kernels do
+      (Andres Freund)
+     </P
+></LI
+><LI
+><P
+>      Warn if OS X's <CODE
+CLASS="FUNCTION"
+>setlocale()</CODE
+> starts an unwanted extra
+      thread inside the postmaster (Noah Misch)
+     </P
+></LI
+><LI
+><P
+>      Fix processing of repeated <TT
+CLASS="LITERAL"
+>dbname</TT
+> parameters
+      in <CODE
+CLASS="FUNCTION"
+>PQconnectdbParams()</CODE
+> (Alex Shulgin)
+     </P
+><P
+>      Unexpected behavior ensued if the first occurrence
+      of <TT
+CLASS="LITERAL"
+>dbname</TT
+> contained a connection string or URI to be
+      expanded.
+     </P
+></LI
+><LI
+><P
+>      Ensure that <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> reports a suitable error message on
+      unexpected socket EOF (Marko Tiikkaja, Tom Lane)
+     </P
+><P
+>      Depending on kernel behavior, <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> might return an
+      empty error string rather than something useful when the server
+      unexpectedly closed the socket.
+     </P
+></LI
+><LI
+><P
+>      Clear any old error message during <CODE
+CLASS="FUNCTION"
+>PQreset()</CODE
+>
+      (Heikki Linnakangas)
+     </P
+><P
+>      If <CODE
+CLASS="FUNCTION"
+>PQreset()</CODE
+> is called repeatedly, and the connection
+      cannot be re-established, error messages from the failed connection
+      attempts kept accumulating in the <TT
+CLASS="STRUCTNAME"
+>PGconn</TT
+>'s error
+      string.
+     </P
+></LI
+><LI
+><P
+>      Properly handle out-of-memory conditions while parsing connection
+      options in <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> (Alex Shulgin, Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Fix array overrun in <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>'s version
+      of <CODE
+CLASS="FUNCTION"
+>ParseDateTime()</CODE
+> (Michael Paquier)
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>initdb</SPAN
+>, give a clearer error message if a password
+      file is specified but is empty (Mats Erik Andersson)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s <TT
+CLASS="COMMAND"
+>\s</TT
+> command to work nicely with
+      libedit, and add pager support (Stepan Rutz, Tom Lane)
+     </P
+><P
+>      When using libedit rather than readline, <TT
+CLASS="COMMAND"
+>\s</TT
+> printed the
+      command history in a fairly unreadable encoded format, and on recent
+      libedit versions might fail altogether.  Fix that by printing the
+      history ourselves rather than having the library do it.  A pleasant
+      side-effect is that the pager is used if appropriate.
+     </P
+><P
+>      This patch also fixes a bug that caused newline encoding to be applied
+      inconsistently when saving the command history with libedit.
+      Multiline history entries written by older <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>
+      versions will be read cleanly with this patch, but perhaps not
+      vice versa, depending on the exact libedit versions involved.
+     </P
+></LI
+><LI
+><P
+>      Improve consistency of parsing of <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s special
+      variables (Tom Lane)
+     </P
+><P
+>      Allow variant spellings of <TT
+CLASS="LITERAL"
+>on</TT
+> and <TT
+CLASS="LITERAL"
+>off</TT
+> (such
+      as <TT
+CLASS="LITERAL"
+>1</TT
+>/<TT
+CLASS="LITERAL"
+>0</TT
+>) for <TT
+CLASS="LITERAL"
+>ECHO_HIDDEN</TT
+>
+      and <TT
+CLASS="LITERAL"
+>ON_ERROR_ROLLBACK</TT
+>.  Report a warning for unrecognized
+      values for <TT
+CLASS="LITERAL"
+>COMP_KEYWORD_CASE</TT
+>, <TT
+CLASS="LITERAL"
+>ECHO</TT
+>,
+      <TT
+CLASS="LITERAL"
+>ECHO_HIDDEN</TT
+>, <TT
+CLASS="LITERAL"
+>HISTCONTROL</TT
+>,
+      <TT
+CLASS="LITERAL"
+>ON_ERROR_ROLLBACK</TT
+>, and <TT
+CLASS="LITERAL"
+>VERBOSITY</TT
+>.  Recognize
+      all values for all these variables case-insensitively; previously
+      there was a mishmash of case-sensitive and case-insensitive behaviors.
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s <TT
+CLASS="COMMAND"
+>\watch</TT
+> command display
+      nulls as specified by <TT
+CLASS="COMMAND"
+>\pset null</TT
+> (Fujii Masao)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s expanded-mode display to work
+      consistently when using <TT
+CLASS="LITERAL"
+>border</TT
+> = 3
+      and <TT
+CLASS="LITERAL"
+>linestyle</TT
+> = <TT
+CLASS="LITERAL"
+>ascii</TT
+> or <TT
+CLASS="LITERAL"
+>unicode</TT
+>
+      (Stephen Frost)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> to handle comments on event triggers
+      without failing (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Allow parallel <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> to
+      use <TT
+CLASS="OPTION"
+>--serializable-deferrable</TT
+> (Kevin Grittner)
+     </P
+></LI
+><LI
+><P
+>      Improve performance of <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> when the database
+      contains many instances of multiple dependency paths between the same
+      two objects (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_dumpall</SPAN
+> to restore its ability to dump from
+      pre-8.1 servers (Gilles Darold)
+     </P
+></LI
+><LI
+><P
+>      Fix possible deadlock during parallel restore of a schema-only dump
+      (Robert Haas, Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix core dump in <TT
+CLASS="LITERAL"
+>pg_dump --binary-upgrade</TT
+> on zero-column
+      composite type (Rushabh Lathia)
+     </P
+></LI
+><LI
+><P
+>      Fix failure to fsync tables in nondefault tablespaces
+      during <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> (Abhijit Menon-Sen, Andres Freund)
+     </P
+><P
+>      With an operating system crash and some bad luck, this could result in
+      data loss during an upgrade.
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>, cope with cases where the new cluster
+      creates a TOAST table for a table that didn't previously have one
+      (Bruce Momjian)
+     </P
+><P
+>      Previously this could result in failures due to OID conflicts.
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>, don't try to
+      set <TT
+CLASS="LITERAL"
+>autovacuum_multixact_freeze_max_age</TT
+> for the old cluster
+      (Bruce Momjian)
+     </P
+><P
+>      This could result in failure because not all 9.3.X versions have that
+      parameter.  Fortunately, we don't actually need to set it at all.
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>, preserve the transaction ID epoch
+      (Bruce Momjian)
+     </P
+><P
+>      This oversight did not bother <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> proper,
+      but could confuse some external replication tools.
+     </P
+></LI
+><LI
+><P
+>      Prevent WAL files created by <TT
+CLASS="LITERAL"
+>pg_basebackup -x/-X</TT
+> from
+      being archived again when the standby is promoted (Andres Freund)
+     </P
+></LI
+><LI
+><P
+>      Fix memory leak in <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+> (Fujii Masao)
+     </P
+></LI
+><LI
+><P
+>      Fix unintended suppression of <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+> verbose
+      messages (Fujii Masao)
+     </P
+></LI
+><LI
+><P
+>      Fix failure of <TT
+CLASS="FILENAME"
+>contrib/auto_explain</TT
+> to print per-node
+      timing information when doing <TT
+CLASS="COMMAND"
+>EXPLAIN ANALYZE</TT
+> (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix upgrade-from-unpackaged script for <TT
+CLASS="FILENAME"
+>contrib/citext</TT
+>
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Avoid integer overflow and buffer overrun
+      in <TT
+CLASS="FILENAME"
+>contrib/hstore</TT
+>'s <CODE
+CLASS="FUNCTION"
+>hstore_to_json()</CODE
+>
+      (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Fix recognition of numbers in <CODE
+CLASS="FUNCTION"
+>hstore_to_json_loose()</CODE
+>,
+      so that JSON numbers and strings are correctly distinguished
+      (Andrew Dunstan)
+     </P
+></LI
+><LI
+><P
+>      Fix block number checking
+      in <TT
+CLASS="FILENAME"
+>contrib/pageinspect</TT
+>'s <CODE
+CLASS="FUNCTION"
+>get_raw_page()</CODE
+>
+      (Tom Lane)
+     </P
+><P
+>      The incorrect checking logic could prevent access to some pages in
+      non-main relation forks.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="FILENAME"
+>contrib/pgcrypto</TT
+>'s <CODE
+CLASS="FUNCTION"
+>pgp_sym_decrypt()</CODE
+>
+      to not fail on messages whose length is 6 less than a power of 2
+      (Marko Tiikkaja)
+     </P
+></LI
+><LI
+><P
+>      Fix file descriptor leak in <TT
+CLASS="FILENAME"
+>contrib/pg_test_fsync</TT
+>
+      (Jeff Janes)
+     </P
+><P
+>      This could cause failure to remove temporary files on Windows.
+     </P
+></LI
+><LI
+><P
+>      Handle unexpected query results, especially NULLs, safely in
+      <TT
+CLASS="FILENAME"
+>contrib/tablefunc</TT
+>'s <CODE
+CLASS="FUNCTION"
+>connectby()</CODE
+>
+      (Michael Paquier)
+     </P
+><P
+>      <CODE
+CLASS="FUNCTION"
+>connectby()</CODE
+> previously crashed if it encountered a NULL
+      key value.  It now prints that row but doesn't recurse further.
+     </P
+></LI
+><LI
+><P
+>      Avoid a possible crash in <TT
+CLASS="FILENAME"
+>contrib/xml2</TT
+>'s
+      <CODE
+CLASS="FUNCTION"
+>xslt_process()</CODE
+> (Mark Simonetti)
+     </P
+><P
+>      <SPAN
+CLASS="APPLICATION"
+>libxslt</SPAN
+> seems to have an undocumented dependency on
+      the order in which resources are freed; reorder our calls to avoid a
+      crash.
+     </P
+></LI
+><LI
+><P
+>      Mark some <TT
+CLASS="FILENAME"
+>contrib</TT
+> I/O functions with correct volatility
+      properties (Tom Lane)
+     </P
+><P
+>      The previous over-conservative marking was immaterial in normal use,
+      but could cause optimization problems or rejection of valid index
+      expression definitions.  Since the consequences are not large, we've
+      just adjusted the function definitions in the extension modules'
+      scripts, without changing version numbers.
+     </P
+></LI
+><LI
+><P
+>      Numerous cleanups of warnings from Coverity static code analyzer
+      (Andres Freund, Tatsuo Ishii, Marko Kreen, Tom Lane, Michael Paquier)
+     </P
+><P
+>      These changes are mostly cosmetic but in some cases fix corner-case
+      bugs, for example a crash rather than a proper error report after an
+      out-of-memory failure.  None are believed to represent security
+      issues.
+     </P
+></LI
+><LI
+><P
+>      Fix setup of background workers in EXEC_BACKEND builds, eg Windows
+      (Robert Haas)
+     </P
+></LI
+><LI
+><P
+>      Detect incompatible OpenLDAP versions during build (Noah Misch)
+     </P
+><P
+>      With OpenLDAP versions 2.4.24 through 2.4.31,
+      inclusive, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> backends can crash at exit.
+      Raise a warning during <SPAN
+CLASS="APPLICATION"
+>configure</SPAN
+> based on the
+      compile-time OpenLDAP version number, and test the crashing scenario
+      in the <TT
+CLASS="FILENAME"
+>contrib/dblink</TT
+> regression test.
+     </P
+></LI
+><LI
+><P
+>      In non-MSVC Windows builds, ensure <TT
+CLASS="FILENAME"
+>libpq.dll</TT
+> is installed
+      with execute permissions (Noah Misch)
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>pg_regress</SPAN
+> remove any temporary installation it
+      created upon successful exit (Tom Lane)
+     </P
+><P
+>      This results in a very substantial reduction in disk space usage
+      during <TT
+CLASS="LITERAL"
+>make check-world</TT
+>, since that sequence involves
+      creation of numerous temporary installations.
+     </P
+></LI
+><LI
+><P
+>      Support time zone abbreviations that change UTC offset from time to
+      time (Tom Lane)
+     </P
+><P
+>      Previously, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> assumed that the UTC offset
+      associated with a time zone abbreviation (such as <TT
+CLASS="LITERAL"
+>EST</TT
+>)
+      never changes in the usage of any particular locale.  However this
+      assumption fails in the real world, so introduce the ability for a
+      zone abbreviation to represent a UTC offset that sometimes changes.
+      Update the zone abbreviation definition files to make use of this
+      feature in timezone locales that have changed the UTC offset of their
+      abbreviations since 1970 (according to the IANA timezone database).
+      In such timezones, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> will now associate the
+      correct UTC offset with the abbreviation depending on the given date.
+     </P
+></LI
+><LI
+><P
+>      Update time zone abbreviations lists (Tom Lane)
+     </P
+><P
+>      Add CST (China Standard Time) to our lists.
+      Remove references to ADT as <SPAN
+CLASS="QUOTE"
+>"Arabia Daylight Time"</SPAN
+>, an
+      abbreviation that's been out of use since 2007; therefore, claiming
+      there is a conflict with <SPAN
+CLASS="QUOTE"
+>"Atlantic Daylight Time"</SPAN
+> doesn't seem
+      especially helpful.
+      Fix entirely incorrect GMT offsets for CKT (Cook Islands), FJT, and FJST
+      (Fiji); we didn't even have them on the proper side of the date line.
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2015a.
+     </P
+><P
+>      The IANA timezone database has adopted abbreviations of the form
+      <TT
+CLASS="LITERAL"
+>A<TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+>ST</TT
+>/<TT
+CLASS="LITERAL"
+>A<TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+>DT</TT
+>
+      for all Australian time zones, reflecting what they believe to be
+      current majority practice Down Under.  These names do not conflict
+      with usage elsewhere (other than ACST for Acre Summer Time, which has
+      been in disuse since 1994).  Accordingly, adopt these names into
+      our <SPAN
+CLASS="QUOTE"
+>"Default"</SPAN
+> timezone abbreviation set.
+      The <SPAN
+CLASS="QUOTE"
+>"Australia"</SPAN
+> abbreviation set now contains only CST, EAST,
+      EST, SAST, SAT, and WST, all of which are thought to be mostly
+      historical usage.  Note that SAST has also been changed to be South
+      Africa Standard Time in the <SPAN
+CLASS="QUOTE"
+>"Default"</SPAN
+> abbreviation set.
+     </P
+><P
+>      Also, add zone abbreviations SRET (Asia/Srednekolymsk) and XJT
+      (Asia/Urumqi), and use WSST/WSDT for western Samoa.  Also, there were
+      DST law changes in Chile, Mexico, the Turks &amp; Caicos Islands
+      (America/Grand_Turk), and Fiji.  There is a new zone
+      Pacific/Bougainville for portions of Papua New Guinea.  Also, numerous
+      corrections for historical (pre-1970) time zone data.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-3-7.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-3-5.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.3.7</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.3.5</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,429 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Date/Time Configuration Files</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Date/Time Support"
+HREF="datetime-appendix.html"><LINK
+REL="PREVIOUS"
+TITLE="Date/Time Key Words"
+HREF="datetime-keywords.html"><LINK
+REL="NEXT"
+TITLE="History of Units"
+HREF="datetime-units-history.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Date/Time Key Words"
+HREF="datetime-keywords.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="datetime-appendix.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix B. Date/Time Support</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="History of Units"
+HREF="datetime-units-history.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="DATETIME-CONFIG-FILES"
+>B.3. Date/Time Configuration Files</A
+></H1
+><P
+>    Since timezone abbreviations are not well standardized,
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> provides a means to customize
+    the set of abbreviations accepted by the server.  The
+    <A
+HREF="runtime-config-client.html#GUC-TIMEZONE-ABBREVIATIONS"
+>timezone_abbreviations</A
+> run-time parameter
+    determines the active set of abbreviations.  While this parameter
+    can be altered by any database user, the possible values for it
+    are under the control of the database administrator &mdash; they
+    are in fact names of configuration files stored in
+    <TT
+CLASS="FILENAME"
+>.../share/timezonesets/</TT
+> of the installation directory.
+    By adding or altering files in that directory, the administrator
+    can set local policy for timezone abbreviations.
+   </P
+><P
+>    <TT
+CLASS="VARNAME"
+>timezone_abbreviations</TT
+> can be set to any file name
+    found in <TT
+CLASS="FILENAME"
+>.../share/timezonesets/</TT
+>, if the file's name
+    is entirely alphabetic.  (The prohibition against non-alphabetic
+    characters in <TT
+CLASS="VARNAME"
+>timezone_abbreviations</TT
+> prevents reading
+    files outside the intended directory, as well as reading editor
+    backup files and other extraneous files.)
+   </P
+><P
+>    A timezone abbreviation file can contain blank lines and comments
+    beginning with <TT
+CLASS="LITERAL"
+>#</TT
+>.  Non-comment lines must have one of
+    these formats:
+
+</P><PRE
+CLASS="SYNOPSIS"
+><TT
+CLASS="REPLACEABLE"
+><I
+>zone_abbreviation</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>offset</I
+></TT
+>
+<TT
+CLASS="REPLACEABLE"
+><I
+>zone_abbreviation</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>offset</I
+></TT
+> D
+<TT
+CLASS="REPLACEABLE"
+><I
+>zone_abbreviation</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>time_zone_name</I
+></TT
+>
+@INCLUDE <TT
+CLASS="REPLACEABLE"
+><I
+>file_name</I
+></TT
+>
+@OVERRIDE</PRE
+><P>
+   </P
+><P
+>    A <TT
+CLASS="REPLACEABLE"
+><I
+>zone_abbreviation</I
+></TT
+> is just the abbreviation
+    being defined.  The <TT
+CLASS="REPLACEABLE"
+><I
+>offset</I
+></TT
+> is the equivalent
+    offset in seconds from UTC, positive being east from Greenwich and
+    negative being west.  For example, -18000 would be five hours west
+    of Greenwich, or North American east coast standard time.  <TT
+CLASS="LITERAL"
+>D</TT
+>
+    indicates that the zone name represents local daylight-savings time rather
+    than standard time.  Alternatively, a <TT
+CLASS="REPLACEABLE"
+><I
+>time_zone_name</I
+></TT
+> can
+    be given, in which case that time zone definition is consulted, and the
+    abbreviation's meaning in that zone is used.  This alternative is
+    recommended only for abbreviations whose meaning has historically varied,
+    as looking up the meaning is noticeably more expensive than just using
+    a fixed integer value.
+   </P
+><P
+>    The <TT
+CLASS="LITERAL"
+>@INCLUDE</TT
+> syntax allows inclusion of another file in the
+    <TT
+CLASS="FILENAME"
+>.../share/timezonesets/</TT
+> directory.  Inclusion can be nested,
+    to a limited depth.
+   </P
+><P
+>    The <TT
+CLASS="LITERAL"
+>@OVERRIDE</TT
+> syntax indicates that subsequent entries in the
+    file can override previous entries (typically, entries obtained from
+    included files).  Without this, conflicting definitions of the same
+    timezone abbreviation are considered an error.
+   </P
+><P
+>    In an unmodified installation, the file <TT
+CLASS="FILENAME"
+>Default</TT
+> contains
+    all the non-conflicting time zone abbreviations for most of the world.
+    Additional files <TT
+CLASS="FILENAME"
+>Australia</TT
+> and <TT
+CLASS="FILENAME"
+>India</TT
+> are
+    provided for those regions: these files first include the
+    <TT
+CLASS="LITERAL"
+>Default</TT
+> file and then add or modify abbreviations as needed.
+   </P
+><P
+>    For reference purposes, a standard installation also contains files
+    <TT
+CLASS="FILENAME"
+>Africa.txt</TT
+>, <TT
+CLASS="FILENAME"
+>America.txt</TT
+>, etc, containing
+    information about every time zone abbreviation known to be in use
+    according to the IANA timezone database.  The zone name
+    definitions found in these files can be copied and pasted into a custom
+    configuration file as needed.  Note that these files cannot be directly
+    referenced as <TT
+CLASS="VARNAME"
+>timezone_abbreviations</TT
+> settings, because of
+    the dot embedded in their names.
+   </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>     If an error occurs while reading the time zone abbreviation set, no new
+     value is applied and the old set is kept. If the error occurs while
+     starting the database, startup fails.
+    </P
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="CAUTION"
+><P
+></P
+><TABLE
+CLASS="CAUTION"
+BORDER="1"
+WIDTH="100%"
+><TR
+><TD
+ALIGN="CENTER"
+><B
+>Caution</B
+></TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+><P
+>     Time zone abbreviations defined in the configuration file override
+     non-timezone meanings built into <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>.
+     For example, the <TT
+CLASS="FILENAME"
+>Australia</TT
+> configuration file defines
+     <TT
+CLASS="LITERAL"
+>SAT</TT
+> (for South Australian Standard Time).  When this
+     file is active, <TT
+CLASS="LITERAL"
+>SAT</TT
+> will not be recognized as an abbreviation
+     for Saturday.
+    </P
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="CAUTION"
+><P
+></P
+><TABLE
+CLASS="CAUTION"
+BORDER="1"
+WIDTH="100%"
+><TR
+><TD
+ALIGN="CENTER"
+><B
+>Caution</B
+></TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+><P
+>     If you modify files in <TT
+CLASS="FILENAME"
+>.../share/timezonesets/</TT
+>,
+     it is up to you to make backups &mdash; a normal database dump
+     will not include this directory.
+    </P
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="datetime-keywords.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="datetime-units-history.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Date/Time Key Words</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="datetime-appendix.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>History of Units</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,396 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Structure of PL/pgSQL</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="PL/pgSQL - SQL Procedural Language"
+HREF="plpgsql.html"><LINK
+REL="PREVIOUS"
+TITLE="Overview"
+HREF="plpgsql-overview.html"><LINK
+REL="NEXT"
+TITLE="Declarations"
+HREF="plpgsql-declarations.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Overview"
+HREF="plpgsql-overview.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plpgsql.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 40. <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> - <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Procedural Language</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Declarations"
+HREF="plpgsql-declarations.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PLPGSQL-STRUCTURE"
+>40.2. Structure of <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+></A
+></H1
+><P
+>   <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> is a block-structured language.
+   The complete text of a function definition must be a
+   <I
+CLASS="FIRSTTERM"
+>block</I
+>. A block is defined as:
+
+</P><PRE
+CLASS="SYNOPSIS"
+>[<SPAN
+CLASS="OPTIONAL"
+> &lt;&lt;<TT
+CLASS="REPLACEABLE"
+><I
+>label</I
+></TT
+>&gt;&gt; </SPAN
+>]
+[<SPAN
+CLASS="OPTIONAL"
+> DECLARE
+    <TT
+CLASS="REPLACEABLE"
+><I
+>declarations</I
+></TT
+> </SPAN
+>]
+BEGIN
+    <TT
+CLASS="REPLACEABLE"
+><I
+>statements</I
+></TT
+>
+END [<SPAN
+CLASS="OPTIONAL"
+> <TT
+CLASS="REPLACEABLE"
+><I
+>label</I
+></TT
+> </SPAN
+>];</PRE
+><P>
+    </P
+><P
+>     Each declaration and each statement within a block is terminated
+     by a semicolon.  A block that appears within another block must
+     have a semicolon after <TT
+CLASS="LITERAL"
+>END</TT
+>, as shown above;
+     however the final <TT
+CLASS="LITERAL"
+>END</TT
+> that
+     concludes a function body does not require a semicolon.
+    </P
+><DIV
+CLASS="TIP"
+><BLOCKQUOTE
+CLASS="TIP"
+><P
+><B
+>Tip: </B
+>      A common mistake is to write a semicolon immediately after
+      <TT
+CLASS="LITERAL"
+>BEGIN</TT
+>.  This is incorrect and will result in a syntax error.
+     </P
+></BLOCKQUOTE
+></DIV
+><P
+>     A <TT
+CLASS="REPLACEABLE"
+><I
+>label</I
+></TT
+> is only needed if you want to
+     identify the block for use
+     in an <TT
+CLASS="LITERAL"
+>EXIT</TT
+> statement, or to qualify the names of the
+     variables declared in the block.  If a label is given after
+     <TT
+CLASS="LITERAL"
+>END</TT
+>, it must match the label at the block's beginning.
+    </P
+><P
+>     All key words are case-insensitive.
+     Identifiers are implicitly converted to lower case
+     unless double-quoted, just as they are in ordinary SQL commands.
+    </P
+><P
+>     Comments work the same way in <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> code as in
+     ordinary SQL.  A double dash (<TT
+CLASS="LITERAL"
+>--</TT
+>) starts a comment
+     that extends to the end of the line. A <TT
+CLASS="LITERAL"
+>/*</TT
+> starts a
+     block comment that extends to the matching occurrence of
+     <TT
+CLASS="LITERAL"
+>*/</TT
+>.  Block comments nest.
+    </P
+><P
+>     Any statement in the statement section of a block
+     can be a <I
+CLASS="FIRSTTERM"
+>subblock</I
+>.  Subblocks can be used for
+     logical grouping or to localize variables to a small group
+     of statements.  Variables declared in a subblock mask any
+     similarly-named variables of outer blocks for the duration
+     of the subblock; but you can access the outer variables anyway
+     if you qualify their names with their block's label. For example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION somefunc() RETURNS integer AS $$
+&lt;&lt; outerblock &gt;&gt;
+DECLARE
+    quantity integer := 30;
+BEGIN
+    RAISE NOTICE 'Quantity here is %', quantity;  -- Prints 30
+    quantity := 50;
+    --
+    -- Create a subblock
+    --
+    DECLARE
+        quantity integer := 80;
+    BEGIN
+        RAISE NOTICE 'Quantity here is %', quantity;  -- Prints 80
+        RAISE NOTICE 'Outer quantity here is %', outerblock.quantity;  -- Prints 50
+    END;
+
+    RAISE NOTICE 'Quantity here is %', quantity;  -- Prints 50
+
+    RETURN quantity;
+END;
+$$ LANGUAGE plpgsql;</PRE
+><P>
+    </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>      There is actually a hidden <SPAN
+CLASS="QUOTE"
+>"outer block"</SPAN
+> surrounding the body
+      of any <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> function.  This block provides the
+      declarations of the function's parameters (if any), as well as some
+      special variables such as <TT
+CLASS="LITERAL"
+>FOUND</TT
+> (see
+      <A
+HREF="plpgsql-statements.html#PLPGSQL-STATEMENTS-DIAGNOSTICS"
+>Section 40.5.5</A
+>).  The outer block is
+      labeled with the function's name, meaning that parameters and special
+      variables can be qualified with the function's name.
+     </P
+></BLOCKQUOTE
+></DIV
+><P
+>     It is important not to confuse the use of
+     <TT
+CLASS="COMMAND"
+>BEGIN</TT
+>/<TT
+CLASS="COMMAND"
+>END</TT
+> for grouping statements in
+     <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> with the similarly-named SQL commands
+     for transaction
+     control.  <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+>'s <TT
+CLASS="COMMAND"
+>BEGIN</TT
+>/<TT
+CLASS="COMMAND"
+>END</TT
+>
+     are only for grouping; they do not start or end a transaction.
+     Functions and trigger procedures are always executed within a transaction
+     established by an outer query &mdash; they cannot start or commit that
+     transaction, since there would be no context for them to execute in.
+     However, a block containing an <TT
+CLASS="LITERAL"
+>EXCEPTION</TT
+> clause effectively
+     forms a subtransaction that can be rolled back without affecting the
+     outer transaction.  For more about that see <A
+HREF="plpgsql-control-structures.html#PLPGSQL-ERROR-TRAPPING"
+>Section 40.6.6</A
+>.
+    </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plpgsql-overview.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="plpgsql-declarations.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Overview</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="plpgsql.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Declarations</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

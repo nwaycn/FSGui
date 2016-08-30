@@ -1,0 +1,740 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Extension Building Infrastructure</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Extending SQL"
+HREF="extend.html"><LINK
+REL="PREVIOUS"
+TITLE="Packaging Related Objects into an Extension"
+HREF="extend-extensions.html"><LINK
+REL="NEXT"
+TITLE="Triggers"
+HREF="triggers.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Packaging Related Objects into an Extension"
+HREF="extend-extensions.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="extend.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 35. Extending <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Triggers"
+HREF="triggers.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="EXTEND-PGXS"
+>35.16. Extension Building Infrastructure</A
+></H1
+><P
+>    If you are thinking about distributing your
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> extension modules, setting up a
+    portable build system for them can be fairly difficult.  Therefore
+    the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> installation provides a build
+    infrastructure for extensions, called <ACRONYM
+CLASS="ACRONYM"
+>PGXS</ACRONYM
+>, so
+    that simple extension modules can be built simply against an
+    already installed server.  <ACRONYM
+CLASS="ACRONYM"
+>PGXS</ACRONYM
+> is mainly intended
+    for extensions that include C code, although it can be used for
+    pure-SQL extensions too.  Note that <ACRONYM
+CLASS="ACRONYM"
+>PGXS</ACRONYM
+> is not
+    intended to be a universal build system framework that can be used
+    to build any software interfacing to <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>;
+    it simply automates common build rules for simple server extension
+    modules.  For more complicated packages, you might need to write your
+    own build system.
+   </P
+><P
+>    To use the <ACRONYM
+CLASS="ACRONYM"
+>PGXS</ACRONYM
+> infrastructure for your extension,
+    you must write a simple makefile.
+    In the makefile, you need to set some variables
+    and include the global <ACRONYM
+CLASS="ACRONYM"
+>PGXS</ACRONYM
+> makefile.
+    Here is an example that builds an extension module named
+    <TT
+CLASS="LITERAL"
+>isbn_issn</TT
+>, consisting of a shared library containing
+    some C code, an extension control file, a SQL script, and a documentation
+    text file:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>MODULES = isbn_issn
+EXTENSION = isbn_issn
+DATA = isbn_issn--1.0.sql
+DOCS = README.isbn_issn
+
+PG_CONFIG = pg_config
+PGXS := $(shell $(PG_CONFIG) --pgxs)
+include $(PGXS)</PRE
+><P>
+    The last three lines should always be the same.  Earlier in the
+    file, you assign variables or add custom
+    <SPAN
+CLASS="APPLICATION"
+>make</SPAN
+> rules.
+   </P
+><P
+>    Set one of these three variables to specify what is built:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="VARNAME"
+>MODULES</TT
+></DT
+><DD
+><P
+>        list of shared-library objects to be built from source files with same
+        stem (do not include library suffixes in this list)
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>MODULE_big</TT
+></DT
+><DD
+><P
+>        a shared library to build from multiple source files
+        (list object files in <TT
+CLASS="VARNAME"
+>OBJS</TT
+>)
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>PROGRAM</TT
+></DT
+><DD
+><P
+>        an executable program to build
+        (list object files in <TT
+CLASS="VARNAME"
+>OBJS</TT
+>)
+       </P
+></DD
+></DL
+></DIV
+><P>
+
+    The following variables can also be set:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="VARNAME"
+>EXTENSION</TT
+></DT
+><DD
+><P
+>        extension name(s); for each name you must provide an
+        <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>extension</I
+></TT
+>.control</TT
+> file,
+        which will be installed into
+        <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>prefix</I
+></TT
+>/share/extension</TT
+>
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>MODULEDIR</TT
+></DT
+><DD
+><P
+>        subdirectory of <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>prefix</I
+></TT
+>/share</TT
+>
+        into which DATA and DOCS files should be installed
+        (if not set, default is <TT
+CLASS="LITERAL"
+>extension</TT
+> if
+        <TT
+CLASS="VARNAME"
+>EXTENSION</TT
+> is set,
+        or <TT
+CLASS="LITERAL"
+>contrib</TT
+> if not)
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>DATA</TT
+></DT
+><DD
+><P
+>        random files to install into <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>prefix</I
+></TT
+>/share/$MODULEDIR</TT
+>
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>DATA_built</TT
+></DT
+><DD
+><P
+>        random files to install into
+        <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>prefix</I
+></TT
+>/share/$MODULEDIR</TT
+>,
+        which need to be built first
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>DATA_TSEARCH</TT
+></DT
+><DD
+><P
+>        random files to install under
+        <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>prefix</I
+></TT
+>/share/tsearch_data</TT
+>
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>DOCS</TT
+></DT
+><DD
+><P
+>        random files to install under
+        <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>prefix</I
+></TT
+>/doc/$MODULEDIR</TT
+>
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>SCRIPTS</TT
+></DT
+><DD
+><P
+>        script files (not binaries) to install into
+        <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>prefix</I
+></TT
+>/bin</TT
+>
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>SCRIPTS_built</TT
+></DT
+><DD
+><P
+>        script files (not binaries) to install into
+        <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>prefix</I
+></TT
+>/bin</TT
+>,
+        which need to be built first
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>REGRESS</TT
+></DT
+><DD
+><P
+>        list of regression test cases (without suffix), see below
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>REGRESS_OPTS</TT
+></DT
+><DD
+><P
+>        additional switches to pass to <SPAN
+CLASS="APPLICATION"
+>pg_regress</SPAN
+>
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>EXTRA_CLEAN</TT
+></DT
+><DD
+><P
+>        extra files to remove in <TT
+CLASS="LITERAL"
+>make clean</TT
+>
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>PG_CPPFLAGS</TT
+></DT
+><DD
+><P
+>        will be added to <TT
+CLASS="VARNAME"
+>CPPFLAGS</TT
+>
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>PG_LIBS</TT
+></DT
+><DD
+><P
+>        will be added to <TT
+CLASS="VARNAME"
+>PROGRAM</TT
+> link line
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>SHLIB_LINK</TT
+></DT
+><DD
+><P
+>        will be added to <TT
+CLASS="VARNAME"
+>MODULE_big</TT
+> link line
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>PG_CONFIG</TT
+></DT
+><DD
+><P
+>        path to <SPAN
+CLASS="APPLICATION"
+>pg_config</SPAN
+> program for the
+        <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> installation to build against
+        (typically just <TT
+CLASS="LITERAL"
+>pg_config</TT
+> to use the first one in your
+        <TT
+CLASS="VARNAME"
+>PATH</TT
+>)
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+><P
+>    Put this makefile as <TT
+CLASS="LITERAL"
+>Makefile</TT
+> in the directory
+    which holds your extension. Then you can do
+    <TT
+CLASS="LITERAL"
+>make</TT
+> to compile, and then <TT
+CLASS="LITERAL"
+>make
+    install</TT
+> to install your module.  By default, the extension is
+    compiled and installed for the
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> installation that
+    corresponds to the first <TT
+CLASS="COMMAND"
+>pg_config</TT
+> program
+    found in your <TT
+CLASS="VARNAME"
+>PATH</TT
+>.  You can use a different installation by
+    setting <TT
+CLASS="VARNAME"
+>PG_CONFIG</TT
+> to point to its
+    <TT
+CLASS="COMMAND"
+>pg_config</TT
+> program, either within the makefile
+    or on the <TT
+CLASS="LITERAL"
+>make</TT
+> command line.
+   </P
+><P
+>    You can also run <TT
+CLASS="LITERAL"
+>make</TT
+> in a directory outside the source
+    tree of your extension, if you want to keep the build directory separate.
+    This procedure is also called a
+    <I
+CLASS="FIRSTTERM"
+>VPATH</I
+>
+    build.  Here's how:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>mkdir build_dir
+cd build_dir
+make -f /path/to/extension/source/tree/Makefile
+make -f /path/to/extension/source/tree/Makefile install</PRE
+><P>
+   </P
+><P
+>    Alternatively, you can set up a directory for a VPATH build in a similar
+    way to how it is done for the core code. One way to do this is using the
+    core script <TT
+CLASS="FILENAME"
+>config/prep_buildtree</TT
+>. Once this has been done
+    you can build by setting the <TT
+CLASS="LITERAL"
+>make</TT
+> variable
+    <TT
+CLASS="VARNAME"
+>VPATH</TT
+> like this:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>make VPATH=/path/to/extension/source/tree
+make VPATH=/path/to/extension/source/tree install</PRE
+><P>
+    This procedure can work with a greater variety of directory layouts.
+   </P
+><P
+>    The scripts listed in the <TT
+CLASS="VARNAME"
+>REGRESS</TT
+> variable are used for
+    regression testing of your module, which can be invoked by <TT
+CLASS="LITERAL"
+>make
+    installcheck</TT
+> after doing <TT
+CLASS="LITERAL"
+>make install</TT
+>.  For this to
+    work you must have a running <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> server.
+    The script files listed in <TT
+CLASS="VARNAME"
+>REGRESS</TT
+> must appear in a
+    subdirectory named <TT
+CLASS="LITERAL"
+>sql/</TT
+> in your extension's directory.
+    These files must have extension <TT
+CLASS="LITERAL"
+>.sql</TT
+>, which must not be
+    included in the <TT
+CLASS="VARNAME"
+>REGRESS</TT
+> list in the makefile.  For each
+    test there should also be a file containing the expected output in a
+    subdirectory named <TT
+CLASS="LITERAL"
+>expected/</TT
+>, with the same stem and
+    extension <TT
+CLASS="LITERAL"
+>.out</TT
+>.  <TT
+CLASS="LITERAL"
+>make installcheck</TT
+>
+    executes each test script with <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>, and compares the
+    resulting output to the matching expected file.  Any differences will be
+    written to the file <TT
+CLASS="LITERAL"
+>regression.diffs</TT
+> in <TT
+CLASS="COMMAND"
+>diff
+    -c</TT
+> format.  Note that trying to run a test that is missing its
+    expected file will be reported as <SPAN
+CLASS="QUOTE"
+>"trouble"</SPAN
+>, so make sure you
+    have all expected files.
+   </P
+><DIV
+CLASS="TIP"
+><BLOCKQUOTE
+CLASS="TIP"
+><P
+><B
+>Tip: </B
+>     The easiest way to create the expected files is to create empty files,
+     then do a test run (which will of course report differences).  Inspect
+     the actual result files found in the <TT
+CLASS="LITERAL"
+>results/</TT
+>
+     directory, then copy them to <TT
+CLASS="LITERAL"
+>expected/</TT
+> if they match
+     what you expect from the test.
+    </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="extend-extensions.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="triggers.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Packaging Related Objects into an Extension</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="extend.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Triggers</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

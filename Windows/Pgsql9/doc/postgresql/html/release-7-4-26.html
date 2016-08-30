@@ -1,0 +1,341 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 7.4.26</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 7.4.27"
+HREF="release-7-4-27.html"><LINK
+REL="NEXT"
+TITLE="Release 7.4.25"
+HREF="release-7-4-25.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 7.4.27"
+HREF="release-7-4-27.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 7.4.25"
+HREF="release-7-4-25.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-7-4-26"
+>E.224. Release 7.4.26</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2009-09-09</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 7.4.25.
+   For information about new features in the 7.4 major release, see
+   <A
+HREF="release-7-4.html"
+>Section E.250</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN163185"
+>E.224.1. Migration to Version 7.4.26</A
+></H2
+><P
+>    A dump/restore is not required for those running 7.4.X.
+    However, if you have any hash indexes on <TT
+CLASS="TYPE"
+>interval</TT
+> columns,
+    you must <TT
+CLASS="COMMAND"
+>REINDEX</TT
+> them after updating to 7.4.26.
+    Also, if you are upgrading from a version earlier than 7.4.11,
+    see <A
+HREF="release-7-4-11.html"
+>Section E.239</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN163191"
+>E.224.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Disallow <TT
+CLASS="COMMAND"
+>RESET ROLE</TT
+> and <TT
+CLASS="COMMAND"
+>RESET SESSION
+      AUTHORIZATION</TT
+> inside security-definer functions (Tom, Heikki)
+     </P
+><P
+>      This covers a case that was missed in the previous patch that
+      disallowed <TT
+CLASS="COMMAND"
+>SET ROLE</TT
+> and <TT
+CLASS="COMMAND"
+>SET SESSION
+      AUTHORIZATION</TT
+> inside security-definer functions.
+      (See CVE-2007-6600)
+     </P
+></LI
+><LI
+><P
+>      Fix handling of sub-SELECTs appearing in the arguments of
+      an outer-level aggregate function (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix hash calculation for data type <TT
+CLASS="TYPE"
+>interval</TT
+> (Tom)
+     </P
+><P
+>      This corrects wrong results for hash joins on interval values.
+      It also changes the contents of hash indexes on interval columns.
+      If you have any such indexes, you must <TT
+CLASS="COMMAND"
+>REINDEX</TT
+> them
+      after updating.
+     </P
+></LI
+><LI
+><P
+>      Fix overflow for <TT
+CLASS="LITERAL"
+>INTERVAL '<TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> ms'</TT
+>
+      when <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> is more than 2 million and integer
+      datetimes are in use (Alex Hunsaker)
+     </P
+></LI
+><LI
+><P
+>      Fix calculation of distance between a point and a line segment (Tom)
+     </P
+><P
+>      This led to incorrect results from a number of geometric operators.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="TYPE"
+>money</TT
+> data type to work in locales where currency
+      amounts have no fractional digits, e.g. Japan (Itagaki Takahiro)
+     </P
+></LI
+><LI
+><P
+>      Properly round datetime input like
+      <TT
+CLASS="LITERAL"
+>00:12:57.9999999999999999999999999999</TT
+> (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix poor choice of page split point in GiST R-tree operator classes
+      (Teodor)
+     </P
+></LI
+><LI
+><P
+>      Fix portability issues in plperl initialization (Andrew Dunstan)
+     </P
+></LI
+><LI
+><P
+>      Improve robustness of <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>'s code to recover
+      from errors during <TT
+CLASS="COMMAND"
+>COPY FROM STDIN</TT
+> (Tom)
+     </P
+></LI
+><LI
+><P
+>      Avoid including conflicting readline and editline header files
+      when both libraries are installed (Zdenek Kotala)
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-7-4-27.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-7-4-25.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 7.4.27</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 7.4.25</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

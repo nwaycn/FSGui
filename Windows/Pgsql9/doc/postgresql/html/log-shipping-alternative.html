@@ -1,0 +1,452 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Alternative Method for Log Shipping</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="High Availability, Load Balancing, and Replication"
+HREF="high-availability.html"><LINK
+REL="PREVIOUS"
+TITLE="Failover"
+HREF="warm-standby-failover.html"><LINK
+REL="NEXT"
+TITLE="Hot Standby"
+HREF="hot-standby.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Failover"
+HREF="warm-standby-failover.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="high-availability.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 25. High Availability, Load Balancing, and Replication</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Hot Standby"
+HREF="hot-standby.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="LOG-SHIPPING-ALTERNATIVE"
+>25.4. Alternative Method for Log Shipping</A
+></H1
+><P
+>    An alternative to the built-in standby mode described in the previous
+    sections is to use a <TT
+CLASS="VARNAME"
+>restore_command</TT
+> that polls the archive location.
+    This was the only option available in versions 8.4 and below. In this
+    setup, set <TT
+CLASS="VARNAME"
+>standby_mode</TT
+> off, because you are implementing
+    the polling required for standby operation yourself. See the
+    <A
+HREF="pgstandby.html"
+><SPAN
+CLASS="APPLICATION"
+>pg_standby</SPAN
+></A
+> module for a reference
+    implementation of this.
+   </P
+><P
+>    Note that in this mode, the server will apply WAL one file at a
+    time, so if you use the standby server for queries (see Hot Standby),
+    there is a delay between an action in the master and when the
+    action becomes visible in the standby, corresponding the time it takes
+    to fill up the WAL file. <TT
+CLASS="VARNAME"
+>archive_timeout</TT
+> can be used to make that delay
+    shorter. Also note that you can't combine streaming replication with
+    this method.
+   </P
+><P
+>    The operations that occur on both primary and standby servers are
+    normal continuous archiving and recovery tasks. The only point of
+    contact between the two database servers is the archive of WAL files
+    that both share: primary writing to the archive, standby reading from
+    the archive. Care must be taken to ensure that WAL archives from separate
+    primary servers do not become mixed together or confused. The archive
+    need not be large if it is only required for standby operation.
+   </P
+><P
+>    The magic that makes the two loosely coupled servers work together is
+    simply a <TT
+CLASS="VARNAME"
+>restore_command</TT
+> used on the standby that,
+    when asked for the next WAL file, waits for it to become available from
+    the primary. The <TT
+CLASS="VARNAME"
+>restore_command</TT
+> is specified in the
+    <TT
+CLASS="FILENAME"
+>recovery.conf</TT
+> file on the standby server. Normal recovery
+    processing would request a file from the WAL archive, reporting failure
+    if the file was unavailable.  For standby processing it is normal for
+    the next WAL file to be unavailable, so the standby must wait for
+    it to appear. For files ending in <TT
+CLASS="LITERAL"
+>.backup</TT
+> or
+    <TT
+CLASS="LITERAL"
+>.history</TT
+> there is no need to wait, and a non-zero return
+    code must be returned. A waiting <TT
+CLASS="VARNAME"
+>restore_command</TT
+> can be
+    written as a custom script that loops after polling for the existence of
+    the next WAL file. There must also be some way to trigger failover, which
+    should interrupt the <TT
+CLASS="VARNAME"
+>restore_command</TT
+>, break the loop and
+    return a file-not-found error to the standby server. This ends recovery
+    and the standby will then come up as a normal server.
+   </P
+><P
+>    Pseudocode for a suitable <TT
+CLASS="VARNAME"
+>restore_command</TT
+> is:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>triggered = false;
+while (!NextWALFileReady() &amp;&amp; !triggered)
+{
+    sleep(100000L);         /* wait for ~0.1 sec */
+    if (CheckForExternalTrigger())
+        triggered = true;
+}
+if (!triggered)
+        CopyWALFileForRecovery();</PRE
+><P>
+   </P
+><P
+>    A working example of a waiting <TT
+CLASS="VARNAME"
+>restore_command</TT
+> is provided
+    in the <A
+HREF="pgstandby.html"
+><SPAN
+CLASS="APPLICATION"
+>pg_standby</SPAN
+></A
+> module. It
+    should be used as a reference on how to correctly implement the logic
+    described above. It can also be extended as needed to support specific
+    configurations and environments.
+   </P
+><P
+>    The method for triggering failover is an important part of planning
+    and design. One potential option is the <TT
+CLASS="VARNAME"
+>restore_command</TT
+>
+    command.  It is executed once for each WAL file, but the process
+    running the <TT
+CLASS="VARNAME"
+>restore_command</TT
+> is created and dies for
+    each file, so there is no daemon or server process, and
+    signals or a signal handler cannot be used. Therefore, the
+    <TT
+CLASS="VARNAME"
+>restore_command</TT
+> is not suitable to trigger failover.
+    It is possible to use a simple timeout facility, especially if
+    used in conjunction with a known <TT
+CLASS="VARNAME"
+>archive_timeout</TT
+>
+    setting on the primary. However, this is somewhat error prone
+    since a network problem or busy primary server might be sufficient
+    to initiate failover. A notification mechanism such as the explicit
+    creation of a trigger file is ideal, if this can be arranged.
+   </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="WARM-STANDBY-CONFIG"
+>25.4.1. Implementation</A
+></H2
+><P
+>    The short procedure for configuring a standby server using this alternative
+    method is as follows. For
+    full details of each step, refer to previous sections as noted.
+    <P
+></P
+></P><OL
+TYPE="1"
+><LI
+><P
+>       Set up primary and standby systems as nearly identical as
+       possible, including two identical copies of
+       <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> at the same release level.
+      </P
+></LI
+><LI
+><P
+>       Set up continuous archiving from the primary to a WAL archive
+       directory on the standby server. Ensure that
+       <A
+HREF="runtime-config-wal.html#GUC-ARCHIVE-MODE"
+>archive_mode</A
+>,
+       <A
+HREF="runtime-config-wal.html#GUC-ARCHIVE-COMMAND"
+>archive_command</A
+> and
+       <A
+HREF="runtime-config-wal.html#GUC-ARCHIVE-TIMEOUT"
+>archive_timeout</A
+>
+       are set appropriately on the primary
+       (see <A
+HREF="continuous-archiving.html#BACKUP-ARCHIVING-WAL"
+>Section 24.3.1</A
+>).
+      </P
+></LI
+><LI
+><P
+>       Make a base backup of the primary server (see <A
+HREF="continuous-archiving.html#BACKUP-BASE-BACKUP"
+>Section 24.3.2</A
+>), and load this data onto the standby.
+      </P
+></LI
+><LI
+><P
+>       Begin recovery on the standby server from the local WAL
+       archive, using a <TT
+CLASS="FILENAME"
+>recovery.conf</TT
+> that specifies a
+       <TT
+CLASS="VARNAME"
+>restore_command</TT
+> that waits as described
+       previously (see <A
+HREF="continuous-archiving.html#BACKUP-PITR-RECOVERY"
+>Section 24.3.4</A
+>).
+      </P
+></LI
+></OL
+><P>
+   </P
+><P
+>    Recovery treats the WAL archive as read-only, so once a WAL file has
+    been copied to the standby system it can be copied to tape at the same
+    time as it is being read by the standby database server.
+    Thus, running a standby server for high availability can be performed at
+    the same time as files are stored for longer term disaster recovery
+    purposes.
+   </P
+><P
+>    For testing purposes, it is possible to run both primary and standby
+    servers on the same system. This does not provide any worthwhile
+    improvement in server robustness, nor would it be described as HA.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="WARM-STANDBY-RECORD"
+>25.4.2. Record-based Log Shipping</A
+></H2
+><P
+>    It is also possible to implement record-based log shipping using this
+    alternative method, though this requires custom development, and changes
+    will still only become visible to hot standby queries after a full WAL
+    file has been shipped.
+   </P
+><P
+>    An external program can call the <CODE
+CLASS="FUNCTION"
+>pg_xlogfile_name_offset()</CODE
+>
+    function (see <A
+HREF="functions-admin.html"
+>Section 9.26</A
+>)
+    to find out the file name and the exact byte offset within it of
+    the current end of WAL.  It can then access the WAL file directly
+    and copy the data from the last known end of WAL through the current end
+    over to the standby servers.  With this approach, the window for data
+    loss is the polling cycle time of the copying program, which can be very
+    small, and there is no wasted bandwidth from forcing partially-used
+    segment files to be archived.  Note that the standby servers'
+    <TT
+CLASS="VARNAME"
+>restore_command</TT
+> scripts can only deal with whole WAL files,
+    so the incrementally copied data is not ordinarily made available to
+    the standby servers.  It is of use only when the primary dies &mdash;
+    then the last partial WAL file is fed to the standby before allowing
+    it to come up.  The correct implementation of this process requires
+    cooperation of the <TT
+CLASS="VARNAME"
+>restore_command</TT
+> script with the data
+    copying program.
+   </P
+><P
+>    Starting with <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> version 9.0, you can use
+    streaming replication (see <A
+HREF="warm-standby.html#STREAMING-REPLICATION"
+>Section 25.2.5</A
+>) to
+    achieve the same benefits with less effort.
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="warm-standby-failover.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="hot-standby.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Failover</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="high-availability.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Hot Standby</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

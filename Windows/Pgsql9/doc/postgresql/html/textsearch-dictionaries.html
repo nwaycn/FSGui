@@ -1,0 +1,1451 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Dictionaries</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Full Text Search"
+HREF="textsearch.html"><LINK
+REL="PREVIOUS"
+TITLE="Parsers"
+HREF="textsearch-parsers.html"><LINK
+REL="NEXT"
+TITLE="Configuration Example"
+HREF="textsearch-configuration.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Parsers"
+HREF="textsearch-parsers.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="textsearch.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 12. Full Text Search</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Configuration Example"
+HREF="textsearch-configuration.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="TEXTSEARCH-DICTIONARIES"
+>12.6. Dictionaries</A
+></H1
+><P
+>   Dictionaries are used to eliminate words that should not be considered in a
+   search (<I
+CLASS="FIRSTTERM"
+>stop words</I
+>), and to <I
+CLASS="FIRSTTERM"
+>normalize</I
+> words so
+   that different derived forms of the same word will match.  A successfully
+   normalized word is called a <I
+CLASS="FIRSTTERM"
+>lexeme</I
+>.  Aside from
+   improving search quality, normalization and removal of stop words reduce the
+   size of the <TT
+CLASS="TYPE"
+>tsvector</TT
+> representation of a document, thereby
+   improving performance.  Normalization does not always have linguistic meaning
+   and usually depends on application semantics.
+  </P
+><P
+>   Some examples of normalization:
+
+   <P
+></P
+></P><UL
+COMPACT="COMPACT"
+><LI
+STYLE="list-style-type: disc"
+><P
+>      Linguistic - Ispell dictionaries try to reduce input words to a
+      normalized form; stemmer dictionaries remove word endings
+     </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>      <ACRONYM
+CLASS="ACRONYM"
+>URL</ACRONYM
+> locations can be canonicalized to make
+      equivalent URLs match:
+
+      <P
+></P
+></P><UL
+COMPACT="COMPACT"
+><LI
+STYLE="list-style-type: disc"
+><P
+>         http://www.pgsql.ru/db/mw/index.html
+        </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>         http://www.pgsql.ru/db/mw/
+        </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>         http://www.pgsql.ru/db/../db/mw/index.html
+        </P
+></LI
+></UL
+><P>
+     </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>      Color names can be replaced by their hexadecimal values, e.g.,
+      <TT
+CLASS="LITERAL"
+>red, green, blue, magenta -&#62; FF0000, 00FF00, 0000FF, FF00FF</TT
+>
+     </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>      If indexing numbers, we can
+      remove some fractional digits to reduce the range of possible
+      numbers, so for example <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>3.14</I
+></SPAN
+>159265359,
+      <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>3.14</I
+></SPAN
+>15926, <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>3.14</I
+></SPAN
+> will be the same
+      after normalization if only two digits are kept after the decimal point.
+     </P
+></LI
+></UL
+><P>
+
+  </P
+><P
+>   A dictionary is a program that accepts a token as
+   input and returns:
+   <P
+></P
+></P><UL
+COMPACT="COMPACT"
+><LI
+STYLE="list-style-type: disc"
+><P
+>      an array of lexemes if the input token is known to the dictionary
+      (notice that one token can produce more than one lexeme)
+     </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>      a single lexeme with the <TT
+CLASS="LITERAL"
+>TSL_FILTER</TT
+> flag set, to replace
+      the original token with a new token to be passed to subsequent
+      dictionaries (a dictionary that does this is called a
+      <I
+CLASS="FIRSTTERM"
+>filtering dictionary</I
+>)
+     </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>      an empty array if the dictionary knows the token, but it is a stop word
+     </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>      <TT
+CLASS="LITERAL"
+>NULL</TT
+> if the dictionary does not recognize the input token
+     </P
+></LI
+></UL
+><P>
+  </P
+><P
+>   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> provides predefined dictionaries for
+   many languages.  There are also several predefined templates that can be
+   used to create new dictionaries with custom parameters.  Each predefined
+   dictionary template is described below.  If no existing
+   template is suitable, it is possible to create new ones; see the
+   <TT
+CLASS="FILENAME"
+>contrib/</TT
+> area of the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> distribution
+   for examples.
+  </P
+><P
+>   A text search configuration binds a parser together with a set of
+   dictionaries to process the parser's output tokens.  For each token
+   type that the parser can return, a separate list of dictionaries is
+   specified by the configuration.  When a token of that type is found
+   by the parser, each dictionary in the list is consulted in turn,
+   until some dictionary recognizes it as a known word.  If it is identified
+   as a stop word, or if no dictionary recognizes the token, it will be
+   discarded and not indexed or searched for.
+   Normally, the first dictionary that returns a non-<TT
+CLASS="LITERAL"
+>NULL</TT
+>
+   output determines the result, and any remaining dictionaries are not
+   consulted; but a filtering dictionary can replace the given word
+   with a modified word, which is then passed to subsequent dictionaries.
+  </P
+><P
+>   The general rule for configuring a list of dictionaries
+   is to place first the most narrow, most specific dictionary, then the more
+   general dictionaries, finishing with a very general dictionary, like
+   a <SPAN
+CLASS="APPLICATION"
+>Snowball</SPAN
+> stemmer or <TT
+CLASS="LITERAL"
+>simple</TT
+>, which
+   recognizes everything.  For example, for an astronomy-specific search
+   (<TT
+CLASS="LITERAL"
+>astro_en</TT
+> configuration) one could bind token type
+   <TT
+CLASS="TYPE"
+>asciiword</TT
+> (ASCII word) to a synonym dictionary of astronomical
+   terms, a general English dictionary and a <SPAN
+CLASS="APPLICATION"
+>Snowball</SPAN
+> English
+   stemmer:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TEXT SEARCH CONFIGURATION astro_en
+    ADD MAPPING FOR asciiword WITH astrosyn, english_ispell, english_stem;</PRE
+><P>
+  </P
+><P
+>   A filtering dictionary can be placed anywhere in the list, except at the
+   end where it'd be useless.  Filtering dictionaries are useful to partially
+   normalize words to simplify the task of later dictionaries.  For example,
+   a filtering dictionary could be used to remove accents from accented
+   letters, as is done by the <A
+HREF="unaccent.html"
+>unaccent</A
+> module.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="TEXTSEARCH-STOPWORDS"
+>12.6.1. Stop Words</A
+></H2
+><P
+>    Stop words are words that are very common, appear in almost every
+    document, and have no discrimination value. Therefore, they can be ignored
+    in the context of full text searching. For example, every English text
+    contains words like <TT
+CLASS="LITERAL"
+>a</TT
+> and <TT
+CLASS="LITERAL"
+>the</TT
+>, so it is
+    useless to store them in an index.  However, stop words do affect the
+    positions in <TT
+CLASS="TYPE"
+>tsvector</TT
+>, which in turn affect ranking:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT to_tsvector('english','in the list of stop words');
+        to_tsvector
+----------------------------
+ 'list':3 'stop':5 'word':6</PRE
+><P>
+
+    The missing positions 1,2,4 are because of stop words.  Ranks
+    calculated for documents with and without stop words are quite different:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT ts_rank_cd (to_tsvector('english','in the list of stop words'), to_tsquery('list &amp; stop'));
+ ts_rank_cd
+------------
+       0.05
+
+SELECT ts_rank_cd (to_tsvector('english','list stop words'), to_tsquery('list &amp; stop'));
+ ts_rank_cd
+------------
+        0.1</PRE
+><P>
+
+   </P
+><P
+>    It is up to the specific dictionary how it treats stop words. For example,
+    <TT
+CLASS="LITERAL"
+>ispell</TT
+> dictionaries first normalize words and then
+    look at the list of stop words, while <TT
+CLASS="LITERAL"
+>Snowball</TT
+> stemmers
+    first check the list of stop words. The reason for the different
+    behavior is an attempt to decrease noise.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="TEXTSEARCH-SIMPLE-DICTIONARY"
+>12.6.2. Simple Dictionary</A
+></H2
+><P
+>    The <TT
+CLASS="LITERAL"
+>simple</TT
+> dictionary template operates by converting the
+    input token to lower case and checking it against a file of stop words.
+    If it is found in the file then an empty array is returned, causing
+    the token to be discarded.  If not, the lower-cased form of the word
+    is returned as the normalized lexeme.  Alternatively, the dictionary
+    can be configured to report non-stop-words as unrecognized, allowing
+    them to be passed on to the next dictionary in the list.
+   </P
+><P
+>    Here is an example of a dictionary definition using the <TT
+CLASS="LITERAL"
+>simple</TT
+>
+    template:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TEXT SEARCH DICTIONARY public.simple_dict (
+    TEMPLATE = pg_catalog.simple,
+    STOPWORDS = english
+);</PRE
+><P>
+
+    Here, <TT
+CLASS="LITERAL"
+>english</TT
+> is the base name of a file of stop words.
+    The file's full name will be
+    <TT
+CLASS="FILENAME"
+>$SHAREDIR/tsearch_data/english.stop</TT
+>,
+    where <TT
+CLASS="LITERAL"
+>$SHAREDIR</TT
+> means the
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> installation's shared-data directory,
+    often <TT
+CLASS="FILENAME"
+>/usr/local/share/postgresql</TT
+> (use <TT
+CLASS="COMMAND"
+>pg_config
+    --sharedir</TT
+> to determine it if you're not sure).
+    The file format is simply a list
+    of words, one per line.  Blank lines and trailing spaces are ignored,
+    and upper case is folded to lower case, but no other processing is done
+    on the file contents.
+   </P
+><P
+>    Now we can test our dictionary:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT ts_lexize('public.simple_dict','YeS');
+ ts_lexize
+-----------
+ {yes}
+
+SELECT ts_lexize('public.simple_dict','The');
+ ts_lexize
+-----------
+ {}</PRE
+><P>
+   </P
+><P
+>    We can also choose to return <TT
+CLASS="LITERAL"
+>NULL</TT
+>, instead of the lower-cased
+    word, if it is not found in the stop words file.  This behavior is
+    selected by setting the dictionary's <TT
+CLASS="LITERAL"
+>Accept</TT
+> parameter to
+    <TT
+CLASS="LITERAL"
+>false</TT
+>.  Continuing the example:
+
+</P><PRE
+CLASS="SCREEN"
+>ALTER TEXT SEARCH DICTIONARY public.simple_dict ( Accept = false );
+
+SELECT ts_lexize('public.simple_dict','YeS');
+ ts_lexize
+-----------
+
+
+SELECT ts_lexize('public.simple_dict','The');
+ ts_lexize
+-----------
+ {}</PRE
+><P>
+   </P
+><P
+>    With the default setting of <TT
+CLASS="LITERAL"
+>Accept</TT
+> = <TT
+CLASS="LITERAL"
+>true</TT
+>,
+    it is only useful to place a <TT
+CLASS="LITERAL"
+>simple</TT
+> dictionary at the end
+    of a list of dictionaries, since it will never pass on any token to
+    a following dictionary.  Conversely, <TT
+CLASS="LITERAL"
+>Accept</TT
+> = <TT
+CLASS="LITERAL"
+>false</TT
+>
+    is only useful when there is at least one following dictionary.
+   </P
+><DIV
+CLASS="CAUTION"
+><P
+></P
+><TABLE
+CLASS="CAUTION"
+BORDER="1"
+WIDTH="100%"
+><TR
+><TD
+ALIGN="CENTER"
+><B
+>Caution</B
+></TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+><P
+>     Most types of dictionaries rely on configuration files, such as files of
+     stop words.  These files <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>must</I
+></SPAN
+> be stored in UTF-8 encoding.
+     They will be translated to the actual database encoding, if that is
+     different, when they are read into the server.
+    </P
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="CAUTION"
+><P
+></P
+><TABLE
+CLASS="CAUTION"
+BORDER="1"
+WIDTH="100%"
+><TR
+><TD
+ALIGN="CENTER"
+><B
+>Caution</B
+></TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+><P
+>     Normally, a database session will read a dictionary configuration file
+     only once, when it is first used within the session.  If you modify a
+     configuration file and want to force existing sessions to pick up the
+     new contents, issue an <TT
+CLASS="COMMAND"
+>ALTER TEXT SEARCH DICTIONARY</TT
+> command
+     on the dictionary.  This can be a <SPAN
+CLASS="QUOTE"
+>"dummy"</SPAN
+> update that doesn't
+     actually change any parameter values.
+    </P
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="TEXTSEARCH-SYNONYM-DICTIONARY"
+>12.6.3. Synonym Dictionary</A
+></H2
+><P
+>    This dictionary template is used to create dictionaries that replace a
+    word with a synonym. Phrases are not supported (use the thesaurus
+    template (<A
+HREF="textsearch-dictionaries.html#TEXTSEARCH-THESAURUS"
+>Section 12.6.4</A
+>) for that).  A synonym
+    dictionary can be used to overcome linguistic problems, for example, to
+    prevent an English stemmer dictionary from reducing the word <SPAN
+CLASS="QUOTE"
+>"Paris"</SPAN
+> to
+    <SPAN
+CLASS="QUOTE"
+>"pari"</SPAN
+>.  It is enough to have a <TT
+CLASS="LITERAL"
+>Paris paris</TT
+> line in the
+    synonym dictionary and put it before the <TT
+CLASS="LITERAL"
+>english_stem</TT
+>
+    dictionary.  For example:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT * FROM ts_debug('english', 'Paris');
+   alias   |   description   | token |  dictionaries  |  dictionary  | lexemes 
+-----------+-----------------+-------+----------------+--------------+---------
+ asciiword | Word, all ASCII | Paris | {english_stem} | english_stem | {pari}
+
+CREATE TEXT SEARCH DICTIONARY my_synonym (
+    TEMPLATE = synonym,
+    SYNONYMS = my_synonyms
+);
+
+ALTER TEXT SEARCH CONFIGURATION english
+    ALTER MAPPING FOR asciiword
+    WITH my_synonym, english_stem;
+
+SELECT * FROM ts_debug('english', 'Paris');
+   alias   |   description   | token |       dictionaries        | dictionary | lexemes 
+-----------+-----------------+-------+---------------------------+------------+---------
+ asciiword | Word, all ASCII | Paris | {my_synonym,english_stem} | my_synonym | {paris}</PRE
+><P>
+   </P
+><P
+>    The only parameter required by the <TT
+CLASS="LITERAL"
+>synonym</TT
+> template is
+    <TT
+CLASS="LITERAL"
+>SYNONYMS</TT
+>, which is the base name of its configuration file
+    &mdash; <TT
+CLASS="LITERAL"
+>my_synonyms</TT
+> in the above example.
+    The file's full name will be
+    <TT
+CLASS="FILENAME"
+>$SHAREDIR/tsearch_data/my_synonyms.syn</TT
+>
+    (where <TT
+CLASS="LITERAL"
+>$SHAREDIR</TT
+> means the
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> installation's shared-data directory).
+    The file format is just one line
+    per word to be substituted, with the word followed by its synonym,
+    separated by white space.  Blank lines and trailing spaces are ignored.
+   </P
+><P
+>    The <TT
+CLASS="LITERAL"
+>synonym</TT
+> template also has an optional parameter
+    <TT
+CLASS="LITERAL"
+>CaseSensitive</TT
+>, which defaults to <TT
+CLASS="LITERAL"
+>false</TT
+>.  When
+    <TT
+CLASS="LITERAL"
+>CaseSensitive</TT
+> is <TT
+CLASS="LITERAL"
+>false</TT
+>, words in the synonym file
+    are folded to lower case, as are input tokens.  When it is
+    <TT
+CLASS="LITERAL"
+>true</TT
+>, words and tokens are not folded to lower case,
+    but are compared as-is.
+   </P
+><P
+>    An asterisk (<TT
+CLASS="LITERAL"
+>*</TT
+>) can be placed at the end of a synonym
+    in the configuration file.  This indicates that the synonym is a prefix.
+    The asterisk is ignored when the entry is used in
+    <CODE
+CLASS="FUNCTION"
+>to_tsvector()</CODE
+>, but when it is used in
+    <CODE
+CLASS="FUNCTION"
+>to_tsquery()</CODE
+>, the result will be a query item with
+    the prefix match marker (see
+    <A
+HREF="textsearch-controls.html#TEXTSEARCH-PARSING-QUERIES"
+>Section 12.3.2</A
+>).
+    For example, suppose we have these entries in
+    <TT
+CLASS="FILENAME"
+>$SHAREDIR/tsearch_data/synonym_sample.syn</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>postgres        pgsql
+postgresql      pgsql
+postgre pgsql
+gogle   googl
+indices index*</PRE
+><P>
+    Then we will get these results:
+</P><PRE
+CLASS="SCREEN"
+>mydb=# CREATE TEXT SEARCH DICTIONARY syn (template=synonym, synonyms='synonym_sample');
+mydb=# SELECT ts_lexize('syn','indices');
+ ts_lexize
+-----------
+ {index}
+(1 row)
+
+mydb=# CREATE TEXT SEARCH CONFIGURATION tst (copy=simple);
+mydb=# ALTER TEXT SEARCH CONFIGURATION tst ALTER MAPPING FOR asciiword WITH syn;
+mydb=# SELECT to_tsvector('tst','indices');
+ to_tsvector
+-------------
+ 'index':1
+(1 row)
+
+mydb=# SELECT to_tsquery('tst','indices');
+ to_tsquery
+------------
+ 'index':*
+(1 row)
+
+mydb=# SELECT 'indexes are very useful'::tsvector;
+            tsvector             
+---------------------------------
+ 'are' 'indexes' 'useful' 'very'
+(1 row)
+
+mydb=# SELECT 'indexes are very useful'::tsvector @@ to_tsquery('tst','indices');
+ ?column?
+----------
+ t
+(1 row)</PRE
+><P>
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="TEXTSEARCH-THESAURUS"
+>12.6.4. Thesaurus Dictionary</A
+></H2
+><P
+>    A thesaurus dictionary (sometimes abbreviated as <ACRONYM
+CLASS="ACRONYM"
+>TZ</ACRONYM
+>) is
+    a collection of words that includes information about the relationships
+    of words and phrases, i.e., broader terms (<ACRONYM
+CLASS="ACRONYM"
+>BT</ACRONYM
+>), narrower
+    terms (<ACRONYM
+CLASS="ACRONYM"
+>NT</ACRONYM
+>), preferred terms, non-preferred terms, related
+    terms, etc.
+   </P
+><P
+>    Basically a thesaurus dictionary replaces all non-preferred terms by one
+    preferred term and, optionally, preserves the original terms for indexing
+    as well.  <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>'s current implementation of the
+    thesaurus dictionary is an extension of the synonym dictionary with added
+    <I
+CLASS="FIRSTTERM"
+>phrase</I
+> support.  A thesaurus dictionary requires
+    a configuration file of the following format:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+># this is a comment
+sample word(s) : indexed word(s)
+more sample word(s) : more indexed word(s)
+...</PRE
+><P>
+
+    where  the colon (<TT
+CLASS="SYMBOL"
+>:</TT
+>) symbol acts as a delimiter between a
+    phrase and its replacement.
+   </P
+><P
+>    A thesaurus dictionary uses a <I
+CLASS="FIRSTTERM"
+>subdictionary</I
+> (which
+    is specified in the dictionary's configuration) to normalize the input
+    text before checking for phrase matches. It is only possible to select one
+    subdictionary.  An error is reported if the subdictionary fails to
+    recognize a word. In that case, you should remove the use of the word or
+    teach the subdictionary about it.  You can place an asterisk
+    (<TT
+CLASS="SYMBOL"
+>*</TT
+>) at the beginning of an indexed word to skip applying
+    the subdictionary to it, but all sample words <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>must</I
+></SPAN
+> be known
+    to the subdictionary.
+   </P
+><P
+>    The thesaurus dictionary chooses the longest match if there are multiple
+    phrases matching the input, and ties are broken by using the last
+    definition.
+   </P
+><P
+>    Specific stop words recognized by the subdictionary cannot be
+    specified;  instead use <TT
+CLASS="LITERAL"
+>?</TT
+> to mark the location where any
+    stop word can appear.  For example, assuming that <TT
+CLASS="LITERAL"
+>a</TT
+> and
+    <TT
+CLASS="LITERAL"
+>the</TT
+> are stop words according to the subdictionary:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>? one ? two : swsw</PRE
+><P>
+
+    matches <TT
+CLASS="LITERAL"
+>a one the two</TT
+> and <TT
+CLASS="LITERAL"
+>the one a two</TT
+>;
+    both would be replaced by <TT
+CLASS="LITERAL"
+>swsw</TT
+>.
+   </P
+><P
+>    Since a thesaurus dictionary has the capability to recognize phrases it
+    must remember its state and interact with the parser. A thesaurus dictionary
+    uses these assignments to check if it should handle the next word or stop
+    accumulation.  The thesaurus dictionary must be configured
+    carefully. For example, if the thesaurus dictionary is assigned to handle
+    only the <TT
+CLASS="LITERAL"
+>asciiword</TT
+> token, then a thesaurus dictionary
+    definition like <TT
+CLASS="LITERAL"
+>one 7</TT
+> will not work since token type
+    <TT
+CLASS="LITERAL"
+>uint</TT
+> is not assigned to the thesaurus dictionary.
+   </P
+><DIV
+CLASS="CAUTION"
+><P
+></P
+><TABLE
+CLASS="CAUTION"
+BORDER="1"
+WIDTH="100%"
+><TR
+><TD
+ALIGN="CENTER"
+><B
+>Caution</B
+></TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+><P
+>     Thesauruses are used during indexing so any change in the thesaurus
+     dictionary's parameters <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>requires</I
+></SPAN
+> reindexing.
+     For most other dictionary types, small changes such as adding or
+     removing stopwords does not force reindexing.
+    </P
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="TEXTSEARCH-THESAURUS-CONFIG"
+>12.6.4.1. Thesaurus Configuration</A
+></H3
+><P
+>    To define a new thesaurus dictionary, use the <TT
+CLASS="LITERAL"
+>thesaurus</TT
+>
+    template.  For example:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TEXT SEARCH DICTIONARY thesaurus_simple (
+    TEMPLATE = thesaurus,
+    DictFile = mythesaurus,
+    Dictionary = pg_catalog.english_stem
+);</PRE
+><P>
+
+    Here:
+    <P
+></P
+></P><UL
+COMPACT="COMPACT"
+><LI
+STYLE="list-style-type: disc"
+><P
+>       <TT
+CLASS="LITERAL"
+>thesaurus_simple</TT
+> is the new dictionary's name
+      </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>       <TT
+CLASS="LITERAL"
+>mythesaurus</TT
+> is the base name of the thesaurus
+       configuration file.
+       (Its full name will be <TT
+CLASS="FILENAME"
+>$SHAREDIR/tsearch_data/mythesaurus.ths</TT
+>,
+       where <TT
+CLASS="LITERAL"
+>$SHAREDIR</TT
+> means the installation shared-data
+       directory.)
+      </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>       <TT
+CLASS="LITERAL"
+>pg_catalog.english_stem</TT
+> is the subdictionary (here,
+       a Snowball English stemmer) to use for thesaurus normalization.
+       Notice that the subdictionary will have its own
+       configuration (for example, stop words), which is not shown here.
+      </P
+></LI
+></UL
+><P>
+
+    Now it is possible to bind the thesaurus dictionary <TT
+CLASS="LITERAL"
+>thesaurus_simple</TT
+>
+    to the desired token types in a configuration, for example:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TEXT SEARCH CONFIGURATION russian
+    ALTER MAPPING FOR asciiword, asciihword, hword_asciipart
+    WITH thesaurus_simple;</PRE
+><P>
+   </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="TEXTSEARCH-THESAURUS-EXAMPLES"
+>12.6.4.2. Thesaurus Example</A
+></H3
+><P
+>    Consider a simple astronomical thesaurus <TT
+CLASS="LITERAL"
+>thesaurus_astro</TT
+>,
+    which contains some astronomical word combinations:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>supernovae stars : sn
+crab nebulae : crab</PRE
+><P>
+
+    Below we create a dictionary and bind some token types to
+    an astronomical thesaurus and English stemmer:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TEXT SEARCH DICTIONARY thesaurus_astro (
+    TEMPLATE = thesaurus,
+    DictFile = thesaurus_astro,
+    Dictionary = english_stem
+);
+
+ALTER TEXT SEARCH CONFIGURATION russian
+    ALTER MAPPING FOR asciiword, asciihword, hword_asciipart
+    WITH thesaurus_astro, english_stem;</PRE
+><P>
+
+    Now we can see how it works.
+    <CODE
+CLASS="FUNCTION"
+>ts_lexize</CODE
+> is not very useful for testing a thesaurus,
+    because it treats its input as a single token.  Instead we can use
+    <CODE
+CLASS="FUNCTION"
+>plainto_tsquery</CODE
+> and <CODE
+CLASS="FUNCTION"
+>to_tsvector</CODE
+>
+    which will break their input strings into multiple tokens:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT plainto_tsquery('supernova star');
+ plainto_tsquery
+-----------------
+ 'sn'
+
+SELECT to_tsvector('supernova star');
+ to_tsvector
+-------------
+ 'sn':1</PRE
+><P>
+
+    In principle, one can use <CODE
+CLASS="FUNCTION"
+>to_tsquery</CODE
+> if you quote
+    the argument:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT to_tsquery('''supernova star''');
+ to_tsquery
+------------
+ 'sn'</PRE
+><P>
+
+    Notice that <TT
+CLASS="LITERAL"
+>supernova star</TT
+> matches <TT
+CLASS="LITERAL"
+>supernovae
+    stars</TT
+> in <TT
+CLASS="LITERAL"
+>thesaurus_astro</TT
+> because we specified
+    the <TT
+CLASS="LITERAL"
+>english_stem</TT
+> stemmer in the thesaurus definition.
+    The stemmer removed the <TT
+CLASS="LITERAL"
+>e</TT
+> and <TT
+CLASS="LITERAL"
+>s</TT
+>.
+   </P
+><P
+>    To index the original phrase as well as the substitute, just include it
+    in the right-hand part of the definition:
+
+</P><PRE
+CLASS="SCREEN"
+>supernovae stars : sn supernovae stars
+
+SELECT plainto_tsquery('supernova star');
+       plainto_tsquery
+-----------------------------
+ 'sn' &amp; 'supernova' &amp; 'star'</PRE
+><P>
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="TEXTSEARCH-ISPELL-DICTIONARY"
+>12.6.5. <SPAN
+CLASS="APPLICATION"
+>Ispell</SPAN
+> Dictionary</A
+></H2
+><P
+>    The <SPAN
+CLASS="APPLICATION"
+>Ispell</SPAN
+> dictionary template supports
+    <I
+CLASS="FIRSTTERM"
+>morphological dictionaries</I
+>, which can normalize many
+    different linguistic forms of a word into the same lexeme.  For example,
+    an English <SPAN
+CLASS="APPLICATION"
+>Ispell</SPAN
+> dictionary can match all declensions and
+    conjugations of the search term <TT
+CLASS="LITERAL"
+>bank</TT
+>, e.g.,
+    <TT
+CLASS="LITERAL"
+>banking</TT
+>, <TT
+CLASS="LITERAL"
+>banked</TT
+>, <TT
+CLASS="LITERAL"
+>banks</TT
+>,
+    <TT
+CLASS="LITERAL"
+>banks'</TT
+>, and <TT
+CLASS="LITERAL"
+>bank's</TT
+>.
+   </P
+><P
+>    The standard <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> distribution does
+    not include any <SPAN
+CLASS="APPLICATION"
+>Ispell</SPAN
+> configuration files.
+    Dictionaries for a large number of languages are available from <A
+HREF="http://ficus-www.cs.ucla.edu/geoff/ispell.html"
+TARGET="_top"
+>Ispell</A
+>.
+    Also, some more modern dictionary file formats are supported &mdash; <A
+HREF="http://en.wikipedia.org/wiki/MySpell"
+TARGET="_top"
+>MySpell</A
+> (OO &lt; 2.0.1)
+    and <A
+HREF="http://sourceforge.net/projects/hunspell/"
+TARGET="_top"
+>Hunspell</A
+>
+    (OO &gt;= 2.0.2).  A large list of dictionaries is available on the <A
+HREF="http://wiki.services.openoffice.org/wiki/Dictionaries"
+TARGET="_top"
+>OpenOffice
+    Wiki</A
+>.
+   </P
+><P
+>    To create an <SPAN
+CLASS="APPLICATION"
+>Ispell</SPAN
+> dictionary, use the built-in
+    <TT
+CLASS="LITERAL"
+>ispell</TT
+> template and specify several parameters:
+   </P
+><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TEXT SEARCH DICTIONARY english_ispell (
+    TEMPLATE = ispell,
+    DictFile = english,
+    AffFile = english,
+    StopWords = english
+);</PRE
+><P
+>    Here, <TT
+CLASS="LITERAL"
+>DictFile</TT
+>, <TT
+CLASS="LITERAL"
+>AffFile</TT
+>, and <TT
+CLASS="LITERAL"
+>StopWords</TT
+>
+    specify the base names of the dictionary, affixes, and stop-words files.
+    The stop-words file has the same format explained above for the
+    <TT
+CLASS="LITERAL"
+>simple</TT
+> dictionary type.  The format of the other files is
+    not specified here but is available from the above-mentioned web sites.
+   </P
+><P
+>    Ispell dictionaries usually recognize a limited set of words, so they
+    should be followed by another broader dictionary; for
+    example, a Snowball dictionary, which recognizes everything.
+   </P
+><P
+>    Ispell dictionaries support splitting compound words;
+    a useful feature.
+    Notice that the affix file should specify a special flag using the
+    <TT
+CLASS="LITERAL"
+>compoundwords controlled</TT
+> statement that marks dictionary
+    words that can participate in compound formation:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>compoundwords  controlled z</PRE
+><P>
+
+    Here are some examples for the Norwegian language:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT ts_lexize('norwegian_ispell', 'overbuljongterningpakkmesterassistent');
+   {over,buljong,terning,pakk,mester,assistent}
+SELECT ts_lexize('norwegian_ispell', 'sjokoladefabrikk');
+   {sjokoladefabrikk,sjokolade,fabrikk}</PRE
+><P>
+   </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>     <SPAN
+CLASS="APPLICATION"
+>MySpell</SPAN
+> does not support compound words.
+     <SPAN
+CLASS="APPLICATION"
+>Hunspell</SPAN
+> has sophisticated support for compound words. At
+     present, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> implements only the basic
+     compound word operations of Hunspell.
+    </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="TEXTSEARCH-SNOWBALL-DICTIONARY"
+>12.6.6. <SPAN
+CLASS="APPLICATION"
+>Snowball</SPAN
+> Dictionary</A
+></H2
+><P
+>    The <SPAN
+CLASS="APPLICATION"
+>Snowball</SPAN
+> dictionary template is based on a project
+    by Martin Porter, inventor of the popular Porter's stemming algorithm
+    for the English language.  Snowball now provides stemming algorithms for
+    many languages (see the <A
+HREF="http://snowballstem.org/"
+TARGET="_top"
+>Snowball
+    site</A
+> for more information).  Each algorithm understands how to
+    reduce common variant forms of words to a base, or stem, spelling within
+    its language.  A Snowball dictionary requires a <TT
+CLASS="LITERAL"
+>language</TT
+>
+    parameter to identify which stemmer to use, and optionally can specify a
+    <TT
+CLASS="LITERAL"
+>stopword</TT
+> file name that gives a list of words to eliminate.
+    (<SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>'s standard stopword lists are also
+    provided by the Snowball project.)
+    For example, there is a built-in definition equivalent to
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TEXT SEARCH DICTIONARY english_stem (
+    TEMPLATE = snowball,
+    Language = english,
+    StopWords = english
+);</PRE
+><P>
+
+    The stopword file format is the same as already explained.
+   </P
+><P
+>    A <SPAN
+CLASS="APPLICATION"
+>Snowball</SPAN
+> dictionary recognizes everything, whether
+    or not it is able to simplify the word, so it should be placed
+    at the end of the dictionary list. It is useless to have it
+    before any other dictionary because a token will never pass through it to
+    the next dictionary.
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="textsearch-parsers.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="textsearch-configuration.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Parsers</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="textsearch.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Configuration Example</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

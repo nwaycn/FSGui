@@ -1,0 +1,296 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.2.12</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.2.13"
+HREF="release-9-2-13.html"><LINK
+REL="NEXT"
+TITLE="Release 9.2.11"
+HREF="release-9-2-11.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.2.13"
+HREF="release-9-2-13.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.2.11"
+HREF="release-9-2-11.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-2-12"
+>E.37. Release 9.2.12</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2015-06-04</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a small number of fixes from 9.2.11.
+   For information about new features in the 9.2 major release, see
+   <A
+HREF="release-9-2.html"
+>Section E.49</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN134887"
+>E.37.1. Migration to Version 9.2.12</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.2.X.
+   </P
+><P
+>    However, if you are upgrading from a version earlier than 9.2.11,
+    see <A
+HREF="release-9-2-11.html"
+>Section E.38</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN134892"
+>E.37.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Avoid failures while <CODE
+CLASS="FUNCTION"
+>fsync</CODE
+>'ing data directory during
+      crash restart (Abhijit Menon-Sen, Tom Lane)
+     </P
+><P
+>      In the previous minor releases we added a patch to <CODE
+CLASS="FUNCTION"
+>fsync</CODE
+>
+      everything in the data directory after a crash.  Unfortunately its
+      response to any error condition was to fail, thereby preventing the
+      server from starting up, even when the problem was quite harmless.
+      An example is that an unwritable file in the data directory would
+      prevent restart on some platforms; but it is common to make SSL
+      certificate files unwritable by the server.  Revise this behavior so
+      that permissions failures are ignored altogether, and other types of
+      failures are logged but do not prevent continuing.
+     </P
+></LI
+><LI
+><P
+>      Fix <CODE
+CLASS="FUNCTION"
+>pg_get_functiondef()</CODE
+> to show
+      functions' <TT
+CLASS="LITERAL"
+>LEAKPROOF</TT
+> property, if set (Jeevan Chalke)
+     </P
+></LI
+><LI
+><P
+>      Remove <SPAN
+CLASS="APPLICATION"
+>configure</SPAN
+>'s check prohibiting linking to a
+      threaded <SPAN
+CLASS="APPLICATION"
+>libpython</SPAN
+>
+      on <SPAN
+CLASS="SYSTEMITEM"
+>OpenBSD</SPAN
+> (Tom Lane)
+     </P
+><P
+>      The failure this restriction was meant to prevent seems to not be a
+      problem anymore on current <SPAN
+CLASS="SYSTEMITEM"
+>OpenBSD</SPAN
+>
+      versions.
+     </P
+></LI
+><LI
+><P
+>      Allow <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> to use TLS protocol versions beyond v1
+      (Noah Misch)
+     </P
+><P
+>      For a long time, <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> was coded so that the only SSL
+      protocol it would allow was TLS v1.  Now that newer TLS versions are
+      becoming popular, allow it to negotiate the highest commonly-supported
+      TLS version with the server.  (<SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> servers were
+      already capable of such negotiation, so no change is needed on the
+      server side.)  This is a back-patch of a change already released in
+      9.4.0.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-2-13.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-2-11.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.2.13</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.2.11</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,369 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>lo</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="isn"
+HREF="isn.html"><LINK
+REL="NEXT"
+TITLE="ltree"
+HREF="ltree.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="isn"
+HREF="isn.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="ltree"
+HREF="ltree.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="LO"
+>F.19. lo</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>lo</TT
+> module provides support for managing Large Objects
+  (also called LOs or BLOBs).  This includes a data type <TT
+CLASS="TYPE"
+>lo</TT
+>
+  and a trigger <CODE
+CLASS="FUNCTION"
+>lo_manage</CODE
+>.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN171952"
+>F.19.1. Rationale</A
+></H2
+><P
+>   One of the problems with the JDBC driver (and this affects the ODBC driver
+   also), is that the specification assumes that references to BLOBs (Binary
+   Large OBjects) are stored within a table, and if that entry is changed, the
+   associated BLOB is deleted from the database.
+  </P
+><P
+>   As <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> stands, this doesn't occur.  Large objects
+   are treated as objects in their own right; a table entry can reference a
+   large object by OID, but there can be multiple table entries referencing
+   the same large object OID, so the system doesn't delete the large object
+   just because you change or remove one such entry.
+  </P
+><P
+>   Now this is fine for <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>-specific applications, but
+   standard code using JDBC or ODBC won't delete the objects, resulting in
+   orphan objects &mdash; objects that are not referenced by anything, and
+   simply occupy disk space.
+  </P
+><P
+>   The <TT
+CLASS="FILENAME"
+>lo</TT
+> module allows fixing this by attaching a trigger
+   to tables that contain LO reference columns.  The trigger essentially just
+   does a <CODE
+CLASS="FUNCTION"
+>lo_unlink</CODE
+> whenever you delete or modify a value
+   referencing a large object.  When you use this trigger, you are assuming
+   that there is only one database reference to any large object that is
+   referenced in a trigger-controlled column!
+  </P
+><P
+>   The module also provides a data type <TT
+CLASS="TYPE"
+>lo</TT
+>, which is really just
+   a domain of the <TT
+CLASS="TYPE"
+>oid</TT
+> type.  This is useful for differentiating
+   database columns that hold large object references from those that are
+   OIDs of other things.  You don't have to use the <TT
+CLASS="TYPE"
+>lo</TT
+> type to
+   use the trigger, but it may be convenient to use it to keep track of which
+   columns in your database represent large objects that you are managing with
+   the trigger.  It is also rumored that the ODBC driver gets confused if you
+   don't use <TT
+CLASS="TYPE"
+>lo</TT
+> for BLOB columns.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN171967"
+>F.19.2. How to Use It</A
+></H2
+><P
+>   Here's a simple example of usage:
+  </P
+><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE image (title TEXT, raster lo);
+
+CREATE TRIGGER t_raster BEFORE UPDATE OR DELETE ON image
+    FOR EACH ROW EXECUTE PROCEDURE lo_manage(raster);</PRE
+><P
+>   For each column that will contain unique references to large objects,
+   create a <TT
+CLASS="LITERAL"
+>BEFORE UPDATE OR DELETE</TT
+> trigger, and give the column
+   name as the sole trigger argument.  You can also restrict the trigger
+   to only execute on updates to the column by using <TT
+CLASS="LITERAL"
+>BEFORE UPDATE
+   OF</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+>.
+   If you need multiple <TT
+CLASS="TYPE"
+>lo</TT
+>
+   columns in the same table, create a separate trigger for each one,
+   remembering to give a different name to each trigger on the same table.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN171976"
+>F.19.3. Limitations</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>     Dropping a table will still orphan any objects it contains, as the trigger
+     is not executed.  You can avoid this by preceding the <TT
+CLASS="COMMAND"
+>DROP
+     TABLE</TT
+> with <TT
+CLASS="COMMAND"
+>DELETE FROM <TT
+CLASS="REPLACEABLE"
+><I
+>table</I
+></TT
+></TT
+>.
+    </P
+><P
+>     <TT
+CLASS="COMMAND"
+>TRUNCATE</TT
+> has the same hazard.
+    </P
+><P
+>     If you already have, or suspect you have, orphaned large objects, see the
+     <A
+HREF="vacuumlo.html"
+><SPAN
+CLASS="APPLICATION"
+>vacuumlo</SPAN
+></A
+> module to help
+     you clean them up.  It's a good idea to run <SPAN
+CLASS="APPLICATION"
+>vacuumlo</SPAN
+>
+     occasionally as a back-stop to the <CODE
+CLASS="FUNCTION"
+>lo_manage</CODE
+> trigger.
+    </P
+></LI
+><LI
+><P
+>     Some frontends may create their own tables, and will not create the
+     associated trigger(s).  Also, users may not remember (or know) to create
+     the triggers.
+    </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN171992"
+>F.19.4. Author</A
+></H2
+><P
+>   Peter Mount <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:peter@retep.org.uk"
+>peter@retep.org.uk</A
+>&#62;</CODE
+>
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="isn.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="ltree.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>isn</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>ltree</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,419 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>CREATE EVENT TRIGGER</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="CREATE DOMAIN"
+HREF="sql-createdomain.html"><LINK
+REL="NEXT"
+TITLE="CREATE EXTENSION"
+HREF="sql-createextension.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="CREATE DOMAIN"
+HREF="sql-createdomain.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="CREATE EXTENSION"
+HREF="sql-createextension.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-CREATEEVENTTRIGGER"
+></A
+>CREATE EVENT TRIGGER</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN75618"
+></A
+><H2
+>Name</H2
+>CREATE EVENT TRIGGER&nbsp;--&nbsp;define a new event trigger</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN75621"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>CREATE EVENT TRIGGER <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>
+    ON <TT
+CLASS="REPLACEABLE"
+><I
+>event</I
+></TT
+>
+    [ WHEN <TT
+CLASS="REPLACEABLE"
+><I
+>filter_variable</I
+></TT
+> IN (filter_value [, ... ]) [ AND ... ] ]
+    EXECUTE PROCEDURE <TT
+CLASS="REPLACEABLE"
+><I
+>function_name</I
+></TT
+>()</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75627"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>CREATE EVENT TRIGGER</TT
+> creates a new event trigger.
+   Whenever the designated event occurs and the <TT
+CLASS="LITERAL"
+>WHEN</TT
+> condition
+   associated with the trigger, if any, is satisfied, the trigger function
+   will be executed.  For a general introduction to event triggers, see
+   <A
+HREF="event-triggers.html"
+>Chapter 37</A
+>.  The user who creates an event trigger
+   becomes its owner.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75633"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></DT
+><DD
+><P
+>      The name to give the new trigger.  This name must be unique within
+      the database.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>event</I
+></TT
+></DT
+><DD
+><P
+>      The name of the event that triggers a call to the given function.
+      See <A
+HREF="event-trigger-definition.html"
+>Section 37.1</A
+> for more information
+      on event names.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>filter_variable</I
+></TT
+></DT
+><DD
+><P
+>      The name of a variable used to filter events.  This makes it possible
+      to restrict the firing of the trigger to a subset of the cases in which
+      it is supported.  Currently the only supported
+      <TT
+CLASS="REPLACEABLE"
+><I
+>filter_variable</I
+></TT
+>
+      is <TT
+CLASS="LITERAL"
+>TAG</TT
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>filter_value</I
+></TT
+></DT
+><DD
+><P
+>      A list of values for the
+      associated <TT
+CLASS="REPLACEABLE"
+><I
+>filter_variable</I
+></TT
+>
+      for which the trigger should fire.  For <TT
+CLASS="LITERAL"
+>TAG</TT
+>, this means a
+      list of command tags (e.g. <TT
+CLASS="LITERAL"
+>'DROP FUNCTION'</TT
+>).
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>function_name</I
+></TT
+></DT
+><DD
+><P
+>      A user-supplied function that is declared as taking no argument and
+      returning type <TT
+CLASS="LITERAL"
+>event_trigger</TT
+>.
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-CREATEEVENTTRIGGER-NOTES"
+></A
+><H2
+>Notes</H2
+><P
+>   Only superusers can create event triggers.
+  </P
+><P
+>   Event triggers are disabled in single-user mode (see <A
+HREF="app-postgres.html"
+><SPAN
+CLASS="APPLICATION"
+>postgres</SPAN
+></A
+>).  If an erroneous event trigger disables the
+   database so much that you can't even drop the trigger, restart in
+   single-user mode and you'll be able to do that.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-CREATEEVENTTRIGGER-EXAMPLES"
+></A
+><H2
+>Examples</H2
+><P
+>   Forbid the execution of any <A
+HREF="ddl.html"
+>DDL</A
+> command:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE OR REPLACE FUNCTION abort_any_command()
+  RETURNS event_trigger
+ LANGUAGE plpgsql
+  AS $$
+BEGIN
+  RAISE EXCEPTION 'command % is disabled', tg_tag;
+END;
+$$;
+
+CREATE EVENT TRIGGER abort_ddl ON ddl_command_start
+   EXECUTE PROCEDURE abort_any_command();</PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-CREATEEVENTTRIGGER-COMPATIBILITY"
+></A
+><H2
+>Compatibility</H2
+><P
+>   There is no <TT
+CLASS="COMMAND"
+>CREATE EVENT TRIGGER</TT
+> statement in the
+   SQL standard.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75682"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-altereventtrigger.html"
+>ALTER EVENT TRIGGER</A
+>, <A
+HREF="sql-dropeventtrigger.html"
+>DROP EVENT TRIGGER</A
+>, <A
+HREF="sql-createfunction.html"
+>CREATE FUNCTION</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-createdomain.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-createextension.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>CREATE DOMAIN</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>CREATE EXTENSION</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

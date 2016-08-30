@@ -1,0 +1,863 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.1.12</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.1.13"
+HREF="release-9-1-13.html"><LINK
+REL="NEXT"
+TITLE="Release 9.1.11"
+HREF="release-9-1-11.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.1.13"
+HREF="release-9-1-13.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.1.11"
+HREF="release-9-1-11.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-1-12"
+>E.61. Release 9.1.12</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2014-02-20</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 9.1.11.
+   For information about new features in the 9.1 major release, see
+   <A
+HREF="release-9-1.html"
+>Section E.73</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN139759"
+>E.61.1. Migration to Version 9.1.12</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.1.X.
+   </P
+><P
+>    However, if you are upgrading from a version earlier than 9.1.11,
+    see <A
+HREF="release-9-1-11.html"
+>Section E.62</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN139764"
+>E.61.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Shore up <TT
+CLASS="LITERAL"
+>GRANT ... WITH ADMIN OPTION</TT
+> restrictions
+      (Noah Misch)
+     </P
+><P
+>      Granting a role without <TT
+CLASS="LITERAL"
+>ADMIN OPTION</TT
+> is supposed to
+      prevent the grantee from adding or removing members from the granted
+      role, but this restriction was easily bypassed by doing <TT
+CLASS="LITERAL"
+>SET
+      ROLE</TT
+> first.  The security impact is mostly that a role member can
+      revoke the access of others, contrary to the wishes of his grantor.
+      Unapproved role member additions are a lesser concern, since an
+      uncooperative role member could provide most of his rights to others
+      anyway by creating views or <TT
+CLASS="LITERAL"
+>SECURITY DEFINER</TT
+> functions.
+      (CVE-2014-0060)
+     </P
+></LI
+><LI
+><P
+>      Prevent privilege escalation via manual calls to PL validator
+      functions (Andres Freund)
+     </P
+><P
+>      The primary role of PL validator functions is to be called implicitly
+      during <TT
+CLASS="COMMAND"
+>CREATE FUNCTION</TT
+>, but they are also normal SQL
+      functions that a user can call explicitly.  Calling a validator on
+      a function actually written in some other language was not checked
+      for and could be exploited for privilege-escalation purposes.
+      The fix involves adding a call to a privilege-checking function in
+      each validator function.  Non-core procedural languages will also
+      need to make this change to their own validator functions, if any.
+      (CVE-2014-0061)
+     </P
+></LI
+><LI
+><P
+>      Avoid multiple name lookups during table and index DDL
+      (Robert Haas, Andres Freund)
+     </P
+><P
+>      If the name lookups come to different conclusions due to concurrent
+      activity, we might perform some parts of the DDL on a different table
+      than other parts.  At least in the case of <TT
+CLASS="COMMAND"
+>CREATE INDEX</TT
+>,
+      this can be used to cause the permissions checks to be performed
+      against a different table than the index creation, allowing for a
+      privilege escalation attack.
+      (CVE-2014-0062)
+     </P
+></LI
+><LI
+><P
+>      Prevent buffer overrun with long datetime strings (Noah Misch)
+     </P
+><P
+>      The <TT
+CLASS="LITERAL"
+>MAXDATELEN</TT
+> constant was too small for the longest
+      possible value of type <TT
+CLASS="TYPE"
+>interval</TT
+>, allowing a buffer overrun
+      in <CODE
+CLASS="FUNCTION"
+>interval_out()</CODE
+>.  Although the datetime input
+      functions were more careful about avoiding buffer overrun, the limit
+      was short enough to cause them to reject some valid inputs, such as
+      input containing a very long timezone name.  The <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>
+      library contained these vulnerabilities along with some of its own.
+      (CVE-2014-0063)
+     </P
+></LI
+><LI
+><P
+>      Prevent buffer overrun due to integer overflow in size calculations
+      (Noah Misch, Heikki Linnakangas)
+     </P
+><P
+>      Several functions, mostly type input functions, calculated an
+      allocation size without checking for overflow.  If overflow did
+      occur, a too-small buffer would be allocated and then written past.
+      (CVE-2014-0064)
+     </P
+></LI
+><LI
+><P
+>      Prevent overruns of fixed-size buffers
+      (Peter Eisentraut, Jozef Mlich)
+     </P
+><P
+>      Use <CODE
+CLASS="FUNCTION"
+>strlcpy()</CODE
+> and related functions to provide a clear
+      guarantee that fixed-size buffers are not overrun.  Unlike the
+      preceding items, it is unclear whether these cases really represent
+      live issues, since in most cases there appear to be previous
+      constraints on the size of the input string.  Nonetheless it seems
+      prudent to silence all Coverity warnings of this type.
+      (CVE-2014-0065)
+     </P
+></LI
+><LI
+><P
+>      Avoid crashing if <CODE
+CLASS="FUNCTION"
+>crypt()</CODE
+> returns NULL (Honza Horak,
+      Bruce Momjian)
+     </P
+><P
+>      There are relatively few scenarios in which <CODE
+CLASS="FUNCTION"
+>crypt()</CODE
+>
+      could return NULL, but <TT
+CLASS="FILENAME"
+>contrib/chkpass</TT
+> would crash
+      if it did.  One practical case in which this could be an issue is
+      if <SPAN
+CLASS="APPLICATION"
+>libc</SPAN
+> is configured to refuse to execute unapproved
+      hashing algorithms (e.g., <SPAN
+CLASS="QUOTE"
+>"FIPS mode"</SPAN
+>).
+      (CVE-2014-0066)
+     </P
+></LI
+><LI
+><P
+>      Document risks of <TT
+CLASS="LITERAL"
+>make check</TT
+> in the regression testing
+      instructions (Noah Misch, Tom Lane)
+     </P
+><P
+>      Since the temporary server started by <TT
+CLASS="LITERAL"
+>make check</TT
+>
+      uses <SPAN
+CLASS="QUOTE"
+>"trust"</SPAN
+> authentication, another user on the same machine
+      could connect to it as database superuser, and then potentially
+      exploit the privileges of the operating-system user who started the
+      tests.  A future release will probably incorporate changes in the
+      testing procedure to prevent this risk, but some public discussion is
+      needed first.  So for the moment, just warn people against using
+      <TT
+CLASS="LITERAL"
+>make check</TT
+> when there are untrusted users on the
+      same machine.
+      (CVE-2014-0067)
+     </P
+></LI
+><LI
+><P
+>      Fix possible mis-replay of WAL records when some segments of a
+      relation aren't full size (Greg Stark, Tom Lane)
+     </P
+><P
+>      The WAL update could be applied to the wrong page, potentially many
+      pages past where it should have been.  Aside from corrupting data,
+      this error has been observed to result in significant <SPAN
+CLASS="QUOTE"
+>"bloat"</SPAN
+>
+      of standby servers compared to their masters, due to updates being
+      applied far beyond where the end-of-file should have been.  This
+      failure mode does not appear to be a significant risk during crash
+      recovery, only when initially synchronizing a standby created from a
+      base backup taken from a quickly-changing master.
+     </P
+></LI
+><LI
+><P
+>      Fix bug in determining when recovery has reached consistency
+      (Tomonari Katsumata, Heikki Linnakangas)
+     </P
+><P
+>      In some cases WAL replay would mistakenly conclude that the database
+      was already consistent at the start of replay, thus possibly allowing
+      hot-standby queries before the database was really consistent.  Other
+      symptoms such as <SPAN
+CLASS="QUOTE"
+>"PANIC: WAL contains references to invalid
+      pages"</SPAN
+> were also possible.
+     </P
+></LI
+><LI
+><P
+>      Fix improper locking of btree index pages while replaying
+      a <TT
+CLASS="LITERAL"
+>VACUUM</TT
+> operation in hot-standby mode (Andres Freund,
+      Heikki Linnakangas, Tom Lane)
+     </P
+><P
+>      This error could result in <SPAN
+CLASS="QUOTE"
+>"PANIC: WAL contains references to
+      invalid pages"</SPAN
+> failures.
+     </P
+></LI
+><LI
+><P
+>      Ensure that insertions into non-leaf GIN index pages write a full-page
+      WAL record when appropriate (Heikki Linnakangas)
+     </P
+><P
+>      The previous coding risked index corruption in the event of a
+      partial-page write during a system crash.
+     </P
+></LI
+><LI
+><P
+>      When <TT
+CLASS="LITERAL"
+>pause_at_recovery_target</TT
+>
+      and <TT
+CLASS="LITERAL"
+>recovery_target_inclusive</TT
+> are both set, ensure the
+      target record is applied before pausing, not after (Heikki
+      Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Fix race conditions during server process exit (Robert Haas)
+     </P
+><P
+>      Ensure that signal handlers don't attempt to use the
+      process's <TT
+CLASS="VARNAME"
+>MyProc</TT
+> pointer after it's no longer valid.
+     </P
+></LI
+><LI
+><P
+>      Fix race conditions in walsender shutdown logic and walreceiver
+      SIGHUP signal handler (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix unsafe references to <TT
+CLASS="VARNAME"
+>errno</TT
+> within error reporting
+      logic (Christian Kruse)
+     </P
+><P
+>      This would typically lead to odd behaviors such as missing or
+      inappropriate <TT
+CLASS="LITERAL"
+>HINT</TT
+> fields.
+     </P
+></LI
+><LI
+><P
+>      Fix possible crashes from using <CODE
+CLASS="FUNCTION"
+>ereport()</CODE
+> too early
+      during server startup (Tom Lane)
+     </P
+><P
+>      The principal case we've seen in the field is a crash if the server
+      is started in a directory it doesn't have permission to read.
+     </P
+></LI
+><LI
+><P
+>      Clear retry flags properly in OpenSSL socket write
+      function (Alexander Kukushkin)
+     </P
+><P
+>      This omission could result in a server lockup after unexpected loss
+      of an SSL-encrypted connection.
+     </P
+></LI
+><LI
+><P
+>      Fix length checking for Unicode identifiers (<TT
+CLASS="LITERAL"
+>U&amp;"..."</TT
+>
+      syntax) containing escapes (Tom Lane)
+     </P
+><P
+>      A spurious truncation warning would be printed for such identifiers
+      if the escaped form of the identifier was too long, but the
+      identifier actually didn't need truncation after de-escaping.
+     </P
+></LI
+><LI
+><P
+>      Allow keywords that are type names to be used in lists of roles
+      (Stephen Frost)
+     </P
+><P
+>      A previous patch allowed such keywords to be used without quoting
+      in places such as role identifiers; but it missed cases where a
+      list of role identifiers was permitted, such as <TT
+CLASS="LITERAL"
+>DROP ROLE</TT
+>.
+     </P
+></LI
+><LI
+><P
+>      Fix parser crash for <TT
+CLASS="LITERAL"
+>EXISTS(SELECT * FROM
+      zero_column_table)</TT
+> (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix possible crash due to invalid plan for nested sub-selects, such
+      as <TT
+CLASS="LITERAL"
+>WHERE (... x IN (SELECT ...) ...) IN (SELECT ...)</TT
+>
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Ensure that <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> creates statistics for a table column
+      even when all the values in it are <SPAN
+CLASS="QUOTE"
+>"too wide"</SPAN
+> (Tom Lane)
+     </P
+><P
+>      <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> intentionally omits very wide values from its
+      histogram and most-common-values calculations, but it neglected to do
+      something sane in the case that all the sampled entries are too wide.
+     </P
+></LI
+><LI
+><P
+>      In <TT
+CLASS="LITERAL"
+>ALTER TABLE ... SET TABLESPACE</TT
+>, allow the database's
+      default tablespace to be used without a permissions check
+      (Stephen Frost)
+     </P
+><P
+>      <TT
+CLASS="LITERAL"
+>CREATE TABLE</TT
+> has always allowed such usage,
+      but <TT
+CLASS="LITERAL"
+>ALTER TABLE</TT
+> didn't get the memo.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="QUOTE"
+>"cannot accept a set"</SPAN
+> error when some arms of
+      a <TT
+CLASS="LITERAL"
+>CASE</TT
+> return a set and others don't (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix checks for all-zero client addresses in pgstat functions (Kevin
+      Grittner)
+     </P
+></LI
+><LI
+><P
+>      Fix possible misclassification of multibyte characters by the text
+      search parser (Tom Lane)
+     </P
+><P
+>      Non-ASCII characters could be misclassified when using C locale with
+      a multibyte encoding.  On Cygwin, non-C locales could fail as well.
+     </P
+></LI
+><LI
+><P
+>      Fix possible misbehavior in <CODE
+CLASS="FUNCTION"
+>plainto_tsquery()</CODE
+>
+      (Heikki Linnakangas)
+     </P
+><P
+>      Use <CODE
+CLASS="FUNCTION"
+>memmove()</CODE
+> not <CODE
+CLASS="FUNCTION"
+>memcpy()</CODE
+> for copying
+      overlapping memory regions.  There have been no field reports of
+      this actually causing trouble, but it's certainly risky.
+     </P
+></LI
+><LI
+><P
+>      Fix placement of permissions checks in <CODE
+CLASS="FUNCTION"
+>pg_start_backup()</CODE
+>
+      and <CODE
+CLASS="FUNCTION"
+>pg_stop_backup()</CODE
+> (Andres Freund, Magnus Hagander)
+     </P
+><P
+>      The previous coding might attempt to do catalog access when it
+      shouldn't.
+     </P
+></LI
+><LI
+><P
+>      Accept <TT
+CLASS="LITERAL"
+>SHIFT_JIS</TT
+> as an encoding name for locale checking
+      purposes (Tatsuo Ishii)
+     </P
+></LI
+><LI
+><P
+>      Fix misbehavior of <CODE
+CLASS="FUNCTION"
+>PQhost()</CODE
+> on Windows (Fujii Masao)
+     </P
+><P
+>      It should return <TT
+CLASS="LITERAL"
+>localhost</TT
+> if no host has been specified.
+     </P
+></LI
+><LI
+><P
+>      Improve error handling in <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> and <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>
+      for failures during <TT
+CLASS="LITERAL"
+>COPY TO STDOUT/FROM STDIN</TT
+> (Tom Lane)
+     </P
+><P
+>      In particular this fixes an infinite loop that could occur in 9.2 and
+      up if the server connection was lost during <TT
+CLASS="LITERAL"
+>COPY FROM
+      STDIN</TT
+>.  Variants of that scenario might be possible in older
+      versions, or with other client applications.
+     </P
+></LI
+><LI
+><P
+>      Fix possible incorrect printing of filenames
+      in <SPAN
+CLASS="APPLICATION"
+>pg_basebackup</SPAN
+>'s verbose mode (Magnus Hagander)
+     </P
+></LI
+><LI
+><P
+>      Avoid including tablespaces inside PGDATA twice in base backups
+      (Dimitri Fontaine, Magnus Hagander)
+     </P
+></LI
+><LI
+><P
+>      Fix misaligned descriptors in <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+> (MauMau)
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>, handle lack of a hostname in the connection
+      parameters properly (Michael Meskes)
+     </P
+></LI
+><LI
+><P
+>      Fix performance regression in <TT
+CLASS="FILENAME"
+>contrib/dblink</TT
+> connection
+      startup (Joe Conway)
+     </P
+><P
+>      Avoid an unnecessary round trip when client and server encodings match.
+     </P
+></LI
+><LI
+><P
+>      In <TT
+CLASS="FILENAME"
+>contrib/isn</TT
+>, fix incorrect calculation of the check
+      digit for ISMN values (Fabien Coelho)
+     </P
+></LI
+><LI
+><P
+>      Ensure client-code-only installation procedure works as documented
+      (Peter Eisentraut)
+     </P
+></LI
+><LI
+><P
+>      In Mingw and Cygwin builds, install the <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> DLL
+      in the <TT
+CLASS="FILENAME"
+>bin</TT
+> directory (Andrew Dunstan)
+     </P
+><P
+>      This duplicates what the MSVC build has long done.  It should fix
+      problems with programs like <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> failing to start
+      because they can't find the DLL.
+     </P
+></LI
+><LI
+><P
+>      Avoid using the deprecated <TT
+CLASS="LITERAL"
+>dllwrap</TT
+> tool in Cygwin builds
+      (Marco Atzeri)
+     </P
+></LI
+><LI
+><P
+>      Don't generate plain-text <TT
+CLASS="FILENAME"
+>HISTORY</TT
+>
+      and <TT
+CLASS="FILENAME"
+>src/test/regress/README</TT
+> files anymore (Tom Lane)
+     </P
+><P
+>      These text files duplicated the main HTML and PDF documentation
+      formats.  The trouble involved in maintaining them greatly outweighs
+      the likely audience for plain-text format.  Distribution tarballs
+      will still contain files by these names, but they'll just be stubs
+      directing the reader to consult the main documentation.
+      The plain-text <TT
+CLASS="FILENAME"
+>INSTALL</TT
+> file will still be maintained, as
+      there is arguably a use-case for that.
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2013i
+      for DST law changes in Jordan and historical changes in Cuba.
+     </P
+><P
+>      In addition, the zones <TT
+CLASS="LITERAL"
+>Asia/Riyadh87</TT
+>,
+      <TT
+CLASS="LITERAL"
+>Asia/Riyadh88</TT
+>, and <TT
+CLASS="LITERAL"
+>Asia/Riyadh89</TT
+> have been
+      removed, as they are no longer maintained by IANA, and never
+      represented actual civil timekeeping practice.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-1-13.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-1-11.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.1.13</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.1.11</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

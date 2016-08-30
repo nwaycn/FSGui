@@ -1,0 +1,388 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Materialized Views</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="The Rule System"
+HREF="rules.html"><LINK
+REL="PREVIOUS"
+TITLE="Views and the Rule System"
+HREF="rules-views.html"><LINK
+REL="NEXT"
+TITLE="Rules on INSERT, UPDATE, and DELETE"
+HREF="rules-update.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Views and the Rule System"
+HREF="rules-views.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="rules.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 38. The Rule System</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Rules on INSERT, UPDATE, and DELETE"
+HREF="rules-update.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RULES-MATERIALIZEDVIEWS"
+>38.3. Materialized Views</A
+></H1
+><P
+>    Materialized views in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> use the
+    rule system like views do, but persist the results in a table-like form.
+    The main differences between:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE MATERIALIZED VIEW mymatview AS SELECT * FROM mytab;</PRE
+><P>
+
+    and:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE mymatview AS SELECT * FROM mytab;</PRE
+><P>
+
+    are that the materialized view cannot subsequently be directly updated
+    and that the query used to create the materialized view is stored in
+    exactly the same way that a view's query is stored, so that fresh data
+    can be generated for the materialized view with:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>REFRESH MATERIALIZED VIEW mymatview;</PRE
+><P>
+
+    The information about a materialized view in the
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> system catalogs is exactly
+    the same as it is for a table or view. So for the parser, a
+    materialized view is a relation, just like a table or a view.  When
+    a materialized view is referenced in a query, the data is returned
+    directly from the materialized view, like from a table; the rule is
+    only used for populating the materialized view.</P
+><P
+>    While access to the data stored in a materialized view is often much
+    faster than accessing the underlying tables directly or through a view,
+    the data is not always current; yet sometimes current data is not needed.
+    Consider a table which records sales:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE invoice (
+    invoice_no    integer        PRIMARY KEY,
+    seller_no     integer,       -- ID of salesperson
+    invoice_date  date,          -- date of sale
+    invoice_amt   numeric(13,2)  -- amount of sale
+);</PRE
+><P>
+
+    If people want to be able to quickly graph historical sales data, they
+    might want to summarize, and they may not care about the incomplete data
+    for the current date:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE MATERIALIZED VIEW sales_summary AS
+  SELECT
+      seller_no,
+      invoice_date,
+      sum(invoice_amt)::numeric(13,2) as sales_amt
+    FROM invoice
+    WHERE invoice_date &#60; CURRENT_DATE
+    GROUP BY
+      seller_no,
+      invoice_date
+    ORDER BY
+      seller_no,
+      invoice_date;
+
+CREATE UNIQUE INDEX sales_summary_seller
+  ON sales_summary (seller_no, invoice_date);</PRE
+><P>
+
+    This materialized view might be useful for displaying a graph in the
+    dashboard created for salespeople.  A job could be scheduled to update
+    the statistics each night using this SQL statement:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>REFRESH MATERIALIZED VIEW sales_summary;</PRE
+><P></P
+><P
+>    Another use for a materialized view is to allow faster access to data
+    brought across from a remote system through a foreign data wrapper.
+    A simple example using <TT
+CLASS="LITERAL"
+>file_fdw</TT
+> is below, with timings,
+    but since this is using cache on the local system the performance
+    difference compared to access to a remote system would usually be greater
+    than shown here.  Notice we are also exploiting the ability to put an
+    index on the materialized view, whereas <TT
+CLASS="LITERAL"
+>file_fdw</TT
+> does
+    not support indexes; this advantage might not apply for other sorts of
+    foreign data access.</P
+><P
+>    Setup:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE EXTENSION file_fdw;
+CREATE SERVER local_file FOREIGN DATA WRAPPER file_fdw;
+CREATE FOREIGN TABLE words (word text NOT NULL)
+  SERVER local_file
+  OPTIONS (filename '/usr/share/dict/words');
+CREATE MATERIALIZED VIEW wrd AS SELECT * FROM words;
+CREATE UNIQUE INDEX wrd_word ON wrd (word);
+CREATE EXTENSION pg_trgm;
+CREATE INDEX wrd_trgm ON wrd USING gist (word gist_trgm_ops);
+VACUUM ANALYZE wrd;</PRE
+><P>
+
+    Now let's spell-check a word.  Using <TT
+CLASS="LITERAL"
+>file_fdw</TT
+> directly:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT count(*) FROM words WHERE word = 'caterpiler';
+
+ count 
+-------
+     0
+(1 row)</PRE
+><P>
+
+    With <TT
+CLASS="COMMAND"
+>EXPLAIN ANALYZE</TT
+>, we see:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+> Aggregate  (cost=21763.99..21764.00 rows=1 width=0) (actual time=188.180..188.181 rows=1 loops=1)
+   -&gt;  Foreign Scan on words  (cost=0.00..21761.41 rows=1032 width=0) (actual time=188.177..188.177 rows=0 loops=1)
+         Filter: (word = 'caterpiler'::text)
+         Rows Removed by Filter: 479829
+         Foreign File: /usr/share/dict/words
+         Foreign File Size: 4953699
+ Planning time: 0.118 ms
+ Execution time: 188.273 ms</PRE
+><P>
+
+    If the materialized view is used instead, the query is much faster:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+> Aggregate  (cost=4.44..4.45 rows=1 width=0) (actual time=0.042..0.042 rows=1 loops=1)
+   -&gt;  Index Only Scan using wrd_word on wrd  (cost=0.42..4.44 rows=1 width=0) (actual time=0.039..0.039 rows=0 loops=1)
+         Index Cond: (word = 'caterpiler'::text)
+         Heap Fetches: 0
+ Planning time: 0.164 ms
+ Execution time: 0.117 ms</PRE
+><P>
+
+    Either way, the word is spelled wrong, so let's look for what we might
+    have wanted.  Again using <TT
+CLASS="LITERAL"
+>file_fdw</TT
+>:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT word FROM words ORDER BY word &#60;-&#62; 'caterpiler' LIMIT 10;
+
+     word     
+---------------
+ cater
+ caterpillar
+ Caterpillar
+ caterpillars
+ caterpillar's
+ Caterpillar's
+ caterer
+ caterer's
+ caters
+ catered
+(10 rows)</PRE
+><P>
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+> Limit  (cost=11583.61..11583.64 rows=10 width=32) (actual time=1431.591..1431.594 rows=10 loops=1)
+   -&gt;  Sort  (cost=11583.61..11804.76 rows=88459 width=32) (actual time=1431.589..1431.591 rows=10 loops=1)
+         Sort Key: ((word &lt;-&gt; 'caterpiler'::text))
+         Sort Method: top-N heapsort  Memory: 25kB
+         -&gt;  Foreign Scan on words  (cost=0.00..9672.05 rows=88459 width=32) (actual time=0.057..1286.455 rows=479829 loops=1)
+               Foreign File: /usr/share/dict/words
+               Foreign File Size: 4953699
+ Planning time: 0.128 ms
+ Execution time: 1431.679 ms</PRE
+><P>
+
+    Using the materialized view:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+> Limit  (cost=0.29..1.06 rows=10 width=10) (actual time=187.222..188.257 rows=10 loops=1)
+   -&gt;  Index Scan using wrd_trgm on wrd  (cost=0.29..37020.87 rows=479829 width=10) (actual time=187.219..188.252 rows=10 loops=1)
+         Order By: (word &lt;-&gt; 'caterpiler'::text)
+ Planning time: 0.196 ms
+ Execution time: 198.640 ms</PRE
+><P>
+
+    If you can tolerate periodic update of the remote data to the local
+    database, the performance benefit can be substantial.</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="rules-views.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="rules-update.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Views and the Rule System</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="rules.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Rules on <TT
+CLASS="COMMAND"
+>INSERT</TT
+>, <TT
+CLASS="COMMAND"
+>UPDATE</TT
+>, and <TT
+CLASS="COMMAND"
+>DELETE</TT
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,257 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Write-Ahead Logging (WAL)</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Reliability and the Write-Ahead Log"
+HREF="wal.html"><LINK
+REL="PREVIOUS"
+TITLE="Reliability"
+HREF="wal-reliability.html"><LINK
+REL="NEXT"
+TITLE="Asynchronous Commit"
+HREF="wal-async-commit.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Reliability"
+HREF="wal-reliability.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="wal.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 29. Reliability and the Write-Ahead Log</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Asynchronous Commit"
+HREF="wal-async-commit.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="WAL-INTRO"
+>29.2. Write-Ahead Logging (<ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+>)</A
+></H1
+><P
+>    <I
+CLASS="FIRSTTERM"
+>Write-Ahead Logging</I
+> (<ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+>)
+    is a standard method for ensuring data integrity.  A detailed
+    description can be found in most (if not all) books about
+    transaction processing. Briefly, <ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+>'s central
+    concept is that changes to data files (where tables and indexes
+    reside) must be written only after those changes have been logged,
+    that is, after log records describing the changes have been flushed
+    to permanent storage. If we follow this procedure, we do not need
+    to flush data pages to disk on every transaction commit, because we
+    know that in the event of a crash we will be able to recover the
+    database using the log: any changes that have not been applied to
+    the data pages can be redone from the log records.  (This is
+    roll-forward recovery, also known as REDO.)
+   </P
+><DIV
+CLASS="TIP"
+><BLOCKQUOTE
+CLASS="TIP"
+><P
+><B
+>Tip: </B
+>     Because <ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+> restores database file
+     contents after a crash, journaled file systems are not necessary for
+     reliable storage of the data files or WAL files.  In fact, journaling
+     overhead can reduce performance, especially if journaling
+     causes file system <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>data</I
+></SPAN
+> to be flushed
+     to disk.  Fortunately, data flushing during journaling can
+     often be disabled with a file system mount option, e.g.
+     <TT
+CLASS="LITERAL"
+>data=writeback</TT
+> on a Linux ext3 file system.
+     Journaled file systems do improve boot speed after a crash.
+    </P
+></BLOCKQUOTE
+></DIV
+><P
+>    Using <ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+> results in a
+    significantly reduced number of disk writes, because only the log
+    file needs to be flushed to disk to guarantee that a transaction is
+    committed, rather than every data file changed by the transaction.
+    The log file is written sequentially,
+    and so the cost of syncing the log is much less than the cost of
+    flushing the data pages.  This is especially true for servers
+    handling many small transactions touching different parts of the data
+    store.  Furthermore, when the server is processing many small concurrent
+    transactions, one <CODE
+CLASS="FUNCTION"
+>fsync</CODE
+> of the log file may
+    suffice to commit many transactions.
+   </P
+><P
+>    <ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+> also makes it possible to support on-line
+    backup and point-in-time recovery, as described in <A
+HREF="continuous-archiving.html"
+>Section 24.3</A
+>.  By archiving the WAL data we can support
+    reverting to any time instant covered by the available WAL data:
+    we simply install a prior physical backup of the database, and
+    replay the WAL log just as far as the desired time.  What's more,
+    the physical backup doesn't have to be an instantaneous snapshot
+    of the database state &mdash; if it is made over some period of time,
+    then replaying the WAL log for that period will fix any internal
+    inconsistencies.
+   </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="wal-reliability.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="wal-async-commit.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Reliability</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="wal.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Asynchronous Commit</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

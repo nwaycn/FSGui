@@ -1,0 +1,321 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Logical Decoding Examples</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Logical Decoding"
+HREF="logicaldecoding.html"><LINK
+REL="PREVIOUS"
+TITLE="Logical Decoding"
+HREF="logicaldecoding.html"><LINK
+REL="NEXT"
+TITLE="Logical Decoding Concepts"
+HREF="logicaldecoding-explanation.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Logical Decoding"
+HREF="logicaldecoding.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="logicaldecoding.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 46. Logical Decoding</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Logical Decoding Concepts"
+HREF="logicaldecoding-explanation.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="LOGICALDECODING-EXAMPLE"
+>46.1. Logical Decoding Examples</A
+></H1
+><P
+>    The following example demonstrates controlling logical decoding using the
+    SQL interface.
+   </P
+><P
+>    Before you can use logical decoding, you must set
+    <A
+HREF="runtime-config-wal.html#GUC-WAL-LEVEL"
+>wal_level</A
+> to <TT
+CLASS="LITERAL"
+>logical</TT
+> and
+    <A
+HREF="runtime-config-replication.html#GUC-MAX-REPLICATION-SLOTS"
+>max_replication_slots</A
+> to at least 1.  Then, you
+    should connect to the target database (in the example
+    below, <TT
+CLASS="LITERAL"
+>postgres</TT
+>) as a superuser.
+   </P
+><PRE
+CLASS="PROGRAMLISTING"
+>postgres=# -- Create a slot named 'regression_slot' using the output plugin 'test_decoding'
+postgres=# SELECT * FROM pg_create_logical_replication_slot('regression_slot', 'test_decoding');
+    slot_name    | xlog_position
+-----------------+---------------
+ regression_slot | 0/16B1970
+(1 row)
+
+postgres=# SELECT slot_name, plugin, slot_type, database, active, restart_lsn FROM pg_replication_slots;
+    slot_name    |    plugin     | slot_type | database | active | restart_lsn
+-----------------+---------------+-----------+----------+--------+-------------
+ regression_slot | test_decoding | logical   | postgres | f      | 0/16A4408
+(1 row)
+
+postgres=# -- There are no changes to see yet
+postgres=# SELECT * FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL);
+ location | xid | data
+----------+-----+------
+(0 rows)
+
+postgres=# CREATE TABLE data(id serial primary key, data text);
+CREATE TABLE
+
+postgres=# -- DDL isn't replicated, so all you'll see is the transaction
+postgres=# SELECT * FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL);
+ location  | xid |    data
+-----------+-----+------------
+ 0/16D5D48 | 688 | BEGIN 688
+ 0/16E0380 | 688 | COMMIT 688
+(2 rows)
+
+postgres=# -- Once changes are read, they're consumed and not emitted
+postgres=# -- in a subsequent call:
+postgres=# SELECT * FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL);
+ location | xid | data
+----------+-----+------
+(0 rows)
+
+postgres=# BEGIN;
+postgres=# INSERT INTO data(data) VALUES('1');
+postgres=# INSERT INTO data(data) VALUES('2');
+postgres=# COMMIT;
+
+postgres=# SELECT * FROM pg_logical_slot_get_changes('regression_slot', NULL, NULL);
+ location  | xid |                     data
+-----------+-----+-----------------------------------------------
+ 0/16E0478 | 689 | BEGIN 689
+ 0/16E0478 | 689 | table public.data: INSERT: id[integer]:1 data[text]:'1'
+ 0/16E0580 | 689 | table public.data: INSERT: id[integer]:2 data[text]:'2'
+ 0/16E0650 | 689 | COMMIT 689
+(4 rows)
+
+postgres=# INSERT INTO data(data) VALUES('3');
+
+postgres=# -- You can also peek ahead in the change stream without consuming changes
+postgres=# SELECT * FROM pg_logical_slot_peek_changes('regression_slot', NULL, NULL);
+ location  | xid |                     data
+-----------+-----+-----------------------------------------------
+ 0/16E09C0 | 690 | BEGIN 690
+ 0/16E09C0 | 690 | table public.data: INSERT: id[integer]:3 data[text]:'3'
+ 0/16E0B90 | 690 | COMMIT 690
+(3 rows)
+
+postgres=# -- The next call to pg_logical_slot_peek_changes() returns the same changes again
+postgres=# SELECT * FROM pg_logical_slot_peek_changes('regression_slot', NULL, NULL);
+ location  | xid |                     data
+-----------+-----+-----------------------------------------------
+ 0/16E09C0 | 690 | BEGIN 690
+ 0/16E09C0 | 690 | table public.data: INSERT: id[integer]:3 data[text]:'3'
+ 0/16E0B90 | 690 | COMMIT 690
+(3 rows)
+
+postgres=# -- options can be passed to output plugin, to influence the formatting
+postgres=# SELECT * FROM pg_logical_slot_peek_changes('regression_slot', NULL, NULL, 'include-timestamp', 'on');
+ location  | xid |                     data
+-----------+-----+-----------------------------------------------
+ 0/16E09C0 | 690 | BEGIN 690
+ 0/16E09C0 | 690 | table public.data: INSERT: id[integer]:3 data[text]:'3'
+ 0/16E0B90 | 690 | COMMIT 690 (at 2014-02-27 16:41:51.863092+01)
+(3 rows)
+
+postgres=# -- Remember to destroy a slot you no longer need to stop it consuming
+postgres=# -- server resources:
+postgres=# SELECT pg_drop_replication_slot('regression_slot');
+ pg_drop_replication_slot
+-----------------------
+
+(1 row)</PRE
+><P
+>    The following example shows how logical decoding is controlled over the
+    streaming replication protocol, using the
+    program <A
+HREF="app-pgrecvlogical.html"
+><SPAN
+CLASS="APPLICATION"
+>pg_recvlogical</SPAN
+></A
+> included in the PostgreSQL
+    distribution.  This requires that client authentication is set up to allow
+    replication connections
+    (see <A
+HREF="warm-standby.html#STREAMING-REPLICATION-AUTHENTICATION"
+>Section 25.2.5.1</A
+>) and
+    that <TT
+CLASS="VARNAME"
+>max_wal_senders</TT
+> is set sufficiently high to allow
+    an additional connection.
+   </P
+><PRE
+CLASS="PROGRAMLISTING"
+>$ pg_recvlogical -d postgres --slot test --create-slot
+$ pg_recvlogical -d postgres --slot test --start -f -
+<B
+CLASS="KEYCAP"
+>Control</B
+>+<B
+CLASS="KEYCAP"
+>Z</B
+>
+$ psql -d postgres -c "INSERT INTO data(data) VALUES('4');"
+$ fg
+BEGIN 693
+table public.data: INSERT: id[integer]:4 data[text]:'4'
+COMMIT 693
+<B
+CLASS="KEYCAP"
+>Control</B
+>+<B
+CLASS="KEYCAP"
+>C</B
+>
+$ pg_recvlogical -d postgres --slot test --drop-slot</PRE
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="logicaldecoding.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="logicaldecoding-explanation.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Logical Decoding</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="logicaldecoding.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Logical Decoding Concepts</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

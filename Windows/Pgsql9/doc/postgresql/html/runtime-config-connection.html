@@ -1,0 +1,1239 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Connections and Authentication</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Configuration"
+HREF="runtime-config.html"><LINK
+REL="PREVIOUS"
+TITLE="File Locations"
+HREF="runtime-config-file-locations.html"><LINK
+REL="NEXT"
+TITLE="Resource Consumption"
+HREF="runtime-config-resource.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="File Locations"
+HREF="runtime-config-file-locations.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 18. Server Configuration</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Resource Consumption"
+HREF="runtime-config-resource.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RUNTIME-CONFIG-CONNECTION"
+>18.3. Connections and Authentication</A
+></H1
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-CONNECTION-SETTINGS"
+>18.3.1. Connection Settings</A
+></H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-LISTEN-ADDRESSES"
+></A
+><TT
+CLASS="VARNAME"
+>listen_addresses</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>         Specifies the TCP/IP address(es) on which the server is
+         to listen for connections from client applications.
+         The value takes the form of a comma-separated list of host names
+         and/or numeric IP addresses.  The special entry <TT
+CLASS="LITERAL"
+>*</TT
+>
+         corresponds to all available IP interfaces.  The entry
+         <TT
+CLASS="LITERAL"
+>0.0.0.0</TT
+> allows listening for all IPv4 addresses and
+         <TT
+CLASS="LITERAL"
+>::</TT
+> allows listening for all IPv6 addresses.
+         If the list is empty, the server does not listen on any IP interface
+         at all, in which case only Unix-domain sockets can be used to connect
+         to it.
+         The default value is <SPAN
+CLASS="SYSTEMITEM"
+>localhost</SPAN
+>,
+         which allows only local TCP/IP <SPAN
+CLASS="QUOTE"
+>"loopback"</SPAN
+> connections to be
+         made.  While client authentication (<A
+HREF="client-authentication.html"
+>Chapter 19</A
+>) allows fine-grained control
+         over who can access the server, <TT
+CLASS="VARNAME"
+>listen_addresses</TT
+>
+         controls which interfaces accept connection attempts, which
+         can help prevent repeated malicious connection requests on
+         insecure network interfaces.  This parameter can only be set
+         at server start.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-PORT"
+></A
+><TT
+CLASS="VARNAME"
+>port</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        The TCP port the server listens on; 5432 by default.  Note that the
+        same port number is used for all IP addresses the server listens on.
+        This parameter can only be set at server start.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-MAX-CONNECTIONS"
+></A
+><TT
+CLASS="VARNAME"
+>max_connections</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Determines the maximum number of concurrent connections to the
+        database server. The default is typically 100 connections, but
+        might be less if your kernel settings will not support it (as
+        determined during <SPAN
+CLASS="APPLICATION"
+>initdb</SPAN
+>).  This parameter can
+        only be set at server start.
+       </P
+><P
+>        When running a standby server, you must set this parameter to the
+        same or higher value than on the master server. Otherwise, queries
+        will not be allowed in the standby server.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-SUPERUSER-RESERVED-CONNECTIONS"
+></A
+><TT
+CLASS="VARNAME"
+>superuser_reserved_connections</TT
+>
+      (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Determines the number of connection <SPAN
+CLASS="QUOTE"
+>"slots"</SPAN
+> that
+        are reserved for connections by <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+        superusers.  At most <A
+HREF="runtime-config-connection.html#GUC-MAX-CONNECTIONS"
+>max_connections</A
+>
+        connections can ever be active simultaneously.  Whenever the
+        number of active concurrent connections is at least
+        <TT
+CLASS="VARNAME"
+>max_connections</TT
+> minus
+        <TT
+CLASS="VARNAME"
+>superuser_reserved_connections</TT
+>, new
+        connections will be accepted only for superusers, and no
+        new replication connections will be accepted.
+       </P
+><P
+>        The default value is three connections. The value must be less
+        than the value of <TT
+CLASS="VARNAME"
+>max_connections</TT
+>. This
+        parameter can only be set at server start.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-UNIX-SOCKET-DIRECTORIES"
+></A
+><TT
+CLASS="VARNAME"
+>unix_socket_directories</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the directory of the Unix-domain socket(s) on which the
+        server is to listen for connections from client applications.
+        Multiple sockets can be created by listing multiple directories
+        separated by commas.  Whitespace between entries is
+        ignored; surround a directory name with double quotes if you need
+        to include whitespace or commas in the name.
+        An empty value
+        specifies not listening on any Unix-domain sockets, in which case
+        only TCP/IP sockets can be used to connect to the server.
+        The default value is normally
+        <TT
+CLASS="FILENAME"
+>/tmp</TT
+>, but that can be changed at build time.
+        This parameter can only be set at server start.
+       </P
+><P
+>        In addition to the socket file itself, which is named
+        <TT
+CLASS="LITERAL"
+>.s.PGSQL.<TT
+CLASS="REPLACEABLE"
+><I
+>nnnn</I
+></TT
+></TT
+> where
+        <TT
+CLASS="REPLACEABLE"
+><I
+>nnnn</I
+></TT
+> is the server's port number, an ordinary file
+        named <TT
+CLASS="LITERAL"
+>.s.PGSQL.<TT
+CLASS="REPLACEABLE"
+><I
+>nnnn</I
+></TT
+>.lock</TT
+> will be
+        created in each of the <TT
+CLASS="VARNAME"
+>unix_socket_directories</TT
+> directories.
+        Neither file should ever be removed manually.
+       </P
+><P
+>        This parameter is irrelevant on Windows, which does not have
+        Unix-domain sockets.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-UNIX-SOCKET-GROUP"
+></A
+><TT
+CLASS="VARNAME"
+>unix_socket_group</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the owning group of the Unix-domain socket(s).  (The owning
+        user of the sockets is always the user that starts the
+        server.)  In combination with the parameter
+        <TT
+CLASS="VARNAME"
+>unix_socket_permissions</TT
+> this can be used as
+        an additional access control mechanism for Unix-domain connections.
+        By default this is the empty string, which uses the default
+        group of the server user.  This parameter can only be set at
+        server start.
+       </P
+><P
+>        This parameter is irrelevant on Windows, which does not have
+        Unix-domain sockets.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-UNIX-SOCKET-PERMISSIONS"
+></A
+><TT
+CLASS="VARNAME"
+>unix_socket_permissions</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the access permissions of the Unix-domain socket(s).  Unix-domain
+        sockets use the usual Unix file system permission set.
+        The parameter value is expected to be a numeric mode
+        specified in the format accepted by the
+        <CODE
+CLASS="FUNCTION"
+>chmod</CODE
+> and <CODE
+CLASS="FUNCTION"
+>umask</CODE
+>
+        system calls.  (To use the customary octal format the number
+        must start with a <TT
+CLASS="LITERAL"
+>0</TT
+> (zero).)
+       </P
+><P
+>        The default permissions are <TT
+CLASS="LITERAL"
+>0777</TT
+>, meaning
+        anyone can connect. Reasonable alternatives are
+        <TT
+CLASS="LITERAL"
+>0770</TT
+> (only user and group, see also
+        <TT
+CLASS="VARNAME"
+>unix_socket_group</TT
+>) and <TT
+CLASS="LITERAL"
+>0700</TT
+>
+        (only user). (Note that for a Unix-domain socket, only write
+        permission matters, so there is no point in setting or revoking
+        read or execute permissions.)
+       </P
+><P
+>        This access control mechanism is independent of the one
+        described in <A
+HREF="client-authentication.html"
+>Chapter 19</A
+>.
+       </P
+><P
+>        This parameter can only be set at server start.
+       </P
+><P
+>        This parameter is irrelevant on systems, notably Solaris as of Solaris
+        10, that ignore socket permissions entirely.  There, one can achieve a
+        similar effect by pointing <TT
+CLASS="VARNAME"
+>unix_socket_directories</TT
+> to a
+        directory having search permission limited to the desired audience.
+        This parameter is also irrelevant on Windows, which does not have
+        Unix-domain sockets.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-BONJOUR"
+></A
+><TT
+CLASS="VARNAME"
+>bonjour</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        Enables advertising the server's existence via
+        <SPAN
+CLASS="PRODUCTNAME"
+>Bonjour</SPAN
+>.  The default is off.
+        This parameter can only be set at server start.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-BONJOUR-NAME"
+></A
+><TT
+CLASS="VARNAME"
+>bonjour_name</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the <SPAN
+CLASS="PRODUCTNAME"
+>Bonjour</SPAN
+> service
+        name.  The computer name is used if this parameter is set to the
+        empty string <TT
+CLASS="LITERAL"
+>''</TT
+> (which is the default).  This parameter is
+        ignored if the server was not compiled with
+        <SPAN
+CLASS="PRODUCTNAME"
+>Bonjour</SPAN
+> support.
+        This parameter can only be set at server start.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-TCP-KEEPALIVES-IDLE"
+></A
+><TT
+CLASS="VARNAME"
+>tcp_keepalives_idle</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the number of seconds of inactivity after which TCP
+        should send a keepalive message to the client.  A value of 0 uses
+        the system default.
+        This parameter is supported only on systems that support the
+        <TT
+CLASS="SYMBOL"
+>TCP_KEEPIDLE</TT
+> or <TT
+CLASS="SYMBOL"
+>TCP_KEEPALIVE</TT
+> symbols, and on
+        Windows; on other systems, it must be zero.
+        In sessions connected via a Unix-domain socket, this parameter is
+        ignored and always reads as zero.
+       </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>         On Windows, a value of 0 will set this parameter to 2 hours,
+         since Windows does not provide a way to read the system default value.
+        </P
+></BLOCKQUOTE
+></DIV
+></DD
+><DT
+><A
+NAME="GUC-TCP-KEEPALIVES-INTERVAL"
+></A
+><TT
+CLASS="VARNAME"
+>tcp_keepalives_interval</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the number of seconds after which a TCP keepalive message
+        that is not acknowledged by the client should be retransmitted.
+        A value of 0 uses the system default.
+        This parameter is supported only on systems that support the
+        <TT
+CLASS="SYMBOL"
+>TCP_KEEPINTVL</TT
+> symbol, and on Windows; on other systems, it
+        must be zero.
+        In sessions connected via a Unix-domain socket, this parameter is
+        ignored and always reads as zero.
+       </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>         On Windows, a value of 0 will set this parameter to 1 second,
+         since Windows does not provide a way to read the system default value.
+        </P
+></BLOCKQUOTE
+></DIV
+></DD
+><DT
+><A
+NAME="GUC-TCP-KEEPALIVES-COUNT"
+></A
+><TT
+CLASS="VARNAME"
+>tcp_keepalives_count</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the number of TCP keepalives that can be lost before
+        the server's connection to the client is considered dead.  A value of 0
+        uses the system default.  This parameter is
+        supported only on systems that support the <TT
+CLASS="SYMBOL"
+>TCP_KEEPCNT</TT
+>
+        symbol; on other systems, it must be zero.
+        In sessions connected via a Unix-domain socket, this parameter is
+        ignored and always reads as zero.
+       </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>         This parameter is not supported on Windows, and must be zero.
+        </P
+></BLOCKQUOTE
+></DIV
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-CONNECTION-SECURITY"
+>18.3.2. Security and Authentication</A
+></H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-AUTHENTICATION-TIMEOUT"
+></A
+><TT
+CLASS="VARNAME"
+>authentication_timeout</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      
+      
+      </DT
+><DD
+><P
+>        Maximum time to complete client authentication, in seconds. If a
+        would-be client has not completed the authentication protocol in
+        this much time, the server closes the connection. This prevents
+        hung clients from occupying a connection indefinitely.
+        The default is one minute (<TT
+CLASS="LITERAL"
+>1m</TT
+>).
+        This parameter can only be set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+        file or on the server command line.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-SSL"
+></A
+><TT
+CLASS="VARNAME"
+>ssl</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        Enables <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> connections. Please read
+        <A
+HREF="ssl-tcp.html"
+>Section 17.9</A
+> before using this. The default
+        is <TT
+CLASS="LITERAL"
+>off</TT
+>. This parameter can only be set at server
+        start.  <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> communication is only possible with
+        TCP/IP connections.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-SSL-CA-FILE"
+></A
+><TT
+CLASS="VARNAME"
+>ssl_ca_file</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the name of the file containing the SSL server certificate
+        authority (CA).  The default is empty, meaning no CA file is loaded,
+        and client certificate verification is not performed.  (In previous
+        releases of PostgreSQL, the name of this file was hard-coded
+        as <TT
+CLASS="FILENAME"
+>root.crt</TT
+>.)  Relative paths are relative to the
+        data directory.  This parameter can only be set at server start.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-SSL-CERT-FILE"
+></A
+><TT
+CLASS="VARNAME"
+>ssl_cert_file</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the name of the file containing the SSL server certificate.
+        The default is <TT
+CLASS="FILENAME"
+>server.crt</TT
+>.  Relative paths are
+        relative to the data directory.  This parameter can only be set at
+        server start.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-SSL-CRL-FILE"
+></A
+><TT
+CLASS="VARNAME"
+>ssl_crl_file</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the name of the file containing the SSL server certificate
+        revocation list (CRL).  The default is empty, meaning no CRL file is
+        loaded.  (In previous releases of PostgreSQL, the name of this file was
+        hard-coded as <TT
+CLASS="FILENAME"
+>root.crl</TT
+>.)  Relative paths are
+        relative to the data directory.  This parameter can only be set at
+        server start.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-SSL-KEY-FILE"
+></A
+><TT
+CLASS="VARNAME"
+>ssl_key_file</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the name of the file containing the SSL server private key.
+        The default is <TT
+CLASS="FILENAME"
+>server.key</TT
+>.  Relative paths are
+        relative to the data directory.  This parameter can only be set at
+        server start.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-SSL-CIPHERS"
+></A
+><TT
+CLASS="VARNAME"
+>ssl_ciphers</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies a list of <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> cipher suites that are allowed to be
+        used on secure connections.  See
+        the <SPAN
+CLASS="CITEREFENTRY"
+><SPAN
+CLASS="REFENTRYTITLE"
+>ciphers</SPAN
+></SPAN
+> manual page
+        in the <SPAN
+CLASS="APPLICATION"
+>OpenSSL</SPAN
+> package for the syntax of this setting
+        and a list of supported values.  The default value is
+        <TT
+CLASS="LITERAL"
+>HIGH:MEDIUM:+3DES:!aNULL</TT
+>.  It is usually reasonable,
+        unless you have specific security requirements.
+       </P
+><P
+>        Explanation of the default value:
+        <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>HIGH</TT
+></DT
+><DD
+><P
+>            Cipher suites that use ciphers from <TT
+CLASS="LITERAL"
+>HIGH</TT
+> group (e.g.,
+            AES, Camellia, 3DES)
+           </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>MEDIUM</TT
+></DT
+><DD
+><P
+>            Cipher suites that use ciphers from <TT
+CLASS="LITERAL"
+>MEDIUM</TT
+> group
+            (e.g., RC4, SEED)
+           </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>+3DES</TT
+></DT
+><DD
+><P
+>            The OpenSSL default order for <TT
+CLASS="LITERAL"
+>HIGH</TT
+> is problematic
+            because it orders 3DES higher than AES128.  This is wrong because
+            3DES offers less security than AES128, and it is also much
+            slower.  <TT
+CLASS="LITERAL"
+>+3DES</TT
+> reorders it after all other
+            <TT
+CLASS="LITERAL"
+>HIGH</TT
+> and <TT
+CLASS="LITERAL"
+>MEDIUM</TT
+> ciphers.
+           </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>!aNULL</TT
+></DT
+><DD
+><P
+>            Disables anonymous cipher suites that do no authentication.  Such
+            cipher suites are vulnerable to man-in-the-middle attacks and
+            therefore should not be used.
+           </P
+></DD
+></DL
+></DIV
+><P>
+       </P
+><P
+>        Available cipher suite details will vary across OpenSSL versions.  Use
+        the command
+        <TT
+CLASS="LITERAL"
+>openssl ciphers -v 'HIGH:MEDIUM:+3DES:!aNULL'</TT
+> to
+        see actual details for the currently installed <SPAN
+CLASS="APPLICATION"
+>OpenSSL</SPAN
+>
+        version.  Note that this list is filtered at run time based on the
+        server key type.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-SSL-PREFER-SERVER-CIPHERS"
+></A
+><TT
+CLASS="VARNAME"
+>ssl_prefer_server_ciphers</TT
+> (<TT
+CLASS="TYPE"
+>bool</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies whether to use the server's SSL cipher preferences, rather
+        than the client's.  The default is true.
+       </P
+><P
+>        Older PostgreSQL versions do not have this setting and always use the
+        client's preferences.  This setting is mainly for backward
+        compatibility with those versions.  Using the server's preferences is
+        usually better because it is more likely that the server is appropriately
+        configured.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-SSL-ECDH-CURVE"
+></A
+><TT
+CLASS="VARNAME"
+>ssl_ecdh_curve</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the name of the curve to use in <ACRONYM
+CLASS="ACRONYM"
+>ECDH</ACRONYM
+> key
+        exchange.  It needs to be supported by all clients that connect.
+        It does not need to be same curve as used by server's Elliptic
+        Curve key.  The default is <TT
+CLASS="LITERAL"
+>prime256v1</TT
+>.
+       </P
+><P
+>        OpenSSL names for most common curves:
+        <TT
+CLASS="LITERAL"
+>prime256v1</TT
+> (NIST P-256),
+        <TT
+CLASS="LITERAL"
+>secp384r1</TT
+> (NIST P-384),
+        <TT
+CLASS="LITERAL"
+>secp521r1</TT
+> (NIST P-521).
+       </P
+><P
+>        The full list of available curves can be shown with the command
+        <TT
+CLASS="COMMAND"
+>openssl ecparam -list_curves</TT
+>.  Not all of them
+        are usable in <ACRONYM
+CLASS="ACRONYM"
+>TLS</ACRONYM
+> though.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-PASSWORD-ENCRYPTION"
+></A
+><TT
+CLASS="VARNAME"
+>password_encryption</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        When a password is specified in <A
+HREF="sql-createuser.html"
+>CREATE USER</A
+> or
+        <A
+HREF="sql-alterrole.html"
+>ALTER ROLE</A
+>
+        without writing either <TT
+CLASS="LITERAL"
+>ENCRYPTED</TT
+> or
+        <TT
+CLASS="LITERAL"
+>UNENCRYPTED</TT
+>, this parameter determines whether the
+        password is to be encrypted. The default is <TT
+CLASS="LITERAL"
+>on</TT
+>
+        (encrypt the password).
+       </P
+></DD
+><DT
+><A
+NAME="GUC-KRB-SERVER-KEYFILE"
+></A
+><TT
+CLASS="VARNAME"
+>krb_server_keyfile</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the location of the Kerberos server key file. See
+        <A
+HREF="auth-methods.html#GSSAPI-AUTH"
+>Section 19.3.3</A
+>
+        for details. This parameter can only be set in the
+        <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> file or on the server command line.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-KRB-CASEINS-USERS"
+></A
+><TT
+CLASS="VARNAME"
+>krb_caseins_users</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        Sets whether GSSAPI user names should be treated
+        case-insensitively.
+        The default is <TT
+CLASS="LITERAL"
+>off</TT
+> (case sensitive). This parameter can only be
+        set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> file or on the server command line.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-DB-USER-NAMESPACE"
+></A
+><TT
+CLASS="VARNAME"
+>db_user_namespace</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        This parameter enables per-database user names.  It is off by default.
+        This parameter can only be set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+        file or on the server command line.
+       </P
+><P
+>        If this is on, you should create users as <TT
+CLASS="LITERAL"
+>username@dbname</TT
+>.
+        When <TT
+CLASS="LITERAL"
+>username</TT
+> is passed by a connecting client,
+        <TT
+CLASS="LITERAL"
+>@</TT
+> and the database name are appended to the user
+        name and that database-specific user name is looked up by the
+        server. Note that when you create users with names containing
+        <TT
+CLASS="LITERAL"
+>@</TT
+> within the SQL environment, you will need to
+        quote the user name.
+       </P
+><P
+>        With this parameter enabled, you can still create ordinary global
+        users.  Simply append <TT
+CLASS="LITERAL"
+>@</TT
+> when specifying the user
+        name in the client, e.g. <TT
+CLASS="LITERAL"
+>joe@</TT
+>.  The <TT
+CLASS="LITERAL"
+>@</TT
+>
+        will be stripped off before the user name is looked up by the
+        server.
+       </P
+><P
+>        <TT
+CLASS="VARNAME"
+>db_user_namespace</TT
+> causes the client's and
+        server's user name representation to differ.
+        Authentication checks are always done with the server's user name
+        so authentication methods must be configured for the
+        server's user name, not the client's.  Because
+        <TT
+CLASS="LITERAL"
+>md5</TT
+> uses the user name as salt on both the
+        client and server, <TT
+CLASS="LITERAL"
+>md5</TT
+> cannot be used with
+        <TT
+CLASS="VARNAME"
+>db_user_namespace</TT
+>.
+       </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>         This feature is intended as a temporary measure until a
+         complete solution is found.  At that time, this option will
+         be removed.
+        </P
+></BLOCKQUOTE
+></DIV
+></DD
+></DL
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime-config-file-locations.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="runtime-config-resource.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>File Locations</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="runtime-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Resource Consumption</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

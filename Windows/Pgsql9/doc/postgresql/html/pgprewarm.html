@@ -1,0 +1,270 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_prewarm</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="pg_freespacemap"
+HREF="pgfreespacemap.html"><LINK
+REL="NEXT"
+TITLE="pgrowlocks"
+HREF="pgrowlocks.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pg_freespacemap"
+HREF="pgfreespacemap.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pgrowlocks"
+HREF="pgrowlocks.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PGPREWARM"
+>F.26. pg_prewarm</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>pg_prewarm</TT
+> module provides a convenient way
+  to load relation data into either the operating system buffer cache
+  or the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> buffer cache.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN173725"
+>F.26.1. Functions</A
+></H2
+><PRE
+CLASS="SYNOPSIS"
+>pg_prewarm(regclass, mode text default 'buffer', fork text default 'main',
+           first_block int8 default null,
+           last_block int8 default null) RETURNS int8</PRE
+><P
+>   The first argument is the relation to be prewarmed.  The second argument
+   is the prewarming method to be used, as further discussed below; the third
+   is the relation fork to be prewarmed, usually <TT
+CLASS="LITERAL"
+>main</TT
+>.
+   The fourth argument is the first block number to prewarm
+   (<TT
+CLASS="LITERAL"
+>NULL</TT
+> is accepted as a synonym for zero).  The fifth
+   argument is the last block number to prewarm (<TT
+CLASS="LITERAL"
+>NULL</TT
+>
+   means prewarm through the last block in the relation).  The return value
+   is the number of blocks prewarmed.
+  </P
+><P
+>   There are three available prewarming methods.  <TT
+CLASS="LITERAL"
+>prefetch</TT
+>
+   issues asynchronous prefetch requests to the operating system, if this is
+   supported, or throws an error otherwise.  <TT
+CLASS="LITERAL"
+>read</TT
+> reads
+   the requested range of blocks; unlike <TT
+CLASS="LITERAL"
+>prefetch</TT
+>, this is
+   synchronous and supported on all platforms and builds, but may be slower.
+   <TT
+CLASS="LITERAL"
+>buffer</TT
+> reads the requested range of blocks into the
+   database buffer cache.
+  </P
+><P
+>   Note that with any of these methods, attempting to prewarm more blocks than
+   can be cached &mdash; by the OS when using <TT
+CLASS="LITERAL"
+>prefetch</TT
+> or
+   <TT
+CLASS="LITERAL"
+>read</TT
+>, or by <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> when
+   using <TT
+CLASS="LITERAL"
+>buffer</TT
+> &mdash; will likely result in lower-numbered
+   blocks being evicted as higher numbered blocks are read in.  Prewarmed data
+   also enjoys no special protection from cache evictions, so it is possible
+   that other system activity may evict the newly prewarmed blocks shortly
+   after they are read; conversely, prewarming may also evict other data from
+   cache. For these reasons, prewarming is typically most useful at startup,
+   when caches are largely empty.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN173742"
+>F.26.2. Author</A
+></H2
+><P
+>   Robert Haas <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:rhaas@postgresql.org"
+>rhaas@postgresql.org</A
+>&#62;</CODE
+>
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="pgfreespacemap.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="pgrowlocks.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>pg_freespacemap</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>pgrowlocks</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

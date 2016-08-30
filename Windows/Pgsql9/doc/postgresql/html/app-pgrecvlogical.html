@@ -1,0 +1,895 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_recvlogical</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="PostgreSQL Client Applications"
+HREF="reference-client.html"><LINK
+REL="PREVIOUS"
+TITLE="pg_receivexlog"
+HREF="app-pgreceivexlog.html"><LINK
+REL="NEXT"
+TITLE="pg_restore"
+HREF="app-pgrestore.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pg_receivexlog"
+HREF="app-pgreceivexlog.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="reference-client.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pg_restore"
+HREF="app-pgrestore.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="APP-PGRECVLOGICAL"
+></A
+><SPAN
+CLASS="APPLICATION"
+>pg_recvlogical</SPAN
+></H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN93706"
+></A
+><H2
+>Name</H2
+>pg_recvlogical&nbsp;--&nbsp;control <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> logical decoding streams</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN93710"
+></A
+><H2
+>Synopsis</H2
+><P
+><TT
+CLASS="COMMAND"
+>pg_recvlogical</TT
+> [<TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+>...]</P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN93715"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>pg_recvlogical</TT
+> controls logical decoding replication
+   slots and streams data from such replication slots.
+  </P
+><P
+>   It creates a replication-mode connection, so it is subject to the same
+   constraints as <A
+HREF="app-pgreceivexlog.html"
+>pg_receivexlog</A
+>, plus those for logical
+   replication (see <A
+HREF="logicaldecoding.html"
+>Chapter 46</A
+>).
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN93722"
+></A
+><H2
+>Options</H2
+><P
+>    At least one of the following options must be specified to select an action:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>--create-slot</TT
+></DT
+><DD
+><P
+>        Create a new logical replication slot with the name specified by
+        <TT
+CLASS="OPTION"
+>--slot</TT
+>, using the output plugin specified by
+        <TT
+CLASS="OPTION"
+>--plugin</TT
+>, for the database specified
+        by <TT
+CLASS="OPTION"
+>--dbname</TT
+>.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>--drop-slot</TT
+></DT
+><DD
+><P
+>        Drop the replication slot with the name specified
+        by <TT
+CLASS="OPTION"
+>--slot</TT
+>, then exit.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>--start</TT
+></DT
+><DD
+><P
+>        Begin streaming changes from the logical replication slot specified
+        by <TT
+CLASS="OPTION"
+>--slot</TT
+>, continuing until terminated by a
+        signal. If the server side change stream ends with a server shutdown
+        or disconnect, retry in a loop unless
+        <TT
+CLASS="OPTION"
+>--no-loop</TT
+> is specified.
+       </P
+><P
+>        The stream format is determined by the output plugin specified when
+        the slot was created.
+       </P
+><P
+>        The connection must be to the same database used to create the slot.
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+><P
+>    <TT
+CLASS="OPTION"
+>--create-slot</TT
+> and <TT
+CLASS="OPTION"
+>--start</TT
+> can be
+    specified together.  <TT
+CLASS="OPTION"
+>--drop-slot</TT
+> cannot be combined with
+    another action.
+   </P
+><P
+>    The following command-line options control the location and format of the
+    output and other replication behavior:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-f <TT
+CLASS="REPLACEABLE"
+><I
+>filename</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--file=<TT
+CLASS="REPLACEABLE"
+><I
+>filename</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Write received and decoded transaction data into this
+        file. Use <TT
+CLASS="LITERAL"
+>-</TT
+> for <SPAN
+CLASS="SYSTEMITEM"
+>stdout</SPAN
+>.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-F <TT
+CLASS="REPLACEABLE"
+><I
+>interval_seconds</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--fsync-interval=<TT
+CLASS="REPLACEABLE"
+><I
+>interval_seconds</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Specifies how often <SPAN
+CLASS="APPLICATION"
+>pg_recvlogical</SPAN
+> should
+        issue <CODE
+CLASS="FUNCTION"
+>fsync()</CODE
+> calls to ensure the output file is
+        safely flushed to disk.
+       </P
+><P
+>        The server will occasionally request the client to perform a flush and
+        report the flush position to the server.  This setting is in addition
+        to that, to perform flushes more frequently.
+       </P
+><P
+>        Specifying an interval of <TT
+CLASS="LITERAL"
+>0</TT
+> disables
+        issuing <CODE
+CLASS="FUNCTION"
+>fsync()</CODE
+> calls altogether, while still
+        reporting progress to the server.  In this case, data could be lost in
+        the event of a crash.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-I <TT
+CLASS="REPLACEABLE"
+><I
+>lsn</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--startpos=<TT
+CLASS="REPLACEABLE"
+><I
+>lsn</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        In <TT
+CLASS="OPTION"
+>--start</TT
+> mode, start replication from the given
+        LSN.  For details on the effect of this, see the documentation
+        in <A
+HREF="logicaldecoding.html"
+>Chapter 46</A
+>
+        and <A
+HREF="protocol-replication.html"
+>Section 50.3</A
+>. Ignored in other modes.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>--if-not-exists</TT
+></DT
+><DD
+><P
+>        Do not error out when <TT
+CLASS="OPTION"
+>--create-slot</TT
+> is specified
+        and a slot with the specified name already exists.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-n</TT
+><BR><TT
+CLASS="OPTION"
+>--no-loop</TT
+></DT
+><DD
+><P
+>        When the connection to the server is lost, do not retry in a loop, just exit.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-o <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>[=<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>]</TT
+><BR><TT
+CLASS="OPTION"
+>--option=<TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>[=<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>]</TT
+></DT
+><DD
+><P
+>        Pass the option <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> to the output plugin with,
+        if specified, the option value <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>. Which
+        options exist and their effects depends on the used output plugin.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-P <TT
+CLASS="REPLACEABLE"
+><I
+>plugin</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--plugin=<TT
+CLASS="REPLACEABLE"
+><I
+>plugin</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        When creating a slot, use the specified logical decoding output
+        plugin. See <A
+HREF="logicaldecoding.html"
+>Chapter 46</A
+>. This option has no
+        effect if the slot already exists.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-s <TT
+CLASS="REPLACEABLE"
+><I
+>interval_seconds</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--status-interval=<TT
+CLASS="REPLACEABLE"
+><I
+>interval_seconds</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        This option has the same effect as the option of the same name
+        in <A
+HREF="app-pgreceivexlog.html"
+>pg_receivexlog</A
+>.  See the description there.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-S <TT
+CLASS="REPLACEABLE"
+><I
+>slot_name</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--slot=<TT
+CLASS="REPLACEABLE"
+><I
+>slot_name</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        In <TT
+CLASS="OPTION"
+>--start</TT
+> mode, use the existing logical replication slot named
+        <TT
+CLASS="REPLACEABLE"
+><I
+>slot_name</I
+></TT
+>. In <TT
+CLASS="OPTION"
+>--create-slot</TT
+>
+        mode, create the slot with this name. In <TT
+CLASS="OPTION"
+>--drop-slot</TT
+>
+        mode, delete the slot with this name.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-v</TT
+><BR><TT
+CLASS="OPTION"
+>--verbose</TT
+></DT
+><DD
+><P
+>        Enables verbose mode.
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+><P
+>    The following command-line options control the database connection parameters.
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-d <TT
+CLASS="REPLACEABLE"
+><I
+>database</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--dbname=<TT
+CLASS="REPLACEABLE"
+><I
+>database</I
+></TT
+></TT
+></DT
+><DD
+><P
+>         The database to connect to.  See the description of the actions for
+         what this means in detail.  This can be a <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> connection string;
+         see <A
+HREF="libpq-connect.html#LIBPQ-CONNSTRING"
+>Section 31.1.1</A
+> for more information.  Defaults
+         to user name.
+        </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-h <TT
+CLASS="REPLACEABLE"
+><I
+>hostname-or-ip</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--host=<TT
+CLASS="REPLACEABLE"
+><I
+>hostname-or-ip</I
+></TT
+></TT
+></DT
+><DD
+><P
+>         Specifies the host name of the machine on which the server is
+         running.  If the value begins with a slash, it is used as the
+         directory for the Unix domain socket. The default is taken
+         from the <TT
+CLASS="ENVAR"
+>PGHOST</TT
+> environment variable, if set,
+         else a Unix domain socket connection is attempted.
+        </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-p <TT
+CLASS="REPLACEABLE"
+><I
+>port</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--port=<TT
+CLASS="REPLACEABLE"
+><I
+>port</I
+></TT
+></TT
+></DT
+><DD
+><P
+>         Specifies the TCP port or local Unix domain socket file
+         extension on which the server is listening for connections.
+         Defaults to the <TT
+CLASS="ENVAR"
+>PGPORT</TT
+> environment variable, if
+         set, or a compiled-in default.
+        </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-U <TT
+CLASS="REPLACEABLE"
+><I
+>user</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--username=<TT
+CLASS="REPLACEABLE"
+><I
+>user</I
+></TT
+></TT
+></DT
+><DD
+><P
+>         User name to connect as.  Defaults to current operating system user
+         name.
+        </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-w</TT
+><BR><TT
+CLASS="OPTION"
+>--no-password</TT
+></DT
+><DD
+><P
+>         Never issue a password prompt.  If the server requires
+         password authentication and a password is not available by
+         other means such as a <TT
+CLASS="FILENAME"
+>.pgpass</TT
+> file, the
+         connection attempt will fail.  This option can be useful in
+         batch jobs and scripts where no user is present to enter a
+         password.
+        </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-W</TT
+><BR><TT
+CLASS="OPTION"
+>--password</TT
+></DT
+><DD
+><P
+>         Force <SPAN
+CLASS="APPLICATION"
+>pg_recvlogical</SPAN
+> to prompt for a
+         password before connecting to a database.
+        </P
+><P
+>         This option is never essential, since
+         <SPAN
+CLASS="APPLICATION"
+>pg_recvlogical</SPAN
+> will automatically prompt
+         for a password if the server demands password authentication.
+         However, <SPAN
+CLASS="APPLICATION"
+>pg_recvlogical</SPAN
+> will waste a
+         connection attempt finding out that the server wants a password.
+         In some cases it is worth typing <TT
+CLASS="OPTION"
+>-W</TT
+> to avoid the extra
+         connection attempt.
+        </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+><P
+>    The following additional options are available:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-V</TT
+><BR><TT
+CLASS="OPTION"
+>--version</TT
+></DT
+><DD
+><P
+>        Print the <SPAN
+CLASS="APPLICATION"
+>pg_recvlogical</SPAN
+> version and exit.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-?</TT
+><BR><TT
+CLASS="OPTION"
+>--help</TT
+></DT
+><DD
+><P
+>         Show help about <SPAN
+CLASS="APPLICATION"
+>pg_recvlogical</SPAN
+> command line
+         arguments, and exit.
+        </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN93939"
+></A
+><H2
+>Environment</H2
+><P
+>   This utility, like most other <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> utilities,
+   uses the environment variables supported by <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>
+   (see <A
+HREF="libpq-envars.html"
+>Section 31.14</A
+>).
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN93945"
+></A
+><H2
+>Examples</H2
+><P
+>   See <A
+HREF="logicaldecoding-example.html"
+>Section 46.1</A
+> for an example.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN93949"
+></A
+><H2
+>See Also</H2
+><A
+HREF="app-pgreceivexlog.html"
+>pg_receivexlog</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="app-pgreceivexlog.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="app-pgrestore.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>pg_receivexlog</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="reference-client.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>pg_restore</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

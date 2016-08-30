@@ -1,0 +1,310 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Lock Management</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Configuration"
+HREF="runtime-config.html"><LINK
+REL="PREVIOUS"
+TITLE="Client Connection Defaults"
+HREF="runtime-config-client.html"><LINK
+REL="NEXT"
+TITLE="Version and Platform Compatibility"
+HREF="runtime-config-compatible.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Client Connection Defaults"
+HREF="runtime-config-client.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 18. Server Configuration</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Version and Platform Compatibility"
+HREF="runtime-config-compatible.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RUNTIME-CONFIG-LOCKS"
+>18.12. Lock Management</A
+></H1
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-DEADLOCK-TIMEOUT"
+></A
+><TT
+CLASS="VARNAME"
+>deadlock_timeout</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      
+      
+      </DT
+><DD
+><P
+>        This is the amount of time, in milliseconds, to wait on a lock
+        before checking to see if there is a deadlock condition. The
+        check for deadlock is relatively expensive, so the server doesn't run
+        it every time it waits for a lock. We optimistically assume
+        that deadlocks are not common in production applications and
+        just wait on the lock for a while before checking for a
+        deadlock. Increasing this value reduces the amount of time
+        wasted in needless deadlock checks, but slows down reporting of
+        real deadlock errors. The default is one second (<TT
+CLASS="LITERAL"
+>1s</TT
+>),
+        which is probably about the smallest value you would want in
+        practice. On a heavily loaded server you might want to raise it.
+        Ideally the setting should exceed your typical transaction time,
+        so as to improve the odds that a lock will be released before
+        the waiter decides to check for deadlock.  Only superusers can change
+        this setting.
+       </P
+><P
+>        When <A
+HREF="runtime-config-logging.html#GUC-LOG-LOCK-WAITS"
+>log_lock_waits</A
+> is set,
+        this parameter also determines the length of time to wait before
+        a log message is issued about the lock wait.  If you are trying
+        to investigate locking delays you might want to set a shorter than
+        normal <TT
+CLASS="VARNAME"
+>deadlock_timeout</TT
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-MAX-LOCKS-PER-TRANSACTION"
+></A
+><TT
+CLASS="VARNAME"
+>max_locks_per_transaction</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        The shared lock table tracks locks on
+        <TT
+CLASS="VARNAME"
+>max_locks_per_transaction</TT
+> * (<A
+HREF="runtime-config-connection.html#GUC-MAX-CONNECTIONS"
+>max_connections</A
+> + <A
+HREF="runtime-config-resource.html#GUC-MAX-PREPARED-TRANSACTIONS"
+>max_prepared_transactions</A
+>) objects (e.g.,  tables);
+        hence, no more than this many distinct objects can be locked at
+        any one time.  This parameter controls the average number of object
+        locks allocated for each transaction;  individual transactions
+        can lock more objects as long as the locks of all transactions
+        fit in the lock table.  This is <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+> the number of
+        rows that can be locked; that value is unlimited.  The default,
+        64, has historically proven sufficient, but you might need to
+        raise this value if you have queries that touch many different
+        tables in a single transaction, e.g. query of a parent table with
+        many children.  This parameter can only be set at server start.
+       </P
+><P
+>        When running a standby server, you must set this parameter to the
+        same or higher value than on the master server. Otherwise, queries
+        will not be allowed in the standby server.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-MAX-PRED-LOCKS-PER-TRANSACTION"
+></A
+><TT
+CLASS="VARNAME"
+>max_pred_locks_per_transaction</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        The shared predicate lock table tracks locks on
+        <TT
+CLASS="VARNAME"
+>max_pred_locks_per_transaction</TT
+> * (<A
+HREF="runtime-config-connection.html#GUC-MAX-CONNECTIONS"
+>max_connections</A
+> + <A
+HREF="runtime-config-resource.html#GUC-MAX-PREPARED-TRANSACTIONS"
+>max_prepared_transactions</A
+>) objects (e.g., tables);
+        hence, no more than this many distinct objects can be locked at
+        any one time.  This parameter controls the average number of object
+        locks allocated for each transaction;  individual transactions
+        can lock more objects as long as the locks of all transactions
+        fit in the lock table.  This is <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+> the number of
+        rows that can be locked; that value is unlimited.  The default,
+        64, has generally been sufficient in testing, but you might need to
+        raise this value if you have clients that touch many different
+        tables in a single serializable transaction. This parameter can
+        only be set at server start.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime-config-client.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="runtime-config-compatible.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Client Connection Defaults</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="runtime-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Version and Platform Compatibility</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

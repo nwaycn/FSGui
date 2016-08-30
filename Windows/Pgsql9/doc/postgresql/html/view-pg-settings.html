@@ -1,0 +1,755 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_settings</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="System Catalogs"
+HREF="catalogs.html"><LINK
+REL="PREVIOUS"
+TITLE="pg_seclabels"
+HREF="view-pg-seclabels.html"><LINK
+REL="NEXT"
+TITLE="pg_shadow"
+HREF="view-pg-shadow.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pg_seclabels"
+HREF="view-pg-seclabels.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="catalogs.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 49. System Catalogs</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pg_shadow"
+HREF="view-pg-shadow.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="VIEW-PG-SETTINGS"
+>49.73. <TT
+CLASS="STRUCTNAME"
+>pg_settings</TT
+></A
+></H1
+><P
+>   The view <TT
+CLASS="STRUCTNAME"
+>pg_settings</TT
+> provides access to
+   run-time parameters of the server.  It is essentially an alternative
+   interface to the <A
+HREF="sql-show.html"
+>SHOW</A
+>
+   and <A
+HREF="sql-set.html"
+>SET</A
+> commands.
+   It also provides access to some facts about each parameter that are
+   not directly available from <TT
+CLASS="COMMAND"
+>SHOW</TT
+>, such as minimum and
+   maximum values.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="AEN107855"
+></A
+><P
+><B
+>Table 49-74. <TT
+CLASS="STRUCTNAME"
+>pg_settings</TT
+> Columns</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>name</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Run-time configuration parameter name</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>setting</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Current value of the parameter</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>unit</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Implicit unit of the parameter</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>category</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Logical group of the parameter</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>short_desc</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>A brief description of the parameter</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>extra_desc</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Additional, more detailed, description of the parameter</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>context</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Context required to set the parameter's value (see below)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>vartype</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Parameter type (<TT
+CLASS="LITERAL"
+>bool</TT
+>, <TT
+CLASS="LITERAL"
+>enum</TT
+>,
+       <TT
+CLASS="LITERAL"
+>integer</TT
+>, <TT
+CLASS="LITERAL"
+>real</TT
+>, or <TT
+CLASS="LITERAL"
+>string</TT
+>)
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>source</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Source of the current parameter value</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>min_val</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Minimum allowed value of the parameter (null for non-numeric
+      values)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>max_val</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Maximum allowed value of the parameter (null for non-numeric
+      values)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>enumvals</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text[]</TT
+></TD
+><TD
+>Allowed values of an enum parameter (null for non-enum
+      values)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>boot_val</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Parameter value assumed at server startup if the parameter is
+      not otherwise set</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>reset_val</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Value that <TT
+CLASS="COMMAND"
+>RESET</TT
+> would reset the parameter to
+      in the current session</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>sourcefile</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Configuration file the current value was set in (null for
+      values set from sources other than configuration files, or when
+      examined by a non-superuser);
+      helpful when using <TT
+CLASS="LITERAL"
+>include</TT
+> directives in configuration files</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>sourceline</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>Line number within the configuration file the current value was
+      set at (null for values set from sources other than configuration files,
+      or when examined by a non-superuser)
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>pending_restart</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>true</TT
+> if the value has been changed in the
+      configuration file but needs a restart; or <TT
+CLASS="LITERAL"
+>false</TT
+>
+      otherwise.
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   There are several possible values of <TT
+CLASS="STRUCTFIELD"
+>context</TT
+>.
+   In order of decreasing difficulty of changing the setting, they are:
+  </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>internal</TT
+></DT
+><DD
+><P
+>      These settings cannot be changed directly; they reflect internally
+      determined values.  Some of them may be adjustable by rebuilding the
+      server with different configuration options, or by changing options
+      supplied to <TT
+CLASS="COMMAND"
+>initdb</TT
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>postmaster</TT
+></DT
+><DD
+><P
+>      These settings can only be applied when the server starts, so any change
+      requires restarting the server.  Values for these settings are typically
+      stored in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> file, or passed on
+      the command line when starting the server.  Of course, settings with any
+      of the lower <TT
+CLASS="STRUCTFIELD"
+>context</TT
+> types can also be
+      set at server start time.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>sighup</TT
+></DT
+><DD
+><P
+>      Changes to these settings can be made in
+      <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> without restarting the server.
+      Send a <SPAN
+CLASS="SYSTEMITEM"
+>SIGHUP</SPAN
+> signal to the postmaster to
+      cause it to re-read <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> and apply
+      the changes.  The postmaster will also forward the
+      <SPAN
+CLASS="SYSTEMITEM"
+>SIGHUP</SPAN
+> signal to its child processes so that
+      they all pick up the new value.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>superuser-backend</TT
+></DT
+><DD
+><P
+>      Changes to these settings can be made in
+      <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> without restarting the server.
+      They can also be set for a particular session in the connection request
+      packet (for example, via <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>'s <TT
+CLASS="LITERAL"
+>PGOPTIONS</TT
+>
+      environment variable), but only if the connecting user is a superuser.
+      However, these settings never change in a session after it is started.
+      If you change them in <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>, send a
+      <SPAN
+CLASS="SYSTEMITEM"
+>SIGHUP</SPAN
+> signal to the postmaster to cause it to
+      re-read <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>.  The new values will only
+      affect subsequently-launched sessions.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>backend</TT
+></DT
+><DD
+><P
+>      Changes to these settings can be made in
+      <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> without restarting the server.
+      They can also be set for a particular session in the connection request
+      packet (for example, via <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>'s <TT
+CLASS="LITERAL"
+>PGOPTIONS</TT
+>
+      environment variable); any user can make such a change for his session.
+      However, these settings never change in a session after it is started.
+      If you change them in <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>, send a
+      <SPAN
+CLASS="SYSTEMITEM"
+>SIGHUP</SPAN
+> signal to the postmaster to cause it to
+      re-read <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>.  The new values will only
+      affect subsequently-launched sessions.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>superuser</TT
+></DT
+><DD
+><P
+>      These settings can be set from <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>,
+      or within a session via the <TT
+CLASS="COMMAND"
+>SET</TT
+> command; but only superusers
+      can change them via <TT
+CLASS="COMMAND"
+>SET</TT
+>.  Changes in
+      <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> will affect existing sessions
+      only if no session-local value has been established with <TT
+CLASS="COMMAND"
+>SET</TT
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>user</TT
+></DT
+><DD
+><P
+>      These settings can be set from <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>,
+      or within a session via the <TT
+CLASS="COMMAND"
+>SET</TT
+> command.  Any user is
+      allowed to change his session-local value.  Changes in
+      <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> will affect existing sessions
+      only if no session-local value has been established with <TT
+CLASS="COMMAND"
+>SET</TT
+>.
+     </P
+></DD
+></DL
+></DIV
+><P
+>   See <A
+HREF="config-setting.html"
+>Section 18.1</A
+> for more information about the various
+   ways to change these parameters.
+  </P
+><P
+>   The <TT
+CLASS="STRUCTNAME"
+>pg_settings</TT
+> view cannot be inserted into or
+   deleted from, but it can be updated.  An <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> applied
+   to a row of <TT
+CLASS="STRUCTNAME"
+>pg_settings</TT
+> is equivalent to executing
+   the <A
+HREF="sql-set.html"
+>SET</A
+> command on that named
+   parameter. The change only affects the value used by the current
+   session. If an <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> is issued within a transaction
+   that is later aborted, the effects of the <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> command
+   disappear when the transaction is rolled back. Once the surrounding
+   transaction is committed, the effects will persist until the end of the
+   session, unless overridden by another <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> or
+   <TT
+CLASS="COMMAND"
+>SET</TT
+>.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="view-pg-seclabels.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="view-pg-shadow.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><TT
+CLASS="STRUCTNAME"
+>pg_seclabels</TT
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="catalogs.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><TT
+CLASS="STRUCTNAME"
+>pg_shadow</TT
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

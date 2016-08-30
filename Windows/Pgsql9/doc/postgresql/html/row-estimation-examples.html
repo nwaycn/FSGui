@@ -1,0 +1,831 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Row Estimation Examples</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="How the Planner Uses Statistics"
+HREF="planner-stats-details.html"><LINK
+REL="PREVIOUS"
+TITLE="How the Planner Uses Statistics"
+HREF="planner-stats-details.html"><LINK
+REL="NEXT"
+TITLE="Appendixes"
+HREF="appendixes.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="How the Planner Uses Statistics"
+HREF="planner-stats-details.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="planner-stats-details.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 65. How the Planner Uses Statistics</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Appendixes"
+HREF="appendixes.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="ROW-ESTIMATION-EXAMPLES"
+>65.1. Row Estimation Examples</A
+></H1
+><P
+>   The examples shown below use tables in the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+   regression test database.
+   The outputs shown are taken from version 8.3.
+   The behavior of earlier (or later) versions might vary.
+   Note also that since <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> uses random sampling
+   while producing statistics, the results will change slightly after
+   any new <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+>.
+  </P
+><P
+>   Let's start with a very simple query:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXPLAIN SELECT * FROM tenk1;
+
+                         QUERY PLAN
+-------------------------------------------------------------
+ Seq Scan on tenk1  (cost=0.00..458.00 rows=10000 width=244)</PRE
+><P>
+
+   How the planner determines the cardinality of <TT
+CLASS="STRUCTNAME"
+>tenk1</TT
+>
+   is covered in <A
+HREF="planner-stats.html"
+>Section 14.2</A
+>, but is repeated here for
+   completeness. The number of pages and rows is looked up in
+   <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+>:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT relpages, reltuples FROM pg_class WHERE relname = 'tenk1';
+
+ relpages | reltuples
+----------+-----------
+      358 |     10000</PRE
+><P>
+
+    These numbers are current as of the last <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> or
+    <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> on the table.  The planner then fetches the
+    actual current number of pages in the table (this is a cheap operation,
+    not requiring a table scan).  If that is different from
+    <TT
+CLASS="STRUCTFIELD"
+>relpages</TT
+> then
+    <TT
+CLASS="STRUCTFIELD"
+>reltuples</TT
+> is scaled accordingly to
+    arrive at a current number-of-rows estimate.  In the example above, the value of
+    <TT
+CLASS="STRUCTFIELD"
+>relpages</TT
+> is up-to-date so the rows estimate is
+    the same as <TT
+CLASS="STRUCTFIELD"
+>reltuples</TT
+>.
+  </P
+><P
+>   Let's move on to an example with a range condition in its
+   <TT
+CLASS="LITERAL"
+>WHERE</TT
+> clause:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXPLAIN SELECT * FROM tenk1 WHERE unique1 &lt; 1000;
+
+                                   QUERY PLAN
+--------------------------------------------------------------------------------
+ Bitmap Heap Scan on tenk1  (cost=24.06..394.64 rows=1007 width=244)
+   Recheck Cond: (unique1 &lt; 1000)
+   -&gt;  Bitmap Index Scan on tenk1_unique1  (cost=0.00..23.80 rows=1007 width=0)
+         Index Cond: (unique1 &lt; 1000)</PRE
+><P>
+
+   The planner examines the <TT
+CLASS="LITERAL"
+>WHERE</TT
+> clause condition
+   and looks up the selectivity function for the operator
+   <TT
+CLASS="LITERAL"
+>&lt;</TT
+> in <TT
+CLASS="STRUCTNAME"
+>pg_operator</TT
+>.
+   This is held in the column <TT
+CLASS="STRUCTFIELD"
+>oprrest</TT
+>,
+   and the entry in this case is <CODE
+CLASS="FUNCTION"
+>scalarltsel</CODE
+>.
+   The <CODE
+CLASS="FUNCTION"
+>scalarltsel</CODE
+> function retrieves the histogram for
+   <TT
+CLASS="STRUCTFIELD"
+>unique1</TT
+> from
+   <TT
+CLASS="STRUCTNAME"
+>pg_statistics</TT
+>.  For manual queries it is more
+   convenient to look in the simpler <TT
+CLASS="STRUCTNAME"
+>pg_stats</TT
+>
+   view:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT histogram_bounds FROM pg_stats
+WHERE tablename='tenk1' AND attname='unique1';
+
+                   histogram_bounds
+------------------------------------------------------
+ {0,993,1997,3050,4040,5036,5957,7057,8029,9016,9995}</PRE
+><P>
+
+   Next the fraction of the histogram occupied by <SPAN
+CLASS="QUOTE"
+>"&lt; 1000"</SPAN
+>
+   is worked out. This is the selectivity. The histogram divides the range
+   into equal frequency buckets, so all we have to do is locate the bucket
+   that our value is in and count <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>part</I
+></SPAN
+> of it and
+   <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>all</I
+></SPAN
+> of the ones before. The value 1000 is clearly in
+   the second bucket (993-1997).  Assuming a linear distribution of
+   values inside each bucket, we can calculate the selectivity as:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>selectivity = (1 + (1000 - bucket[2].min)/(bucket[2].max - bucket[2].min))/num_buckets
+            = (1 + (1000 - 993)/(1997 - 993))/10
+            = 0.100697</PRE
+><P>
+
+   that is, one whole bucket plus a linear fraction of the second, divided by
+   the number of buckets. The estimated number of rows can now be calculated as
+   the product of the selectivity and the cardinality of
+   <TT
+CLASS="STRUCTNAME"
+>tenk1</TT
+>:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>rows = rel_cardinality * selectivity
+     = 10000 * 0.100697
+     = 1007  (rounding off)</PRE
+><P>
+  </P
+><P
+>   Next let's consider an example with an equality condition in its
+   <TT
+CLASS="LITERAL"
+>WHERE</TT
+> clause:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXPLAIN SELECT * FROM tenk1 WHERE stringu1 = 'CRAAAA';
+
+                        QUERY PLAN
+----------------------------------------------------------
+ Seq Scan on tenk1  (cost=0.00..483.00 rows=30 width=244)
+   Filter: (stringu1 = 'CRAAAA'::name)</PRE
+><P>
+
+   Again the planner examines the <TT
+CLASS="LITERAL"
+>WHERE</TT
+> clause condition
+   and looks up the selectivity function for <TT
+CLASS="LITERAL"
+>=</TT
+>, which is
+   <CODE
+CLASS="FUNCTION"
+>eqsel</CODE
+>.  For equality estimation the histogram is
+   not useful; instead the list of <I
+CLASS="FIRSTTERM"
+>most
+   common values</I
+> (<ACRONYM
+CLASS="ACRONYM"
+>MCV</ACRONYM
+>s) is used to determine the
+   selectivity. Let's have a look at the MCVs, with some additional columns
+   that will be useful later:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT null_frac, n_distinct, most_common_vals, most_common_freqs FROM pg_stats
+WHERE tablename='tenk1' AND attname='stringu1';
+
+null_frac         | 0
+n_distinct        | 676
+most_common_vals  | {EJAAAA,BBAAAA,CRAAAA,FCAAAA,FEAAAA,GSAAAA,JOAAAA,MCAAAA,NAAAAA,WGAAAA}
+most_common_freqs | {0.00333333,0.003,0.003,0.003,0.003,0.003,0.003,0.003,0.003,0.003}&#13;</PRE
+><P>
+
+   Since <TT
+CLASS="LITERAL"
+>CRAAAA</TT
+> appears in the list of MCVs, the selectivity is
+   merely the corresponding entry in the list of most common frequencies
+   (<ACRONYM
+CLASS="ACRONYM"
+>MCF</ACRONYM
+>s):
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>selectivity = mcf[3]
+            = 0.003</PRE
+><P>
+
+   As before, the estimated number of rows is just the product of this with the
+   cardinality of <TT
+CLASS="STRUCTNAME"
+>tenk1</TT
+>:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>rows = 10000 * 0.003
+     = 30</PRE
+><P>
+  </P
+><P
+>   Now consider the same query, but with a constant that is not in the
+   <ACRONYM
+CLASS="ACRONYM"
+>MCV</ACRONYM
+> list:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXPLAIN SELECT * FROM tenk1 WHERE stringu1 = 'xxx';
+
+                        QUERY PLAN
+----------------------------------------------------------
+ Seq Scan on tenk1  (cost=0.00..483.00 rows=15 width=244)
+   Filter: (stringu1 = 'xxx'::name)</PRE
+><P>
+
+   This is quite a different problem: how to estimate the selectivity when the
+   value is <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+> in the <ACRONYM
+CLASS="ACRONYM"
+>MCV</ACRONYM
+> list.
+   The approach is to use the fact that the value is not in the list,
+   combined with the knowledge of the frequencies for all of the
+   <ACRONYM
+CLASS="ACRONYM"
+>MCV</ACRONYM
+>s:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>selectivity = (1 - sum(mvf))/(num_distinct - num_mcv)
+            = (1 - (0.00333333 + 0.003 + 0.003 + 0.003 + 0.003 + 0.003 +
+                    0.003 + 0.003 + 0.003 + 0.003))/(676 - 10)
+            = 0.0014559</PRE
+><P>
+
+   That is, add up all the frequencies for the <ACRONYM
+CLASS="ACRONYM"
+>MCV</ACRONYM
+>s and
+   subtract them from one, then
+   divide by the number of <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>other</I
+></SPAN
+> distinct values.
+   This amounts to assuming that the fraction of the column that is not any
+   of the MCVs is evenly distributed among all the other distinct values.
+   Notice that there are no null values so we don't have to worry about those
+   (otherwise we'd subtract the null fraction from the numerator as well).
+   The estimated number of rows is then calculated as usual:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>rows = 10000 * 0.0014559
+     = 15  (rounding off)</PRE
+><P>
+  </P
+><P
+>   The previous example with <TT
+CLASS="LITERAL"
+>unique1 &lt; 1000</TT
+> was an
+   oversimplification of what <CODE
+CLASS="FUNCTION"
+>scalarltsel</CODE
+> really does;
+   now that we have seen an example of the use of MCVs, we can fill in some
+   more detail.  The example was correct as far as it went, because since
+   <TT
+CLASS="STRUCTFIELD"
+>unique1</TT
+> is a unique column it has no MCVs (obviously, no
+   value is any more common than any other value).  For a non-unique
+   column, there will normally be both a histogram and an MCV list, and
+   <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>the histogram does not include the portion of the column
+   population represented by the MCVs</I
+></SPAN
+>.  We do things this way because
+   it allows more precise estimation.  In this situation
+   <CODE
+CLASS="FUNCTION"
+>scalarltsel</CODE
+> directly applies the condition (e.g.,
+   <SPAN
+CLASS="QUOTE"
+>"&lt; 1000"</SPAN
+>) to each value of the MCV list, and adds up the
+   frequencies of the MCVs for which the condition is true.  This gives
+   an exact estimate of the selectivity within the portion of the table
+   that is MCVs.  The histogram is then used in the same way as above
+   to estimate the selectivity in the portion of the table that is not
+   MCVs, and then the two numbers are combined to estimate the overall
+   selectivity.  For example, consider
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXPLAIN SELECT * FROM tenk1 WHERE stringu1 &lt; 'IAAAAA';
+
+                         QUERY PLAN
+------------------------------------------------------------
+ Seq Scan on tenk1  (cost=0.00..483.00 rows=3077 width=244)
+   Filter: (stringu1 &lt; 'IAAAAA'::name)</PRE
+><P>
+
+   We already saw the MCV information for <TT
+CLASS="STRUCTFIELD"
+>stringu1</TT
+>,
+   and here is its histogram:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT histogram_bounds FROM pg_stats
+WHERE tablename='tenk1' AND attname='stringu1';
+
+                                histogram_bounds
+--------------------------------------------------------------------------------
+ {AAAAAA,CQAAAA,FRAAAA,IBAAAA,KRAAAA,NFAAAA,PSAAAA,SGAAAA,VAAAAA,XLAAAA,ZZAAAA}</PRE
+><P>
+
+   Checking the MCV list, we find that the condition <TT
+CLASS="LITERAL"
+>stringu1 &lt;
+   'IAAAAA'</TT
+> is satisfied by the first six entries and not the last four,
+   so the selectivity within the MCV part of the population is
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>selectivity = sum(relevant mvfs)
+            = 0.00333333 + 0.003 + 0.003 + 0.003 + 0.003 + 0.003
+            = 0.01833333</PRE
+><P>
+
+   Summing all the MCFs also tells us that the total fraction of the
+   population represented by MCVs is 0.03033333, and therefore the
+   fraction represented by the histogram is 0.96966667 (again, there
+   are no nulls, else we'd have to exclude them here).  We can see
+   that the value <TT
+CLASS="LITERAL"
+>IAAAAA</TT
+> falls nearly at the end of the
+   third histogram bucket.  Using some rather cheesy assumptions
+   about the frequency of different characters, the planner arrives
+   at the estimate 0.298387 for the portion of the histogram population
+   that is less than <TT
+CLASS="LITERAL"
+>IAAAAA</TT
+>.  We then combine the estimates
+   for the MCV and non-MCV populations:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>selectivity = mcv_selectivity + histogram_selectivity * histogram_fraction
+            = 0.01833333 + 0.298387 * 0.96966667
+            = 0.307669
+
+rows        = 10000 * 0.307669
+            = 3077  (rounding off)</PRE
+><P>
+
+   In this particular example, the correction from the MCV list is fairly
+   small, because the column distribution is actually quite flat (the
+   statistics showing these particular values as being more common than
+   others are mostly due to sampling error).  In a more typical case where
+   some values are significantly more common than others, this complicated
+   process gives a useful improvement in accuracy because the selectivity
+   for the most common values is found exactly.
+  </P
+><P
+>   Now let's consider a case with more than one
+   condition in the <TT
+CLASS="LITERAL"
+>WHERE</TT
+> clause:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXPLAIN SELECT * FROM tenk1 WHERE unique1 &lt; 1000 AND stringu1 = 'xxx';
+
+                                   QUERY PLAN
+--------------------------------------------------------------------------------
+ Bitmap Heap Scan on tenk1  (cost=23.80..396.91 rows=1 width=244)
+   Recheck Cond: (unique1 &lt; 1000)
+   Filter: (stringu1 = 'xxx'::name)
+   -&gt;  Bitmap Index Scan on tenk1_unique1  (cost=0.00..23.80 rows=1007 width=0)
+         Index Cond: (unique1 &lt; 1000)</PRE
+><P>
+
+   The planner assumes that the two conditions are independent, so that
+   the individual selectivities of the clauses can be multiplied together:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>selectivity = selectivity(unique1 &lt; 1000) * selectivity(stringu1 = 'xxx')
+            = 0.100697 * 0.0014559
+            = 0.0001466
+
+rows        = 10000 * 0.0001466
+            = 1  (rounding off)</PRE
+><P>
+
+   Notice that the number of rows estimated to be returned from the bitmap
+   index scan reflects only the condition used with the index; this is
+   important since it affects the cost estimate for the subsequent heap
+   fetches.
+  </P
+><P
+>   Finally we will examine a query that involves a join:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXPLAIN SELECT * FROM tenk1 t1, tenk2 t2
+WHERE t1.unique1 &lt; 50 AND t1.unique2 = t2.unique2;
+
+                                      QUERY PLAN
+--------------------------------------------------------------------------------------
+ Nested Loop  (cost=4.64..456.23 rows=50 width=488)
+   -&gt;  Bitmap Heap Scan on tenk1 t1  (cost=4.64..142.17 rows=50 width=244)
+         Recheck Cond: (unique1 &lt; 50)
+         -&gt;  Bitmap Index Scan on tenk1_unique1  (cost=0.00..4.63 rows=50 width=0)
+               Index Cond: (unique1 &lt; 50)
+   -&gt;  Index Scan using tenk2_unique2 on tenk2 t2  (cost=0.00..6.27 rows=1 width=244)
+         Index Cond: (unique2 = t1.unique2)</PRE
+><P>
+
+   The restriction on <TT
+CLASS="STRUCTNAME"
+>tenk1</TT
+>,
+   <TT
+CLASS="LITERAL"
+>unique1 &lt; 50</TT
+>,
+   is evaluated before the nested-loop join.
+   This is handled analogously to the previous range example.  This time the
+   value 50 falls into the first bucket of the
+   <TT
+CLASS="STRUCTFIELD"
+>unique1</TT
+> histogram:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>selectivity = (0 + (50 - bucket[1].min)/(bucket[1].max - bucket[1].min))/num_buckets
+            = (0 + (50 - 0)/(993 - 0))/10
+            = 0.005035
+
+rows        = 10000 * 0.005035
+            = 50  (rounding off)</PRE
+><P>
+
+   The restriction for the join is <TT
+CLASS="LITERAL"
+>t2.unique2 = t1.unique2</TT
+>.
+   The operator is just
+   our familiar <TT
+CLASS="LITERAL"
+>=</TT
+>, however the selectivity function is
+   obtained from the <TT
+CLASS="STRUCTFIELD"
+>oprjoin</TT
+> column of
+   <TT
+CLASS="STRUCTNAME"
+>pg_operator</TT
+>, and is <CODE
+CLASS="FUNCTION"
+>eqjoinsel</CODE
+>.
+   <CODE
+CLASS="FUNCTION"
+>eqjoinsel</CODE
+> looks up the statistical information for both
+   <TT
+CLASS="STRUCTNAME"
+>tenk2</TT
+> and <TT
+CLASS="STRUCTNAME"
+>tenk1</TT
+>:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT tablename, null_frac,n_distinct, most_common_vals FROM pg_stats
+WHERE tablename IN ('tenk1', 'tenk2') AND attname='unique2';
+
+tablename  | null_frac | n_distinct | most_common_vals
+-----------+-----------+------------+------------------
+ tenk1     |         0 |         -1 |
+ tenk2     |         0 |         -1 |</PRE
+><P>
+
+   In this case there is no <ACRONYM
+CLASS="ACRONYM"
+>MCV</ACRONYM
+> information for
+   <TT
+CLASS="STRUCTFIELD"
+>unique2</TT
+> because all the values appear to be
+   unique, so we use an algorithm that relies only on the number of
+   distinct values for both relations together with their null fractions:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>selectivity = (1 - null_frac1) * (1 - null_frac2) * min(1/num_distinct1, 1/num_distinct2)
+            = (1 - 0) * (1 - 0) / max(10000, 10000)
+            = 0.0001</PRE
+><P>
+
+   This is, subtract the null fraction from one for each of the relations,
+   and divide by the maximum of the numbers of distinct values.
+   The number of rows
+   that the join is likely to emit is calculated as the cardinality of the
+   Cartesian product of the two inputs, multiplied by the
+   selectivity:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>rows = (outer_cardinality * inner_cardinality) * selectivity
+     = (50 * 10000) * 0.0001
+     = 50</PRE
+><P>
+  </P
+><P
+>   Had there been MCV lists for the two columns,
+   <CODE
+CLASS="FUNCTION"
+>eqjoinsel</CODE
+> would have used direct comparison of the MCV
+   lists to determine the join selectivity within the part of the column
+   populations represented by the MCVs.  The estimate for the remainder of the
+   populations follows the same approach shown here.
+  </P
+><P
+>   Notice that we showed <TT
+CLASS="LITERAL"
+>inner_cardinality</TT
+> as 10000, that is,
+   the unmodified size of <TT
+CLASS="STRUCTNAME"
+>tenk2</TT
+>.  It might appear from
+   inspection of the <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+> output that the estimate of
+   join rows comes from 50 * 1, that is, the number of outer rows times
+   the estimated number of rows obtained by each inner index scan on
+   <TT
+CLASS="STRUCTNAME"
+>tenk2</TT
+>.  But this is not the case: the join relation size
+   is estimated before any particular join plan has been considered.  If
+   everything is working well then the two ways of estimating the join
+   size will produce about the same answer, but due to round-off error and
+   other factors they sometimes diverge significantly.
+  </P
+><P
+>   For those interested in further details, estimation of the size of
+   a table (before any <TT
+CLASS="LITERAL"
+>WHERE</TT
+> clauses) is done in
+   <TT
+CLASS="FILENAME"
+>src/backend/optimizer/util/plancat.c</TT
+>. The generic
+   logic for clause selectivities is in
+   <TT
+CLASS="FILENAME"
+>src/backend/optimizer/path/clausesel.c</TT
+>.  The
+   operator-specific selectivity functions are mostly found
+   in <TT
+CLASS="FILENAME"
+>src/backend/utils/adt/selfuncs.c</TT
+>.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="planner-stats-details.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="appendixes.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>How the Planner Uses Statistics</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="planner-stats-details.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Appendixes</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

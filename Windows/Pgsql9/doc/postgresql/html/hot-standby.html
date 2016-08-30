@@ -1,0 +1,1447 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Hot Standby</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="High Availability, Load Balancing, and Replication"
+HREF="high-availability.html"><LINK
+REL="PREVIOUS"
+TITLE="Alternative Method for Log Shipping"
+HREF="log-shipping-alternative.html"><LINK
+REL="NEXT"
+TITLE="Recovery Configuration"
+HREF="recovery-config.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Alternative Method for Log Shipping"
+HREF="log-shipping-alternative.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="high-availability.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 25. High Availability, Load Balancing, and Replication</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Recovery Configuration"
+HREF="recovery-config.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="HOT-STANDBY"
+>25.5. Hot Standby</A
+></H1
+><P
+>    Hot Standby is the term used to describe the ability to connect to
+    the server and run read-only queries while the server is in archive
+    recovery or standby mode. This
+    is useful both for replication purposes and for restoring a backup
+    to a desired state with great precision.
+    The term Hot Standby also refers to the ability of the server to move
+    from recovery through to normal operation while users continue running
+    queries and/or keep their connections open.
+   </P
+><P
+>    Running queries in hot standby mode is similar to normal query operation,
+    though there are several usage and administrative differences
+    explained below.
+   </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="HOT-STANDBY-USERS"
+>25.5.1. User's Overview</A
+></H2
+><P
+>    When the <A
+HREF="runtime-config-replication.html#GUC-HOT-STANDBY"
+>hot_standby</A
+> parameter is set to true on a
+    standby server, it will begin accepting connections once the recovery has
+    brought the system to a consistent state.  All such connections are
+    strictly read-only; not even temporary tables may be written.
+   </P
+><P
+>    The data on the standby takes some time to arrive from the primary server
+    so there will be a measurable delay between primary and standby. Running the
+    same query nearly simultaneously on both primary and standby might therefore
+    return differing results. We say that data on the standby is
+    <I
+CLASS="FIRSTTERM"
+>eventually consistent</I
+> with the primary.  Once the
+    commit record for a transaction is replayed on the standby, the changes
+    made by that transaction will be visible to any new snapshots taken on
+    the standby.  Snapshots may be taken at the start of each query or at the
+    start of each transaction, depending on the current transaction isolation
+    level.  For more details, see <A
+HREF="transaction-iso.html"
+>Section 13.2</A
+>.
+   </P
+><P
+>    Transactions started during hot standby may issue the following commands:
+
+    <P
+></P
+></P><UL
+><LI
+><P
+>       Query access - <TT
+CLASS="COMMAND"
+>SELECT</TT
+>, <TT
+CLASS="COMMAND"
+>COPY TO</TT
+>
+      </P
+></LI
+><LI
+><P
+>       Cursor commands - <TT
+CLASS="COMMAND"
+>DECLARE</TT
+>, <TT
+CLASS="COMMAND"
+>FETCH</TT
+>, <TT
+CLASS="COMMAND"
+>CLOSE</TT
+>
+      </P
+></LI
+><LI
+><P
+>       Parameters - <TT
+CLASS="COMMAND"
+>SHOW</TT
+>, <TT
+CLASS="COMMAND"
+>SET</TT
+>, <TT
+CLASS="COMMAND"
+>RESET</TT
+>
+      </P
+></LI
+><LI
+><P
+>       Transaction management commands
+        <P
+></P
+></P><UL
+><LI
+><P
+>           <TT
+CLASS="COMMAND"
+>BEGIN</TT
+>, <TT
+CLASS="COMMAND"
+>END</TT
+>, <TT
+CLASS="COMMAND"
+>ABORT</TT
+>, <TT
+CLASS="COMMAND"
+>START TRANSACTION</TT
+>
+          </P
+></LI
+><LI
+><P
+>           <TT
+CLASS="COMMAND"
+>SAVEPOINT</TT
+>, <TT
+CLASS="COMMAND"
+>RELEASE</TT
+>, <TT
+CLASS="COMMAND"
+>ROLLBACK TO SAVEPOINT</TT
+>
+          </P
+></LI
+><LI
+><P
+>           <TT
+CLASS="COMMAND"
+>EXCEPTION</TT
+> blocks and other internal subtransactions
+          </P
+></LI
+></UL
+><P>
+      </P
+></LI
+><LI
+><P
+>       <TT
+CLASS="COMMAND"
+>LOCK TABLE</TT
+>, though only when explicitly in one of these modes:
+       <TT
+CLASS="LITERAL"
+>ACCESS SHARE</TT
+>, <TT
+CLASS="LITERAL"
+>ROW SHARE</TT
+> or <TT
+CLASS="LITERAL"
+>ROW EXCLUSIVE</TT
+>.
+      </P
+></LI
+><LI
+><P
+>       Plans and resources - <TT
+CLASS="COMMAND"
+>PREPARE</TT
+>, <TT
+CLASS="COMMAND"
+>EXECUTE</TT
+>,
+       <TT
+CLASS="COMMAND"
+>DEALLOCATE</TT
+>, <TT
+CLASS="COMMAND"
+>DISCARD</TT
+>
+      </P
+></LI
+><LI
+><P
+>       Plugins and extensions - <TT
+CLASS="COMMAND"
+>LOAD</TT
+>
+      </P
+></LI
+></UL
+><P>
+   </P
+><P
+>    Transactions started during hot standby will never be assigned a
+    transaction ID and cannot write to the system write-ahead log.
+    Therefore, the following actions will produce error messages:
+
+    <P
+></P
+></P><UL
+><LI
+><P
+>       Data Manipulation Language (DML) - <TT
+CLASS="COMMAND"
+>INSERT</TT
+>,
+       <TT
+CLASS="COMMAND"
+>UPDATE</TT
+>, <TT
+CLASS="COMMAND"
+>DELETE</TT
+>, <TT
+CLASS="COMMAND"
+>COPY FROM</TT
+>,
+       <TT
+CLASS="COMMAND"
+>TRUNCATE</TT
+>.
+       Note that there are no allowed actions that result in a trigger
+       being executed during recovery.  This restriction applies even to
+       temporary tables, because table rows cannot be read or written without
+       assigning a transaction ID, which is currently not possible in a
+       Hot Standby environment.
+      </P
+></LI
+><LI
+><P
+>       Data Definition Language (DDL) - <TT
+CLASS="COMMAND"
+>CREATE</TT
+>,
+       <TT
+CLASS="COMMAND"
+>DROP</TT
+>, <TT
+CLASS="COMMAND"
+>ALTER</TT
+>, <TT
+CLASS="COMMAND"
+>COMMENT</TT
+>.
+       This restriction applies even to temporary tables, because carrying
+       out these operations would require updating the system catalog tables.
+      </P
+></LI
+><LI
+><P
+>       <TT
+CLASS="COMMAND"
+>SELECT ... FOR SHARE | UPDATE</TT
+>, because row locks cannot be
+       taken without updating the underlying data files.
+      </P
+></LI
+><LI
+><P
+>       Rules on <TT
+CLASS="COMMAND"
+>SELECT</TT
+> statements that generate DML commands.
+      </P
+></LI
+><LI
+><P
+>       <TT
+CLASS="COMMAND"
+>LOCK</TT
+> that explicitly requests a mode higher than <TT
+CLASS="LITERAL"
+>ROW EXCLUSIVE MODE</TT
+>.
+      </P
+></LI
+><LI
+><P
+>       <TT
+CLASS="COMMAND"
+>LOCK</TT
+> in short default form, since it requests <TT
+CLASS="LITERAL"
+>ACCESS EXCLUSIVE MODE</TT
+>.
+      </P
+></LI
+><LI
+><P
+>       Transaction management commands that explicitly set non-read-only state:
+        <P
+></P
+></P><UL
+><LI
+><P
+>            <TT
+CLASS="COMMAND"
+>BEGIN READ WRITE</TT
+>,
+            <TT
+CLASS="COMMAND"
+>START TRANSACTION READ WRITE</TT
+>
+          </P
+></LI
+><LI
+><P
+>            <TT
+CLASS="COMMAND"
+>SET TRANSACTION READ WRITE</TT
+>,
+            <TT
+CLASS="COMMAND"
+>SET SESSION CHARACTERISTICS AS TRANSACTION READ WRITE</TT
+>
+          </P
+></LI
+><LI
+><P
+>           <TT
+CLASS="COMMAND"
+>SET transaction_read_only = off</TT
+>
+          </P
+></LI
+></UL
+><P>
+      </P
+></LI
+><LI
+><P
+>       Two-phase commit commands - <TT
+CLASS="COMMAND"
+>PREPARE TRANSACTION</TT
+>,
+       <TT
+CLASS="COMMAND"
+>COMMIT PREPARED</TT
+>, <TT
+CLASS="COMMAND"
+>ROLLBACK PREPARED</TT
+>
+       because even read-only transactions need to write WAL in the
+       prepare phase (the first phase of two phase commit).
+      </P
+></LI
+><LI
+><P
+>       Sequence updates - <CODE
+CLASS="FUNCTION"
+>nextval()</CODE
+>, <CODE
+CLASS="FUNCTION"
+>setval()</CODE
+>
+      </P
+></LI
+><LI
+><P
+>       <TT
+CLASS="COMMAND"
+>LISTEN</TT
+>, <TT
+CLASS="COMMAND"
+>UNLISTEN</TT
+>, <TT
+CLASS="COMMAND"
+>NOTIFY</TT
+>
+      </P
+></LI
+></UL
+><P>
+   </P
+><P
+>    In normal operation, <SPAN
+CLASS="QUOTE"
+>"read-only"</SPAN
+> transactions are allowed to
+    update sequences and to use <TT
+CLASS="COMMAND"
+>LISTEN</TT
+>, <TT
+CLASS="COMMAND"
+>UNLISTEN</TT
+>, and
+    <TT
+CLASS="COMMAND"
+>NOTIFY</TT
+>, so Hot Standby sessions operate under slightly tighter
+    restrictions than ordinary read-only sessions.  It is possible that some
+    of these restrictions might be loosened in a future release.
+   </P
+><P
+>    During hot standby, the parameter <TT
+CLASS="VARNAME"
+>transaction_read_only</TT
+> is always
+    true and may not be changed.  But as long as no attempt is made to modify
+    the database, connections during hot standby will act much like any other
+    database connection.  If failover or switchover occurs, the database will
+    switch to normal processing mode.  Sessions will remain connected while the
+    server changes mode.  Once hot standby finishes, it will be possible to
+    initiate read-write transactions (even from a session begun during
+    hot standby).
+   </P
+><P
+>    Users will be able to tell whether their session is read-only by
+    issuing <TT
+CLASS="COMMAND"
+>SHOW transaction_read_only</TT
+>.  In addition, a set of
+    functions (<A
+HREF="functions-admin.html#FUNCTIONS-RECOVERY-INFO-TABLE"
+>Table 9-69</A
+>) allow users to
+    access information about the standby server. These allow you to write
+    programs that are aware of the current state of the database. These
+    can be used to monitor the progress of recovery, or to allow you to
+    write complex programs that restore the database to particular states.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="HOT-STANDBY-CONFLICT"
+>25.5.2. Handling Query Conflicts</A
+></H2
+><P
+>    The primary and standby servers are in many ways loosely connected. Actions
+    on the primary will have an effect on the standby. As a result, there is
+    potential for negative interactions or conflicts between them. The easiest
+    conflict to understand is performance: if a huge data load is taking place
+    on the primary then this will generate a similar stream of WAL records on the
+    standby, so standby queries may contend for system resources, such as I/O.
+   </P
+><P
+>    There are also additional types of conflict that can occur with Hot Standby.
+    These conflicts are <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>hard conflicts</I
+></SPAN
+> in the sense that queries
+    might need to be canceled and, in some cases, sessions disconnected to resolve them.
+    The user is provided with several ways to handle these
+    conflicts. Conflict cases include:
+
+      <P
+></P
+></P><UL
+><LI
+><P
+>         Access Exclusive locks taken on the primary server, including both
+         explicit <TT
+CLASS="COMMAND"
+>LOCK</TT
+> commands and various <ACRONYM
+CLASS="ACRONYM"
+>DDL</ACRONYM
+>
+         actions, conflict with table accesses in standby queries.
+        </P
+></LI
+><LI
+><P
+>         Dropping a tablespace on the primary conflicts with standby queries
+         using that tablespace for temporary work files.
+        </P
+></LI
+><LI
+><P
+>         Dropping a database on the primary conflicts with sessions connected
+         to that database on the standby.
+        </P
+></LI
+><LI
+><P
+>         Application of a vacuum cleanup record from WAL conflicts with
+         standby transactions whose snapshots can still <SPAN
+CLASS="QUOTE"
+>"see"</SPAN
+> any of
+         the rows to be removed.
+        </P
+></LI
+><LI
+><P
+>         Application of a vacuum cleanup record from WAL conflicts with
+         queries accessing the target page on the standby, whether or not
+         the data to be removed is visible.
+        </P
+></LI
+></UL
+><P>
+   </P
+><P
+>    On the primary server, these cases simply result in waiting; and the
+    user might choose to cancel either of the conflicting actions.  However,
+    on the standby there is no choice: the WAL-logged action already occurred
+    on the primary so the standby must not fail to apply it.  Furthermore,
+    allowing WAL application to wait indefinitely may be very undesirable,
+    because the standby's state will become increasingly far behind the
+    primary's.  Therefore, a mechanism is provided to forcibly cancel standby
+    queries that conflict with to-be-applied WAL records.
+   </P
+><P
+>    An example of the problem situation is an administrator on the primary
+    server running <TT
+CLASS="COMMAND"
+>DROP TABLE</TT
+> on a table that is currently being
+    queried on the standby server.  Clearly the standby query cannot continue
+    if the <TT
+CLASS="COMMAND"
+>DROP TABLE</TT
+> is applied on the standby. If this situation
+    occurred on the primary, the <TT
+CLASS="COMMAND"
+>DROP TABLE</TT
+> would wait until the
+    other query had finished. But when <TT
+CLASS="COMMAND"
+>DROP TABLE</TT
+> is run on the
+    primary, the primary doesn't have information about what queries are
+    running on the standby, so it will not wait for any such standby
+    queries. The WAL change records come through to the standby while the
+    standby query is still running, causing a conflict.  The standby server
+    must either delay application of the WAL records (and everything after
+    them, too) or else cancel the conflicting query so that the <TT
+CLASS="COMMAND"
+>DROP
+    TABLE</TT
+> can be applied.
+   </P
+><P
+>    When a conflicting query is short, it's typically desirable to allow it to
+    complete by delaying WAL application for a little bit; but a long delay in
+    WAL application is usually not desirable.  So the cancel mechanism has
+    parameters, <A
+HREF="runtime-config-replication.html#GUC-MAX-STANDBY-ARCHIVE-DELAY"
+>max_standby_archive_delay</A
+> and <A
+HREF="runtime-config-replication.html#GUC-MAX-STANDBY-STREAMING-DELAY"
+>max_standby_streaming_delay</A
+>, that define the maximum
+    allowed delay in WAL application.  Conflicting queries will be canceled
+    once it has taken longer than the relevant delay setting to apply any
+    newly-received WAL data.  There are two parameters so that different delay
+    values can be specified for the case of reading WAL data from an archive
+    (i.e., initial recovery from a base backup or <SPAN
+CLASS="QUOTE"
+>"catching up"</SPAN
+> a
+    standby server that has fallen far behind) versus reading WAL data via
+    streaming replication.
+   </P
+><P
+>    In a standby server that exists primarily for high availability, it's
+    best to set the delay parameters relatively short, so that the server
+    cannot fall far behind the primary due to delays caused by standby
+    queries.  However, if the standby server is meant for executing
+    long-running queries, then a high or even infinite delay value may be
+    preferable.  Keep in mind however that a long-running query could
+    cause other sessions on the standby server to not see recent changes
+    on the primary, if it delays application of WAL records.
+   </P
+><P
+>    Once the delay specified by <TT
+CLASS="VARNAME"
+>max_standby_archive_delay</TT
+> or
+    <TT
+CLASS="VARNAME"
+>max_standby_streaming_delay</TT
+> has been exceeded, conflicting
+    queries will be canceled.  This usually results just in a cancellation
+    error, although in the case of replaying a <TT
+CLASS="COMMAND"
+>DROP DATABASE</TT
+>
+    the entire conflicting session will be terminated.  Also, if the conflict
+    is over a lock held by an idle transaction, the conflicting session is
+    terminated (this behavior might change in the future).
+   </P
+><P
+>    Canceled queries may be retried immediately (after beginning a new
+    transaction, of course).  Since query cancellation depends on
+    the nature of the WAL records being replayed, a query that was
+    canceled may well succeed if it is executed again.
+   </P
+><P
+>    Keep in mind that the delay parameters are compared to the elapsed time
+    since the WAL data was received by the standby server.  Thus, the grace
+    period allowed to any one query on the standby is never more than the
+    delay parameter, and could be considerably less if the standby has already
+    fallen behind as a result of waiting for previous queries to complete, or
+    as a result of being unable to keep up with a heavy update load.
+   </P
+><P
+>    The most common reason for conflict between standby queries and WAL replay
+    is <SPAN
+CLASS="QUOTE"
+>"early cleanup"</SPAN
+>.  Normally, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> allows
+    cleanup of old row versions when there are no transactions that need to
+    see them to ensure correct visibility of data according to MVCC rules.
+    However, this rule can only be applied for transactions executing on the
+    master.  So it is possible that cleanup on the master will remove row
+    versions that are still visible to a transaction on the standby.
+   </P
+><P
+>    Experienced users should note that both row version cleanup and row version
+    freezing will potentially conflict with standby queries. Running a manual
+    <TT
+CLASS="COMMAND"
+>VACUUM FREEZE</TT
+> is likely to cause conflicts even on tables with
+    no updated or deleted rows.
+   </P
+><P
+>    Users should be clear that tables that are regularly and heavily updated
+    on the primary server will quickly cause cancellation of longer running
+    queries on the standby. In such cases the setting of a finite value for
+    <TT
+CLASS="VARNAME"
+>max_standby_archive_delay</TT
+> or
+    <TT
+CLASS="VARNAME"
+>max_standby_streaming_delay</TT
+> can be considered similar to
+    setting <TT
+CLASS="VARNAME"
+>statement_timeout</TT
+>.
+   </P
+><P
+>    Remedial possibilities exist if the number of standby-query cancellations
+    is found to be unacceptable.  The first option is to set the parameter
+    <TT
+CLASS="VARNAME"
+>hot_standby_feedback</TT
+>, which prevents <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> from
+    removing recently-dead rows and so cleanup conflicts do not occur.
+    If you do this, you
+    should note that this will delay cleanup of dead rows on the primary,
+    which may result in undesirable table bloat. However, the cleanup
+    situation will be no worse than if the standby queries were running
+    directly on the primary server, and you are still getting the benefit of
+    off-loading execution onto the standby.
+    If standby servers connect and disconnect frequently, you
+    might want to make adjustments to handle the period when
+    <TT
+CLASS="VARNAME"
+>hot_standby_feedback</TT
+> feedback is not being provided.
+    For example, consider increasing <TT
+CLASS="VARNAME"
+>max_standby_archive_delay</TT
+>
+    so that queries are not rapidly canceled by conflicts in WAL archive
+    files during disconnected periods.  You should also consider increasing
+    <TT
+CLASS="VARNAME"
+>max_standby_streaming_delay</TT
+> to avoid rapid cancellations
+    by newly-arrived streaming WAL entries after reconnection.
+   </P
+><P
+>    Another option is to increase <A
+HREF="runtime-config-replication.html#GUC-VACUUM-DEFER-CLEANUP-AGE"
+>vacuum_defer_cleanup_age</A
+>
+    on the primary server, so that dead rows will not be cleaned up as quickly
+    as they normally would be.  This will allow more time for queries to
+    execute before they are canceled on the standby, without having to set
+    a high <TT
+CLASS="VARNAME"
+>max_standby_streaming_delay</TT
+>.  However it is
+    difficult to guarantee any specific execution-time window with this
+    approach, since <TT
+CLASS="VARNAME"
+>vacuum_defer_cleanup_age</TT
+> is measured in
+    transactions executed on the primary server.
+   </P
+><P
+>    The number of query cancels and the reason for them can be viewed using
+    the <TT
+CLASS="STRUCTNAME"
+>pg_stat_database_conflicts</TT
+> system view on the standby
+    server. The <TT
+CLASS="STRUCTNAME"
+>pg_stat_database</TT
+> system view also contains
+    summary information.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="HOT-STANDBY-ADMIN"
+>25.5.3. Administrator's Overview</A
+></H2
+><P
+>    If <TT
+CLASS="VARNAME"
+>hot_standby</TT
+> is turned <TT
+CLASS="LITERAL"
+>on</TT
+> in
+    <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> and there is a <TT
+CLASS="FILENAME"
+>recovery.conf</TT
+>
+    file present, the server will run in Hot Standby mode.
+    However, it may take some time for Hot Standby connections to be allowed,
+    because the server will not accept connections until it has completed
+    sufficient recovery to provide a consistent state against which queries
+    can run.  During this period,
+    clients that attempt to connect will be refused with an error message.
+    To confirm the server has come up, either loop trying to connect from
+    the application, or look for these messages in the server logs:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>LOG:  entering standby mode
+
+... then some time later ...
+
+LOG:  consistent recovery state reached
+LOG:  database system is ready to accept read only connections</PRE
+><P>
+
+    Consistency information is recorded once per checkpoint on the primary.
+    It is not possible to enable hot standby when reading WAL
+    written during a period when <TT
+CLASS="VARNAME"
+>wal_level</TT
+> was not set to
+    <TT
+CLASS="LITERAL"
+>hot_standby</TT
+> or <TT
+CLASS="LITERAL"
+>logical</TT
+> on the primary.  Reaching
+    a consistent state can also be delayed in the presence of both of these
+    conditions:
+
+      <P
+></P
+></P><UL
+><LI
+><P
+>         A write transaction has more than 64 subtransactions
+        </P
+></LI
+><LI
+><P
+>         Very long-lived write transactions
+        </P
+></LI
+></UL
+><P>
+
+    If you are running file-based log shipping ("warm standby"), you might need
+    to wait until the next WAL file arrives, which could be as long as the
+    <TT
+CLASS="VARNAME"
+>archive_timeout</TT
+> setting on the primary.
+   </P
+><P
+>    The setting of some parameters on the standby will need reconfiguration
+    if they have been changed on the primary. For these parameters,
+    the value on the standby must
+    be equal to or greater than the value on the primary. If these parameters
+    are not set high enough then the standby will refuse to start.
+    Higher values can then be supplied and the server
+    restarted to begin recovery again.  These parameters are:
+
+      <P
+></P
+></P><UL
+><LI
+><P
+>         <TT
+CLASS="VARNAME"
+>max_connections</TT
+>
+        </P
+></LI
+><LI
+><P
+>         <TT
+CLASS="VARNAME"
+>max_prepared_transactions</TT
+>
+        </P
+></LI
+><LI
+><P
+>         <TT
+CLASS="VARNAME"
+>max_locks_per_transaction</TT
+>
+        </P
+></LI
+><LI
+><P
+>         <TT
+CLASS="VARNAME"
+>max_worker_processes</TT
+>
+        </P
+></LI
+></UL
+><P>
+   </P
+><P
+>    It is important that the administrator select appropriate settings for
+    <A
+HREF="runtime-config-replication.html#GUC-MAX-STANDBY-ARCHIVE-DELAY"
+>max_standby_archive_delay</A
+> and <A
+HREF="runtime-config-replication.html#GUC-MAX-STANDBY-STREAMING-DELAY"
+>max_standby_streaming_delay</A
+>.  The best choices vary
+    depending on business priorities.  For example if the server is primarily
+    tasked as a High Availability server, then you will want low delay
+    settings, perhaps even zero, though that is a very aggressive setting. If
+    the standby server is tasked as an additional server for decision support
+    queries then it might be acceptable to set the maximum delay values to
+    many hours, or even -1 which means wait forever for queries to complete.
+   </P
+><P
+>    Transaction status "hint bits" written on the primary are not WAL-logged,
+    so data on the standby will likely re-write the hints again on the standby.
+    Thus, the standby server will still perform disk writes even though
+    all users are read-only; no changes occur to the data values
+    themselves.  Users will still write large sort temporary files and
+    re-generate relcache info files, so no part of the database
+    is truly read-only during hot standby mode.
+    Note also that writes to remote databases using
+    <SPAN
+CLASS="APPLICATION"
+>dblink</SPAN
+> module, and other operations outside the
+    database using PL functions will still be possible, even though the
+    transaction is read-only locally.
+   </P
+><P
+>    The following types of administration commands are not accepted
+    during recovery mode:
+
+      <P
+></P
+></P><UL
+><LI
+><P
+>         Data Definition Language (DDL) - e.g. <TT
+CLASS="COMMAND"
+>CREATE INDEX</TT
+>
+        </P
+></LI
+><LI
+><P
+>         Privilege and Ownership - <TT
+CLASS="COMMAND"
+>GRANT</TT
+>, <TT
+CLASS="COMMAND"
+>REVOKE</TT
+>,
+         <TT
+CLASS="COMMAND"
+>REASSIGN</TT
+>
+        </P
+></LI
+><LI
+><P
+>         Maintenance commands - <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+>, <TT
+CLASS="COMMAND"
+>VACUUM</TT
+>,
+         <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+>, <TT
+CLASS="COMMAND"
+>REINDEX</TT
+>
+        </P
+></LI
+></UL
+><P>
+   </P
+><P
+>    Again, note that some of these commands are actually allowed during
+    "read only" mode transactions on the primary.
+   </P
+><P
+>    As a result, you cannot create additional indexes that exist solely
+    on the standby, nor statistics that exist solely on the standby.
+    If these administration commands are needed, they should be executed
+    on the primary, and eventually those changes will propagate to the
+    standby.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_cancel_backend()</CODE
+>
+    and <CODE
+CLASS="FUNCTION"
+>pg_terminate_backend()</CODE
+> will work on user backends,
+    but not the Startup process, which performs
+    recovery. <TT
+CLASS="STRUCTNAME"
+>pg_stat_activity</TT
+> does not show an
+    entry for the Startup process, nor do recovering transactions show
+    as active. As a result, <TT
+CLASS="STRUCTNAME"
+>pg_prepared_xacts</TT
+>
+    is always empty during recovery. If you wish to resolve in-doubt
+    prepared transactions, view <TT
+CLASS="LITERAL"
+>pg_prepared_xacts</TT
+> on the
+    primary and issue commands to resolve transactions there.
+   </P
+><P
+>    <TT
+CLASS="STRUCTNAME"
+>pg_locks</TT
+> will show locks held by backends,
+    as normal. <TT
+CLASS="STRUCTNAME"
+>pg_locks</TT
+> also shows
+    a virtual transaction managed by the Startup process that owns all
+    <TT
+CLASS="LITERAL"
+>AccessExclusiveLocks</TT
+> held by transactions being replayed by recovery.
+    Note that the Startup process does not acquire locks to
+    make database changes, and thus locks other than <TT
+CLASS="LITERAL"
+>AccessExclusiveLocks</TT
+>
+    do not show in <TT
+CLASS="STRUCTNAME"
+>pg_locks</TT
+> for the Startup
+    process; they are just presumed to exist.
+   </P
+><P
+>    The <SPAN
+CLASS="PRODUCTNAME"
+>Nagios</SPAN
+> plugin <SPAN
+CLASS="PRODUCTNAME"
+>check_pgsql</SPAN
+> will
+    work, because the simple information it checks for exists.
+    The <SPAN
+CLASS="PRODUCTNAME"
+>check_postgres</SPAN
+> monitoring script will also work,
+    though some reported values could give different or confusing results.
+    For example, last vacuum time will not be maintained, since no
+    vacuum occurs on the standby.  Vacuums running on the primary
+    do still send their changes to the standby.
+   </P
+><P
+>    WAL file control commands will not work during recovery,
+    e.g. <CODE
+CLASS="FUNCTION"
+>pg_start_backup</CODE
+>, <CODE
+CLASS="FUNCTION"
+>pg_switch_xlog</CODE
+> etc.
+   </P
+><P
+>    Dynamically loadable modules work, including <TT
+CLASS="STRUCTNAME"
+>pg_stat_statements</TT
+>.
+   </P
+><P
+>    Advisory locks work normally in recovery, including deadlock detection.
+    Note that advisory locks are never WAL logged, so it is impossible for
+    an advisory lock on either the primary or the standby to conflict with WAL
+    replay. Nor is it possible to acquire an advisory lock on the primary
+    and have it initiate a similar advisory lock on the standby. Advisory
+    locks relate only to the server on which they are acquired.
+   </P
+><P
+>    Trigger-based replication systems such as <SPAN
+CLASS="PRODUCTNAME"
+>Slony</SPAN
+>,
+    <SPAN
+CLASS="PRODUCTNAME"
+>Londiste</SPAN
+> and <SPAN
+CLASS="PRODUCTNAME"
+>Bucardo</SPAN
+> won't run on the
+    standby at all, though they will run happily on the primary server as
+    long as the changes are not sent to standby servers to be applied.
+    WAL replay is not trigger-based so you cannot relay from the
+    standby to any system that requires additional database writes or
+    relies on the use of triggers.
+   </P
+><P
+>    New OIDs cannot be assigned, though some <ACRONYM
+CLASS="ACRONYM"
+>UUID</ACRONYM
+> generators may still
+    work as long as they do not rely on writing new status to the database.
+   </P
+><P
+>    Currently, temporary table creation is not allowed during read only
+    transactions, so in some cases existing scripts will not run correctly.
+    This restriction might be relaxed in a later release. This is
+    both a SQL Standard compliance issue and a technical issue.
+   </P
+><P
+>    <TT
+CLASS="COMMAND"
+>DROP TABLESPACE</TT
+> can only succeed if the tablespace is empty.
+    Some standby users may be actively using the tablespace via their
+    <TT
+CLASS="VARNAME"
+>temp_tablespaces</TT
+> parameter. If there are temporary files in the
+    tablespace, all active queries are canceled to ensure that temporary
+    files are removed, so the tablespace can be removed and WAL replay
+    can continue.
+   </P
+><P
+>    Running <TT
+CLASS="COMMAND"
+>DROP DATABASE</TT
+> or <TT
+CLASS="COMMAND"
+>ALTER DATABASE ... SET
+    TABLESPACE</TT
+> on the primary
+    will generate a WAL entry that will cause all users connected to that
+    database on the standby to be forcibly disconnected. This action occurs
+    immediately, whatever the setting of
+    <TT
+CLASS="VARNAME"
+>max_standby_streaming_delay</TT
+>. Note that
+    <TT
+CLASS="COMMAND"
+>ALTER DATABASE ... RENAME</TT
+> does not disconnect users, which
+    in most cases will go unnoticed, though might in some cases cause a
+    program confusion if it depends in some way upon database name.
+   </P
+><P
+>    In normal (non-recovery) mode, if you issue <TT
+CLASS="COMMAND"
+>DROP USER</TT
+> or <TT
+CLASS="COMMAND"
+>DROP ROLE</TT
+>
+    for a role with login capability while that user is still connected then
+    nothing happens to the connected user - they remain connected. The user cannot
+    reconnect however. This behavior applies in recovery also, so a
+    <TT
+CLASS="COMMAND"
+>DROP USER</TT
+> on the primary does not disconnect that user on the standby.
+   </P
+><P
+>    The statistics collector is active during recovery. All scans, reads, blocks,
+    index usage, etc., will be recorded normally on the standby. Replayed
+    actions will not duplicate their effects on primary, so replaying an
+    insert will not increment the Inserts column of pg_stat_user_tables.
+    The stats file is deleted at the start of recovery, so stats from primary
+    and standby will differ; this is considered a feature, not a bug.
+   </P
+><P
+>    Autovacuum is not active during recovery.  It will start normally at the
+    end of recovery.
+   </P
+><P
+>    The background writer is active during recovery and will perform
+    restartpoints (similar to checkpoints on the primary) and normal block
+    cleaning activities. This can include updates of the hint bit
+    information stored on the standby server.
+    The <TT
+CLASS="COMMAND"
+>CHECKPOINT</TT
+> command is accepted during recovery,
+    though it performs a restartpoint rather than a new checkpoint.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="HOT-STANDBY-PARAMETERS"
+>25.5.4. Hot Standby Parameter Reference</A
+></H2
+><P
+>    Various parameters have been mentioned above in
+    <A
+HREF="hot-standby.html#HOT-STANDBY-CONFLICT"
+>Section 25.5.2</A
+> and
+    <A
+HREF="hot-standby.html#HOT-STANDBY-ADMIN"
+>Section 25.5.3</A
+>.
+   </P
+><P
+>    On the primary, parameters <A
+HREF="runtime-config-wal.html#GUC-WAL-LEVEL"
+>wal_level</A
+> and
+    <A
+HREF="runtime-config-replication.html#GUC-VACUUM-DEFER-CLEANUP-AGE"
+>vacuum_defer_cleanup_age</A
+> can be used.
+    <A
+HREF="runtime-config-replication.html#GUC-MAX-STANDBY-ARCHIVE-DELAY"
+>max_standby_archive_delay</A
+> and
+    <A
+HREF="runtime-config-replication.html#GUC-MAX-STANDBY-STREAMING-DELAY"
+>max_standby_streaming_delay</A
+> have no effect if set on
+    the primary.
+   </P
+><P
+>    On the standby, parameters <A
+HREF="runtime-config-replication.html#GUC-HOT-STANDBY"
+>hot_standby</A
+>,
+    <A
+HREF="runtime-config-replication.html#GUC-MAX-STANDBY-ARCHIVE-DELAY"
+>max_standby_archive_delay</A
+> and
+    <A
+HREF="runtime-config-replication.html#GUC-MAX-STANDBY-STREAMING-DELAY"
+>max_standby_streaming_delay</A
+> can be used.
+    <A
+HREF="runtime-config-replication.html#GUC-VACUUM-DEFER-CLEANUP-AGE"
+>vacuum_defer_cleanup_age</A
+> has no effect
+    as long as the server remains in standby mode, though it will
+    become relevant if the standby becomes primary.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="HOT-STANDBY-CAVEATS"
+>25.5.5. Caveats</A
+></H2
+><P
+>    There are several limitations of Hot Standby.
+    These can and probably will be fixed in future releases:
+
+  <P
+></P
+></P><UL
+><LI
+><P
+>     Operations on hash indexes are not presently WAL-logged, so
+     replay will not update these indexes.
+    </P
+></LI
+><LI
+><P
+>     Full knowledge of running transactions is required before snapshots
+     can be taken. Transactions that use large numbers of subtransactions
+     (currently greater than 64) will delay the start of read only
+     connections until the completion of the longest running write transaction.
+     If this situation occurs, explanatory messages will be sent to the server log.
+    </P
+></LI
+><LI
+><P
+>     Valid starting points for standby queries are generated at each
+     checkpoint on the master. If the standby is shut down while the master
+     is in a shutdown state, it might not be possible to re-enter Hot Standby
+     until the primary is started up, so that it generates further starting
+     points in the WAL logs.  This situation isn't a problem in the most
+     common situations where it might happen. Generally, if the primary is
+     shut down and not available anymore, that's likely due to a serious
+     failure that requires the standby being converted to operate as
+     the new primary anyway.  And in situations where the primary is
+     being intentionally taken down, coordinating to make sure the standby
+     becomes the new primary smoothly is also standard procedure.
+    </P
+></LI
+><LI
+><P
+>     At the end of recovery, <TT
+CLASS="LITERAL"
+>AccessExclusiveLocks</TT
+> held by prepared transactions
+     will require twice the normal number of lock table entries. If you plan
+     on running either a large number of concurrent prepared transactions
+     that normally take <TT
+CLASS="LITERAL"
+>AccessExclusiveLocks</TT
+>, or you plan on having one
+     large transaction that takes many <TT
+CLASS="LITERAL"
+>AccessExclusiveLocks</TT
+>, you are
+     advised to select a larger value of <TT
+CLASS="VARNAME"
+>max_locks_per_transaction</TT
+>,
+     perhaps as much as twice the value of the parameter on
+     the primary server. You need not consider this at all if
+     your setting of <TT
+CLASS="VARNAME"
+>max_prepared_transactions</TT
+> is 0.
+    </P
+></LI
+><LI
+><P
+>     The Serializable transaction isolation level is not yet available in hot
+     standby.  (See <A
+HREF="transaction-iso.html#XACT-SERIALIZABLE"
+>Section 13.2.3</A
+> and
+     <A
+HREF="applevel-consistency.html#SERIALIZABLE-CONSISTENCY"
+>Section 13.4.1</A
+> for details.)
+     An attempt to set a transaction to the serializable isolation level in
+     hot standby mode will generate an error.
+    </P
+></LI
+></UL
+><P>
+
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="log-shipping-alternative.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="recovery-config.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Alternative Method for Log Shipping</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="high-availability.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Recovery Configuration</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

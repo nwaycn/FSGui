@@ -1,0 +1,462 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Recovery Target Settings</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Recovery Configuration"
+HREF="recovery-config.html"><LINK
+REL="PREVIOUS"
+TITLE="Archive Recovery Settings"
+HREF="archive-recovery-settings.html"><LINK
+REL="NEXT"
+TITLE="Standby Server Settings"
+HREF="standby-settings.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Archive Recovery Settings"
+HREF="archive-recovery-settings.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="recovery-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 26. Recovery Configuration</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Standby Server Settings"
+HREF="standby-settings.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RECOVERY-TARGET-SETTINGS"
+>26.2. Recovery Target Settings</A
+></H1
+><P
+>      By default, recovery will recover to the end of the WAL log. The
+      following parameters can be used to specify an earlier stopping point.
+      At most one of <TT
+CLASS="VARNAME"
+>recovery_target</TT
+>,
+      <TT
+CLASS="VARNAME"
+>recovery_target_name</TT
+>, <TT
+CLASS="VARNAME"
+>recovery_target_time</TT
+>, or
+      <TT
+CLASS="VARNAME"
+>recovery_target_xid</TT
+> can be used; if more than one of these
+      is specified in the configuration file, the last entry will be used.
+     </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="RECOVERY-TARGET"
+></A
+><TT
+CLASS="VARNAME"
+>recovery_target</TT
+><TT
+CLASS="LITERAL"
+> = 'immediate'</TT
+>
+      </DT
+><DD
+><P
+>        This parameter specifies that recovery should end as soon as a
+        consistent state is reached, i.e. as early as possible. When restoring
+        from an online backup, this means the point where taking the backup
+        ended.
+       </P
+><P
+>        Technically, this is a string parameter, but <TT
+CLASS="LITERAL"
+>'immediate'</TT
+>
+        is currently the only allowed value.
+       </P
+></DD
+><DT
+><A
+NAME="RECOVERY-TARGET-NAME"
+></A
+><TT
+CLASS="VARNAME"
+>recovery_target_name</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        This parameter specifies the named restore point (created with
+        <CODE
+CLASS="FUNCTION"
+>pg_create_restore_point()</CODE
+>) to which recovery will proceed.
+       </P
+></DD
+><DT
+><A
+NAME="RECOVERY-TARGET-TIME"
+></A
+><TT
+CLASS="VARNAME"
+>recovery_target_time</TT
+> (<TT
+CLASS="TYPE"
+>timestamp</TT
+>)
+      </DT
+><DD
+><P
+>        This parameter specifies the time stamp up to which recovery
+        will proceed.
+        The precise stopping point is also influenced by
+        <A
+HREF="recovery-target-settings.html#RECOVERY-TARGET-INCLUSIVE"
+>recovery_target_inclusive</A
+>.
+       </P
+></DD
+><DT
+><A
+NAME="RECOVERY-TARGET-XID"
+></A
+><TT
+CLASS="VARNAME"
+>recovery_target_xid</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        This parameter specifies the transaction ID up to which recovery
+        will proceed. Keep in mind
+        that while transaction IDs are assigned sequentially at transaction
+        start, transactions can complete in a different numeric order.
+        The transactions that will be recovered are those that committed
+        before (and optionally including) the specified one.
+        The precise stopping point is also influenced by
+        <A
+HREF="recovery-target-settings.html#RECOVERY-TARGET-INCLUSIVE"
+>recovery_target_inclusive</A
+>.
+       </P
+></DD
+></DL
+></DIV
+><P
+>       The following options further specify the recovery target, and affect
+       what happens when the target is reached:
+     </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="RECOVERY-TARGET-INCLUSIVE"
+></A
+><TT
+CLASS="VARNAME"
+>recovery_target_inclusive</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies whether to stop just after the specified recovery target
+        (<TT
+CLASS="LITERAL"
+>true</TT
+>), or just before the recovery target
+        (<TT
+CLASS="LITERAL"
+>false</TT
+>).
+        Applies when either <A
+HREF="recovery-target-settings.html#RECOVERY-TARGET-TIME"
+>recovery_target_time</A
+>
+        or <A
+HREF="recovery-target-settings.html#RECOVERY-TARGET-XID"
+>recovery_target_xid</A
+> is specified.
+        This setting controls whether transactions
+        having exactly the target commit time or ID, respectively, will
+        be included in the recovery.  Default is <TT
+CLASS="LITERAL"
+>true</TT
+>.
+       </P
+></DD
+><DT
+><A
+NAME="RECOVERY-TARGET-TIMELINE"
+></A
+><TT
+CLASS="VARNAME"
+>recovery_target_timeline</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies recovering into a particular timeline.  The default is
+        to recover along the same timeline that was current when the
+        base backup was taken. Setting this to <TT
+CLASS="LITERAL"
+>latest</TT
+> recovers
+        to the latest timeline found in the archive, which is useful in
+        a standby server. Other than that you only need to set this parameter
+        in complex re-recovery situations, where you need to return to
+        a state that itself was reached after a point-in-time recovery.
+        See <A
+HREF="continuous-archiving.html#BACKUP-TIMELINES"
+>Section 24.3.5</A
+> for discussion.
+       </P
+></DD
+><DT
+><A
+NAME="RECOVERY-TARGET-ACTION"
+></A
+><TT
+CLASS="VARNAME"
+>recovery_target_action</TT
+> (<TT
+CLASS="TYPE"
+>enum</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies what action the server should take once the recovery target is
+        reached. The default is <TT
+CLASS="LITERAL"
+>pause</TT
+>, which means recovery will
+        be paused. <TT
+CLASS="LITERAL"
+>promote</TT
+> means the recovery process will finish
+        and the server will start to accept connections.
+        Finally <TT
+CLASS="LITERAL"
+>shutdown</TT
+> will stop the server after reaching the
+        recovery target.
+       </P
+><P
+>        The intended use of the <TT
+CLASS="LITERAL"
+>pause</TT
+> setting is to allow queries
+        to be executed against the database to check if this recovery target
+        is the most desirable point for recovery.
+        The paused state can be resumed by
+        using <CODE
+CLASS="FUNCTION"
+>pg_xlog_replay_resume()</CODE
+> (see
+        <A
+HREF="functions-admin.html#FUNCTIONS-RECOVERY-CONTROL-TABLE"
+>Table 9-70</A
+>), which then
+        causes recovery to end. If this recovery target is not the
+        desired stopping point, then shut down the server, change the
+        recovery target settings to a later target and restart to
+        continue recovery.
+       </P
+><P
+>        The <TT
+CLASS="LITERAL"
+>shutdown</TT
+> setting is useful to have the instance ready
+        at the exact replay point desired.  The instance will still be able to
+        replay more WAL records (and in fact will have to replay WAL records
+        since the last checkpoint next time it is started).
+       </P
+><P
+>        Note that because <TT
+CLASS="FILENAME"
+>recovery.conf</TT
+> will not be renamed when
+        <TT
+CLASS="VARNAME"
+>recovery_target_action</TT
+> is set to <TT
+CLASS="LITERAL"
+>shutdown</TT
+>,
+        any subsequent start will end with immediate shutdown unless the
+        configuration is changed or the <TT
+CLASS="FILENAME"
+>recovery.conf</TT
+> file is
+        removed manually.
+       </P
+><P
+>        This setting has no effect if no recovery target is set.
+        If <A
+HREF="runtime-config-replication.html#GUC-HOT-STANDBY"
+>hot_standby</A
+> is not enabled, a setting of
+        <TT
+CLASS="LITERAL"
+>pause</TT
+> will act the same as <TT
+CLASS="LITERAL"
+>shutdown</TT
+>.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="archive-recovery-settings.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="standby-settings.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Archive Recovery Settings</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="recovery-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Standby Server Settings</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

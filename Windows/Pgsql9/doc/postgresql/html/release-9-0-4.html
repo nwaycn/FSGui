@@ -1,0 +1,585 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.0.4</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.0.5"
+HREF="release-9-0-5.html"><LINK
+REL="NEXT"
+TITLE="Release 9.0.3"
+HREF="release-9-0-3.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.0.5"
+HREF="release-9-0-5.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.0.3"
+HREF="release-9-0-3.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-0-4"
+>E.93. Release 9.0.4</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2011-04-18</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 9.0.3.
+   For information about new features in the 9.0 major release, see
+   <A
+HREF="release-9-0.html"
+>Section E.97</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN145450"
+>E.93.1. Migration to Version 9.0.4</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.0.X.
+   </P
+><P
+>    However, if your installation was upgraded from a previous major
+    release by running <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>, you should take
+    action to prevent possible data loss due to a now-fixed bug in
+    <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>.  The recommended solution is to run
+    <TT
+CLASS="COMMAND"
+>VACUUM FREEZE</TT
+> on all TOAST tables.
+    More information is available at <A
+HREF="http://wiki.postgresql.org/wiki/20110408pg_upgrade_fix"
+TARGET="_top"
+>    http://wiki.postgresql.org/wiki/20110408pg_upgrade_fix</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN145458"
+>E.93.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>'s handling of TOAST tables
+      (Bruce Momjian)
+     </P
+><P
+>      The <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>relfrozenxid</TT
+> value for
+      TOAST tables was not correctly copied into the new installation
+      during <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>.  This could later result in
+      <TT
+CLASS="LITERAL"
+>pg_clog</TT
+> files being discarded while they were still
+      needed to validate tuples in the TOAST tables, leading to
+      <SPAN
+CLASS="QUOTE"
+>"could not access status of transaction"</SPAN
+> failures.
+     </P
+><P
+>      This error poses a significant risk of data loss for installations
+      that have been upgraded with <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>.  This patch
+      corrects the problem for future uses of <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>,
+      but does not in itself cure the issue in installations that have been
+      processed with a buggy version of <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>.
+     </P
+></LI
+><LI
+><P
+>      Suppress incorrect <SPAN
+CLASS="QUOTE"
+>"PD_ALL_VISIBLE flag was incorrectly set"</SPAN
+>
+      warning (Heikki Linnakangas)
+     </P
+><P
+>      <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> would sometimes issue this warning in cases that
+      are actually valid.
+     </P
+></LI
+><LI
+><P
+>      Use better SQLSTATE error codes for hot standby conflict cases
+      (Tatsuo Ishii and Simon Riggs)
+     </P
+><P
+>      All retryable conflict errors now have an error code that indicates
+      that a retry is possible.  Also, session closure due to the database
+      being dropped on the master is now reported as
+      <TT
+CLASS="LITERAL"
+>ERRCODE_DATABASE_DROPPED</TT
+>, rather than
+      <TT
+CLASS="LITERAL"
+>ERRCODE_ADMIN_SHUTDOWN</TT
+>, so that connection poolers can
+      handle the situation correctly.
+     </P
+></LI
+><LI
+><P
+>      Prevent intermittent hang in interactions of startup process with
+      bgwriter process (Simon Riggs)
+     </P
+><P
+>      This affected recovery in non-hot-standby cases.
+     </P
+></LI
+><LI
+><P
+>      Disallow including a composite type in itself (Tom Lane)
+     </P
+><P
+>      This prevents scenarios wherein the server could recurse infinitely
+      while processing the composite type.  While there are some possible
+      uses for such a structure, they don't seem compelling enough to
+      justify the effort required to make sure it always works safely.
+     </P
+></LI
+><LI
+><P
+>      Avoid potential deadlock during catalog cache initialization
+      (Nikhil Sontakke)
+     </P
+><P
+>      In some cases the cache loading code would acquire share lock on a
+      system index before locking the index's catalog.  This could deadlock
+      against processes trying to acquire exclusive locks in the other,
+      more standard order.
+     </P
+></LI
+><LI
+><P
+>      Fix dangling-pointer problem in <TT
+CLASS="LITERAL"
+>BEFORE ROW UPDATE</TT
+> trigger
+      handling when there was a concurrent update to the target tuple
+      (Tom Lane)
+     </P
+><P
+>      This bug has been observed to result in intermittent <SPAN
+CLASS="QUOTE"
+>"cannot
+      extract system attribute from virtual tuple"</SPAN
+> failures while trying to
+      do <TT
+CLASS="LITERAL"
+>UPDATE RETURNING ctid</TT
+>.  There is a very small probability
+      of more serious errors, such as generating incorrect index entries for
+      the updated tuple.
+     </P
+></LI
+><LI
+><P
+>      Disallow <TT
+CLASS="COMMAND"
+>DROP TABLE</TT
+> when there are pending deferred trigger
+      events for the table (Tom Lane)
+     </P
+><P
+>      Formerly the <TT
+CLASS="COMMAND"
+>DROP</TT
+> would go through, leading to
+      <SPAN
+CLASS="QUOTE"
+>"could not open relation with OID nnn"</SPAN
+> errors when the
+      triggers were eventually fired.
+     </P
+></LI
+><LI
+><P
+>      Allow <SPAN
+CLASS="QUOTE"
+>"replication"</SPAN
+> as a user name in
+      <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> (Andrew Dunstan)
+     </P
+><P
+>      <SPAN
+CLASS="QUOTE"
+>"replication"</SPAN
+> is special in the database name column, but it
+      was mistakenly also treated as special in the user name column.
+     </P
+></LI
+><LI
+><P
+>      Prevent crash triggered by constant-false WHERE conditions during
+      GEQO optimization (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Improve planner's handling of semi-join and anti-join cases
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix handling of <TT
+CLASS="LITERAL"
+>SELECT FOR UPDATE</TT
+> in a sub-SELECT
+      (Tom Lane)
+     </P
+><P
+>      This bug typically led to <SPAN
+CLASS="QUOTE"
+>"cannot extract system attribute from
+      virtual tuple"</SPAN
+> errors.
+     </P
+></LI
+><LI
+><P
+>      Fix selectivity estimation for text search to account for NULLs
+      (Jesper Krogh)
+     </P
+></LI
+><LI
+><P
+>      Fix get_actual_variable_range() to support hypothetical indexes
+      injected by an index adviser plugin (Gurjeet Singh)
+     </P
+></LI
+><LI
+><P
+>      Fix PL/Python memory leak involving array slices (Daniel Popowich)
+     </P
+></LI
+><LI
+><P
+>      Allow <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>'s SSL initialization to succeed when
+      user's home directory is unavailable (Tom Lane)
+     </P
+><P
+>      If the SSL mode is such that a root certificate file is not required,
+      there is no need to fail.  This change restores the behavior to what
+      it was in pre-9.0 releases.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> to return a useful error message for errors
+      detected in <CODE
+CLASS="FUNCTION"
+>conninfo_array_parse</CODE
+> (Joseph Adams)
+     </P
+><P
+>      A typo caused the library to return NULL, rather than the
+      <TT
+CLASS="STRUCTNAME"
+>PGconn</TT
+> structure containing the error message, to the
+      application.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+> preprocessor's handling of float constants
+      (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Fix parallel <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> to handle comments on
+      POST_DATA items correctly (Arnd Hannemann)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> to cope with long lines (over 1KB) in
+      TOC files (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Put in more safeguards against crashing due to division-by-zero
+      with overly enthusiastic compiler optimization (Aurelien Jarno)
+     </P
+></LI
+><LI
+><P
+>      Support use of dlopen() in FreeBSD and OpenBSD on MIPS (Tom Lane)
+     </P
+><P
+>      There was a hard-wired assumption that this system function was not
+      available on MIPS hardware on these systems.  Use a compile-time test
+      instead, since more recent versions have it.
+     </P
+></LI
+><LI
+><P
+>      Fix compilation failures on HP-UX (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Avoid crash when trying to write to the Windows console very early
+      in process startup (Rushabh Lathia)
+     </P
+></LI
+><LI
+><P
+>      Support building with MinGW 64 bit compiler for Windows
+      (Andrew Dunstan)
+     </P
+></LI
+><LI
+><P
+>      Fix version-incompatibility problem with <SPAN
+CLASS="APPLICATION"
+>libintl</SPAN
+> on
+      Windows (Hiroshi Inoue)
+     </P
+></LI
+><LI
+><P
+>      Fix usage of <SPAN
+CLASS="APPLICATION"
+>xcopy</SPAN
+> in Windows build scripts to
+      work correctly under Windows 7 (Andrew Dunstan)
+     </P
+><P
+>      This affects the build scripts only, not installation or usage.
+     </P
+></LI
+><LI
+><P
+>      Fix path separator used by <SPAN
+CLASS="APPLICATION"
+>pg_regress</SPAN
+> on Cygwin
+      (Andrew Dunstan)
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2011f
+      for DST law changes in Chile, Cuba, Falkland Islands, Morocco, Samoa,
+      and Turkey; also historical corrections for South Australia, Alaska,
+      and Hawaii.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-0-5.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-0-3.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.0.5</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.0.3</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

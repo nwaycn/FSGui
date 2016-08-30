@@ -1,0 +1,388 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 7.4.20</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 7.4.21"
+HREF="release-7-4-21.html"><LINK
+REL="NEXT"
+TITLE="Release 7.4.19"
+HREF="release-7-4-19.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 7.4.21"
+HREF="release-7-4-21.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 7.4.19"
+HREF="release-7-4-19.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-7-4-20"
+>E.230. Release 7.4.20</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>never released</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 7.4.19.
+   For information about new features in the 7.4 major release, see
+   <A
+HREF="release-7-4.html"
+>Section E.250</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN163393"
+>E.230.1. Migration to Version 7.4.20</A
+></H2
+><P
+>    A dump/restore is not required for those running 7.4.X.
+    However, if you are upgrading from a version earlier than 7.4.11,
+    see <A
+HREF="release-7-4-11.html"
+>Section E.239</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN163397"
+>E.230.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix conversions between ISO-8859-5 and other encodings to handle
+      Cyrillic <SPAN
+CLASS="QUOTE"
+>"Yo"</SPAN
+> characters (<TT
+CLASS="LITERAL"
+>e</TT
+> and <TT
+CLASS="LITERAL"
+>E</TT
+> with
+      two dots) (Sergey Burladyan)
+     </P
+></LI
+><LI
+><P
+>      Fix a few datatype input functions
+      that were allowing unused bytes in their results to contain
+      uninitialized, unpredictable values (Tom)
+     </P
+><P
+>      This could lead to failures in which two apparently identical literal
+      values were not seen as equal, resulting in the parser complaining
+      about unmatched <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> and <TT
+CLASS="LITERAL"
+>DISTINCT</TT
+>
+      expressions.
+     </P
+></LI
+><LI
+><P
+>      Fix a corner case in regular-expression substring matching
+      (<TT
+CLASS="LITERAL"
+>substring(<TT
+CLASS="REPLACEABLE"
+><I
+>string</I
+></TT
+> from
+      <TT
+CLASS="REPLACEABLE"
+><I
+>pattern</I
+></TT
+>)</TT
+>) (Tom)
+     </P
+><P
+>      The problem occurs when there is a match to the pattern overall but
+      the user has specified a parenthesized subexpression and that
+      subexpression hasn't got a match.  An example is
+      <TT
+CLASS="LITERAL"
+>substring('foo' from 'foo(bar)?')</TT
+>.
+      This should return NULL, since <TT
+CLASS="LITERAL"
+>(bar)</TT
+> isn't matched, but
+      it was mistakenly returning the whole-pattern match instead (ie,
+      <TT
+CLASS="LITERAL"
+>foo</TT
+>).
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect result from <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>'s
+      <CODE
+CLASS="FUNCTION"
+>PGTYPEStimestamp_sub()</CODE
+> function (Michael)
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="LITERAL"
+>DatumGetBool</TT
+> macro to not fail with <SPAN
+CLASS="APPLICATION"
+>gcc</SPAN
+>
+      4.3 (Tom)
+     </P
+><P
+>      This problem affects <SPAN
+CLASS="QUOTE"
+>"old style"</SPAN
+> (V0) C functions that
+      return boolean.  The fix is already in 8.3, but the need to
+      back-patch it was not realized at the time.
+     </P
+></LI
+><LI
+><P
+>      Fix longstanding <TT
+CLASS="COMMAND"
+>LISTEN</TT
+>/<TT
+CLASS="COMMAND"
+>NOTIFY</TT
+>
+      race condition (Tom)
+     </P
+><P
+>      In rare cases a session that had just executed a
+      <TT
+CLASS="COMMAND"
+>LISTEN</TT
+> might not get a notification, even though
+      one would be expected because the concurrent transaction executing
+      <TT
+CLASS="COMMAND"
+>NOTIFY</TT
+> was observed to commit later.
+     </P
+><P
+>      A side effect of the fix is that a transaction that has executed
+      a not-yet-committed <TT
+CLASS="COMMAND"
+>LISTEN</TT
+> command will not see any
+      row in <TT
+CLASS="STRUCTNAME"
+>pg_listener</TT
+> for the <TT
+CLASS="COMMAND"
+>LISTEN</TT
+>,
+      should it choose to look; formerly it would have.  This behavior
+      was never documented one way or the other, but it is possible that
+      some applications depend on the old behavior.
+     </P
+></LI
+><LI
+><P
+>      Fix display of constant expressions in <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+>
+      and <TT
+CLASS="LITERAL"
+>GROUP BY</TT
+> (Tom)
+     </P
+><P
+>      An explicitly casted constant would be shown incorrectly.  This could
+      for example lead to corruption of a view definition during
+      dump and reload.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> to handle NOTICE messages correctly
+      during COPY OUT (Tom)
+     </P
+><P
+>      This failure has only been observed to occur when a user-defined
+      datatype's output routine issues a NOTICE, but there is no
+      guarantee it couldn't happen due to other causes.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-7-4-21.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-7-4-19.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 7.4.21</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 7.4.19</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

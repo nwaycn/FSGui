@@ -1,0 +1,472 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Index Cost Estimation Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Index Access Method Interface Definition"
+HREF="indexam.html"><LINK
+REL="PREVIOUS"
+TITLE="Index Uniqueness Checks"
+HREF="index-unique-checks.html"><LINK
+REL="NEXT"
+TITLE="GiST Indexes"
+HREF="gist.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Index Uniqueness Checks"
+HREF="index-unique-checks.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="indexam.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 58. Index Access Method Interface Definition</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="GiST Indexes"
+HREF="gist.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="INDEX-COST-ESTIMATION"
+>58.6. Index Cost Estimation Functions</A
+></H1
+><P
+>   The <CODE
+CLASS="FUNCTION"
+>amcostestimate</CODE
+> function is given information describing
+   a possible index scan, including lists of WHERE and ORDER BY clauses that
+   have been determined to be usable with the index.  It must return estimates
+   of the cost of accessing the index and the selectivity of the WHERE
+   clauses (that is, the fraction of parent-table rows that will be
+   retrieved during the index scan).  For simple cases, nearly all the
+   work of the cost estimator can be done by calling standard routines
+   in the optimizer; the point of having an <CODE
+CLASS="FUNCTION"
+>amcostestimate</CODE
+> function is
+   to allow index access methods to provide index-type-specific knowledge,
+   in case it is possible to improve on the standard estimates.
+  </P
+><P
+>   Each <CODE
+CLASS="FUNCTION"
+>amcostestimate</CODE
+> function must have the signature:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>void
+amcostestimate (PlannerInfo *root,
+                IndexPath *path,
+                double loop_count,
+                Cost *indexStartupCost,
+                Cost *indexTotalCost,
+                Selectivity *indexSelectivity,
+                double *indexCorrelation);</PRE
+><P>
+
+   The first three parameters are inputs:
+
+   <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="PARAMETER"
+>root</TT
+></DT
+><DD
+><P
+>       The planner's information about the query being processed.
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>path</TT
+></DT
+><DD
+><P
+>       The index access path being considered.  All fields except cost and
+       selectivity values are valid.
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>loop_count</TT
+></DT
+><DD
+><P
+>       The number of repetitions of the index scan that should be factored
+       into the cost estimates.  This will typically be greater than one when
+       considering a parameterized scan for use in the inside of a nestloop
+       join.  Note that the cost estimates should still be for just one scan;
+       a larger <TT
+CLASS="PARAMETER"
+>loop_count</TT
+> means that it may be appropriate
+       to allow for some caching effects across multiple scans.
+      </P
+></DD
+></DL
+></DIV
+><P>
+  </P
+><P
+>   The last four parameters are pass-by-reference outputs:
+
+   <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="PARAMETER"
+>*indexStartupCost</TT
+></DT
+><DD
+><P
+>       Set to cost of index start-up processing
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>*indexTotalCost</TT
+></DT
+><DD
+><P
+>       Set to total cost of index processing
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>*indexSelectivity</TT
+></DT
+><DD
+><P
+>       Set to index selectivity
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>*indexCorrelation</TT
+></DT
+><DD
+><P
+>       Set to correlation coefficient between index scan order and
+       underlying table's order
+      </P
+></DD
+></DL
+></DIV
+><P>
+  </P
+><P
+>   Note that cost estimate functions must be written in C, not in SQL or
+   any available procedural language, because they must access internal
+   data structures of the planner/optimizer.
+  </P
+><P
+>   The index access costs should be computed using the parameters used by
+   <TT
+CLASS="FILENAME"
+>src/backend/optimizer/path/costsize.c</TT
+>: a sequential
+   disk block fetch has cost <TT
+CLASS="VARNAME"
+>seq_page_cost</TT
+>, a nonsequential fetch
+   has cost <TT
+CLASS="VARNAME"
+>random_page_cost</TT
+>, and the cost of processing one index
+   row should usually be taken as <TT
+CLASS="VARNAME"
+>cpu_index_tuple_cost</TT
+>.  In
+   addition, an appropriate multiple of <TT
+CLASS="VARNAME"
+>cpu_operator_cost</TT
+> should
+   be charged for any comparison operators invoked during index processing
+   (especially evaluation of the indexquals themselves).
+  </P
+><P
+>   The access costs should include all disk and CPU costs associated with
+   scanning the index itself, but <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+> the costs of retrieving or
+   processing the parent-table rows that are identified by the index.
+  </P
+><P
+>   The <SPAN
+CLASS="QUOTE"
+>"start-up cost"</SPAN
+> is the part of the total scan cost that
+   must be expended before we can begin to fetch the first row.  For most
+   indexes this can be taken as zero, but an index type with a high start-up
+   cost might want to set it nonzero.
+  </P
+><P
+>   The <TT
+CLASS="PARAMETER"
+>indexSelectivity</TT
+> should be set to the estimated fraction of the parent
+   table rows that will be retrieved during the index scan.  In the case
+   of a lossy query, this will typically be higher than the fraction of
+   rows that actually pass the given qual conditions.
+  </P
+><P
+>   The <TT
+CLASS="PARAMETER"
+>indexCorrelation</TT
+> should be set to the correlation (ranging between
+   -1.0 and 1.0) between the index order and the table order.  This is used
+   to adjust the estimate for the cost of fetching rows from the parent
+   table.
+  </P
+><P
+>   When <TT
+CLASS="PARAMETER"
+>loop_count</TT
+> is greater than one, the returned numbers
+   should be averages expected for any one scan of the index.
+  </P
+><DIV
+CLASS="PROCEDURE"
+><P
+><B
+>Cost Estimation</B
+></P
+><P
+>    A typical cost estimator will proceed as follows:
+   </P
+><OL
+TYPE="1"
+><LI
+CLASS="STEP"
+><P
+>     Estimate and return the fraction of parent-table rows that will be visited
+     based on the given qual conditions.  In the absence of any index-type-specific
+     knowledge, use the standard optimizer function <CODE
+CLASS="FUNCTION"
+>clauselist_selectivity()</CODE
+>:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>*indexSelectivity = clauselist_selectivity(root, path-&gt;indexquals,
+                                           path-&gt;indexinfo-&gt;rel-&gt;relid,
+                                           JOIN_INNER, NULL);</PRE
+><P>
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+>     Estimate the number of index rows that will be visited during the
+     scan.  For many index types this is the same as <TT
+CLASS="PARAMETER"
+>indexSelectivity</TT
+> times
+     the number of rows in the index, but it might be more.  (Note that the
+     index's size in pages and rows is available from the
+     <TT
+CLASS="LITERAL"
+>path-&gt;indexinfo</TT
+> struct.)
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+>     Estimate the number of index pages that will be retrieved during the scan.
+     This might be just <TT
+CLASS="PARAMETER"
+>indexSelectivity</TT
+> times the index's size in pages.
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+>     Compute the index access cost.  A generic estimator might do this:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>/*
+ * Our generic assumption is that the index pages will be read
+ * sequentially, so they cost seq_page_cost each, not random_page_cost.
+ * Also, we charge for evaluation of the indexquals at each index row.
+ * All the costs are assumed to be paid incrementally during the scan.
+ */
+cost_qual_eval(&amp;index_qual_cost, path-&gt;indexquals, root);
+*indexStartupCost = index_qual_cost.startup;
+*indexTotalCost = seq_page_cost * numIndexPages +
+    (cpu_index_tuple_cost + index_qual_cost.per_tuple) * numIndexTuples;</PRE
+><P>
+
+     However, the above does not account for amortization of index reads
+     across repeated index scans.
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+>     Estimate the index correlation.  For a simple ordered index on a single
+     field, this can be retrieved from pg_statistic.  If the correlation
+     is not known, the conservative estimate is zero (no correlation).
+    </P
+></LI
+></OL
+></DIV
+><P
+>   Examples of cost estimator functions can be found in
+   <TT
+CLASS="FILENAME"
+>src/backend/utils/adt/selfuncs.c</TT
+>.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="index-unique-checks.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="gist.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Index Uniqueness Checks</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="indexam.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>GiST Indexes</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

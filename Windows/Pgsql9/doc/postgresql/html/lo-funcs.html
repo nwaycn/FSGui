@@ -1,0 +1,427 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Server-side Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Large Objects"
+HREF="largeobjects.html"><LINK
+REL="PREVIOUS"
+TITLE="Client Interfaces"
+HREF="lo-interfaces.html"><LINK
+REL="NEXT"
+TITLE="Example Program"
+HREF="lo-examplesect.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Client Interfaces"
+HREF="lo-interfaces.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="largeobjects.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 32. Large Objects</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Example Program"
+HREF="lo-examplesect.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="LO-FUNCS"
+>32.4. Server-side Functions</A
+></H1
+><P
+>   Server-side functions tailored for manipulating large objects from SQL are
+   listed in <A
+HREF="lo-funcs.html#LO-FUNCS-TABLE"
+>Table 32-1</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="LO-FUNCS-TABLE"
+></A
+><P
+><B
+>Table 32-1. SQL-oriented Large Object Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+><TH
+>Example</TH
+><TH
+>Result</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>       
+       <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>lo_from_bytea(<TT
+CLASS="PARAMETER"
+>loid</TT
+> <TT
+CLASS="TYPE"
+>oid</TT
+>, <TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>bytea</TT
+>)</CODE
+></TT
+>
+      </TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>       Create a large object and store data there, returning its OID.
+       Pass <TT
+CLASS="LITERAL"
+>0</TT
+> to have the system choose an OID.
+      </TD
+><TD
+><TT
+CLASS="LITERAL"
+>lo_from_bytea(0, E'\\xffffff00')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>24528</TT
+></TD
+></TR
+><TR
+><TD
+>       
+       <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>lo_put(<TT
+CLASS="PARAMETER"
+>loid</TT
+> <TT
+CLASS="TYPE"
+>oid</TT
+>, <TT
+CLASS="PARAMETER"
+>offset</TT
+> <TT
+CLASS="TYPE"
+>bigint</TT
+>, <TT
+CLASS="PARAMETER"
+>str</TT
+> <TT
+CLASS="TYPE"
+>bytea</TT
+>)</CODE
+></TT
+>
+      </TD
+><TD
+><TT
+CLASS="TYPE"
+>void</TT
+></TD
+><TD
+>       Write data at the given offset.
+      </TD
+><TD
+><TT
+CLASS="LITERAL"
+>lo_put(24528, 1, E'\\xaa')</TT
+></TD
+><TD
+>&nbsp;</TD
+></TR
+><TR
+><TD
+>       
+       <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>lo_get(<TT
+CLASS="PARAMETER"
+>loid</TT
+> <TT
+CLASS="TYPE"
+>oid</TT
+> [<SPAN
+CLASS="OPTIONAL"
+>, <TT
+CLASS="PARAMETER"
+>from</TT
+> <TT
+CLASS="TYPE"
+>bigint</TT
+>, <TT
+CLASS="PARAMETER"
+>for</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+></SPAN
+>])</CODE
+></TT
+>
+      </TD
+><TD
+><TT
+CLASS="TYPE"
+>bytea</TT
+></TD
+><TD
+>       Extract contents or a substring thereof.
+      </TD
+><TD
+><TT
+CLASS="LITERAL"
+>lo_get(24528, 0, 3)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>\xffaaff</TT
+></TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   There are additional server-side functions corresponding to each of the
+   client-side functions described earlier; indeed, for the most part the
+   client-side functions are simply interfaces to the equivalent server-side
+   functions.  The ones just as convenient to call via SQL commands are
+   <CODE
+CLASS="FUNCTION"
+>lo_creat</CODE
+>,
+   <CODE
+CLASS="FUNCTION"
+>lo_create</CODE
+>,
+   <CODE
+CLASS="FUNCTION"
+>lo_unlink</CODE
+>,
+   <CODE
+CLASS="FUNCTION"
+>lo_import</CODE
+>, and
+   <CODE
+CLASS="FUNCTION"
+>lo_export</CODE
+>.
+   Here are examples of their use:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE image (
+    name            text,
+    raster          oid
+);
+
+SELECT lo_creat(-1);       -- returns OID of new, empty large object
+
+SELECT lo_create(43213);   -- attempts to create large object with OID 43213
+
+SELECT lo_unlink(173454);  -- deletes large object with OID 173454
+
+INSERT INTO image (name, raster)
+    VALUES ('beautiful image', lo_import('/etc/motd'));
+
+INSERT INTO image (name, raster)  -- same as above, but specify OID to use
+    VALUES ('beautiful image', lo_import('/etc/motd', 68583));
+
+SELECT lo_export(image.raster, '/tmp/motd') FROM image
+    WHERE name = 'beautiful image';</PRE
+><P>
+  </P
+><P
+>    The server-side <CODE
+CLASS="FUNCTION"
+>lo_import</CODE
+> and
+    <CODE
+CLASS="FUNCTION"
+>lo_export</CODE
+> functions behave considerably differently
+    from their client-side analogs.  These two functions read and write files
+    in the server's file system, using the permissions of the database's
+    owning user.  Therefore, their use is restricted to superusers.  In
+    contrast, the client-side import and export functions read and write files
+    in the client's file system, using the permissions of the client program.
+    The client-side functions do not require superuser privilege.
+  </P
+><P
+>    The functionality of <CODE
+CLASS="FUNCTION"
+>lo_read</CODE
+> and
+    <CODE
+CLASS="FUNCTION"
+>lo_write</CODE
+> is also available via server-side calls,
+    but the names of the server-side functions differ from the client side
+    interfaces in that they do not contain underscores.  You must call
+    these functions as <CODE
+CLASS="FUNCTION"
+>loread</CODE
+> and <CODE
+CLASS="FUNCTION"
+>lowrite</CODE
+>.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="lo-interfaces.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="lo-examplesect.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Client Interfaces</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="largeobjects.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Example Program</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

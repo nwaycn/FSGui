@@ -1,0 +1,525 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.4.13</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.4.14"
+HREF="release-8-4-14.html"><LINK
+REL="NEXT"
+TITLE="Release 8.4.12"
+HREF="release-8-4-12.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.4.14"
+HREF="release-8-4-14.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.4.12"
+HREF="release-8-4-12.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-4-13"
+>E.107. Release 8.4.13</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2012-08-17</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.4.12.
+   For information about new features in the 8.4 major release, see
+   <A
+HREF="release-8-4.html"
+>Section E.120</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN148229"
+>E.107.1. Migration to Version 8.4.13</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.4.X.
+   </P
+><P
+>    However, if you are upgrading from a version earlier than 8.4.10,
+    see <A
+HREF="release-8-4-10.html"
+>Section E.110</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN148234"
+>E.107.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Prevent access to external files/URLs via XML entity references
+      (Noah Misch, Tom Lane)
+     </P
+><P
+>      <CODE
+CLASS="FUNCTION"
+>xml_parse()</CODE
+> would attempt to fetch external files or
+      URLs as needed to resolve DTD and entity references in an XML value,
+      thus allowing unprivileged database users to attempt to fetch data
+      with the privileges of the database server.  While the external data
+      wouldn't get returned directly to the user, portions of it could be
+      exposed in error messages if the data didn't parse as valid XML; and
+      in any case the mere ability to check existence of a file might be
+      useful to an attacker.  (CVE-2012-3489)
+     </P
+></LI
+><LI
+><P
+>      Prevent access to external files/URLs via <TT
+CLASS="FILENAME"
+>contrib/xml2</TT
+>'s
+      <CODE
+CLASS="FUNCTION"
+>xslt_process()</CODE
+> (Peter Eisentraut)
+     </P
+><P
+>      <SPAN
+CLASS="APPLICATION"
+>libxslt</SPAN
+> offers the ability to read and write both
+      files and URLs through stylesheet commands, thus allowing
+      unprivileged database users to both read and write data with the
+      privileges of the database server.  Disable that through proper use
+      of <SPAN
+CLASS="APPLICATION"
+>libxslt</SPAN
+>'s security options.  (CVE-2012-3488)
+     </P
+><P
+>      Also, remove <CODE
+CLASS="FUNCTION"
+>xslt_process()</CODE
+>'s ability to fetch documents
+      and stylesheets from external files/URLs.  While this was a
+      documented <SPAN
+CLASS="QUOTE"
+>"feature"</SPAN
+>, it was long regarded as a bad idea.
+      The fix for CVE-2012-3489 broke that capability, and rather than
+      expend effort on trying to fix it, we're just going to summarily
+      remove it.
+     </P
+></LI
+><LI
+><P
+>      Prevent too-early recycling of btree index pages (Noah Misch)
+     </P
+><P
+>      When we allowed read-only transactions to skip assigning XIDs, we
+      introduced the possibility that a deleted btree page could be
+      recycled while a read-only transaction was still in flight to it.
+      This would result in incorrect index search results.  The probability
+      of such an error occurring in the field seems very low because of the
+      timing requirements, but nonetheless it should be fixed.
+     </P
+></LI
+><LI
+><P
+>      Fix crash-safety bug with newly-created-or-reset sequences (Tom Lane)
+     </P
+><P
+>      If <TT
+CLASS="COMMAND"
+>ALTER SEQUENCE</TT
+> was executed on a freshly created or
+      reset sequence, and then precisely one <CODE
+CLASS="FUNCTION"
+>nextval()</CODE
+> call
+      was made on it, and then the server crashed, WAL replay would restore
+      the sequence to a state in which it appeared that no
+      <CODE
+CLASS="FUNCTION"
+>nextval()</CODE
+> had been done, thus allowing the first
+      sequence value to be returned again by the next
+      <CODE
+CLASS="FUNCTION"
+>nextval()</CODE
+> call.  In particular this could manifest for
+      <TT
+CLASS="TYPE"
+>serial</TT
+> columns, since creation of a serial column's sequence
+      includes an <TT
+CLASS="COMMAND"
+>ALTER SEQUENCE OWNED BY</TT
+> step.
+     </P
+></LI
+><LI
+><P
+>      Ensure the <TT
+CLASS="FILENAME"
+>backup_label</TT
+> file is fsync'd after
+      <CODE
+CLASS="FUNCTION"
+>pg_start_backup()</CODE
+> (Dave Kerr)
+     </P
+></LI
+><LI
+><P
+>      Back-patch 9.1 improvement to compress the fsync request queue
+      (Robert Haas)
+     </P
+><P
+>      This improves performance during checkpoints.  The 9.1 change
+      has now seen enough field testing to seem safe to back-patch.
+     </P
+></LI
+><LI
+><P
+>      Only allow autovacuum to be auto-canceled by a directly blocked
+      process (Tom Lane)
+     </P
+><P
+>      The original coding could allow inconsistent behavior in some cases;
+      in particular, an autovacuum could get canceled after less than
+      <TT
+CLASS="LITERAL"
+>deadlock_timeout</TT
+> grace period.
+     </P
+></LI
+><LI
+><P
+>      Improve logging of autovacuum cancels (Robert Haas)
+     </P
+></LI
+><LI
+><P
+>      Fix log collector so that <TT
+CLASS="LITERAL"
+>log_truncate_on_rotation</TT
+> works
+      during the very first log rotation after server start (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="LITERAL"
+>WITH</TT
+> attached to a nested set operation
+      (<TT
+CLASS="LITERAL"
+>UNION</TT
+>/<TT
+CLASS="LITERAL"
+>INTERSECT</TT
+>/<TT
+CLASS="LITERAL"
+>EXCEPT</TT
+>)
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Ensure that a whole-row reference to a subquery doesn't include any
+      extra <TT
+CLASS="LITERAL"
+>GROUP BY</TT
+> or <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> columns (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Disallow copying whole-row references in <TT
+CLASS="LITERAL"
+>CHECK</TT
+>
+      constraints and index definitions during <TT
+CLASS="COMMAND"
+>CREATE TABLE</TT
+>
+      (Tom Lane)
+     </P
+><P
+>      This situation can arise in <TT
+CLASS="COMMAND"
+>CREATE TABLE</TT
+> with
+      <TT
+CLASS="LITERAL"
+>LIKE</TT
+> or <TT
+CLASS="LITERAL"
+>INHERITS</TT
+>.  The copied whole-row
+      variable was incorrectly labeled with the row type of the original
+      table not the new one.  Rejecting the case seems reasonable for
+      <TT
+CLASS="LITERAL"
+>LIKE</TT
+>, since the row types might well diverge later.  For
+      <TT
+CLASS="LITERAL"
+>INHERITS</TT
+> we should ideally allow it, with an implicit
+      coercion to the parent table's row type; but that will require more
+      work than seems safe to back-patch.
+     </P
+></LI
+><LI
+><P
+>      Fix memory leak in <TT
+CLASS="LITERAL"
+>ARRAY(SELECT ...)</TT
+> subqueries (Heikki
+      Linnakangas, Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix extraction of common prefixes from regular expressions (Tom Lane)
+     </P
+><P
+>      The code could get confused by quantified parenthesized
+      subexpressions, such as <TT
+CLASS="LITERAL"
+>^(foo)?bar</TT
+>.  This would lead to
+      incorrect index optimization of searches for such patterns.
+     </P
+></LI
+><LI
+><P
+>      Fix bugs with parsing signed
+      <TT
+CLASS="REPLACEABLE"
+><I
+>hh</I
+></TT
+><TT
+CLASS="LITERAL"
+>:</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>mm</I
+></TT
+> and
+      <TT
+CLASS="REPLACEABLE"
+><I
+>hh</I
+></TT
+><TT
+CLASS="LITERAL"
+>:</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>mm</I
+></TT
+><TT
+CLASS="LITERAL"
+>:</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>ss</I
+></TT
+>
+      fields in <TT
+CLASS="TYPE"
+>interval</TT
+> constants (Amit Kapila, Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Report errors properly in <TT
+CLASS="FILENAME"
+>contrib/xml2</TT
+>'s
+      <CODE
+CLASS="FUNCTION"
+>xslt_process()</CODE
+> (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2012e
+      for DST law changes in Morocco and Tokelau
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-4-14.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-4-12.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.4.14</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.4.12</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

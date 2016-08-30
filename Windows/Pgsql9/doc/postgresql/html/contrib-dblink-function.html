@@ -1,0 +1,457 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>dblink</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="dblink"
+HREF="dblink.html"><LINK
+REL="PREVIOUS"
+TITLE="dblink_disconnect"
+HREF="contrib-dblink-disconnect.html"><LINK
+REL="NEXT"
+TITLE="dblink_exec"
+HREF="contrib-dblink-exec.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="dblink_disconnect"
+HREF="contrib-dblink-disconnect.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="dblink.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="dblink_exec"
+HREF="contrib-dblink-exec.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="CONTRIB-DBLINK-FUNCTION"
+></A
+>dblink</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN169677"
+></A
+><H2
+>Name</H2
+>dblink&nbsp;--&nbsp;executes a query in a remote database</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN169680"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>dblink(text connname, text sql [, bool fail_on_error]) returns setof record
+dblink(text connstr, text sql [, bool fail_on_error]) returns setof record
+dblink(text sql [, bool fail_on_error]) returns setof record</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169682"
+></A
+><H2
+>Description</H2
+><P
+>    <CODE
+CLASS="FUNCTION"
+>dblink</CODE
+> executes a query (usually a <TT
+CLASS="COMMAND"
+>SELECT</TT
+>,
+    but it can be any SQL statement that returns rows) in a remote database.
+   </P
+><P
+>    When two <TT
+CLASS="TYPE"
+>text</TT
+> arguments are given, the first one is first
+    looked up as a persistent connection's name; if found, the command
+    is executed on that connection.  If not found, the first argument
+    is treated as a connection info string as for <CODE
+CLASS="FUNCTION"
+>dblink_connect</CODE
+>,
+    and the indicated connection is made just for the duration of this command.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169690"
+></A
+><H2
+>Arguments</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="PARAMETER"
+>connname</TT
+></DT
+><DD
+><P
+>       Name of the connection to use; omit this parameter to use the
+       unnamed connection.
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>connstr</TT
+></DT
+><DD
+><P
+>       A connection info string, as previously described for
+       <CODE
+CLASS="FUNCTION"
+>dblink_connect</CODE
+>.
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>sql</TT
+></DT
+><DD
+><P
+>       The SQL query that you wish to execute in the remote database,
+       for example <TT
+CLASS="LITERAL"
+>select * from foo</TT
+>.
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>fail_on_error</TT
+></DT
+><DD
+><P
+>       If true (the default when omitted) then an error thrown on the
+       remote side of the connection causes an error to also be thrown
+       locally. If false, the remote error is locally reported as a NOTICE,
+       and the function returns no rows.
+      </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169715"
+></A
+><H2
+>Return Value</H2
+><P
+>    The function returns the row(s) produced by the query.  Since
+    <CODE
+CLASS="FUNCTION"
+>dblink</CODE
+> can be used with any query, it is declared
+    to return <TT
+CLASS="TYPE"
+>record</TT
+>, rather than specifying any particular
+    set of columns.  This means that you must specify the expected
+    set of columns in the calling query &mdash; otherwise
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> would not know what to expect.
+    Here is an example:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT *
+    FROM dblink('dbname=mydb', 'select proname, prosrc from pg_proc')
+      AS t1(proname name, prosrc text)
+    WHERE proname LIKE 'bytea%';</PRE
+><P>
+
+    The <SPAN
+CLASS="QUOTE"
+>"alias"</SPAN
+> part of the <TT
+CLASS="LITERAL"
+>FROM</TT
+> clause must
+    specify the column names and types that the function will return.
+    (Specifying column names in an alias is actually standard SQL
+    syntax, but specifying column types is a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+    extension.)  This allows the system to understand what
+    <TT
+CLASS="LITERAL"
+>*</TT
+> should expand to, and what <TT
+CLASS="STRUCTNAME"
+>proname</TT
+>
+    in the <TT
+CLASS="LITERAL"
+>WHERE</TT
+> clause refers to, in advance of trying
+    to execute the function.  At run time, an error will be thrown
+    if the actual query result from the remote database does not
+    have the same number of columns shown in the <TT
+CLASS="LITERAL"
+>FROM</TT
+> clause.
+    The column names need not match, however, and <CODE
+CLASS="FUNCTION"
+>dblink</CODE
+>
+    does not insist on exact type matches either.  It will succeed
+    so long as the returned data strings are valid input for the
+    column type declared in the <TT
+CLASS="LITERAL"
+>FROM</TT
+> clause.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169731"
+></A
+><H2
+>Notes</H2
+><P
+>    A convenient way to use <CODE
+CLASS="FUNCTION"
+>dblink</CODE
+> with predetermined
+    queries is to create a view.
+    This allows the column type information to be buried in the view,
+    instead of having to spell it out in every query.  For example,
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE VIEW myremote_pg_proc AS
+  SELECT *
+    FROM dblink('dbname=postgres', 'select proname, prosrc from pg_proc')
+    AS t1(proname name, prosrc text);
+
+SELECT * FROM myremote_pg_proc WHERE proname LIKE 'bytea%';</PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169736"
+></A
+><H2
+>Examples</H2
+><PRE
+CLASS="SCREEN"
+>SELECT * FROM dblink('dbname=postgres', 'select proname, prosrc from pg_proc')
+  AS t1(proname name, prosrc text) WHERE proname LIKE 'bytea%';
+  proname   |   prosrc
+------------+------------
+ byteacat   | byteacat
+ byteaeq    | byteaeq
+ bytealt    | bytealt
+ byteale    | byteale
+ byteagt    | byteagt
+ byteage    | byteage
+ byteane    | byteane
+ byteacmp   | byteacmp
+ bytealike  | bytealike
+ byteanlike | byteanlike
+ byteain    | byteain
+ byteaout   | byteaout
+(12 rows)
+
+SELECT dblink_connect('dbname=postgres');
+ dblink_connect
+----------------
+ OK
+(1 row)
+
+SELECT * FROM dblink('select proname, prosrc from pg_proc')
+  AS t1(proname name, prosrc text) WHERE proname LIKE 'bytea%';
+  proname   |   prosrc
+------------+------------
+ byteacat   | byteacat
+ byteaeq    | byteaeq
+ bytealt    | bytealt
+ byteale    | byteale
+ byteagt    | byteagt
+ byteage    | byteage
+ byteane    | byteane
+ byteacmp   | byteacmp
+ bytealike  | bytealike
+ byteanlike | byteanlike
+ byteain    | byteain
+ byteaout   | byteaout
+(12 rows)
+
+SELECT dblink_connect('myconn', 'dbname=regression');
+ dblink_connect
+----------------
+ OK
+(1 row)
+
+SELECT * FROM dblink('myconn', 'select proname, prosrc from pg_proc')
+  AS t1(proname name, prosrc text) WHERE proname LIKE 'bytea%';
+  proname   |   prosrc
+------------+------------
+ bytearecv  | bytearecv
+ byteasend  | byteasend
+ byteale    | byteale
+ byteagt    | byteagt
+ byteage    | byteage
+ byteane    | byteane
+ byteacmp   | byteacmp
+ bytealike  | bytealike
+ byteanlike | byteanlike
+ byteacat   | byteacat
+ byteaeq    | byteaeq
+ bytealt    | bytealt
+ byteain    | byteain
+ byteaout   | byteaout
+(14 rows)</PRE
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib-dblink-disconnect.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="contrib-dblink-exec.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>dblink_disconnect</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="dblink.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>dblink_exec</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

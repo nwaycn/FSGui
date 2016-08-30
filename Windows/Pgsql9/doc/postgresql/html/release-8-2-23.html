@@ -1,0 +1,486 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.2.23</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.3"
+HREF="release-8-3.html"><LINK
+REL="NEXT"
+TITLE="Release 8.2.22"
+HREF="release-8-2-22.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.3"
+HREF="release-8-3.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.2.22"
+HREF="release-8-2-22.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-2-23"
+>E.145. Release 8.2.23</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2011-12-05</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.2.22.
+   For information about new features in the 8.2 major release, see
+   <A
+HREF="release-8-2.html"
+>Section E.168</A
+>.
+  </P
+><P
+>   This is expected to be the last <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> release
+   in the 8.2.X series.  Users are encouraged to update to a newer
+   release branch soon.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN154971"
+>E.145.1. Migration to Version 8.2.23</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.2.X.
+   </P
+><P
+>    However, a longstanding error was discovered in the definition of the
+    <TT
+CLASS="LITERAL"
+>information_schema.referential_constraints</TT
+> view.  If you
+    rely on correct results from that view, you should replace its
+    definition as explained in the first changelog item below.
+   </P
+><P
+>    Also, if you are upgrading from a version earlier than 8.2.14,
+    see <A
+HREF="release-8-2-14.html"
+>Section E.154</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN154978"
+>E.145.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix bugs in <TT
+CLASS="LITERAL"
+>information_schema.referential_constraints</TT
+> view
+      (Tom Lane)
+     </P
+><P
+>      This view was being insufficiently careful about matching the
+      foreign-key constraint to the depended-on primary or unique key
+      constraint.  That could result in failure to show a foreign key
+      constraint at all, or showing it multiple times, or claiming that it
+      depends on a different constraint than the one it really does.
+     </P
+><P
+>      Since the view definition is installed by <SPAN
+CLASS="APPLICATION"
+>initdb</SPAN
+>,
+      merely upgrading will not fix the problem.  If you need to fix this
+      in an existing installation, you can (as a superuser) drop the
+      <TT
+CLASS="LITERAL"
+>information_schema</TT
+> schema then re-create it by sourcing
+      <TT
+CLASS="FILENAME"
+><TT
+CLASS="REPLACEABLE"
+><I
+>SHAREDIR</I
+></TT
+>/information_schema.sql</TT
+>.
+      (Run <TT
+CLASS="LITERAL"
+>pg_config --sharedir</TT
+> if you're uncertain where
+      <TT
+CLASS="REPLACEABLE"
+><I
+>SHAREDIR</I
+></TT
+> is.)  This must be repeated in each database
+      to be fixed.
+     </P
+></LI
+><LI
+><P
+>      Fix TOAST-related data corruption during <TT
+CLASS="LITERAL"
+>CREATE TABLE dest AS
+      SELECT * FROM src</TT
+> or <TT
+CLASS="LITERAL"
+>INSERT INTO dest SELECT * FROM src</TT
+>
+      (Tom Lane)
+     </P
+><P
+>      If a table has been modified by <TT
+CLASS="COMMAND"
+>ALTER TABLE ADD COLUMN</TT
+>,
+      attempts to copy its data verbatim to another table could produce
+      corrupt results in certain corner cases.
+      The problem can only manifest in this precise form in 8.4 and later,
+      but we patched earlier versions as well in case there are other code
+      paths that could trigger the same bug.
+     </P
+></LI
+><LI
+><P
+>      Fix race condition during toast table access from stale syscache entries
+      (Tom Lane)
+     </P
+><P
+>      The typical symptom was transient errors like <SPAN
+CLASS="QUOTE"
+>"missing chunk
+      number 0 for toast value NNNNN in pg_toast_2619"</SPAN
+>, where the cited
+      toast table would always belong to a system catalog.
+     </P
+></LI
+><LI
+><P
+>      Improve locale support in <TT
+CLASS="TYPE"
+>money</TT
+> type's input and output
+      (Tom Lane)
+     </P
+><P
+>      Aside from not supporting all standard
+      <A
+HREF="runtime-config-client.html#GUC-LC-MONETARY"
+><TT
+CLASS="VARNAME"
+>lc_monetary</TT
+></A
+>
+      formatting options, the input and output functions were inconsistent,
+      meaning there were locales in which dumped <TT
+CLASS="TYPE"
+>money</TT
+> values could
+      not be re-read.
+     </P
+></LI
+><LI
+><P
+>      Don't let <A
+HREF="runtime-config-compatible.html#GUC-TRANSFORM-NULL-EQUALS"
+><TT
+CLASS="VARNAME"
+>transform_null_equals</TT
+></A
+>
+      affect <TT
+CLASS="LITERAL"
+>CASE foo WHEN NULL ...</TT
+> constructs
+      (Heikki Linnakangas)
+     </P
+><P
+>      <TT
+CLASS="VARNAME"
+>transform_null_equals</TT
+> is only supposed to affect
+      <TT
+CLASS="LITERAL"
+>foo = NULL</TT
+> expressions written directly by the user, not
+      equality checks generated internally by this form of <TT
+CLASS="LITERAL"
+>CASE</TT
+>.
+     </P
+></LI
+><LI
+><P
+>      Change foreign-key trigger creation order to better support
+      self-referential foreign keys (Tom Lane)
+     </P
+><P
+>      For a cascading foreign key that references its own table, a row update
+      will fire both the <TT
+CLASS="LITERAL"
+>ON UPDATE</TT
+> trigger and the
+      <TT
+CLASS="LITERAL"
+>CHECK</TT
+> trigger as one event.  The <TT
+CLASS="LITERAL"
+>ON UPDATE</TT
+>
+      trigger must execute first, else the <TT
+CLASS="LITERAL"
+>CHECK</TT
+> will check a
+      non-final state of the row and possibly throw an inappropriate error.
+      However, the firing order of these triggers is determined by their
+      names, which generally sort in creation order since the triggers have
+      auto-generated names following the convention
+      <SPAN
+CLASS="QUOTE"
+>"RI_ConstraintTrigger_NNNN"</SPAN
+>.  A proper fix would require
+      modifying that convention, which we will do in 9.2, but it seems risky
+      to change it in existing releases.  So this patch just changes the
+      creation order of the triggers.  Users encountering this type of error
+      should drop and re-create the foreign key constraint to get its
+      triggers into the right order.
+     </P
+></LI
+><LI
+><P
+>      Preserve blank lines within commands in <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s command
+      history (Robert Haas)
+     </P
+><P
+>      The former behavior could cause problems if an empty line was removed
+      from within a string literal, for example.
+     </P
+></LI
+><LI
+><P
+>      Use the preferred version of <SPAN
+CLASS="APPLICATION"
+>xsubpp</SPAN
+> to build PL/Perl,
+      not necessarily the operating system's main copy
+      (David Wheeler and Alex Hunsaker)
+     </P
+></LI
+><LI
+><P
+>      Honor query cancel interrupts promptly in <CODE
+CLASS="FUNCTION"
+>pgstatindex()</CODE
+>
+      (Robert Haas)
+     </P
+></LI
+><LI
+><P
+>      Ensure VPATH builds properly install all server header files
+      (Peter Eisentraut)
+     </P
+></LI
+><LI
+><P
+>      Shorten file names reported in verbose error messages (Peter Eisentraut)
+     </P
+><P
+>      Regular builds have always reported just the name of the C file
+      containing the error message call, but VPATH builds formerly
+      reported an absolute path name.
+     </P
+></LI
+><LI
+><P
+>      Fix interpretation of Windows timezone names for Central America
+      (Tom Lane)
+     </P
+><P
+>      Map <SPAN
+CLASS="QUOTE"
+>"Central America Standard Time"</SPAN
+> to <TT
+CLASS="LITERAL"
+>CST6</TT
+>, not
+      <TT
+CLASS="LITERAL"
+>CST6CDT</TT
+>, because DST is generally not observed anywhere in
+      Central America.
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2011n
+      for DST law changes in Brazil, Cuba, Fiji, Palestine, Russia, and Samoa;
+      also historical corrections for Alaska and British East Africa.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-3.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-2-22.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.3</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.2.22</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

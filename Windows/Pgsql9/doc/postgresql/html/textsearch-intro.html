@@ -1,0 +1,876 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Introduction</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Full Text Search"
+HREF="textsearch.html"><LINK
+REL="PREVIOUS"
+TITLE="Full Text Search"
+HREF="textsearch.html"><LINK
+REL="NEXT"
+TITLE="Tables and Indexes"
+HREF="textsearch-tables.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Full Text Search"
+HREF="textsearch.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="textsearch.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 12. Full Text Search</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Tables and Indexes"
+HREF="textsearch-tables.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="TEXTSEARCH-INTRO"
+>12.1. Introduction</A
+></H1
+><P
+>   Full Text Searching (or just <I
+CLASS="FIRSTTERM"
+>text search</I
+>) provides
+   the capability to identify natural-language <I
+CLASS="FIRSTTERM"
+>documents</I
+> that
+   satisfy a <I
+CLASS="FIRSTTERM"
+>query</I
+>, and optionally to sort them by
+   relevance to the query.  The most common type of search
+   is to find all documents containing given <I
+CLASS="FIRSTTERM"
+>query terms</I
+>
+   and return them in order of their <I
+CLASS="FIRSTTERM"
+>similarity</I
+> to the
+   query.  Notions of <TT
+CLASS="VARNAME"
+>query</TT
+> and
+   <TT
+CLASS="VARNAME"
+>similarity</TT
+> are very flexible and depend on the specific
+   application. The simplest search considers <TT
+CLASS="VARNAME"
+>query</TT
+> as a
+   set of words and <TT
+CLASS="VARNAME"
+>similarity</TT
+> as the frequency of query
+   words in the document.
+  </P
+><P
+>   Textual search operators have existed in databases for years.
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> has
+   <TT
+CLASS="LITERAL"
+>~</TT
+>, <TT
+CLASS="LITERAL"
+>~*</TT
+>, <TT
+CLASS="LITERAL"
+>LIKE</TT
+>, and
+   <TT
+CLASS="LITERAL"
+>ILIKE</TT
+> operators for textual data types, but they lack
+   many essential properties required by modern information systems:
+  </P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+STYLE="list-style-type: disc"
+><P
+>     There is no linguistic support, even for English.  Regular expressions
+     are not sufficient because they cannot easily handle derived words, e.g.,
+     <TT
+CLASS="LITERAL"
+>satisfies</TT
+> and <TT
+CLASS="LITERAL"
+>satisfy</TT
+>. You might
+     miss documents that contain <TT
+CLASS="LITERAL"
+>satisfies</TT
+>, although you
+     probably would like to find them when searching for
+     <TT
+CLASS="LITERAL"
+>satisfy</TT
+>. It is possible to use <TT
+CLASS="LITERAL"
+>OR</TT
+>
+     to search for multiple derived forms, but this is tedious and error-prone
+     (some words can have several thousand derivatives).
+    </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>     They provide no ordering (ranking) of search results, which makes them
+     ineffective when thousands of matching documents are found.
+    </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>     They tend to be slow because there is no index support, so they must
+     process all documents for every search.
+    </P
+></LI
+></UL
+><P
+>   Full text indexing allows documents to be <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>preprocessed</I
+></SPAN
+>
+   and an index saved for later rapid searching. Preprocessing includes:
+  </P
+><P
+></P
+><UL
+><LI
+STYLE="list-style-type: none"
+><P
+>     <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>Parsing documents into <I
+CLASS="FIRSTTERM"
+>tokens</I
+></I
+></SPAN
+>. It is
+     useful to identify various classes of tokens, e.g., numbers, words,
+     complex words, email addresses, so that they can be processed
+     differently.  In principle token classes depend on the specific
+     application, but for most purposes it is adequate to use a predefined
+     set of classes.
+     <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> uses a <I
+CLASS="FIRSTTERM"
+>parser</I
+> to
+     perform this step.  A standard parser is provided, and custom parsers
+     can be created for specific needs.
+    </P
+></LI
+><LI
+STYLE="list-style-type: none"
+><P
+>     <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>Converting tokens into <I
+CLASS="FIRSTTERM"
+>lexemes</I
+></I
+></SPAN
+>.
+     A lexeme is a string, just like a token, but it has been
+     <I
+CLASS="FIRSTTERM"
+>normalized</I
+> so that different forms of the same word
+     are made alike.  For example, normalization almost always includes
+     folding upper-case letters to lower-case, and often involves removal
+     of suffixes (such as <TT
+CLASS="LITERAL"
+>s</TT
+> or <TT
+CLASS="LITERAL"
+>es</TT
+> in English).
+     This allows searches to find variant forms of the
+     same word, without tediously entering all the possible variants.
+     Also, this step typically eliminates <I
+CLASS="FIRSTTERM"
+>stop words</I
+>, which
+     are words that are so common that they are useless for searching.
+     (In short, then, tokens are raw fragments of the document text, while
+     lexemes are words that are believed useful for indexing and searching.)
+     <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> uses <I
+CLASS="FIRSTTERM"
+>dictionaries</I
+> to
+     perform this step.  Various standard dictionaries are provided, and
+     custom ones can be created for specific needs.
+    </P
+></LI
+><LI
+STYLE="list-style-type: none"
+><P
+>     <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>Storing preprocessed documents optimized for
+     searching</I
+></SPAN
+>.  For example, each document can be represented
+     as a sorted array of normalized lexemes. Along with the lexemes it is
+     often desirable to store positional information to use for
+     <I
+CLASS="FIRSTTERM"
+>proximity ranking</I
+>, so that a document that
+     contains a more <SPAN
+CLASS="QUOTE"
+>"dense"</SPAN
+> region of query words is
+     assigned a higher rank than one with scattered query words.
+    </P
+></LI
+></UL
+><P
+>   Dictionaries allow fine-grained control over how tokens are normalized.
+   With appropriate dictionaries, you can:
+  </P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+STYLE="list-style-type: disc"
+><P
+>     Define stop words that should not be indexed.
+    </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>     Map synonyms to a single word using <SPAN
+CLASS="APPLICATION"
+>Ispell</SPAN
+>.
+    </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>     Map phrases to a single word using a thesaurus.
+    </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>     Map different variations of a word to a canonical form using
+     an <SPAN
+CLASS="APPLICATION"
+>Ispell</SPAN
+> dictionary.
+    </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>     Map different variations of a word to a canonical form using
+     <SPAN
+CLASS="APPLICATION"
+>Snowball</SPAN
+> stemmer rules.
+    </P
+></LI
+></UL
+><P
+>   A data type <TT
+CLASS="TYPE"
+>tsvector</TT
+> is provided for storing preprocessed
+   documents, along with a type <TT
+CLASS="TYPE"
+>tsquery</TT
+> for representing processed
+   queries (<A
+HREF="datatype-textsearch.html"
+>Section 8.11</A
+>).  There are many
+   functions and operators available for these data types
+   (<A
+HREF="functions-textsearch.html"
+>Section 9.13</A
+>), the most important of which is
+   the match operator <TT
+CLASS="LITERAL"
+>@@</TT
+>, which we introduce in
+   <A
+HREF="textsearch-intro.html#TEXTSEARCH-MATCHING"
+>Section 12.1.2</A
+>.  Full text searches can be accelerated
+   using indexes (<A
+HREF="textsearch-indexes.html"
+>Section 12.9</A
+>).
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="TEXTSEARCH-DOCUMENT"
+>12.1.1. What Is a Document?</A
+></H2
+><P
+>    A <I
+CLASS="FIRSTTERM"
+>document</I
+> is the unit of searching in a full text search
+    system; for example, a magazine article or email message.  The text search
+    engine must be able to parse documents and store associations of lexemes
+    (key words) with their parent document. Later, these associations are
+    used to search for documents that contain query words.
+   </P
+><P
+>    For searches within <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>,
+    a document is normally a textual field within a row of a database table,
+    or possibly a combination (concatenation) of such fields, perhaps stored
+    in several tables or obtained dynamically. In other words, a document can
+    be constructed from different parts for indexing and it might not be
+    stored anywhere as a whole. For example:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT title || ' ' ||  author || ' ' ||  abstract || ' ' || body AS document
+FROM messages
+WHERE mid = 12;
+
+SELECT m.title || ' ' || m.author || ' ' || m.abstract || ' ' || d.body AS document
+FROM messages m, docs d
+WHERE mid = did AND mid = 12;</PRE
+><P>
+   </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>     Actually, in these example queries, <CODE
+CLASS="FUNCTION"
+>coalesce</CODE
+>
+     should be used to prevent a single <TT
+CLASS="LITERAL"
+>NULL</TT
+> attribute from
+     causing a <TT
+CLASS="LITERAL"
+>NULL</TT
+> result for the whole document.
+    </P
+></BLOCKQUOTE
+></DIV
+><P
+>    Another possibility is to store the documents as simple text files in the
+    file system. In this case, the database can be used to store the full text
+    index and to execute searches, and some unique identifier can be used to
+    retrieve the document from the file system.  However, retrieving files
+    from outside the database requires superuser permissions or special
+    function support, so this is usually less convenient than keeping all
+    the data inside <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>.  Also, keeping
+    everything inside the database allows easy access
+    to document metadata to assist in indexing and display.
+   </P
+><P
+>    For text search purposes, each document must be reduced to the
+    preprocessed <TT
+CLASS="TYPE"
+>tsvector</TT
+> format.  Searching and ranking
+    are performed entirely on the <TT
+CLASS="TYPE"
+>tsvector</TT
+> representation
+    of a document &mdash; the original text need only be retrieved
+    when the document has been selected for display to a user.
+    We therefore often speak of the <TT
+CLASS="TYPE"
+>tsvector</TT
+> as being the
+    document, but of course it is only a compact representation of
+    the full document.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="TEXTSEARCH-MATCHING"
+>12.1.2. Basic Text Matching</A
+></H2
+><P
+>    Full text searching in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> is based on
+    the match operator <TT
+CLASS="LITERAL"
+>@@</TT
+>, which returns
+    <TT
+CLASS="LITERAL"
+>true</TT
+> if a <TT
+CLASS="TYPE"
+>tsvector</TT
+>
+    (document) matches a <TT
+CLASS="TYPE"
+>tsquery</TT
+> (query).
+    It doesn't matter which data type is written first:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT 'a fat cat sat on a mat and ate a fat rat'::tsvector @@ 'cat &amp; rat'::tsquery;
+ ?column?
+----------
+ t
+
+SELECT 'fat &amp; cow'::tsquery @@ 'a fat cat sat on a mat and ate a fat rat'::tsvector;
+ ?column?
+----------
+ f</PRE
+><P>
+   </P
+><P
+>    As the above example suggests, a <TT
+CLASS="TYPE"
+>tsquery</TT
+> is not just raw
+    text, any more than a <TT
+CLASS="TYPE"
+>tsvector</TT
+> is.  A <TT
+CLASS="TYPE"
+>tsquery</TT
+>
+    contains search terms, which must be already-normalized lexemes, and
+    may combine multiple terms using AND, OR, and NOT operators.
+    (For details see <A
+HREF="datatype-textsearch.html"
+>Section 8.11</A
+>.)  There are
+    functions <CODE
+CLASS="FUNCTION"
+>to_tsquery</CODE
+> and <CODE
+CLASS="FUNCTION"
+>plainto_tsquery</CODE
+>
+    that are helpful in converting user-written text into a proper
+    <TT
+CLASS="TYPE"
+>tsquery</TT
+>, for example by normalizing words appearing in
+    the text.  Similarly, <CODE
+CLASS="FUNCTION"
+>to_tsvector</CODE
+> is used to parse and
+    normalize a document string.  So in practice a text search match would
+    look more like this:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT to_tsvector('fat cats ate fat rats') @@ to_tsquery('fat &amp; rat');
+ ?column? 
+----------
+ t</PRE
+><P>
+
+    Observe that this match would not succeed if written as
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT 'fat cats ate fat rats'::tsvector @@ to_tsquery('fat &amp; rat');
+ ?column? 
+----------
+ f</PRE
+><P>
+
+    since here no normalization of the word <TT
+CLASS="LITERAL"
+>rats</TT
+> will occur.
+    The elements of a <TT
+CLASS="TYPE"
+>tsvector</TT
+> are lexemes, which are assumed
+    already normalized, so <TT
+CLASS="LITERAL"
+>rats</TT
+> does not match <TT
+CLASS="LITERAL"
+>rat</TT
+>.
+   </P
+><P
+>    The <TT
+CLASS="LITERAL"
+>@@</TT
+> operator also
+    supports <TT
+CLASS="TYPE"
+>text</TT
+> input, allowing explicit conversion of a text
+    string to <TT
+CLASS="TYPE"
+>tsvector</TT
+> or <TT
+CLASS="TYPE"
+>tsquery</TT
+> to be skipped
+    in simple cases.  The variants available are:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>tsvector @@ tsquery
+tsquery  @@ tsvector
+text @@ tsquery
+text @@ text</PRE
+><P>
+   </P
+><P
+>    The first two of these we saw already.
+    The form <TT
+CLASS="TYPE"
+>text</TT
+> <TT
+CLASS="LITERAL"
+>@@</TT
+> <TT
+CLASS="TYPE"
+>tsquery</TT
+>
+    is equivalent to <TT
+CLASS="LITERAL"
+>to_tsvector(x) @@ y</TT
+>.
+    The form <TT
+CLASS="TYPE"
+>text</TT
+> <TT
+CLASS="LITERAL"
+>@@</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>
+    is equivalent to <TT
+CLASS="LITERAL"
+>to_tsvector(x) @@ plainto_tsquery(y)</TT
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="TEXTSEARCH-INTRO-CONFIGURATIONS"
+>12.1.3. Configurations</A
+></H2
+><P
+>    The above are all simple text search examples.  As mentioned before, full
+    text search functionality includes the ability to do many more things:
+    skip indexing certain words (stop words), process synonyms, and use
+    sophisticated parsing, e.g., parse based on more than just white space.
+    This functionality is controlled by <I
+CLASS="FIRSTTERM"
+>text search
+    configurations</I
+>.  <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> comes with predefined
+    configurations for many languages, and you can easily create your own
+    configurations.  (<SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s <TT
+CLASS="COMMAND"
+>\dF</TT
+> command
+    shows all available configurations.)
+   </P
+><P
+>    During installation an appropriate configuration is selected and
+    <A
+HREF="runtime-config-client.html#GUC-DEFAULT-TEXT-SEARCH-CONFIG"
+>default_text_search_config</A
+> is set accordingly
+    in <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>.  If you are using the same text search
+    configuration for the entire cluster you can use the value in
+    <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>.  To use different configurations
+    throughout the cluster but the same configuration within any one database,
+    use <TT
+CLASS="COMMAND"
+>ALTER DATABASE ... SET</TT
+>.  Otherwise, you can set
+    <TT
+CLASS="VARNAME"
+>default_text_search_config</TT
+> in each session.
+   </P
+><P
+>    Each text search function that depends on a configuration has an optional
+    <TT
+CLASS="TYPE"
+>regconfig</TT
+> argument, so that the configuration to use can be
+    specified explicitly.  <TT
+CLASS="VARNAME"
+>default_text_search_config</TT
+>
+    is used only when this argument is omitted.
+   </P
+><P
+>    To make it easier to build custom text search configurations, a
+    configuration is built up from simpler database objects.
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>'s text search facility provides
+    four types of configuration-related database objects:
+   </P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+STYLE="list-style-type: disc"
+><P
+>     <I
+CLASS="FIRSTTERM"
+>Text search parsers</I
+> break documents into tokens
+     and classify each token (for example, as words or numbers).
+    </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>     <I
+CLASS="FIRSTTERM"
+>Text search dictionaries</I
+> convert tokens to normalized
+     form and reject stop words.
+    </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>     <I
+CLASS="FIRSTTERM"
+>Text search templates</I
+> provide the functions underlying
+     dictionaries.  (A dictionary simply specifies a template and a set
+     of parameters for the template.)
+    </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>     <I
+CLASS="FIRSTTERM"
+>Text search configurations</I
+> select a parser and a set
+     of dictionaries to use to normalize the tokens produced by the parser.
+    </P
+></LI
+></UL
+><P
+>    Text search parsers and templates are built from low-level C functions;
+    therefore it requires C programming ability to develop new ones, and
+    superuser privileges to install one into a database.  (There are examples
+    of add-on parsers and templates in the <TT
+CLASS="FILENAME"
+>contrib/</TT
+> area of the
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> distribution.)  Since dictionaries and
+    configurations just parameterize and connect together some underlying
+    parsers and templates, no special privilege is needed to create a new
+    dictionary or configuration.  Examples of creating custom dictionaries and
+    configurations appear later in this chapter.
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="textsearch.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="textsearch-tables.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Full Text Search</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="textsearch.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Tables and Indexes</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

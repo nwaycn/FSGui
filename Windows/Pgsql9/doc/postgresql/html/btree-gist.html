@@ -1,0 +1,419 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>btree_gist</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="btree_gin"
+HREF="btree-gin.html"><LINK
+REL="NEXT"
+TITLE="chkpass"
+HREF="chkpass.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="btree_gin"
+HREF="btree-gin.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="chkpass"
+HREF="chkpass.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="BTREE-GIST"
+>F.5. btree_gist</A
+></H1
+><P
+>  <TT
+CLASS="FILENAME"
+>btree_gist</TT
+> provides GiST index operator classes that
+  implement B-tree equivalent behavior for the data types
+  <TT
+CLASS="TYPE"
+>int2</TT
+>, <TT
+CLASS="TYPE"
+>int4</TT
+>, <TT
+CLASS="TYPE"
+>int8</TT
+>, <TT
+CLASS="TYPE"
+>float4</TT
+>,
+  <TT
+CLASS="TYPE"
+>float8</TT
+>, <TT
+CLASS="TYPE"
+>numeric</TT
+>, <TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+>,
+  <TT
+CLASS="TYPE"
+>timestamp without time zone</TT
+>, <TT
+CLASS="TYPE"
+>time with time zone</TT
+>,
+  <TT
+CLASS="TYPE"
+>time without time zone</TT
+>, <TT
+CLASS="TYPE"
+>date</TT
+>, <TT
+CLASS="TYPE"
+>interval</TT
+>,
+  <TT
+CLASS="TYPE"
+>oid</TT
+>, <TT
+CLASS="TYPE"
+>money</TT
+>, <TT
+CLASS="TYPE"
+>char</TT
+>,
+  <TT
+CLASS="TYPE"
+>varchar</TT
+>, <TT
+CLASS="TYPE"
+>text</TT
+>, <TT
+CLASS="TYPE"
+>bytea</TT
+>, <TT
+CLASS="TYPE"
+>bit</TT
+>,
+  <TT
+CLASS="TYPE"
+>varbit</TT
+>, <TT
+CLASS="TYPE"
+>macaddr</TT
+>, <TT
+CLASS="TYPE"
+>inet</TT
+>, and <TT
+CLASS="TYPE"
+>cidr</TT
+>.
+ </P
+><P
+>  In general, these operator classes will not outperform the equivalent
+  standard B-tree index methods, and they lack one major feature of the
+  standard B-tree code: the ability to enforce uniqueness.  However,
+  they provide some other features that are not available with a B-tree
+  index, as described below.  Also, these operator classes are useful
+  when a multicolumn GiST index is needed, wherein some of the columns
+  are of data types that are only indexable with GiST but other columns
+  are just simple data types.  Lastly, these operator classes are useful for
+  GiST testing and as a base for developing other GiST operator classes.
+ </P
+><P
+>  In addition to the typical B-tree search operators, <TT
+CLASS="FILENAME"
+>btree_gist</TT
+>
+  also provides index support for <TT
+CLASS="LITERAL"
+>&lt;&gt;</TT
+> (<SPAN
+CLASS="QUOTE"
+>"not
+  equals"</SPAN
+>). This may be useful in combination with an
+  <A
+HREF="sql-createtable.html#SQL-CREATETABLE-EXCLUDE"
+>exclusion constraint</A
+>,
+  as described below.
+ </P
+><P
+>  Also, for data types for which there is a natural distance metric,
+  <TT
+CLASS="FILENAME"
+>btree_gist</TT
+> defines a distance operator <TT
+CLASS="LITERAL"
+>&lt;-&gt;</TT
+>,
+  and provides GiST index support for nearest-neighbor searches using
+  this operator.  Distance operators are provided for
+  <TT
+CLASS="TYPE"
+>int2</TT
+>, <TT
+CLASS="TYPE"
+>int4</TT
+>, <TT
+CLASS="TYPE"
+>int8</TT
+>, <TT
+CLASS="TYPE"
+>float4</TT
+>,
+  <TT
+CLASS="TYPE"
+>float8</TT
+>, <TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+>,
+  <TT
+CLASS="TYPE"
+>timestamp without time zone</TT
+>,
+  <TT
+CLASS="TYPE"
+>time without time zone</TT
+>, <TT
+CLASS="TYPE"
+>date</TT
+>, <TT
+CLASS="TYPE"
+>interval</TT
+>,
+  <TT
+CLASS="TYPE"
+>oid</TT
+>, and <TT
+CLASS="TYPE"
+>money</TT
+>.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN169146"
+>F.5.1. Example Usage</A
+></H2
+><P
+>   Simple example using <TT
+CLASS="LITERAL"
+>btree_gist</TT
+> instead of <TT
+CLASS="LITERAL"
+>btree</TT
+>:
+  </P
+><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE test (a int4);
+-- create index
+CREATE INDEX testidx ON test USING GIST (a);
+-- query
+SELECT * FROM test WHERE a &lt; 10;
+-- nearest-neighbor search: find the ten entries closest to "42"
+SELECT *, a &lt;-&gt; 42 AS dist FROM test ORDER BY a &lt;-&gt; 42 LIMIT 10;</PRE
+><P
+>   Use an <A
+HREF="sql-createtable.html#SQL-CREATETABLE-EXCLUDE"
+>exclusion
+   constraint</A
+> to enforce the rule that a cage at a zoo
+   can contain only one kind of animal:
+  </P
+><PRE
+CLASS="PROGRAMLISTING"
+>=&gt; CREATE TABLE zoo (
+  cage   INTEGER,
+  animal TEXT,
+  EXCLUDE USING GIST (cage WITH =, animal WITH &lt;&gt;)
+);
+
+=&gt; INSERT INTO zoo VALUES(123, 'zebra');
+INSERT 0 1
+=&gt; INSERT INTO zoo VALUES(123, 'zebra');
+INSERT 0 1
+=&gt; INSERT INTO zoo VALUES(123, 'lion');
+ERROR:  conflicting key value violates exclusion constraint "zoo_cage_animal_excl"
+DETAIL:  Key (cage, animal)=(123, lion) conflicts with existing key (cage, animal)=(123, zebra).
+=&gt; INSERT INTO zoo VALUES(124, 'lion');
+INSERT 0 1</PRE
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN169155"
+>F.5.2. Authors</A
+></H2
+><P
+>   Teodor Sigaev (<CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:teodor@stack.net"
+>teodor@stack.net</A
+>&#62;</CODE
+>),
+   Oleg Bartunov (<CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:oleg@sai.msu.su"
+>oleg@sai.msu.su</A
+>&#62;</CODE
+>), and
+   Janko Richter (<CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:jankorichter@yahoo.de"
+>jankorichter@yahoo.de</A
+>&#62;</CODE
+>).  See
+   <A
+HREF="http://www.sai.msu.su/~megera/postgres/gist/"
+TARGET="_top"
+>http://www.sai.msu.su/~megera/postgres/gist/</A
+>
+   for additional information.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="btree-gin.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="chkpass.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>btree_gin</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>chkpass</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,537 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.3.13</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.3.14"
+HREF="release-8-3-14.html"><LINK
+REL="NEXT"
+TITLE="Release 8.3.12"
+HREF="release-8-3-12.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.3.14"
+HREF="release-8-3-14.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.3.12"
+HREF="release-8-3-12.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-3-13"
+>E.131. Release 8.3.13</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2010-12-16</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.3.12.
+   For information about new features in the 8.3 major release, see
+   <A
+HREF="release-8-3.html"
+>Section E.144</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN152404"
+>E.131.1. Migration to Version 8.3.13</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.3.X.
+    However, if you are upgrading from a version earlier than 8.3.8,
+    see <A
+HREF="release-8-3-8.html"
+>Section E.136</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN152408"
+>E.131.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Force the default
+      <A
+HREF="runtime-config-wal.html#GUC-WAL-SYNC-METHOD"
+><TT
+CLASS="VARNAME"
+>wal_sync_method</TT
+></A
+>
+      to be <TT
+CLASS="LITERAL"
+>fdatasync</TT
+> on Linux (Tom Lane, Marti Raudsepp)
+     </P
+><P
+>      The default on Linux has actually been <TT
+CLASS="LITERAL"
+>fdatasync</TT
+> for many
+      years, but recent kernel changes caused <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> to
+      choose <TT
+CLASS="LITERAL"
+>open_datasync</TT
+> instead.  This choice did not result
+      in any performance improvement, and caused outright failures on
+      certain filesystems, notably <TT
+CLASS="LITERAL"
+>ext4</TT
+> with the
+      <TT
+CLASS="LITERAL"
+>data=journal</TT
+> mount option.
+     </P
+></LI
+><LI
+><P
+>      Fix assorted bugs in WAL replay logic for GIN indexes (Tom Lane)
+     </P
+><P
+>      This could result in <SPAN
+CLASS="QUOTE"
+>"bad buffer id: 0"</SPAN
+> failures or
+      corruption of index contents during replication.
+     </P
+></LI
+><LI
+><P
+>      Fix recovery from base backup when the starting checkpoint WAL record
+      is not in the same WAL segment as its redo point (Jeff Davis)
+     </P
+></LI
+><LI
+><P
+>      Fix persistent slowdown of autovacuum workers when multiple workers
+      remain active for a long time (Tom Lane)
+     </P
+><P
+>      The effective <TT
+CLASS="VARNAME"
+>vacuum_cost_limit</TT
+> for an autovacuum worker
+      could drop to nearly zero if it processed enough tables, causing it
+      to run extremely slowly.
+     </P
+></LI
+><LI
+><P
+>      Add support for detecting register-stack overrun on <TT
+CLASS="LITERAL"
+>IA64</TT
+>
+      (Tom Lane)
+     </P
+><P
+>      The <TT
+CLASS="LITERAL"
+>IA64</TT
+> architecture has two hardware stacks.  Full
+      prevention of stack-overrun failures requires checking both.
+     </P
+></LI
+><LI
+><P
+>      Add a check for stack overflow in <CODE
+CLASS="FUNCTION"
+>copyObject()</CODE
+> (Tom Lane)
+     </P
+><P
+>      Certain code paths could crash due to stack overflow given a
+      sufficiently complex query.
+     </P
+></LI
+><LI
+><P
+>      Fix detection of page splits in temporary GiST indexes (Heikki
+      Linnakangas)
+     </P
+><P
+>      It is possible to have a <SPAN
+CLASS="QUOTE"
+>"concurrent"</SPAN
+> page split in a
+      temporary index, if for example there is an open cursor scanning the
+      index when an insertion is done.  GiST failed to detect this case and
+      hence could deliver wrong results when execution of the cursor
+      continued.
+     </P
+></LI
+><LI
+><P
+>      Avoid memory leakage while <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+>'ing complex index
+      expressions (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Ensure an index that uses a whole-row Var still depends on its table
+      (Tom Lane)
+     </P
+><P
+>      An index declared like <TT
+CLASS="LITERAL"
+>create index i on t (foo(t.*))</TT
+>
+      would not automatically get dropped when its table was dropped.
+     </P
+></LI
+><LI
+><P
+>      Do not <SPAN
+CLASS="QUOTE"
+>"inline"</SPAN
+> a SQL function with multiple <TT
+CLASS="LITERAL"
+>OUT</TT
+>
+      parameters (Tom Lane)
+     </P
+><P
+>      This avoids a possible crash due to loss of information about the
+      expected result rowtype.
+     </P
+></LI
+><LI
+><P
+>      Behave correctly if <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+>, <TT
+CLASS="LITERAL"
+>LIMIT</TT
+>,
+      <TT
+CLASS="LITERAL"
+>FOR UPDATE</TT
+>, or <TT
+CLASS="LITERAL"
+>WITH</TT
+> is attached to the
+      <TT
+CLASS="LITERAL"
+>VALUES</TT
+> part of <TT
+CLASS="LITERAL"
+>INSERT ... VALUES</TT
+> (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix constant-folding of <TT
+CLASS="LITERAL"
+>COALESCE()</TT
+> expressions (Tom Lane)
+     </P
+><P
+>      The planner would sometimes attempt to evaluate sub-expressions that
+      in fact could never be reached, possibly leading to unexpected errors.
+     </P
+></LI
+><LI
+><P
+>      Fix postmaster crash when connection acceptance
+      (<CODE
+CLASS="FUNCTION"
+>accept()</CODE
+> or one of the calls made immediately after it)
+      fails, and the postmaster was compiled with GSSAPI support (Alexander
+      Chernikov)
+     </P
+></LI
+><LI
+><P
+>      Fix missed unlink of temporary files when <TT
+CLASS="VARNAME"
+>log_temp_files</TT
+>
+      is active (Tom Lane)
+     </P
+><P
+>      If an error occurred while attempting to emit the log message, the
+      unlink was not done, resulting in accumulation of temp files.
+     </P
+></LI
+><LI
+><P
+>      Add print functionality for <TT
+CLASS="STRUCTNAME"
+>InhRelation</TT
+> nodes (Tom Lane)
+     </P
+><P
+>      This avoids a failure when <TT
+CLASS="VARNAME"
+>debug_print_parse</TT
+> is enabled
+      and certain types of query are executed.
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect calculation of distance from a point to a horizontal
+      line segment (Tom Lane)
+     </P
+><P
+>      This bug affected several different geometric distance-measurement
+      operators.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+>'s handling of <SPAN
+CLASS="QUOTE"
+>"simple"</SPAN
+>
+      expressions to not fail in recursion or error-recovery cases (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>PL/Python</SPAN
+>'s handling of set-returning functions
+      (Jan Urbanski)
+     </P
+><P
+>      Attempts to call SPI functions within the iterator generating a set
+      result would fail.
+     </P
+></LI
+><LI
+><P
+>      Fix bug in <TT
+CLASS="FILENAME"
+>contrib/cube</TT
+>'s GiST picksplit algorithm
+      (Alexander Korotkov)
+     </P
+><P
+>      This could result in considerable inefficiency, though not actually
+      incorrect answers, in a GiST index on a <TT
+CLASS="TYPE"
+>cube</TT
+> column.
+      If you have such an index, consider <TT
+CLASS="COMMAND"
+>REINDEX</TT
+>ing it after
+      installing this update.
+     </P
+></LI
+><LI
+><P
+>      Don't emit <SPAN
+CLASS="QUOTE"
+>"identifier will be truncated"</SPAN
+> notices in
+      <TT
+CLASS="FILENAME"
+>contrib/dblink</TT
+> except when creating new connections
+      (Itagaki Takahiro)
+     </P
+></LI
+><LI
+><P
+>      Fix potential coredump on missing public key in
+      <TT
+CLASS="FILENAME"
+>contrib/pgcrypto</TT
+> (Marti Raudsepp)
+     </P
+></LI
+><LI
+><P
+>      Fix memory leak in <TT
+CLASS="FILENAME"
+>contrib/xml2</TT
+>'s XPath query functions
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2010o
+      for DST law changes in Fiji and Samoa;
+      also historical corrections for Hong Kong.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-3-14.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-3-12.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.3.14</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.3.12</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,962 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.0.5</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.0.6"
+HREF="release-9-0-6.html"><LINK
+REL="NEXT"
+TITLE="Release 9.0.4"
+HREF="release-9-0-4.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.0.6"
+HREF="release-9-0-6.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.0.4"
+HREF="release-9-0-4.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-0-5"
+>E.92. Release 9.0.5</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2011-09-26</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 9.0.4.
+   For information about new features in the 9.0 major release, see
+   <A
+HREF="release-9-0.html"
+>Section E.97</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN145198"
+>E.92.1. Migration to Version 9.0.5</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.0.X.
+   </P
+><P
+>    However, if you are upgrading from a version earlier than 9.0.4,
+    see <A
+HREF="release-9-0-4.html"
+>Section E.93</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN145203"
+>E.92.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix catalog cache invalidation after a <TT
+CLASS="COMMAND"
+>VACUUM FULL</TT
+> or
+      <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+> on a system catalog (Tom Lane)
+     </P
+><P
+>      In some cases the relocation of a system catalog row to another place
+      would not be recognized by concurrent server processes, allowing catalog
+      corruption to occur if they then tried to update that row.  The
+      worst-case outcome could be as bad as complete loss of a table.
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect order of operations during sinval reset processing,
+      and ensure that TOAST OIDs are preserved in system catalogs (Tom
+      Lane)
+     </P
+><P
+>      These mistakes could lead to transient failures after a <TT
+CLASS="COMMAND"
+>VACUUM
+      FULL</TT
+> or <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+> on a system catalog.
+     </P
+></LI
+><LI
+><P
+>      Fix bugs in indexing of in-doubt HOT-updated tuples (Tom Lane)
+     </P
+><P
+>      These bugs could result in index corruption after reindexing a system
+      catalog.  They are not believed to affect user indexes.
+     </P
+></LI
+><LI
+><P
+>      Fix multiple bugs in GiST index page split processing (Heikki
+      Linnakangas)
+     </P
+><P
+>      The probability of occurrence was low, but these could lead to index
+      corruption.
+     </P
+></LI
+><LI
+><P
+>      Fix possible buffer overrun in <CODE
+CLASS="FUNCTION"
+>tsvector_concat()</CODE
+>
+      (Tom Lane)
+     </P
+><P
+>      The function could underestimate the amount of memory needed for its
+      result, leading to server crashes.
+     </P
+></LI
+><LI
+><P
+>      Fix crash in <CODE
+CLASS="FUNCTION"
+>xml_recv</CODE
+> when processing a
+      <SPAN
+CLASS="QUOTE"
+>"standalone"</SPAN
+> parameter (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Make <CODE
+CLASS="FUNCTION"
+>pg_options_to_table</CODE
+> return NULL for an option with no
+      value (Tom Lane)
+     </P
+><P
+>      Previously such cases would result in a server crash.
+     </P
+></LI
+><LI
+><P
+>      Avoid possibly accessing off the end of memory in <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+>
+      and in SJIS-2004 encoding conversion (Noah Misch)
+     </P
+><P
+>      This fixes some very-low-probability server crash scenarios.
+     </P
+></LI
+><LI
+><P
+>      Protect <CODE
+CLASS="FUNCTION"
+>pg_stat_reset_shared()</CODE
+> against NULL input (Magnus
+      Hagander)
+     </P
+></LI
+><LI
+><P
+>      Fix possible failure when a recovery conflict deadlock is detected
+      within a sub-transaction (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Avoid spurious conflicts while recycling btree index pages during hot
+      standby (Noah Misch, Simon Riggs)
+     </P
+></LI
+><LI
+><P
+>      Shut down WAL receiver if it's still running at end of recovery (Heikki
+      Linnakangas)
+     </P
+><P
+>      The postmaster formerly panicked in this situation, but it's actually a
+      legitimate case.
+     </P
+></LI
+><LI
+><P
+>      Fix race condition in relcache init file invalidation (Tom Lane)
+     </P
+><P
+>      There was a window wherein a new backend process could read a stale init
+      file but miss the inval messages that would tell it the data is stale.
+      The result would be bizarre failures in catalog accesses, typically
+      <SPAN
+CLASS="QUOTE"
+>"could not read block 0 in file ..."</SPAN
+> later during startup.
+     </P
+></LI
+><LI
+><P
+>      Fix memory leak at end of a GiST index scan (Tom Lane)
+     </P
+><P
+>      Commands that perform many separate GiST index scans, such as
+      verification of a new GiST-based exclusion constraint on a table
+      already containing many rows, could transiently require large amounts of
+      memory due to this leak.
+     </P
+></LI
+><LI
+><P
+>      Fix memory leak when encoding conversion has to be done on incoming
+      command strings and <TT
+CLASS="COMMAND"
+>LISTEN</TT
+> is active (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect memory accounting (leading to possible memory bloat) in
+      tuplestores supporting holdable cursors and plpgsql's <TT
+CLASS="LITERAL"
+>RETURN
+      NEXT</TT
+> command (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix trigger <TT
+CLASS="LITERAL"
+>WHEN</TT
+> conditions when both <TT
+CLASS="LITERAL"
+>BEFORE</TT
+> and
+      <TT
+CLASS="LITERAL"
+>AFTER</TT
+> triggers exist (Tom Lane)
+     </P
+><P
+>      Evaluation of <TT
+CLASS="LITERAL"
+>WHEN</TT
+> conditions for <TT
+CLASS="LITERAL"
+>AFTER ROW
+      UPDATE</TT
+> triggers could crash if there had been a <TT
+CLASS="LITERAL"
+>BEFORE
+      ROW</TT
+> trigger fired for the same update.
+     </P
+></LI
+><LI
+><P
+>      Fix performance problem when constructing a large, lossy bitmap
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix join selectivity estimation for unique columns (Tom Lane)
+     </P
+><P
+>      This fixes an erroneous planner heuristic that could lead to poor
+      estimates of the result size of a join.
+     </P
+></LI
+><LI
+><P
+>      Fix nested PlaceHolderVar expressions that appear only in sub-select
+      target lists (Tom Lane)
+     </P
+><P
+>      This mistake could result in outputs of an outer join incorrectly
+      appearing as NULL.
+     </P
+></LI
+><LI
+><P
+>      Allow the planner to assume that empty parent tables really are empty
+      (Tom Lane)
+     </P
+><P
+>      Normally an empty table is assumed to have a certain minimum size for
+      planning purposes; but this heuristic seems to do more harm than good
+      for the parent table of an inheritance hierarchy, which often is
+      permanently empty.
+     </P
+></LI
+><LI
+><P
+>      Allow nested <TT
+CLASS="LITERAL"
+>EXISTS</TT
+> queries to be optimized properly (Tom
+      Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix array- and path-creating functions to ensure padding bytes are
+      zeroes (Tom Lane)
+     </P
+><P
+>      This avoids some situations where the planner will think that
+      semantically-equal constants are not equal, resulting in poor
+      optimization.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+> to handle gating Result nodes within
+      inner-indexscan subplans (Tom Lane)
+     </P
+><P
+>      The usual symptom of this oversight was <SPAN
+CLASS="QUOTE"
+>"bogus varno"</SPAN
+> errors.
+     </P
+></LI
+><LI
+><P
+>      Fix btree preprocessing of <TT
+CLASS="REPLACEABLE"
+><I
+>indexedcol</I
+></TT
+> <TT
+CLASS="LITERAL"
+>IS
+      NULL</TT
+> conditions (Dean Rasheed)
+     </P
+><P
+>      Such a condition is unsatisfiable if combined with any other type of
+      btree-indexable condition on the same index column.  The case was
+      handled incorrectly in 9.0.0 and later, leading to query output where
+      there should be none.
+     </P
+></LI
+><LI
+><P
+>      Work around gcc 4.6.0 bug that breaks WAL replay (Tom Lane)
+     </P
+><P
+>      This could lead to loss of committed transactions after a server crash.
+     </P
+></LI
+><LI
+><P
+>      Fix dump bug for <TT
+CLASS="LITERAL"
+>VALUES</TT
+> in a view (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Disallow <TT
+CLASS="LITERAL"
+>SELECT FOR UPDATE/SHARE</TT
+> on sequences (Tom Lane)
+     </P
+><P
+>      This operation doesn't work as expected and can lead to failures.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> so that it always updates
+      <TT
+CLASS="LITERAL"
+>pg_class</TT
+>.<TT
+CLASS="LITERAL"
+>reltuples</TT
+>/<TT
+CLASS="LITERAL"
+>relpages</TT
+> (Tom
+      Lane)
+     </P
+><P
+>      This fixes some scenarios where autovacuum could make increasingly poor
+      decisions about when to vacuum tables.
+     </P
+></LI
+><LI
+><P
+>      Defend against integer overflow when computing size of a hash table (Tom
+      Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix cases where <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+> might attempt to access
+      already-removed TOAST data (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix premature timeout failures during initial authentication transaction
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix portability bugs in use of credentials control messages for
+      <SPAN
+CLASS="QUOTE"
+>"peer"</SPAN
+> authentication (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix SSPI login when multiple roundtrips are required (Ahmed Shinwari,
+      Magnus Hagander)
+     </P
+><P
+>      The typical symptom of this problem was <SPAN
+CLASS="QUOTE"
+>"The function requested is
+      not supported"</SPAN
+> errors during SSPI login.
+     </P
+></LI
+><LI
+><P
+>      Fix failure when adding a new variable of a custom variable class to
+      <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Throw an error if <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> contains <TT
+CLASS="LITERAL"
+>hostssl</TT
+>
+      but SSL is disabled (Tom Lane)
+     </P
+><P
+>      This was concluded to be more user-friendly than the previous behavior
+      of silently ignoring such lines.
+     </P
+></LI
+><LI
+><P
+>      Fix failure when <TT
+CLASS="COMMAND"
+>DROP OWNED BY</TT
+> attempts to remove default
+      privileges on sequences (Shigeru Hanada)
+     </P
+></LI
+><LI
+><P
+>      Fix typo in <CODE
+CLASS="FUNCTION"
+>pg_srand48</CODE
+> seed initialization (Andres Freund)
+     </P
+><P
+>      This led to failure to use all bits of the provided seed.  This function
+      is not used on most platforms (only those without <CODE
+CLASS="FUNCTION"
+>srandom</CODE
+>),
+      and the potential security exposure from a less-random-than-expected
+      seed seems minimal in any case.
+     </P
+></LI
+><LI
+><P
+>      Avoid integer overflow when the sum of <TT
+CLASS="LITERAL"
+>LIMIT</TT
+> and
+      <TT
+CLASS="LITERAL"
+>OFFSET</TT
+> values exceeds 2^63 (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Add overflow checks to <TT
+CLASS="TYPE"
+>int4</TT
+> and <TT
+CLASS="TYPE"
+>int8</TT
+> versions of
+      <CODE
+CLASS="FUNCTION"
+>generate_series()</CODE
+> (Robert Haas)
+     </P
+></LI
+><LI
+><P
+>      Fix trailing-zero removal in <CODE
+CLASS="FUNCTION"
+>to_char()</CODE
+> (Marti Raudsepp)
+     </P
+><P
+>      In a format with <TT
+CLASS="LITERAL"
+>FM</TT
+> and no digit positions
+      after the decimal point, zeroes to the left of the decimal point could
+      be removed incorrectly.
+     </P
+></LI
+><LI
+><P
+>      Fix <CODE
+CLASS="FUNCTION"
+>pg_size_pretty()</CODE
+> to avoid overflow for inputs close to
+      2^63 (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Weaken plpgsql's check for typmod matching in record values (Tom Lane)
+     </P
+><P
+>      An overly enthusiastic check could lead to discarding length modifiers
+      that should have been kept.
+     </P
+></LI
+><LI
+><P
+>      Correctly handle quotes in locale names during <SPAN
+CLASS="APPLICATION"
+>initdb</SPAN
+>
+      (Heikki Linnakangas)
+     </P
+><P
+>      The case can arise with some Windows locales, such as <SPAN
+CLASS="QUOTE"
+>"People's
+      Republic of China"</SPAN
+>.
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>, avoid dumping orphaned temporary tables
+      (Bruce Momjian)
+     </P
+><P
+>      This prevents situations wherein table OID assignments could get out of
+      sync between old and new installations.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> to preserve toast tables' relfrozenxids
+      during an upgrade from 8.3 (Bruce Momjian)
+     </P
+><P
+>      Failure to do this could lead to <TT
+CLASS="FILENAME"
+>pg_clog</TT
+> files being
+      removed too soon after the upgrade.
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>, fix the <TT
+CLASS="LITERAL"
+>-l</TT
+> (log) option to
+      work on Windows (Bruce Momjian)
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+>, support silent mode for service registrations
+      on Windows (MauMau)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s counting of script file line numbers during
+      <TT
+CLASS="LITERAL"
+>COPY</TT
+> from a different file (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+>'s direct-to-database mode for
+      <TT
+CLASS="VARNAME"
+>standard_conforming_strings</TT
+> (Tom Lane)
+     </P
+><P
+>      <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> could emit incorrect commands when restoring
+      directly to a database server from an archive file that had been made
+      with <TT
+CLASS="VARNAME"
+>standard_conforming_strings</TT
+> set to <TT
+CLASS="LITERAL"
+>on</TT
+>.
+     </P
+></LI
+><LI
+><P
+>      Be more user-friendly about unsupported cases for parallel
+      <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> (Tom Lane)
+     </P
+><P
+>      This change ensures that such cases are detected and reported before
+      any restore actions have been taken.
+     </P
+></LI
+><LI
+><P
+>      Fix write-past-buffer-end and memory leak in <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>'s
+      LDAP service lookup code (Albe Laurenz)
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>, avoid failures when using nonblocking I/O
+      and an SSL connection (Martin Pihlak, Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Improve libpq's handling of failures during connection startup
+      (Tom Lane)
+     </P
+><P
+>      In particular, the response to a server report of <CODE
+CLASS="FUNCTION"
+>fork()</CODE
+>
+      failure during SSL connection startup is now saner.
+     </P
+></LI
+><LI
+><P
+>      Improve <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>'s error reporting for SSL failures (Tom
+      Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <CODE
+CLASS="FUNCTION"
+>PQsetvalue()</CODE
+> to avoid possible crash when adding a new
+      tuple to a <TT
+CLASS="STRUCTNAME"
+>PGresult</TT
+> originally obtained from a server
+      query (Andrew Chernow)
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>ecpglib</SPAN
+> write <TT
+CLASS="TYPE"
+>double</TT
+> values with 15 digits
+      precision (Akira Kurosawa)
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>ecpglib</SPAN
+>, be sure <TT
+CLASS="LITERAL"
+>LC_NUMERIC</TT
+> setting is
+      restored after an error (Michael Meskes)
+     </P
+></LI
+><LI
+><P
+>      Apply upstream fix for blowfish signed-character bug (CVE-2011-2483)
+      (Tom Lane)
+     </P
+><P
+>      <TT
+CLASS="FILENAME"
+>contrib/pg_crypto</TT
+>'s blowfish encryption code could give
+      wrong results on platforms where char is signed (which is most),
+      leading to encrypted passwords being weaker than they should be.
+     </P
+></LI
+><LI
+><P
+>      Fix memory leak in <TT
+CLASS="FILENAME"
+>contrib/seg</TT
+> (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Fix <CODE
+CLASS="FUNCTION"
+>pgstatindex()</CODE
+> to give consistent results for empty
+      indexes (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Allow building with perl 5.14 (Alex Hunsaker)
+     </P
+></LI
+><LI
+><P
+>      Fix assorted issues with build and install file paths containing spaces
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2011i
+      for DST law changes in Canada, Egypt, Russia, Samoa, and South Sudan.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-0-6.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-0-4.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.0.6</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.0.4</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

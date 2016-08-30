@@ -1,0 +1,1037 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pgstattuple</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="pg_stat_statements"
+HREF="pgstatstatements.html"><LINK
+REL="NEXT"
+TITLE="pg_trgm"
+HREF="pgtrgm.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pg_stat_statements"
+HREF="pgstatstatements.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pg_trgm"
+HREF="pgtrgm.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PGSTATTUPLE"
+>F.29. pgstattuple</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>pgstattuple</TT
+> module provides various functions to
+  obtain tuple-level statistics.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174162"
+>F.29.1. Functions</A
+></H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>&#13;     <CODE
+CLASS="FUNCTION"
+>pgstattuple(regclass) returns record</CODE
+></DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>pgstattuple</CODE
+> returns a relation's physical length,
+      percentage of <SPAN
+CLASS="QUOTE"
+>"dead"</SPAN
+> tuples, and other info. This may help users
+      to determine whether vacuum is necessary or not.  The argument is the
+      target relation's name (optionally schema-qualified) or OID.
+      For example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>test=&#62; SELECT * FROM pgstattuple('pg_catalog.pg_proc');
+-[ RECORD 1 ]------+-------
+table_len          | 458752
+tuple_count        | 1470
+tuple_len          | 438896
+tuple_percent      | 95.67
+dead_tuple_count   | 11
+dead_tuple_len     | 3157
+dead_tuple_percent | 0.69
+free_space         | 8932
+free_percent       | 1.95</PRE
+><P>
+     The output columns are described in <A
+HREF="pgstattuple.html#PGSTATTUPLE-COLUMNS"
+>Table F-21</A
+>.
+    </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="PGSTATTUPLE-COLUMNS"
+></A
+><P
+><B
+>Table F-21. <CODE
+CLASS="FUNCTION"
+>pgstattuple</CODE
+> Output Columns</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Column</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>table_len</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Physical relation length in bytes</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tuple_count</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of live tuples</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tuple_len</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Total length of live tuples in bytes</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tuple_percent</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float8</TT
+></TD
+><TD
+>Percentage of live tuples</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>dead_tuple_count</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of dead tuples</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>dead_tuple_len</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Total length of dead tuples in bytes</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>dead_tuple_percent</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float8</TT
+></TD
+><TD
+>Percentage of dead tuples</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>free_space</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Total free space in bytes</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>free_percent</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float8</TT
+></TD
+><TD
+>Percentage of free space</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>     <CODE
+CLASS="FUNCTION"
+>pgstattuple</CODE
+> acquires only a read lock on the
+     relation. So the results do not reflect an instantaneous snapshot;
+     concurrent updates will affect them.
+    </P
+><P
+>     <CODE
+CLASS="FUNCTION"
+>pgstattuple</CODE
+> judges a tuple is <SPAN
+CLASS="QUOTE"
+>"dead"</SPAN
+> if
+     <CODE
+CLASS="FUNCTION"
+>HeapTupleSatisfiesDirty</CODE
+> returns false.
+    </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>pgstattuple(text) returns record</CODE
+></DT
+><DD
+><P
+>      This is the same as <CODE
+CLASS="FUNCTION"
+>pgstattuple(regclass)</CODE
+>, except
+      that the target relation is specified as TEXT. This function is kept
+      because of backward-compatibility so far, and will be deprecated in
+      some future release.
+     </P
+></DD
+><DT
+>&#13;     <CODE
+CLASS="FUNCTION"
+>pgstatindex(regclass) returns record</CODE
+></DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>pgstatindex</CODE
+> returns a record showing information
+      about a B-tree index.  For example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>test=&#62; SELECT * FROM pgstatindex('pg_cast_oid_index');
+-[ RECORD 1 ]------+------
+version            | 2
+tree_level         | 0
+index_size         | 16384
+root_block_no      | 1
+internal_pages     | 0
+leaf_pages         | 1
+empty_pages        | 0
+deleted_pages      | 0
+avg_leaf_density   | 54.27
+leaf_fragmentation | 0</PRE
+><P>
+     </P
+><P
+>     The output columns are:
+
+    <DIV
+CLASS="INFORMALTABLE"
+><P
+></P
+><A
+NAME="AEN174262"
+></A
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Column</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>version</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>B-tree version number</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tree_level</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>Tree level of the root page</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>index_size</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Total index size in bytes</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>root_block_no</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Location of root page (zero if none)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>internal_pages</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of <SPAN
+CLASS="QUOTE"
+>"internal"</SPAN
+> (upper-level) pages</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>leaf_pages</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of leaf pages</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>empty_pages</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of empty pages</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>deleted_pages</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of deleted pages</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>avg_leaf_density</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float8</TT
+></TD
+><TD
+>Average density of leaf pages</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>leaf_fragmentation</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float8</TT
+></TD
+><TD
+>Leaf page fragmentation</TD
+></TR
+></TBODY
+></TABLE
+><P
+></P
+></DIV
+>
+    </P
+><P
+>     The reported <TT
+CLASS="LITERAL"
+>index_size</TT
+> will normally correspond to one more
+     page than is accounted for by <TT
+CLASS="LITERAL"
+>internal_pages + leaf_pages +
+     empty_pages + deleted_pages</TT
+>, because it also includes the
+     index's metapage.
+    </P
+><P
+>     As with <CODE
+CLASS="FUNCTION"
+>pgstattuple</CODE
+>, the results are accumulated
+     page-by-page, and should not be expected to represent an
+     instantaneous snapshot of the whole index.
+    </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>pgstatindex(text) returns record</CODE
+></DT
+><DD
+><P
+>      This is the same as <CODE
+CLASS="FUNCTION"
+>pgstatindex(regclass)</CODE
+>, except
+      that the target index is specified as TEXT. This function is kept
+      because of backward-compatibility so far, and will be deprecated in
+      some future release.
+     </P
+></DD
+><DT
+>&#13;     <CODE
+CLASS="FUNCTION"
+>pgstatginindex(regclass) returns record</CODE
+></DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>pgstatginindex</CODE
+> returns a record showing information
+      about a GIN index.  For example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>test=&#62; SELECT * FROM pgstatginindex('test_gin_index');
+-[ RECORD 1 ]--+--
+version        | 1
+pending_pages  | 0
+pending_tuples | 0</PRE
+><P>
+     </P
+><P
+>     The output columns are:
+
+    <DIV
+CLASS="INFORMALTABLE"
+><P
+></P
+><A
+NAME="AEN174352"
+></A
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Column</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>version</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>GIN version number</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>pending_pages</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>Number of pages in the pending list</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>pending_tuples</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of tuples in the pending list</TD
+></TR
+></TBODY
+></TABLE
+><P
+></P
+></DIV
+>
+    </P
+></DD
+><DT
+>&#13;     <CODE
+CLASS="FUNCTION"
+>pg_relpages(regclass) returns bigint</CODE
+></DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>pg_relpages</CODE
+> returns the number of pages in the
+      relation.
+     </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>pg_relpages(text) returns bigint</CODE
+></DT
+><DD
+><P
+>      This is the same as <CODE
+CLASS="FUNCTION"
+>pg_relpages(regclass)</CODE
+>, except
+      that the target relation is specified as TEXT. This function is kept
+      because of backward-compatibility so far, and will be deprecated in
+      some future release.
+     </P
+></DD
+><DT
+>&#13;     <CODE
+CLASS="FUNCTION"
+>pgstattuple_approx(regclass) returns record</CODE
+></DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>pgstattuple_approx</CODE
+> is a faster alternative to
+      <CODE
+CLASS="FUNCTION"
+>pgstattuple</CODE
+> that returns approximate results.
+      The argument is the target relation's name or OID.
+      For example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>test=&#62; SELECT * FROM pgstattuple_approx('pg_catalog.pg_proc'::regclass);
+-[ RECORD 1 ]--------+-------
+table_len            | 573440
+scanned_percent      | 2
+approx_tuple_count   | 2740
+approx_tuple_len     | 561210
+approx_tuple_percent | 97.87
+dead_tuple_count     | 0
+dead_tuple_len       | 0
+dead_tuple_percent   | 0
+approx_free_space    | 11996
+approx_free_percent  | 2.09</PRE
+><P>
+      The output columns are described in <A
+HREF="pgstattuple.html#PGSTATAPPROX-COLUMNS"
+>Table F-22</A
+>.
+     </P
+><P
+>      Whereas <CODE
+CLASS="FUNCTION"
+>pgstattuple</CODE
+> always performs a
+      full-table scan and returns an exact count of live and dead tuples
+      (and their sizes) and free space, <CODE
+CLASS="FUNCTION"
+>pgstattuple_approx</CODE
+>
+      tries to avoid the full-table scan and returns exact dead tuple
+      statistics along with an approximation of the number and
+      size of live tuples and free space.
+     </P
+><P
+>      It does this by skipping pages that have only visible tuples
+      according to the visibility map (if a page has the corresponding VM
+      bit set, then it is assumed to contain no dead tuples). For such
+      pages, it derives the free space value from the free space map, and
+      assumes that the rest of the space on the page is taken up by live
+      tuples.
+     </P
+><P
+>      For pages that cannot be skipped, it scans each tuple, recording its
+      presence and size in the appropriate counters, and adding up the
+      free space on the page. At the end, it estimates the total number of
+      live tuples based on the number of pages and tuples scanned (in the
+      same way that VACUUM estimates pg_class.reltuples).
+     </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="PGSTATAPPROX-COLUMNS"
+></A
+><P
+><B
+>Table F-22. <CODE
+CLASS="FUNCTION"
+>pgstattuple_approx</CODE
+> Output Columns</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Column</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>table_len</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Physical relation length in bytes (exact)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>scanned_percent</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float8</TT
+></TD
+><TD
+>Percentage of table scanned</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>approx_tuple_count</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of live tuples (estimated)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>approx_tuple_len</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Total length of live tuples in bytes (estimated)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>approx_tuple_percent</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float8</TT
+></TD
+><TD
+>Percentage of live tuples</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>dead_tuple_count</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of dead tuples (exact)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>dead_tuple_len</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Total length of dead tuples in bytes (exact)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>dead_tuple_percent</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float8</TT
+></TD
+><TD
+>Percentage of dead tuples</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>approx_free_space</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Total free space in bytes (estimated)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>approx_free_percent</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float8</TT
+></TD
+><TD
+>Percentage of free space</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>      In the above output, the free space figures may not match the
+      <CODE
+CLASS="FUNCTION"
+>pgstattuple</CODE
+> output exactly, because the free
+      space map gives us an exact figure, but is not guaranteed to be
+      accurate to the byte.
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174480"
+>F.29.2. Authors</A
+></H2
+><P
+>   Tatsuo Ishii, Satoshi Nagayasu and Abhijit Menon-Sen
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="pgstatstatements.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="pgtrgm.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>pg_stat_statements</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>pg_trgm</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

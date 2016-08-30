@@ -1,0 +1,344 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Standard Unix Tools</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Monitoring Database Activity"
+HREF="monitoring.html"><LINK
+REL="PREVIOUS"
+TITLE="Monitoring Database Activity"
+HREF="monitoring.html"><LINK
+REL="NEXT"
+TITLE="The Statistics Collector"
+HREF="monitoring-stats.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Monitoring Database Activity"
+HREF="monitoring.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="monitoring.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 27. Monitoring Database Activity</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="The Statistics Collector"
+HREF="monitoring-stats.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="MONITORING-PS"
+>27.1. Standard Unix Tools</A
+></H1
+><P
+>   On most Unix platforms, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> modifies its
+   command title as reported by <TT
+CLASS="COMMAND"
+>ps</TT
+>, so that individual server
+   processes can readily be identified.  A sample display is
+
+</P><PRE
+CLASS="SCREEN"
+>$ ps auxww | grep ^postgres
+postgres  15551  0.0  0.1  57536  7132 pts/0    S    18:02   0:00 postgres -i
+postgres  15554  0.0  0.0  57536  1184 ?        Ss   18:02   0:00 postgres: writer process
+postgres  15555  0.0  0.0  57536   916 ?        Ss   18:02   0:00 postgres: checkpointer process
+postgres  15556  0.0  0.0  57536   916 ?        Ss   18:02   0:00 postgres: wal writer process
+postgres  15557  0.0  0.0  58504  2244 ?        Ss   18:02   0:00 postgres: autovacuum launcher process
+postgres  15558  0.0  0.0  17512  1068 ?        Ss   18:02   0:00 postgres: stats collector process
+postgres  15582  0.0  0.0  58772  3080 ?        Ss   18:04   0:00 postgres: joe runbug 127.0.0.1 idle
+postgres  15606  0.0  0.0  58772  3052 ?        Ss   18:07   0:00 postgres: tgl regression [local] SELECT waiting
+postgres  15610  0.0  0.0  58772  3056 ?        Ss   18:07   0:00 postgres: tgl regression [local] idle in transaction</PRE
+><P>
+
+   (The appropriate invocation of <TT
+CLASS="COMMAND"
+>ps</TT
+> varies across different
+   platforms, as do the details of what is shown.  This example is from a
+   recent Linux system.)  The first process listed here is the
+   master server process.  The command arguments
+   shown for it are the same ones used when it was launched.  The next five
+   processes are background worker processes automatically launched by the
+   master process.  (The <SPAN
+CLASS="QUOTE"
+>"stats collector"</SPAN
+> process will not be present
+   if you have set the system not to start the statistics collector; likewise
+   the <SPAN
+CLASS="QUOTE"
+>"autovacuum launcher"</SPAN
+> process can be disabled.)
+   Each of the remaining
+   processes is a server process handling one client connection.  Each such
+   process sets its command line display in the form
+
+</P><PRE
+CLASS="SCREEN"
+>postgres: <TT
+CLASS="REPLACEABLE"
+><I
+>user</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>database</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>host</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>activity</I
+></TT
+></PRE
+><P>
+
+  The user, database, and (client) host items remain the same for
+  the life of the client connection, but the activity indicator changes.
+  The activity can be <TT
+CLASS="LITERAL"
+>idle</TT
+> (i.e., waiting for a client command),
+  <TT
+CLASS="LITERAL"
+>idle in transaction</TT
+> (waiting for client inside a <TT
+CLASS="COMMAND"
+>BEGIN</TT
+> block),
+  or a command type name such as <TT
+CLASS="LITERAL"
+>SELECT</TT
+>.  Also,
+  <TT
+CLASS="LITERAL"
+>waiting</TT
+> is appended if the server process is presently waiting
+  on a lock held by another session.  In the above example we can infer
+  that process 15606 is waiting for process 15610 to complete its transaction
+  and thereby release some lock.  (Process 15610 must be the blocker, because
+  there is no other active session.  In more complicated cases it would be
+  necessary to look into the
+  <A
+HREF="view-pg-locks.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_locks</TT
+></A
+>
+  system view to determine who is blocking whom.)
+  </P
+><P
+>   If <A
+HREF="runtime-config-logging.html#GUC-CLUSTER-NAME"
+>cluster_name</A
+> has been configured the
+   cluster name will also be shown in <TT
+CLASS="COMMAND"
+>ps</TT
+> output:
+</P><PRE
+CLASS="SCREEN"
+>$ psql -c 'SHOW cluster_name'
+ cluster_name
+--------------
+ server1
+(1 row)
+
+$ ps aux|grep server1
+postgres   27093  0.0  0.0  30096  2752 ?        Ss   11:34   0:00 postgres: server1: writer process
+...</PRE
+><P>
+  </P
+><P
+>   If you have turned off <A
+HREF="runtime-config-logging.html#GUC-UPDATE-PROCESS-TITLE"
+>update_process_title</A
+> then the
+   activity indicator is not updated; the process title is set only once
+   when a new process is launched.  On some platforms this saves a measurable
+   amount of per-command overhead;  on others it's insignificant.
+  </P
+><DIV
+CLASS="TIP"
+><BLOCKQUOTE
+CLASS="TIP"
+><P
+><B
+>Tip: </B
+>  <SPAN
+CLASS="PRODUCTNAME"
+>Solaris</SPAN
+> requires special handling. You must
+  use <TT
+CLASS="COMMAND"
+>/usr/ucb/ps</TT
+>, rather than
+  <TT
+CLASS="COMMAND"
+>/bin/ps</TT
+>. You also must use two <TT
+CLASS="OPTION"
+>w</TT
+>
+  flags, not just one. In addition, your original invocation of the
+  <TT
+CLASS="COMMAND"
+>postgres</TT
+> command must have a shorter
+  <TT
+CLASS="COMMAND"
+>ps</TT
+> status display than that provided by each
+  server process.  If you fail to do all three things, the <TT
+CLASS="COMMAND"
+>ps</TT
+>
+  output for each server process will be the original <TT
+CLASS="COMMAND"
+>postgres</TT
+>
+  command line.
+  </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="monitoring.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="monitoring-stats.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Monitoring Database Activity</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="monitoring.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>The Statistics Collector</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

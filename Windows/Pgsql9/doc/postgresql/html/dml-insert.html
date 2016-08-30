@@ -1,0 +1,272 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Inserting Data</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Data Manipulation"
+HREF="dml.html"><LINK
+REL="PREVIOUS"
+TITLE="Data Manipulation"
+HREF="dml.html"><LINK
+REL="NEXT"
+TITLE="Updating Data"
+HREF="dml-update.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Data Manipulation"
+HREF="dml.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="dml.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 6. Data Manipulation</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Updating Data"
+HREF="dml-update.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="DML-INSERT"
+>6.1. Inserting Data</A
+></H1
+><P
+>   When a table is created, it contains no data.  The first thing to
+   do before a database can be of much use is to insert data.  Data is
+   conceptually inserted one row at a time.  Of course you can also
+   insert more than one row, but there is no way to insert less than
+   one row.  Even if you know only some column values, a
+   complete row must be created.
+  </P
+><P
+>   To create a new row, use the <A
+HREF="sql-insert.html"
+>INSERT</A
+>
+   command.  The command requires the
+   table name and column values.  For
+   example, consider the products table from <A
+HREF="ddl.html"
+>Chapter 5</A
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE products (
+    product_no integer,
+    name text,
+    price numeric
+);</PRE
+><P>
+   An example command to insert a row would be:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>INSERT INTO products VALUES (1, 'Cheese', 9.99);</PRE
+><P>
+   The data values are listed in the order in which the columns appear
+   in the table, separated by commas.  Usually, the data values will
+   be literals (constants), but scalar expressions are also allowed.
+  </P
+><P
+>   The above syntax has the drawback that you need to know the order
+   of the columns in the table.  To avoid this you can also list the
+   columns explicitly.  For example, both of the following commands
+   have the same effect as the one above:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>INSERT INTO products (product_no, name, price) VALUES (1, 'Cheese', 9.99);
+INSERT INTO products (name, price, product_no) VALUES ('Cheese', 9.99, 1);</PRE
+><P>
+   Many users consider it good practice to always list the column
+   names.
+  </P
+><P
+>   If you don't have values for all the columns, you can omit some of
+   them.  In that case, the columns will be filled with their default
+   values.  For example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>INSERT INTO products (product_no, name) VALUES (1, 'Cheese');
+INSERT INTO products VALUES (1, 'Cheese');</PRE
+><P>
+   The second form is a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+   extension.  It fills the columns from the left with as many values
+   as are given, and the rest will be defaulted.
+  </P
+><P
+>   For clarity, you can also request default values explicitly, for
+   individual columns or for the entire row:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>INSERT INTO products (product_no, name, price) VALUES (1, 'Cheese', DEFAULT);
+INSERT INTO products DEFAULT VALUES;</PRE
+><P>
+  </P
+><P
+>   You can insert multiple rows in a single command:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>INSERT INTO products (product_no, name, price) VALUES
+    (1, 'Cheese', 9.99),
+    (2, 'Bread', 1.99),
+    (3, 'Milk', 2.99);</PRE
+><P>
+  </P
+><DIV
+CLASS="TIP"
+><BLOCKQUOTE
+CLASS="TIP"
+><P
+><B
+>Tip: </B
+>    When inserting a lot of data at the same time, considering using
+    the <A
+HREF="sql-copy.html"
+>COPY</A
+> command.
+    It is not as flexible as the <A
+HREF="sql-insert.html"
+>INSERT</A
+>
+    command, but is more efficient. Refer
+    to <A
+HREF="populate.html"
+>Section 14.4</A
+> for more information on improving
+    bulk loading performance.
+   </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="dml.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="dml-update.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Data Manipulation</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="dml.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Updating Data</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

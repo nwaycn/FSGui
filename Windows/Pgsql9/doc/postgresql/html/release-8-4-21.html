@@ -1,0 +1,318 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.4.21</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.4.22"
+HREF="release-8-4-22.html"><LINK
+REL="NEXT"
+TITLE="Release 8.4.20"
+HREF="release-8-4-20.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.4.22"
+HREF="release-8-4-22.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.4.20"
+HREF="release-8-4-20.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-4-21"
+>E.99. Release 8.4.21</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2014-03-20</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.4.20.
+   For information about new features in the 8.4 major release, see
+   <A
+HREF="release-8-4.html"
+>Section E.120</A
+>.
+  </P
+><P
+>   The <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> community will stop releasing updates
+   for the 8.4.X release series in July 2014.
+   Users are encouraged to update to a newer release branch soon.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN147493"
+>E.99.1. Migration to Version 8.4.21</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.4.X.
+   </P
+><P
+>    However, if you are upgrading from a version earlier than 8.4.19,
+    see <A
+HREF="release-8-4-19.html"
+>Section E.101</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN147498"
+>E.99.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Restore GIN metapages unconditionally to avoid torn-page risk
+      (Heikki Linnakangas)
+     </P
+><P
+>      Although this oversight could theoretically result in a corrupted
+      index, it is unlikely to have caused any problems in practice, since
+      the active part of a GIN metapage is smaller than a standard 512-byte
+      disk sector.
+     </P
+></LI
+><LI
+><P
+>      Allow regular-expression operators to be terminated early by query
+      cancel requests (Tom Lane)
+     </P
+><P
+>      This prevents scenarios wherein a pathological regular expression
+      could lock up a server process uninterruptably for a long time.
+     </P
+></LI
+><LI
+><P
+>      Remove incorrect code that tried to allow <TT
+CLASS="LITERAL"
+>OVERLAPS</TT
+> with
+      single-element row arguments (Joshua Yanovski)
+     </P
+><P
+>      This code never worked correctly, and since the case is neither
+      specified by the SQL standard nor documented, it seemed better to
+      remove it than fix it.
+     </P
+></LI
+><LI
+><P
+>      Avoid getting more than <TT
+CLASS="LITERAL"
+>AccessShareLock</TT
+> when de-parsing a
+      rule or view (Dean Rasheed)
+     </P
+><P
+>      This oversight resulted in <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> unexpectedly
+      acquiring <TT
+CLASS="LITERAL"
+>RowExclusiveLock</TT
+> locks on tables mentioned as
+      the targets of <TT
+CLASS="LITERAL"
+>INSERT</TT
+>/<TT
+CLASS="LITERAL"
+>UPDATE</TT
+>/<TT
+CLASS="LITERAL"
+>DELETE</TT
+>
+      commands in rules.  While usually harmless, that could interfere with
+      concurrent transactions that tried to acquire, for example,
+      <TT
+CLASS="LITERAL"
+>ShareLock</TT
+> on those tables.
+     </P
+></LI
+><LI
+><P
+>      Prevent interrupts while reporting non-<TT
+CLASS="LITERAL"
+>ERROR</TT
+> messages
+      (Tom Lane)
+     </P
+><P
+>      This guards against rare server-process freezeups due to recursive
+      entry to <CODE
+CLASS="FUNCTION"
+>syslog()</CODE
+>, and perhaps other related problems.
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2014a
+      for DST law changes in Fiji and Turkey, plus historical changes in
+      Israel and Ukraine.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-4-22.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-4-20.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.4.22</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.4.20</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

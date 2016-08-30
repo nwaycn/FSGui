@@ -1,0 +1,1385 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Data Types</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="The SQL Language"
+HREF="sql.html"><LINK
+REL="PREVIOUS"
+TITLE="WITH Queries (Common Table Expressions)"
+HREF="queries-with.html"><LINK
+REL="NEXT"
+TITLE="Numeric Types"
+HREF="datatype-numeric.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="CHAPTER"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="WITH Queries (Common Table Expressions)"
+HREF="queries-with.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Numeric Types"
+HREF="datatype-numeric.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="DATATYPE"
+></A
+>Chapter 8. Data Types</H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+>8.1. <A
+HREF="datatype-numeric.html"
+>Numeric Types</A
+></DT
+><DD
+><DL
+><DT
+>8.1.1. <A
+HREF="datatype-numeric.html#DATATYPE-INT"
+>Integer Types</A
+></DT
+><DT
+>8.1.2. <A
+HREF="datatype-numeric.html#DATATYPE-NUMERIC-DECIMAL"
+>Arbitrary Precision Numbers</A
+></DT
+><DT
+>8.1.3. <A
+HREF="datatype-numeric.html#DATATYPE-FLOAT"
+>Floating-Point Types</A
+></DT
+><DT
+>8.1.4. <A
+HREF="datatype-numeric.html#DATATYPE-SERIAL"
+>Serial Types</A
+></DT
+></DL
+></DD
+><DT
+>8.2. <A
+HREF="datatype-money.html"
+>Monetary Types</A
+></DT
+><DT
+>8.3. <A
+HREF="datatype-character.html"
+>Character Types</A
+></DT
+><DT
+>8.4. <A
+HREF="datatype-binary.html"
+>Binary Data Types</A
+></DT
+><DD
+><DL
+><DT
+>8.4.1. <A
+HREF="datatype-binary.html#AEN5676"
+><TT
+CLASS="TYPE"
+>bytea</TT
+> Hex Format</A
+></DT
+><DT
+>8.4.2. <A
+HREF="datatype-binary.html#AEN5685"
+><TT
+CLASS="TYPE"
+>bytea</TT
+> Escape Format</A
+></DT
+></DL
+></DD
+><DT
+>8.5. <A
+HREF="datatype-datetime.html"
+>Date/Time Types</A
+></DT
+><DD
+><DL
+><DT
+>8.5.1. <A
+HREF="datatype-datetime.html#DATATYPE-DATETIME-INPUT"
+>Date/Time Input</A
+></DT
+><DT
+>8.5.2. <A
+HREF="datatype-datetime.html#DATATYPE-DATETIME-OUTPUT"
+>Date/Time Output</A
+></DT
+><DT
+>8.5.3. <A
+HREF="datatype-datetime.html#DATATYPE-TIMEZONES"
+>Time Zones</A
+></DT
+><DT
+>8.5.4. <A
+HREF="datatype-datetime.html#DATATYPE-INTERVAL-INPUT"
+>Interval Input</A
+></DT
+><DT
+>8.5.5. <A
+HREF="datatype-datetime.html#DATATYPE-INTERVAL-OUTPUT"
+>Interval Output</A
+></DT
+></DL
+></DD
+><DT
+>8.6. <A
+HREF="datatype-boolean.html"
+>Boolean Type</A
+></DT
+><DT
+>8.7. <A
+HREF="datatype-enum.html"
+>Enumerated Types</A
+></DT
+><DD
+><DL
+><DT
+>8.7.1. <A
+HREF="datatype-enum.html#AEN6817"
+>Declaration of Enumerated Types</A
+></DT
+><DT
+>8.7.2. <A
+HREF="datatype-enum.html#AEN6823"
+>Ordering</A
+></DT
+><DT
+>8.7.3. <A
+HREF="datatype-enum.html#AEN6827"
+>Type Safety</A
+></DT
+><DT
+>8.7.4. <A
+HREF="datatype-enum.html#AEN6833"
+>Implementation Details</A
+></DT
+></DL
+></DD
+><DT
+>8.8. <A
+HREF="datatype-geometric.html"
+>Geometric Types</A
+></DT
+><DD
+><DL
+><DT
+>8.8.1. <A
+HREF="datatype-geometric.html#AEN6909"
+>Points</A
+></DT
+><DT
+>8.8.2. <A
+HREF="datatype-geometric.html#DATATYPE-LINE"
+>Lines</A
+></DT
+><DT
+>8.8.3. <A
+HREF="datatype-geometric.html#DATATYPE-LSEG"
+>Line Segments</A
+></DT
+><DT
+>8.8.4. <A
+HREF="datatype-geometric.html#AEN6993"
+>Boxes</A
+></DT
+><DT
+>8.8.5. <A
+HREF="datatype-geometric.html#AEN7022"
+>Paths</A
+></DT
+><DT
+>8.8.6. <A
+HREF="datatype-geometric.html#DATATYPE-POLYGON"
+>Polygons</A
+></DT
+><DT
+>8.8.7. <A
+HREF="datatype-geometric.html#DATATYPE-CIRCLE"
+>Circles</A
+></DT
+></DL
+></DD
+><DT
+>8.9. <A
+HREF="datatype-net-types.html"
+>Network Address Types</A
+></DT
+><DD
+><DL
+><DT
+>8.9.1. <A
+HREF="datatype-net-types.html#DATATYPE-INET"
+><TT
+CLASS="TYPE"
+>inet</TT
+></A
+></DT
+><DT
+>8.9.2. <A
+HREF="datatype-net-types.html#DATATYPE-CIDR"
+><TT
+CLASS="TYPE"
+>cidr</TT
+></A
+></DT
+><DT
+>8.9.3. <A
+HREF="datatype-net-types.html#DATATYPE-INET-VS-CIDR"
+><TT
+CLASS="TYPE"
+>inet</TT
+> vs. <TT
+CLASS="TYPE"
+>cidr</TT
+></A
+></DT
+><DT
+>8.9.4. <A
+HREF="datatype-net-types.html#DATATYPE-MACADDR"
+><TT
+CLASS="TYPE"
+>macaddr</TT
+></A
+></DT
+></DL
+></DD
+><DT
+>8.10. <A
+HREF="datatype-bit.html"
+>Bit String Types</A
+></DT
+><DT
+>8.11. <A
+HREF="datatype-textsearch.html"
+>Text Search Types</A
+></DT
+><DD
+><DL
+><DT
+>8.11.1. <A
+HREF="datatype-textsearch.html#DATATYPE-TSVECTOR"
+><TT
+CLASS="TYPE"
+>tsvector</TT
+></A
+></DT
+><DT
+>8.11.2. <A
+HREF="datatype-textsearch.html#DATATYPE-TSQUERY"
+><TT
+CLASS="TYPE"
+>tsquery</TT
+></A
+></DT
+></DL
+></DD
+><DT
+>8.12. <A
+HREF="datatype-uuid.html"
+><ACRONYM
+CLASS="ACRONYM"
+>UUID</ACRONYM
+> Type</A
+></DT
+><DT
+>8.13. <A
+HREF="datatype-xml.html"
+><ACRONYM
+CLASS="ACRONYM"
+>XML</ACRONYM
+> Type</A
+></DT
+><DD
+><DL
+><DT
+>8.13.1. <A
+HREF="datatype-xml.html#AEN7447"
+>Creating XML Values</A
+></DT
+><DT
+>8.13.2. <A
+HREF="datatype-xml.html#AEN7491"
+>Encoding Handling</A
+></DT
+><DT
+>8.13.3. <A
+HREF="datatype-xml.html#AEN7503"
+>Accessing XML Values</A
+></DT
+></DL
+></DD
+><DT
+>8.14. <A
+HREF="datatype-json.html"
+><ACRONYM
+CLASS="ACRONYM"
+>JSON</ACRONYM
+> Types</A
+></DT
+><DD
+><DL
+><DT
+>8.14.1. <A
+HREF="datatype-json.html#JSON-KEYS-ELEMENTS"
+>JSON Input and Output Syntax</A
+></DT
+><DT
+>8.14.2. <A
+HREF="datatype-json.html#JSON-DOC-DESIGN"
+>Designing JSON documents effectively</A
+></DT
+><DT
+>8.14.3. <A
+HREF="datatype-json.html#JSON-CONTAINMENT"
+><TT
+CLASS="TYPE"
+>jsonb</TT
+> Containment and Existence</A
+></DT
+><DT
+>8.14.4. <A
+HREF="datatype-json.html#JSON-INDEXING"
+><TT
+CLASS="TYPE"
+>jsonb</TT
+> Indexing</A
+></DT
+></DL
+></DD
+><DT
+>8.15. <A
+HREF="arrays.html"
+>Arrays</A
+></DT
+><DD
+><DL
+><DT
+>8.15.1. <A
+HREF="arrays.html#ARRAYS-DECLARATION"
+>Declaration of Array Types</A
+></DT
+><DT
+>8.15.2. <A
+HREF="arrays.html#ARRAYS-INPUT"
+>Array Value Input</A
+></DT
+><DT
+>8.15.3. <A
+HREF="arrays.html#ARRAYS-ACCESSING"
+>Accessing Arrays</A
+></DT
+><DT
+>8.15.4. <A
+HREF="arrays.html#ARRAYS-MODIFYING"
+>Modifying Arrays</A
+></DT
+><DT
+>8.15.5. <A
+HREF="arrays.html#ARRAYS-SEARCHING"
+>Searching in Arrays</A
+></DT
+><DT
+>8.15.6. <A
+HREF="arrays.html#ARRAYS-IO"
+>Array Input and Output Syntax</A
+></DT
+></DL
+></DD
+><DT
+>8.16. <A
+HREF="rowtypes.html"
+>Composite Types</A
+></DT
+><DD
+><DL
+><DT
+>8.16.1. <A
+HREF="rowtypes.html#AEN8000"
+>Declaration of Composite Types</A
+></DT
+><DT
+>8.16.2. <A
+HREF="rowtypes.html#AEN8015"
+>Composite Value Input</A
+></DT
+><DT
+>8.16.3. <A
+HREF="rowtypes.html#AEN8036"
+>Accessing Composite Types</A
+></DT
+><DT
+>8.16.4. <A
+HREF="rowtypes.html#AEN8048"
+>Modifying Composite Types</A
+></DT
+><DT
+>8.16.5. <A
+HREF="rowtypes.html#ROWTYPES-IO-SYNTAX"
+>Composite Type Input and Output Syntax</A
+></DT
+></DL
+></DD
+><DT
+>8.17. <A
+HREF="rangetypes.html"
+>Range Types</A
+></DT
+><DD
+><DL
+><DT
+>8.17.1. <A
+HREF="rangetypes.html#RANGETYPES-BUILTIN"
+>Built-in Range Types</A
+></DT
+><DT
+>8.17.2. <A
+HREF="rangetypes.html#RANGETYPES-EXAMPLES"
+>Examples</A
+></DT
+><DT
+>8.17.3. <A
+HREF="rangetypes.html#RANGETYPES-INCLUSIVITY"
+>Inclusive and Exclusive Bounds</A
+></DT
+><DT
+>8.17.4. <A
+HREF="rangetypes.html#RANGETYPES-INFINITE"
+>Infinite (Unbounded) Ranges</A
+></DT
+><DT
+>8.17.5. <A
+HREF="rangetypes.html#RANGETYPES-IO"
+>Range Input/Output</A
+></DT
+><DT
+>8.17.6. <A
+HREF="rangetypes.html#RANGETYPES-CONSTRUCT"
+>Constructing Ranges</A
+></DT
+><DT
+>8.17.7. <A
+HREF="rangetypes.html#RANGETYPES-DISCRETE"
+>Discrete Range Types</A
+></DT
+><DT
+>8.17.8. <A
+HREF="rangetypes.html#RANGETYPES-DEFINING"
+>Defining New Range Types</A
+></DT
+><DT
+>8.17.9. <A
+HREF="rangetypes.html#RANGETYPES-INDEXING"
+>Indexing</A
+></DT
+><DT
+>8.17.10. <A
+HREF="rangetypes.html#RANGETYPES-CONSTRAINT"
+>Constraints on Ranges</A
+></DT
+></DL
+></DD
+><DT
+>8.18. <A
+HREF="datatype-oid.html"
+>Object Identifier Types</A
+></DT
+><DT
+>8.19. <A
+HREF="datatype-pg-lsn.html"
+><ACRONYM
+CLASS="ACRONYM"
+>pg_lsn Type</ACRONYM
+></A
+></DT
+><DT
+>8.20. <A
+HREF="datatype-pseudo.html"
+>Pseudo-Types</A
+></DT
+></DL
+></DIV
+><P
+>   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> has a rich set of native data
+   types available to users.  Users can add new types to
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> using the <A
+HREF="sql-createtype.html"
+>CREATE TYPE</A
+> command.
+  </P
+><P
+>   <A
+HREF="datatype.html#DATATYPE-TABLE"
+>Table 8-1</A
+> shows all the built-in general-purpose data
+   types. Most of the alternative names listed in the
+   <SPAN
+CLASS="QUOTE"
+>"Aliases"</SPAN
+> column are the names used internally by
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> for historical reasons.  In
+   addition, some internally used or deprecated types are available,
+   but are not listed here.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="DATATYPE-TABLE"
+></A
+><P
+><B
+>Table 8-1. Data Types</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Aliases</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int8</TT
+></TD
+><TD
+>signed eight-byte integer</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>bigserial</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>serial8</TT
+></TD
+><TD
+>autoincrementing eight-byte integer</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>bit [ (<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>) ]</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>fixed-length bit string</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>bit varying [ (<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>) ]</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>varbit</TT
+></TD
+><TD
+>variable-length bit string</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bool</TT
+></TD
+><TD
+>logical Boolean (true/false)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>box</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>rectangular box on a plane</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>bytea</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>binary data (<SPAN
+CLASS="QUOTE"
+>"byte array"</SPAN
+>)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>character [ (<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>) ]</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>char [ (<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>) ]</TT
+></TD
+><TD
+>fixed-length character string</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>character varying [ (<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>) ]</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>varchar [ (<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>) ]</TT
+></TD
+><TD
+>variable-length character string</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>cidr</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>IPv4 or IPv6 network address</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>circle</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>circle on a plane</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>date</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>calendar date (year, month, day)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>double precision</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float8</TT
+></TD
+><TD
+>double precision floating-point number (8 bytes)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>inet</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>IPv4 or IPv6 host address</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+>, <TT
+CLASS="TYPE"
+>int4</TT
+></TD
+><TD
+>signed four-byte integer</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>interval [ <TT
+CLASS="REPLACEABLE"
+><I
+>fields</I
+></TT
+> ] [ (<TT
+CLASS="REPLACEABLE"
+><I
+>p</I
+></TT
+>) ]</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>time span</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>json</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>textual JSON data</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>jsonb</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>binary JSON data, decomposed</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>line</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>infinite line on a plane</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>lseg</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>line segment on a plane</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>macaddr</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>MAC (Media Access Control) address</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>money</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>currency amount</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>numeric [ (<TT
+CLASS="REPLACEABLE"
+><I
+>p</I
+></TT
+>,
+         <TT
+CLASS="REPLACEABLE"
+><I
+>s</I
+></TT
+>) ]</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>decimal [ (<TT
+CLASS="REPLACEABLE"
+><I
+>p</I
+></TT
+>,
+         <TT
+CLASS="REPLACEABLE"
+><I
+>s</I
+></TT
+>) ]</TT
+></TD
+><TD
+>exact numeric of selectable precision</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>path</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>geometric path on a plane</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>pg_lsn</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+><SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> Log Sequence Number</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>point</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>geometric point on a plane</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>polygon</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>closed geometric path on a plane</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>real</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float4</TT
+></TD
+><TD
+>single precision floating-point number (4 bytes)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>smallint</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int2</TT
+></TD
+><TD
+>signed two-byte integer</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>smallserial</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>serial2</TT
+></TD
+><TD
+>autoincrementing two-byte integer</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>serial</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>serial4</TT
+></TD
+><TD
+>autoincrementing four-byte integer</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>variable-length character string</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>time [ (<TT
+CLASS="REPLACEABLE"
+><I
+>p</I
+></TT
+>) ] [ without time zone ]</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>time of day (no time zone)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>time [ (<TT
+CLASS="REPLACEABLE"
+><I
+>p</I
+></TT
+>) ] with time zone</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timetz</TT
+></TD
+><TD
+>time of day, including time zone</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>timestamp [ (<TT
+CLASS="REPLACEABLE"
+><I
+>p</I
+></TT
+>) ] [ without time zone ]</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>date and time (no time zone)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>timestamp [ (<TT
+CLASS="REPLACEABLE"
+><I
+>p</I
+></TT
+>) ] with time zone</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamptz</TT
+></TD
+><TD
+>date and time, including time zone</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>tsquery</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>text search query</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>tsvector</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>text search document</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>txid_snapshot</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>user-level transaction ID snapshot</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>uuid</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>universally unique identifier</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>xml</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>XML data</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Compatibility: </B
+>    The following types (or spellings thereof) are specified by
+    <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+>: <TT
+CLASS="TYPE"
+>bigint</TT
+>, <TT
+CLASS="TYPE"
+>bit</TT
+>, <TT
+CLASS="TYPE"
+>bit
+    varying</TT
+>, <TT
+CLASS="TYPE"
+>boolean</TT
+>, <TT
+CLASS="TYPE"
+>char</TT
+>,
+    <TT
+CLASS="TYPE"
+>character varying</TT
+>, <TT
+CLASS="TYPE"
+>character</TT
+>,
+    <TT
+CLASS="TYPE"
+>varchar</TT
+>, <TT
+CLASS="TYPE"
+>date</TT
+>, <TT
+CLASS="TYPE"
+>double
+    precision</TT
+>, <TT
+CLASS="TYPE"
+>integer</TT
+>, <TT
+CLASS="TYPE"
+>interval</TT
+>,
+    <TT
+CLASS="TYPE"
+>numeric</TT
+>, <TT
+CLASS="TYPE"
+>decimal</TT
+>, <TT
+CLASS="TYPE"
+>real</TT
+>,
+    <TT
+CLASS="TYPE"
+>smallint</TT
+>, <TT
+CLASS="TYPE"
+>time</TT
+> (with or without time zone),
+    <TT
+CLASS="TYPE"
+>timestamp</TT
+> (with or without time zone),
+    <TT
+CLASS="TYPE"
+>xml</TT
+>.
+   </P
+></BLOCKQUOTE
+></DIV
+><P
+>   Each data type has an external representation determined by its input
+   and output functions.  Many of the built-in types have
+   obvious external formats.  However, several types are either unique
+   to <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>, such as geometric
+   paths, or have several possible formats, such as the date
+   and time types.
+   Some of the input and output functions are not invertible, i.e.,
+   the result of an output function might lose accuracy when compared to
+   the original input.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="queries-with.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="datatype-numeric.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><TT
+CLASS="LITERAL"
+>WITH</TT
+> Queries (Common Table Expressions)</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Numeric Types</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

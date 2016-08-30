@@ -1,0 +1,750 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.5.2</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.5.3"
+HREF="release-9-5-3.html"><LINK
+REL="NEXT"
+TITLE="Release 9.5.1"
+HREF="release-9-5-1.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.5.3"
+HREF="release-9-5-3.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.5.1"
+HREF="release-9-5-1.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-5-2"
+>E.3. Release 9.5.2</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2016-03-31</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 9.5.1.
+   For information about new features in the 9.5 major release, see
+   <A
+HREF="release-9-5.html"
+>Section E.5</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN126368"
+>E.3.1. Migration to Version 9.5.2</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.5.X.
+   </P
+><P
+>    However, you may need to <TT
+CLASS="COMMAND"
+>REINDEX</TT
+> some indexes after applying
+    the update, as per the first changelog entry below.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN126373"
+>E.3.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Disable abbreviated keys for string sorting in non-<TT
+CLASS="LITERAL"
+>C</TT
+>
+      locales (Robert Haas)
+     </P
+><P
+>      <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 9.5 introduced logic for speeding up
+      comparisons of string data types by using the standard C library
+      function <CODE
+CLASS="FUNCTION"
+>strxfrm()</CODE
+> as a substitute
+      for <CODE
+CLASS="FUNCTION"
+>strcoll()</CODE
+>.  It now emerges that most versions of
+      glibc (Linux's implementation of the C library) have buggy
+      implementations of <CODE
+CLASS="FUNCTION"
+>strxfrm()</CODE
+> that, in some locales,
+      can produce string comparison results that do not
+      match <CODE
+CLASS="FUNCTION"
+>strcoll()</CODE
+>.  Until this problem can be better
+      characterized, disable the optimization in all non-<TT
+CLASS="LITERAL"
+>C</TT
+>
+      locales.  (<TT
+CLASS="LITERAL"
+>C</TT
+> locale is safe since it uses
+      neither <CODE
+CLASS="FUNCTION"
+>strcoll()</CODE
+> nor <CODE
+CLASS="FUNCTION"
+>strxfrm()</CODE
+>.)
+     </P
+><P
+>      Unfortunately, this problem affects not only sorting but also entry
+      ordering in B-tree indexes, which means that B-tree indexes
+      on <TT
+CLASS="TYPE"
+>text</TT
+>, <TT
+CLASS="TYPE"
+>varchar</TT
+>, or <TT
+CLASS="TYPE"
+>char</TT
+> columns may now
+      be corrupt if they sort according to an affected locale and were
+      built or modified under <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 9.5.0 or 9.5.1.
+      Users should <TT
+CLASS="COMMAND"
+>REINDEX</TT
+> indexes that might be affected.
+     </P
+><P
+>      It is not possible at this time to give an exhaustive list of
+      known-affected locales.  <TT
+CLASS="LITERAL"
+>C</TT
+> locale is known safe, and
+      there is no evidence of trouble in English-based locales such
+      as <TT
+CLASS="LITERAL"
+>en_US</TT
+>, but some other popular locales such
+      as <TT
+CLASS="LITERAL"
+>de_DE</TT
+> are affected in most glibc versions.
+     </P
+></LI
+><LI
+><P
+>      Maintain row-security status properly in cached plans (Stephen Frost)
+     </P
+><P
+>      In a session that performs queries as more than one role, the plan
+      cache might incorrectly re-use a plan that was generated for another
+      role ID, thus possibly applying the wrong set of policies when
+      row-level security (RLS) is in use.
+      (CVE-2016-2193)
+     </P
+></LI
+><LI
+><P
+>      Add must-be-superuser checks to some
+      new <TT
+CLASS="FILENAME"
+>contrib/pageinspect</TT
+> functions (Andreas Seltenreich)
+     </P
+><P
+>      Most functions in the <TT
+CLASS="FILENAME"
+>pageinspect</TT
+> extension that
+      inspect <TT
+CLASS="TYPE"
+>bytea</TT
+> values disallow calls by non-superusers,
+      but <CODE
+CLASS="FUNCTION"
+>brin_page_type()</CODE
+> and <CODE
+CLASS="FUNCTION"
+>brin_metapage_info()</CODE
+>
+      failed to do so.  Passing contrived <TT
+CLASS="TYPE"
+>bytea</TT
+> values to them might
+      crash the server or disclose a few bytes of server memory.  Add the
+      missing permissions checks to prevent misuse.
+      (CVE-2016-3065)
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect handling of indexed <TT
+CLASS="LITERAL"
+>ROW()</TT
+> comparisons
+      (Simon Riggs)
+     </P
+><P
+>      Flaws in a minor optimization introduced in 9.5 caused incorrect
+      results if the <TT
+CLASS="LITERAL"
+>ROW()</TT
+> comparison matches the index ordering
+      partially but not exactly (for example, differing column order, or the
+      index contains both <TT
+CLASS="LITERAL"
+>ASC</TT
+> and <TT
+CLASS="LITERAL"
+>DESC</TT
+> columns).
+      Pending a better solution, the optimization has been removed.
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect handling of NULL index entries in
+      indexed <TT
+CLASS="LITERAL"
+>ROW()</TT
+> comparisons (Tom Lane)
+     </P
+><P
+>      An index search using a row comparison such as <TT
+CLASS="LITERAL"
+>ROW(a, b) &gt;
+      ROW('x', 'y')</TT
+> would stop upon reaching a NULL entry in
+      the <TT
+CLASS="STRUCTFIELD"
+>b</TT
+> column, ignoring the fact that there might be
+      non-NULL <TT
+CLASS="STRUCTFIELD"
+>b</TT
+> values associated with later values
+      of <TT
+CLASS="STRUCTFIELD"
+>a</TT
+>.
+     </P
+></LI
+><LI
+><P
+>      Avoid unlikely data-loss scenarios due to renaming files without
+      adequate <CODE
+CLASS="FUNCTION"
+>fsync()</CODE
+> calls before and after (Michael Paquier,
+      Tomas Vondra, Andres Freund)
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect behavior when rechecking a just-modified row in a query
+      that does <TT
+CLASS="COMMAND"
+>SELECT FOR UPDATE/SHARE</TT
+> and contains some
+      relations that need not be locked (Tom Lane)
+     </P
+><P
+>      Rows from non-locked relations were incorrectly treated as containing
+      all NULLs during the recheck, which could result in incorrectly
+      deciding that the updated row no longer passes the <TT
+CLASS="LITERAL"
+>WHERE</TT
+>
+      condition, or in incorrectly outputting NULLs.
+     </P
+></LI
+><LI
+><P
+>      Fix bug in <CODE
+CLASS="FUNCTION"
+>json_to_record()</CODE
+> when a field of its input
+      object contains a sub-object with a field name matching one of the
+      requested output column names (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix nonsense result from two-argument form
+      of <CODE
+CLASS="FUNCTION"
+>jsonb_object()</CODE
+> when called with empty arrays
+      (Michael Paquier, Andrew Dunstan)
+     </P
+></LI
+><LI
+><P
+>      Fix misbehavior in <CODE
+CLASS="FUNCTION"
+>jsonb_set()</CODE
+> when converting a path
+      array element into an integer for use as an array subscript
+      (Michael Paquier)
+     </P
+></LI
+><LI
+><P
+>      Fix misformatting of negative time zone offsets
+      by <CODE
+CLASS="FUNCTION"
+>to_char()</CODE
+>'s <TT
+CLASS="LITERAL"
+>OF</TT
+> format code
+      (Thomas Munro, Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix possible incorrect logging of waits done by
+      <TT
+CLASS="COMMAND"
+>INSERT ... ON CONFLICT</TT
+> (Peter Geoghegan)
+     </P
+><P
+>      Log messages would sometimes claim that the wait was due to an
+      exclusion constraint although no such constraint was responsible.
+     </P
+></LI
+><LI
+><P
+>      Ignore <A
+HREF="standby-settings.html#RECOVERY-MIN-APPLY-DELAY"
+>recovery_min_apply_delay</A
+> parameter until
+      recovery has reached a consistent state (Michael Paquier)
+     </P
+><P
+>      Previously, standby servers would delay application of WAL records in
+      response to <TT
+CLASS="VARNAME"
+>recovery_min_apply_delay</TT
+> even while replaying
+      the initial portion of WAL needed to make their database state valid.
+      Since the standby is useless until it's reached a consistent database
+      state, this was deemed unhelpful.
+     </P
+></LI
+><LI
+><P
+>      Correctly handle cases where <TT
+CLASS="LITERAL"
+>pg_subtrans</TT
+> is close to XID
+      wraparound during server startup (Jeff Janes)
+     </P
+></LI
+><LI
+><P
+>      Fix assorted bugs in logical decoding (Andres Freund)
+     </P
+><P
+>      Trouble cases included tuples larger than one page when replica
+      identity is <TT
+CLASS="LITERAL"
+>FULL</TT
+>, <TT
+CLASS="COMMAND"
+>UPDATE</TT
+>s that change a
+      primary key within a transaction large enough to be spooled to disk,
+      incorrect reports of <SPAN
+CLASS="QUOTE"
+>"subxact logged without previous toplevel
+      record"</SPAN
+>, and incorrect reporting of a transaction's commit time.
+     </P
+></LI
+><LI
+><P
+>      Fix planner error with nested security barrier views when the outer
+      view has a <TT
+CLASS="LITERAL"
+>WHERE</TT
+> clause containing a correlated subquery
+      (Dean Rasheed)
+     </P
+></LI
+><LI
+><P
+>      Fix memory leak in GIN index searches (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix corner-case crash due to trying to free <CODE
+CLASS="FUNCTION"
+>localeconv()</CODE
+>
+      output strings more than once (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix parsing of affix files for <TT
+CLASS="LITERAL"
+>ispell</TT
+> dictionaries
+      (Tom Lane)
+     </P
+><P
+>      The code could go wrong if the affix file contained any characters
+      whose byte length changes during case-folding, for
+      example <TT
+CLASS="LITERAL"
+>I</TT
+> in Turkish UTF8 locales.
+     </P
+></LI
+><LI
+><P
+>      Avoid use of <CODE
+CLASS="FUNCTION"
+>sscanf()</CODE
+> to parse <TT
+CLASS="LITERAL"
+>ispell</TT
+>
+      dictionary files (Artur Zakirov)
+     </P
+><P
+>      This dodges a portability problem on FreeBSD-derived platforms
+      (including OS X).
+     </P
+></LI
+><LI
+><P
+>      Fix atomic-operations code used on PPC with IBM's xlc compiler
+      (Noah Misch)
+     </P
+><P
+>      This error led to rare failures of concurrent operations on that
+      platform.
+     </P
+></LI
+><LI
+><P
+>      Avoid a crash on old Windows versions (before 7SP1/2008R2SP1) with an
+      AVX2-capable CPU and a Postgres build done with Visual Studio 2013
+      (Christian Ullrich)
+     </P
+><P
+>      This is a workaround for a bug in Visual Studio 2013's runtime
+      library, which Microsoft have stated they will not fix in that
+      version.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s tab completion logic to handle multibyte
+      characters properly (Kyotaro Horiguchi, Robert Haas)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s tab completion for
+      <TT
+CLASS="LITERAL"
+>SECURITY LABEL</TT
+> (Tom Lane)
+     </P
+><P
+>      Pressing TAB after <TT
+CLASS="LITERAL"
+>SECURITY LABEL</TT
+> might cause a crash
+      or offering of inappropriate keywords.
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> accept a wait timeout from the
+      <TT
+CLASS="ENVAR"
+>PGCTLTIMEOUT</TT
+> environment variable, if none is specified on
+      the command line (Noah Misch)
+     </P
+><P
+>      This eases testing of slower buildfarm members by allowing them
+      to globally specify a longer-than-normal timeout for postmaster
+      startup and shutdown.
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect test for Windows service status
+      in <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> (Manuel Mathar)
+     </P
+><P
+>      The previous set of minor releases attempted to
+      fix <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> to properly determine whether to send log
+      messages to Window's Event Log, but got the test backwards.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> to correctly handle the combination
+      of <TT
+CLASS="LITERAL"
+>-C</TT
+> and <TT
+CLASS="LITERAL"
+>-M prepared</TT
+> options (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>, skip creating a deletion script when
+      the new data directory is inside the old data directory (Bruce
+      Momjian)
+     </P
+><P
+>      Blind application of the script in such cases would result in loss of
+      the new data directory.
+     </P
+></LI
+><LI
+><P
+>      In PL/Perl, properly translate empty Postgres arrays into empty Perl
+      arrays (Alex Hunsaker)
+     </P
+></LI
+><LI
+><P
+>      Make PL/Python cope with function names that aren't valid Python
+      identifiers (Jim Nasby)
+     </P
+></LI
+><LI
+><P
+>      Fix multiple mistakes in the statistics returned
+      by <TT
+CLASS="FILENAME"
+>contrib/pgstattuple</TT
+>'s <CODE
+CLASS="FUNCTION"
+>pgstatindex()</CODE
+>
+      function (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Remove dependency on <TT
+CLASS="LITERAL"
+>psed</TT
+> in MSVC builds, since it's no
+      longer provided by core Perl (Michael Paquier, Andrew Dunstan)
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2016c
+      for DST law changes in Azerbaijan, Chile, Haiti, Palestine, and Russia
+      (Altai, Astrakhan, Kirov, Sakhalin, Ulyanovsk regions), plus
+      historical corrections for Lithuania, Moldova, and Russia
+      (Kaliningrad, Samara, Volgograd).
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-5-3.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-5-1.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.5.3</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.5.1</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,641 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_trigger</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="System Catalogs"
+HREF="catalogs.html"><LINK
+REL="PREVIOUS"
+TITLE="pg_transform"
+HREF="catalog-pg-transform.html"><LINK
+REL="NEXT"
+TITLE="pg_ts_config"
+HREF="catalog-pg-ts-config.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pg_transform"
+HREF="catalog-pg-transform.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="catalogs.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 49. System Catalogs</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pg_ts_config"
+HREF="catalog-pg-ts-config.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="CATALOG-PG-TRIGGER"
+>49.48. <TT
+CLASS="STRUCTNAME"
+>pg_trigger</TT
+></A
+></H1
+><P
+>   The catalog <TT
+CLASS="STRUCTNAME"
+>pg_trigger</TT
+> stores triggers on tables
+   and views.
+   See <A
+HREF="sql-createtrigger.html"
+>CREATE TRIGGER</A
+>
+   for more information.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="AEN105364"
+></A
+><P
+><B
+>Table 49-48. <TT
+CLASS="STRUCTNAME"
+>pg_trigger</TT
+> Columns</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Type</TH
+><TH
+>References</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Row identifier (hidden attribute; must be explicitly selected)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tgrelid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-class.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+></A
+>.oid</TT
+></TD
+><TD
+>The table this trigger is on</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tgname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Trigger name (must be unique among triggers of same table)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tgfoid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-proc.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_proc</TT
+></A
+>.oid</TT
+></TD
+><TD
+>The function to be called</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tgtype</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int2</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Bit mask identifying trigger firing conditions</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tgenabled</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>char</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>       Controls in which <A
+HREF="runtime-config-client.html#GUC-SESSION-REPLICATION-ROLE"
+>session_replication_role</A
+> modes
+       the trigger fires.
+       <TT
+CLASS="LITERAL"
+>O</TT
+> = trigger fires in <SPAN
+CLASS="QUOTE"
+>"origin"</SPAN
+> and <SPAN
+CLASS="QUOTE"
+>"local"</SPAN
+> modes,
+       <TT
+CLASS="LITERAL"
+>D</TT
+> = trigger is disabled,
+       <TT
+CLASS="LITERAL"
+>R</TT
+> = trigger fires in <SPAN
+CLASS="QUOTE"
+>"replica"</SPAN
+> mode,
+       <TT
+CLASS="LITERAL"
+>A</TT
+> = trigger fires always.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tgisinternal</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bool</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>True if trigger is internally generated (usually, to enforce
+       the constraint identified by <TT
+CLASS="STRUCTFIELD"
+>tgconstraint</TT
+>)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tgconstrrelid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-class.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+></A
+>.oid</TT
+></TD
+><TD
+>The table referenced by a referential integrity constraint</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tgconstrindid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-class.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+></A
+>.oid</TT
+></TD
+><TD
+>The index supporting a unique, primary key, referential integrity,
+       or exclusion constraint</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tgconstraint</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-constraint.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_constraint</TT
+></A
+>.oid</TT
+></TD
+><TD
+>The <TT
+CLASS="STRUCTNAME"
+>pg_constraint</TT
+> entry associated with the trigger, if any</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tgdeferrable</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bool</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>True if constraint trigger is deferrable</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tginitdeferred</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bool</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>True if constraint trigger is initially deferred</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tgnargs</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int2</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Number of argument strings passed to trigger function</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tgattr</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int2vector</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-attribute.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_attribute</TT
+></A
+>.attnum</TT
+></TD
+><TD
+>Column numbers, if trigger is column-specific; otherwise an
+       empty array</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tgargs</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bytea</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Argument strings to pass to trigger, each NULL-terminated</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tgqual</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>pg_node_tree</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Expression tree (in <CODE
+CLASS="FUNCTION"
+>nodeToString()</CODE
+>
+       representation) for the trigger's <TT
+CLASS="LITERAL"
+>WHEN</TT
+> condition, or null
+       if none</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   Currently, column-specific triggering is supported only for
+   <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> events, and so <TT
+CLASS="STRUCTFIELD"
+>tgattr</TT
+> is relevant
+   only for that event type.  <TT
+CLASS="STRUCTFIELD"
+>tgtype</TT
+> might
+   contain bits for other event types as well, but those are presumed
+   to be table-wide regardless of what is in <TT
+CLASS="STRUCTFIELD"
+>tgattr</TT
+>.
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    When <TT
+CLASS="STRUCTFIELD"
+>tgconstraint</TT
+> is nonzero,
+    <TT
+CLASS="STRUCTFIELD"
+>tgconstrrelid</TT
+>, <TT
+CLASS="STRUCTFIELD"
+>tgconstrindid</TT
+>,
+    <TT
+CLASS="STRUCTFIELD"
+>tgdeferrable</TT
+>, and <TT
+CLASS="STRUCTFIELD"
+>tginitdeferred</TT
+> are
+    largely redundant with the referenced <TT
+CLASS="STRUCTNAME"
+>pg_constraint</TT
+> entry.
+    However, it is possible for a non-deferrable trigger to be associated
+    with a deferrable constraint: foreign key constraints can have some
+    deferrable and some non-deferrable triggers.
+   </P
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    <TT
+CLASS="LITERAL"
+>pg_class.relhastriggers</TT
+>
+    must be true if a relation has any triggers in this catalog.
+   </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="catalog-pg-transform.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="catalog-pg-ts-config.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><TT
+CLASS="STRUCTNAME"
+>pg_transform</TT
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="catalogs.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><TT
+CLASS="STRUCTNAME"
+>pg_ts_config</TT
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

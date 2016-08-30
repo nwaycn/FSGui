@@ -1,0 +1,579 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>ALTER AGGREGATE</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="ABORT"
+HREF="sql-abort.html"><LINK
+REL="NEXT"
+TITLE="ALTER COLLATION"
+HREF="sql-altercollation.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="ABORT"
+HREF="sql-abort.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="ALTER COLLATION"
+HREF="sql-altercollation.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-ALTERAGGREGATE"
+></A
+>ALTER AGGREGATE</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN68926"
+></A
+><H2
+>Name</H2
+>ALTER AGGREGATE&nbsp;--&nbsp;change the definition of an aggregate function</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN68929"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>ALTER AGGREGATE <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> ( <TT
+CLASS="REPLACEABLE"
+><I
+>aggregate_signature</I
+></TT
+> ) RENAME TO <TT
+CLASS="REPLACEABLE"
+><I
+>new_name</I
+></TT
+>
+ALTER AGGREGATE <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> ( <TT
+CLASS="REPLACEABLE"
+><I
+>aggregate_signature</I
+></TT
+> )
+                OWNER TO { <TT
+CLASS="REPLACEABLE"
+><I
+>new_owner</I
+></TT
+> | CURRENT_USER | SESSION_USER }
+ALTER AGGREGATE <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> ( <TT
+CLASS="REPLACEABLE"
+><I
+>aggregate_signature</I
+></TT
+> ) SET SCHEMA <TT
+CLASS="REPLACEABLE"
+><I
+>new_schema</I
+></TT
+>
+
+<SPAN
+CLASS="phrase"
+><SPAN
+CLASS="PHRASE"
+>where <TT
+CLASS="REPLACEABLE"
+><I
+>aggregate_signature</I
+></TT
+> is:</SPAN
+></SPAN
+>
+
+* |
+[ <TT
+CLASS="REPLACEABLE"
+><I
+>argmode</I
+></TT
+> ] [ <TT
+CLASS="REPLACEABLE"
+><I
+>argname</I
+></TT
+> ] <TT
+CLASS="REPLACEABLE"
+><I
+>argtype</I
+></TT
+> [ , ... ] |
+[ [ <TT
+CLASS="REPLACEABLE"
+><I
+>argmode</I
+></TT
+> ] [ <TT
+CLASS="REPLACEABLE"
+><I
+>argname</I
+></TT
+> ] <TT
+CLASS="REPLACEABLE"
+><I
+>argtype</I
+></TT
+> [ , ... ] ] ORDER BY [ <TT
+CLASS="REPLACEABLE"
+><I
+>argmode</I
+></TT
+> ] [ <TT
+CLASS="REPLACEABLE"
+><I
+>argname</I
+></TT
+> ] <TT
+CLASS="REPLACEABLE"
+><I
+>argtype</I
+></TT
+> [ , ... ]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN68951"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>ALTER AGGREGATE</TT
+> changes the definition of an
+   aggregate function.
+  </P
+><P
+>   You must own the aggregate function to use <TT
+CLASS="COMMAND"
+>ALTER AGGREGATE</TT
+>.
+   To change the schema of an aggregate function, you must also have
+   <TT
+CLASS="LITERAL"
+>CREATE</TT
+> privilege on the new schema.
+   To alter the owner, you must also be a direct or indirect member of the new
+   owning role, and that role must have <TT
+CLASS="LITERAL"
+>CREATE</TT
+> privilege on
+   the aggregate function's schema.  (These restrictions enforce that altering
+   the owner doesn't do anything you couldn't do by dropping and recreating
+   the aggregate function.  However, a superuser can alter ownership of any
+   aggregate function anyway.)
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN68959"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></DT
+><DD
+><P
+>      The name (optionally schema-qualified) of an existing aggregate function.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>argmode</I
+></TT
+></DT
+><DD
+><P
+>      The mode of an argument: <TT
+CLASS="LITERAL"
+>IN</TT
+> or <TT
+CLASS="LITERAL"
+>VARIADIC</TT
+>.
+      If omitted, the default is <TT
+CLASS="LITERAL"
+>IN</TT
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>argname</I
+></TT
+></DT
+><DD
+><P
+>      The name of an argument.
+      Note that <TT
+CLASS="COMMAND"
+>ALTER AGGREGATE</TT
+> does not actually pay
+      any attention to argument names, since only the argument data
+      types are needed to determine the aggregate function's identity.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>argtype</I
+></TT
+></DT
+><DD
+><P
+>      An input data type on which the aggregate function operates.
+      To reference a zero-argument aggregate function, write <TT
+CLASS="LITERAL"
+>*</TT
+>
+      in place of the list of argument specifications.
+      To reference an ordered-set aggregate function, write
+      <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> between the direct and aggregated argument
+      specifications.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_name</I
+></TT
+></DT
+><DD
+><P
+>      The new name of the aggregate function.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_owner</I
+></TT
+></DT
+><DD
+><P
+>      The new owner of the aggregate function.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_schema</I
+></TT
+></DT
+><DD
+><P
+>      The new schema for the aggregate function.
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN69003"
+></A
+><H2
+>Notes</H2
+><P
+>    The recommended syntax for referencing an ordered-set aggregate
+    is to write <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> between the direct and aggregated
+    argument specifications, in the same style as in
+    <A
+HREF="sql-createaggregate.html"
+>CREATE AGGREGATE</A
+>.  However, it will also work to
+    omit <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> and just run the direct and aggregated
+    argument specifications into a single list.  In this abbreviated form,
+    if <TT
+CLASS="LITERAL"
+>VARIADIC "any"</TT
+> was used in both the direct and
+    aggregated argument lists, write <TT
+CLASS="LITERAL"
+>VARIADIC "any"</TT
+> only once.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN69011"
+></A
+><H2
+>Examples</H2
+><P
+>   To rename the aggregate function <TT
+CLASS="LITERAL"
+>myavg</TT
+> for type
+   <TT
+CLASS="TYPE"
+>integer</TT
+> to <TT
+CLASS="LITERAL"
+>my_average</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER AGGREGATE myavg(integer) RENAME TO my_average;</PRE
+><P>
+  </P
+><P
+>   To change the owner of the aggregate function <TT
+CLASS="LITERAL"
+>myavg</TT
+> for type
+   <TT
+CLASS="TYPE"
+>integer</TT
+> to <TT
+CLASS="LITERAL"
+>joe</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER AGGREGATE myavg(integer) OWNER TO joe;</PRE
+><P>
+  </P
+><P
+>   To move the ordered-set aggregate <TT
+CLASS="LITERAL"
+>mypercentile</TT
+> with
+   direct argument of type <TT
+CLASS="TYPE"
+>float8</TT
+> and aggregated argument
+   of type <TT
+CLASS="TYPE"
+>integer</TT
+> into schema <TT
+CLASS="LITERAL"
+>myschema</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER AGGREGATE mypercentile(float8 ORDER BY integer) SET SCHEMA myschema;</PRE
+><P>
+   This will work too:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER AGGREGATE mypercentile(float8, integer) SET SCHEMA myschema;</PRE
+><P>
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN69030"
+></A
+><H2
+>Compatibility</H2
+><P
+>   There is no <TT
+CLASS="COMMAND"
+>ALTER AGGREGATE</TT
+> statement in the SQL
+   standard.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN69034"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-createaggregate.html"
+>CREATE AGGREGATE</A
+>, <A
+HREF="sql-dropaggregate.html"
+>DROP AGGREGATE</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-abort.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-altercollation.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>ABORT</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>ALTER COLLATION</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

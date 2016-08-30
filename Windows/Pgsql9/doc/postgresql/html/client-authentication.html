@@ -1,0 +1,332 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Client Authentication</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Administration"
+HREF="admin.html"><LINK
+REL="PREVIOUS"
+TITLE="Short Options"
+HREF="runtime-config-short.html"><LINK
+REL="NEXT"
+TITLE="The pg_hba.conf File"
+HREF="auth-pg-hba-conf.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="CHAPTER"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Short Options"
+HREF="runtime-config-short.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="admin.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="The pg_hba.conf File"
+HREF="auth-pg-hba-conf.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="CLIENT-AUTHENTICATION"
+></A
+>Chapter 19. Client Authentication</H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+>19.1. <A
+HREF="auth-pg-hba-conf.html"
+>The <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> File</A
+></DT
+><DT
+>19.2. <A
+HREF="auth-username-maps.html"
+>User Name Maps</A
+></DT
+><DT
+>19.3. <A
+HREF="auth-methods.html"
+>Authentication Methods</A
+></DT
+><DD
+><DL
+><DT
+>19.3.1. <A
+HREF="auth-methods.html#AUTH-TRUST"
+>Trust Authentication</A
+></DT
+><DT
+>19.3.2. <A
+HREF="auth-methods.html#AUTH-PASSWORD"
+>Password Authentication</A
+></DT
+><DT
+>19.3.3. <A
+HREF="auth-methods.html#GSSAPI-AUTH"
+>GSSAPI Authentication</A
+></DT
+><DT
+>19.3.4. <A
+HREF="auth-methods.html#SSPI-AUTH"
+>SSPI Authentication</A
+></DT
+><DT
+>19.3.5. <A
+HREF="auth-methods.html#AUTH-IDENT"
+>Ident Authentication</A
+></DT
+><DT
+>19.3.6. <A
+HREF="auth-methods.html#AUTH-PEER"
+>Peer Authentication</A
+></DT
+><DT
+>19.3.7. <A
+HREF="auth-methods.html#AUTH-LDAP"
+>LDAP Authentication</A
+></DT
+><DT
+>19.3.8. <A
+HREF="auth-methods.html#AUTH-RADIUS"
+>RADIUS Authentication</A
+></DT
+><DT
+>19.3.9. <A
+HREF="auth-methods.html#AUTH-CERT"
+>Certificate Authentication</A
+></DT
+><DT
+>19.3.10. <A
+HREF="auth-methods.html#AUTH-PAM"
+>PAM Authentication</A
+></DT
+></DL
+></DD
+><DT
+>19.4. <A
+HREF="client-authentication-problems.html"
+>Authentication Problems</A
+></DT
+></DL
+></DIV
+><P
+>  When a client application connects to the database server, it
+  specifies which <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> database user name it
+  wants to connect as, much the same way one logs into a Unix computer
+  as a particular user. Within the SQL environment the active database
+  user name determines access privileges to database objects &mdash; see
+  <A
+HREF="user-manag.html"
+>Chapter 20</A
+> for more information. Therefore, it is
+  essential to restrict which database users can connect.
+ </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>   As explained in <A
+HREF="user-manag.html"
+>Chapter 20</A
+>,
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> actually does privilege
+   management in terms of <SPAN
+CLASS="QUOTE"
+>"roles"</SPAN
+>.  In this chapter, we
+   consistently use <I
+CLASS="FIRSTTERM"
+>database user</I
+> to mean <SPAN
+CLASS="QUOTE"
+>"role with the
+   <TT
+CLASS="LITERAL"
+>LOGIN</TT
+> privilege"</SPAN
+>.
+  </P
+></BLOCKQUOTE
+></DIV
+><P
+>  <I
+CLASS="FIRSTTERM"
+>Authentication</I
+> is the process by which the
+  database server establishes the identity of the client, and by
+  extension determines whether the client application (or the user
+  who runs the client application) is permitted to connect with the
+  database user name that was requested.
+ </P
+><P
+>  <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> offers a number of different
+  client authentication methods. The method used to authenticate a
+  particular client connection can be selected on the basis of
+  (client) host address, database, and user.
+ </P
+><P
+>  <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> database user names are logically
+  separate from user names of the operating system in which the server
+  runs. If all the users of a particular server also have accounts on
+  the server's machine, it makes sense to assign database user names
+  that match their operating system user names. However, a server that
+  accepts remote connections might have many database users who have no local
+  operating system
+  account, and in such cases there need be no connection between
+  database user names and OS user names.
+ </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime-config-short.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="auth-pg-hba-conf.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Short Options</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="admin.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>The <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> File</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

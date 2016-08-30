@@ -1,0 +1,192 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Visibility Map</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Database Physical Storage"
+HREF="storage.html"><LINK
+REL="PREVIOUS"
+TITLE="Free Space Map"
+HREF="storage-fsm.html"><LINK
+REL="NEXT"
+TITLE="The Initialization Fork"
+HREF="storage-init.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Free Space Map"
+HREF="storage-fsm.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="storage.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 63. Database Physical Storage</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="The Initialization Fork"
+HREF="storage-init.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="STORAGE-VM"
+>63.4. Visibility Map</A
+></H1
+><P
+>Each heap relation has a Visibility Map
+(VM) to keep track of which pages contain only tuples that are known to be
+visible to all active transactions. It's stored
+alongside the main relation data in a separate relation fork, named after the
+filenode number of the relation, plus a <TT
+CLASS="LITERAL"
+>_vm</TT
+> suffix. For example,
+if the filenode of a relation is 12345, the VM is stored in a file called
+<TT
+CLASS="FILENAME"
+>12345_vm</TT
+>, in the same directory as the main relation file.
+Note that indexes do not have VMs.</P
+><P
+>The visibility map simply stores one bit per heap page. A set bit means
+that all tuples on the page are known to be visible to all transactions.
+This means that the page does not contain any tuples that need to be vacuumed.
+This information can also be used by <I
+CLASS="FIRSTTERM"
+>index-only scans</I
+> to answer
+queries using only the index tuple.</P
+><P
+>The map is conservative in the sense that we make sure that whenever a bit is
+set, we know the condition is true, but if a bit is not set, it might or
+might not be true. Visibility map bits are only set by vacuum, but are
+cleared by any data-modifying operations on a page.</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="storage-fsm.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="storage-init.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Free Space Map</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="storage.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>The Initialization Fork</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

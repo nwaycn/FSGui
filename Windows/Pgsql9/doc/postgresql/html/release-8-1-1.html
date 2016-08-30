@@ -1,0 +1,349 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.1.1</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.1.2"
+HREF="release-8-1-2.html"><LINK
+REL="NEXT"
+TITLE="Release 8.1"
+HREF="release-8-1.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.1.2"
+HREF="release-8-1-2.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.1"
+HREF="release-8-1.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-1-1"
+>E.191. Release 8.1.1</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2005-12-12</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.1.0.
+   For information about new features in the 8.1 major release, see
+   <A
+HREF="release-8-1.html"
+>Section E.192</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN159403"
+>E.191.1. Migration to Version 8.1.1</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.1.X.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN159406"
+>E.191.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>Fix incorrect optimizations of outer-join conditions
+(Tom)</P
+></LI
+><LI
+><P
+>Fix problems with wrong reported column names in cases
+involving sub-selects flattened by the optimizer (Tom)</P
+></LI
+><LI
+><P
+>Fix update failures in scenarios involving CHECK constraints,
+toasted columns, <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>and</I
+></SPAN
+> indexes (Tom)</P
+></LI
+><LI
+><P
+>Fix bgwriter problems after recovering from errors
+(Tom)</P
+><P
+>The background writer was found to leak buffer pins after write errors.
+While not fatal in itself, this might lead to mysterious blockages of
+later VACUUM commands.</P
+></LI
+><LI
+><P
+>Prevent failure if client sends Bind protocol message
+when current transaction is already aborted</P
+></LI
+><LI
+><P
+><TT
+CLASS="FILENAME"
+>/contrib/tsearch2</TT
+> and <TT
+CLASS="FILENAME"
+>/contrib/ltree</TT
+>
+fixes (Teodor)</P
+></LI
+><LI
+><P
+>Fix problems with translated error messages in
+languages that require word reordering, such as Turkish; also problems with
+unexpected truncation of output strings and wrong display of the smallest
+possible bigint value (Andrew, Tom)</P
+><P
+>These problems only appeared on platforms that were using our
+<TT
+CLASS="FILENAME"
+>port/snprintf.c</TT
+> code, which includes BSD variants if
+<TT
+CLASS="LITERAL"
+>--enable-nls</TT
+> was given, and perhaps others.  In addition,
+a different form of the translated-error-message problem could appear
+on Windows depending on which version of <TT
+CLASS="FILENAME"
+>libintl</TT
+> was used.</P
+></LI
+><LI
+><P
+>Re-allow <TT
+CLASS="LITERAL"
+>AM</TT
+>/<TT
+CLASS="LITERAL"
+>PM</TT
+>, <TT
+CLASS="LITERAL"
+>HH</TT
+>,
+<TT
+CLASS="LITERAL"
+>HH12</TT
+>, and <TT
+CLASS="LITERAL"
+>D</TT
+> format specifiers for
+<CODE
+CLASS="FUNCTION"
+>to_char(time)</CODE
+> and <CODE
+CLASS="FUNCTION"
+>to_char(interval)</CODE
+>.
+(<CODE
+CLASS="FUNCTION"
+>to_char(interval)</CODE
+> should probably use
+<TT
+CLASS="LITERAL"
+>HH24</TT
+>.) (Bruce)</P
+></LI
+><LI
+><P
+>AIX, HPUX, and MSVC compile fixes (Tom, Hiroshi
+Saito)</P
+></LI
+><LI
+><P
+>Optimizer improvements (Tom)</P
+></LI
+><LI
+><P
+>Retry file reads and writes after Windows
+NO_SYSTEM_RESOURCES error (Qingqing Zhou)</P
+></LI
+><LI
+><P
+>Prevent <SPAN
+CLASS="APPLICATION"
+>autovacuum</SPAN
+> from crashing during
+ANALYZE of expression index (Alvaro)</P
+></LI
+><LI
+><P
+>Fix problems with ON COMMIT DELETE ROWS temp
+tables</P
+></LI
+><LI
+><P
+>Fix problems when a trigger alters the output of a SELECT
+DISTINCT query</P
+></LI
+><LI
+><P
+>Add 8.1.0 release note item on how to migrate invalid
+<TT
+CLASS="LITERAL"
+>UTF-8</TT
+> byte sequences (Paul Lindner)</P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-1-2.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-1.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.1.2</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.1</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

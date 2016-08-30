@@ -1,0 +1,320 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Writing A Table Sampling Method</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Internals"
+HREF="internals.html"><LINK
+REL="PREVIOUS"
+TITLE="Row Locking in Foreign Data Wrappers"
+HREF="fdw-row-locking.html"><LINK
+REL="NEXT"
+TITLE="Sampling Method Support Functions"
+HREF="tablesample-support-functions.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="CHAPTER"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Row Locking in Foreign Data Wrappers"
+HREF="fdw-row-locking.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="internals.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Sampling Method Support Functions"
+HREF="tablesample-support-functions.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="TABLESAMPLE-METHOD"
+></A
+>Chapter 55. Writing A Table Sampling Method</H1
+><P
+>  <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>'s implementation of the <TT
+CLASS="LITERAL"
+>TABLESAMPLE</TT
+>
+  clause supports custom table sampling methods, in addition to
+  the <TT
+CLASS="LITERAL"
+>BERNOULLI</TT
+> and <TT
+CLASS="LITERAL"
+>SYSTEM</TT
+> methods that are required
+  by the SQL standard.  The sampling method determines which rows of the
+  table will be selected when the <TT
+CLASS="LITERAL"
+>TABLESAMPLE</TT
+> clause is used.
+ </P
+><P
+>  At the SQL level, a table sampling method is represented by a single SQL
+  function, typically implemented in C, having the signature
+</P><PRE
+CLASS="PROGRAMLISTING"
+>method_name(internal) RETURNS tsm_handler</PRE
+><P>
+  The name of the function is the same method name appearing in the
+  <TT
+CLASS="LITERAL"
+>TABLESAMPLE</TT
+> clause.  The <TT
+CLASS="TYPE"
+>internal</TT
+> argument is a dummy
+  (always having value zero) that simply serves to prevent this function from
+  being called directly from a SQL command.
+  The result of the function must be a palloc'd struct of
+  type <TT
+CLASS="TYPE"
+>TsmRoutine</TT
+>, which contains pointers to support functions for
+  the sampling method.  These support functions are plain C functions and
+  are not visible or callable at the SQL level.  The support functions are
+  described in <A
+HREF="tablesample-support-functions.html"
+>Section 55.1</A
+>.
+ </P
+><P
+>  In addition to function pointers, the <TT
+CLASS="TYPE"
+>TsmRoutine</TT
+> struct must
+  provide these additional fields:
+ </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>List *parameterTypes</TT
+></DT
+><DD
+><P
+>     This is an OID list containing the data type OIDs of the parameter(s)
+     that will be accepted by the <TT
+CLASS="LITERAL"
+>TABLESAMPLE</TT
+> clause when this
+     sampling method is used.  For example, for the built-in methods, this
+     list contains a single item with value <TT
+CLASS="LITERAL"
+>FLOAT4OID</TT
+>, which
+     represents the sampling percentage.  Custom sampling methods can have
+     more or different parameters.
+    </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>bool repeatable_across_queries</TT
+></DT
+><DD
+><P
+>     If <TT
+CLASS="LITERAL"
+>true</TT
+>, the sampling method can deliver identical samples
+     across successive queries, if the same parameters
+     and <TT
+CLASS="LITERAL"
+>REPEATABLE</TT
+> seed value are supplied each time and the
+     table contents have not changed.  When this is <TT
+CLASS="LITERAL"
+>false</TT
+>,
+     the <TT
+CLASS="LITERAL"
+>REPEATABLE</TT
+> clause is not accepted for use with the
+     sampling method.
+    </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>bool repeatable_across_scans</TT
+></DT
+><DD
+><P
+>     If <TT
+CLASS="LITERAL"
+>true</TT
+>, the sampling method can deliver identical samples
+     across successive scans in the same query (assuming unchanging
+     parameters, seed value, and snapshot).
+     When this is <TT
+CLASS="LITERAL"
+>false</TT
+>, the planner will not select plans that
+     would require scanning the sampled table more than once, since that
+     might result in inconsistent query output.
+    </P
+></DD
+></DL
+></DIV
+><P
+>  The <TT
+CLASS="TYPE"
+>TsmRoutine</TT
+> struct type is declared
+  in <TT
+CLASS="FILENAME"
+>src/include/access/tsmapi.h</TT
+>, which see for additional
+  details.
+ </P
+><P
+>  The table sampling methods included in the standard distribution are good
+  references when trying to write your own.  Look into
+  the <TT
+CLASS="FILENAME"
+>src/backend/access/tablesample</TT
+> subdirectory of the source
+  tree for the built-in sampling methods, and into the <TT
+CLASS="FILENAME"
+>contrib</TT
+>
+  subdirectory for add-on methods.
+ </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="fdw-row-locking.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="tablesample-support-functions.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Row Locking in Foreign Data Wrappers</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="internals.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Sampling Method Support Functions</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

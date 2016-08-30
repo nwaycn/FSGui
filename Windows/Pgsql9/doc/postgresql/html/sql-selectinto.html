@@ -1,0 +1,509 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>SELECT INTO</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="SELECT"
+HREF="sql-select.html"><LINK
+REL="NEXT"
+TITLE="SET"
+HREF="sql-set.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="SELECT"
+HREF="sql-select.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="SET"
+HREF="sql-set.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-SELECTINTO"
+></A
+>SELECT INTO</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN87784"
+></A
+><H2
+>Name</H2
+>SELECT INTO&nbsp;--&nbsp;define a new table from the results of a query</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN87787"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>[ WITH [ RECURSIVE ] <TT
+CLASS="REPLACEABLE"
+><I
+>with_query</I
+></TT
+> [, ...] ]
+SELECT [ ALL | DISTINCT [ ON ( <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+> [, ...] ) ] ]
+    * | <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+> [ [ AS ] <TT
+CLASS="REPLACEABLE"
+><I
+>output_name</I
+></TT
+> ] [, ...]
+    INTO [ TEMPORARY | TEMP | UNLOGGED ] [ TABLE ] <TT
+CLASS="REPLACEABLE"
+><I
+>new_table</I
+></TT
+>
+    [ FROM <TT
+CLASS="REPLACEABLE"
+><I
+>from_item</I
+></TT
+> [, ...] ]
+    [ WHERE <TT
+CLASS="REPLACEABLE"
+><I
+>condition</I
+></TT
+> ]
+    [ GROUP BY <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+> [, ...] ]
+    [ HAVING <TT
+CLASS="REPLACEABLE"
+><I
+>condition</I
+></TT
+> [, ...] ]
+    [ WINDOW <TT
+CLASS="REPLACEABLE"
+><I
+>window_name</I
+></TT
+> AS ( <TT
+CLASS="REPLACEABLE"
+><I
+>window_definition</I
+></TT
+> ) [, ...] ]
+    [ { UNION | INTERSECT | EXCEPT } [ ALL | DISTINCT ] <TT
+CLASS="REPLACEABLE"
+><I
+>select</I
+></TT
+> ]
+    [ ORDER BY <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+> [ ASC | DESC | USING <TT
+CLASS="REPLACEABLE"
+><I
+>operator</I
+></TT
+> ] [ NULLS { FIRST | LAST } ] [, ...] ]
+    [ LIMIT { <TT
+CLASS="REPLACEABLE"
+><I
+>count</I
+></TT
+> | ALL } ]
+    [ OFFSET <TT
+CLASS="REPLACEABLE"
+><I
+>start</I
+></TT
+> [ ROW | ROWS ] ]
+    [ FETCH { FIRST | NEXT } [ <TT
+CLASS="REPLACEABLE"
+><I
+>count</I
+></TT
+> ] { ROW | ROWS } ONLY ]
+    [ FOR { UPDATE | SHARE } [ OF <TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+> [, ...] ] [ NOWAIT ] [...] ]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN87807"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>SELECT INTO</TT
+> creates a new table and fills it
+   with data computed by a query.  The data is not returned to the
+   client, as it is with a normal <TT
+CLASS="COMMAND"
+>SELECT</TT
+>.  The new
+   table's columns have the names and data types associated with the
+   output columns of the <TT
+CLASS="COMMAND"
+>SELECT</TT
+>.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN87813"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>TEMPORARY</TT
+> or <TT
+CLASS="LITERAL"
+>TEMP</TT
+></DT
+><DD
+><P
+>     If specified, the table is created as a temporary table.  Refer
+     to <A
+HREF="sql-createtable.html"
+>CREATE TABLE</A
+> for details.
+    </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>UNLOGGED</TT
+></DT
+><DD
+><P
+>     If specified, the table is created as an unlogged table.  Refer
+     to <A
+HREF="sql-createtable.html"
+>CREATE TABLE</A
+> for details.
+    </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_table</I
+></TT
+></DT
+><DD
+><P
+>      The name (optionally schema-qualified) of the table to be created.
+     </P
+></DD
+></DL
+></DIV
+><P
+>   All other parameters are described in detail under <A
+HREF="sql-select.html"
+>SELECT</A
+>.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN87836"
+></A
+><H2
+>Notes</H2
+><P
+>   <A
+HREF="sql-createtableas.html"
+>CREATE TABLE AS</A
+> is functionally similar to
+   <TT
+CLASS="COMMAND"
+>SELECT INTO</TT
+>.  <TT
+CLASS="COMMAND"
+>CREATE TABLE AS</TT
+>
+   is the recommended syntax, since this form of <TT
+CLASS="COMMAND"
+>SELECT
+   INTO</TT
+> is not available in <SPAN
+CLASS="APPLICATION"
+>ECPG</SPAN
+>
+   or <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+>, because they interpret the
+   <TT
+CLASS="LITERAL"
+>INTO</TT
+> clause differently. Furthermore,
+   <TT
+CLASS="COMMAND"
+>CREATE TABLE AS</TT
+> offers a superset of the
+   functionality provided by <TT
+CLASS="COMMAND"
+>SELECT INTO</TT
+>.
+  </P
+><P
+>   To add OIDs to the table created by <TT
+CLASS="COMMAND"
+>SELECT INTO</TT
+>,
+   enable the <A
+HREF="runtime-config-compatible.html#GUC-DEFAULT-WITH-OIDS"
+>default_with_oids</A
+> configuration
+   variable.  Alternatively, <TT
+CLASS="COMMAND"
+>CREATE TABLE AS</TT
+> can be
+   used with the <TT
+CLASS="LITERAL"
+>WITH OIDS</TT
+> clause.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN87853"
+></A
+><H2
+>Examples</H2
+><P
+>   Create a new table <TT
+CLASS="LITERAL"
+>films_recent</TT
+> consisting of only
+   recent entries from the table <TT
+CLASS="LITERAL"
+>films</TT
+>:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT * INTO films_recent FROM films WHERE date_prod &gt;= '2002-01-01';</PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN87859"
+></A
+><H2
+>Compatibility</H2
+><P
+>   The SQL standard uses <TT
+CLASS="COMMAND"
+>SELECT INTO</TT
+> to
+   represent selecting values into scalar variables of a host program,
+   rather than creating a new table.  This indeed is the usage found
+   in <SPAN
+CLASS="APPLICATION"
+>ECPG</SPAN
+> (see <A
+HREF="ecpg.html"
+>Chapter 33</A
+>) and
+   <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> (see <A
+HREF="plpgsql.html"
+>Chapter 40</A
+>).
+   The <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> usage of <TT
+CLASS="COMMAND"
+>SELECT
+   INTO</TT
+> to represent table creation is historical.  It is
+   best to use <TT
+CLASS="COMMAND"
+>CREATE TABLE AS</TT
+> for this purpose in
+   new code.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN87870"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-createtableas.html"
+>CREATE TABLE AS</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-select.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-set.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>SELECT</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>SET</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

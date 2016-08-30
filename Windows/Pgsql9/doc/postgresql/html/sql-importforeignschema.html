@@ -1,0 +1,439 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>IMPORT FOREIGN SCHEMA</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="GRANT"
+HREF="sql-grant.html"><LINK
+REL="NEXT"
+TITLE="INSERT"
+HREF="sql-insert.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="GRANT"
+HREF="sql-grant.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="INSERT"
+HREF="sql-insert.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-IMPORTFOREIGNSCHEMA"
+></A
+>IMPORT FOREIGN SCHEMA</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN84693"
+></A
+><H2
+>Name</H2
+>IMPORT FOREIGN SCHEMA&nbsp;--&nbsp;import table definitions from a foreign server</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN84696"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>IMPORT FOREIGN SCHEMA <TT
+CLASS="REPLACEABLE"
+><I
+>remote_schema</I
+></TT
+>
+    [ { LIMIT TO | EXCEPT } ( <TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+> [, ...] ) ]
+    FROM SERVER <TT
+CLASS="REPLACEABLE"
+><I
+>server_name</I
+></TT
+>
+    INTO <TT
+CLASS="REPLACEABLE"
+><I
+>local_schema</I
+></TT
+>
+    [ OPTIONS ( <TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+> '<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>' [, ... ] ) ]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-IMPORTFOREIGNSCHEMA-DESCRIPTION"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>IMPORT FOREIGN SCHEMA</TT
+> creates foreign tables that
+   represent tables existing on a foreign server.  The new foreign tables
+   will be owned by the user issuing the command and are created with
+   the correct column definitions and options to match the remote tables.
+  </P
+><P
+>   By default, all tables and views existing in a particular schema on the
+   foreign server are imported.  Optionally, the list of tables can be limited
+   to a specified subset, or specific tables can be excluded.  The new foreign
+   tables are all created in the target schema, which must already exist.
+  </P
+><P
+>   To use <TT
+CLASS="COMMAND"
+>IMPORT FOREIGN SCHEMA</TT
+>, the user must have
+   <TT
+CLASS="LITERAL"
+>USAGE</TT
+> privilege on the foreign server, as well as
+   <TT
+CLASS="LITERAL"
+>CREATE</TT
+> privilege on the target schema.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN84713"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>remote_schema</I
+></TT
+></DT
+><DD
+><P
+>      The remote schema to import from. The specific meaning of a remote schema
+      depends on the foreign data wrapper in use.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>LIMIT TO ( <TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+> [, ...] )</TT
+></DT
+><DD
+><P
+>      Import only foreign tables matching one of the given table names.
+      Other tables existing in the foreign schema will be ignored.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>EXCEPT ( <TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+> [, ...] )</TT
+></DT
+><DD
+><P
+>      Exclude specified foreign tables from the import.  All tables
+      existing in the foreign schema will be imported except the
+      ones listed here.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>server_name</I
+></TT
+></DT
+><DD
+><P
+>      The foreign server to import from.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>local_schema</I
+></TT
+></DT
+><DD
+><P
+>      The schema in which the imported foreign tables will be created.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>OPTIONS ( <TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+> '<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>' [, ...] )</TT
+></DT
+><DD
+><P
+>      Options to be used during the import.
+      The allowed option names and values are specific to each foreign
+      data wrapper.
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-IMPORTFOREIGNSCHEMA-EXAMPLES"
+></A
+><H2
+>Examples</H2
+><P
+>   Import table definitions from a remote schema <TT
+CLASS="STRUCTNAME"
+>foreign_films</TT
+>
+   on server <TT
+CLASS="STRUCTNAME"
+>film_server</TT
+>, creating the foreign tables in
+   local schema <TT
+CLASS="STRUCTNAME"
+>films</TT
+>:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>IMPORT FOREIGN SCHEMA foreign_films
+    FROM SERVER film_server INTO films;</PRE
+><P>
+   </P
+><P
+>   As above, but import only the two tables <TT
+CLASS="STRUCTNAME"
+>actors</TT
+> and
+   <TT
+CLASS="LITERAL"
+>directors</TT
+> (if they exist):
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>IMPORT FOREIGN SCHEMA foreign_films LIMIT TO (actors, directors)
+    FROM SERVER film_server INTO films;</PRE
+><P>
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-IMPORTFOREIGNSCHEMA-COMPATIBILITY"
+></A
+><H2
+>Compatibility</H2
+><P
+>   The <TT
+CLASS="COMMAND"
+>IMPORT FOREIGN SCHEMA</TT
+> command conforms to the
+   <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> standard, except that the <TT
+CLASS="LITERAL"
+>OPTIONS</TT
+>
+   clause is a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> extension.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN84768"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-createforeigntable.html"
+>CREATE FOREIGN TABLE</A
+>, <A
+HREF="sql-createserver.html"
+>CREATE SERVER</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-grant.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-insert.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>GRANT</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>INSERT</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,376 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Asynchronous Commit</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Reliability and the Write-Ahead Log"
+HREF="wal.html"><LINK
+REL="PREVIOUS"
+TITLE="Write-Ahead Logging (WAL)"
+HREF="wal-intro.html"><LINK
+REL="NEXT"
+TITLE="WAL Configuration"
+HREF="wal-configuration.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Write-Ahead Logging (WAL)"
+HREF="wal-intro.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="wal.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 29. Reliability and the Write-Ahead Log</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="WAL Configuration"
+HREF="wal-configuration.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="WAL-ASYNC-COMMIT"
+>29.3. Asynchronous Commit</A
+></H1
+><P
+>   <I
+CLASS="FIRSTTERM"
+>Asynchronous commit</I
+> is an option that allows transactions
+   to complete more quickly, at the cost that the most recent transactions may
+   be lost if the database should crash.  In many applications this is an
+   acceptable trade-off.
+  </P
+><P
+>   As described in the previous section, transaction commit is normally
+   <I
+CLASS="FIRSTTERM"
+>synchronous</I
+>: the server waits for the transaction's
+   <ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+> records to be flushed to permanent storage
+   before returning a success indication to the client.  The client is
+   therefore guaranteed that a transaction reported to be committed will
+   be preserved, even in the event of a server crash immediately after.
+   However, for short transactions this delay is a major component of the
+   total transaction time.  Selecting asynchronous commit mode means that
+   the server returns success as soon as the transaction is logically
+   completed, before the <ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+> records it generated have
+   actually made their way to disk.  This can provide a significant boost
+   in throughput for small transactions.
+  </P
+><P
+>   Asynchronous commit introduces the risk of data loss. There is a short
+   time window between the report of transaction completion to the client
+   and the time that the transaction is truly committed (that is, it is
+   guaranteed not to be lost if the server crashes).  Thus asynchronous
+   commit should not be used if the client will take external actions
+   relying on the assumption that the transaction will be remembered.
+   As an example, a bank would certainly not use asynchronous commit for
+   a transaction recording an ATM's dispensing of cash.  But in many
+   scenarios, such as event logging, there is no need for a strong
+   guarantee of this kind.
+  </P
+><P
+>   The risk that is taken by using asynchronous commit is of data loss,
+   not data corruption.  If the database should crash, it will recover
+   by replaying <ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+> up to the last record that was
+   flushed.  The database will therefore be restored to a self-consistent
+   state, but any transactions that were not yet flushed to disk will
+   not be reflected in that state.  The net effect is therefore loss of
+   the last few transactions.  Because the transactions are replayed in
+   commit order, no inconsistency can be introduced &mdash; for example,
+   if transaction B made changes relying on the effects of a previous
+   transaction A, it is not possible for A's effects to be lost while B's
+   effects are preserved.
+  </P
+><P
+>   The user can select the commit mode of each transaction, so that
+   it is possible to have both synchronous and asynchronous commit
+   transactions running concurrently.  This allows flexible trade-offs
+   between performance and certainty of transaction durability.
+   The commit mode is controlled by the user-settable parameter
+   <A
+HREF="runtime-config-wal.html#GUC-SYNCHRONOUS-COMMIT"
+>synchronous_commit</A
+>, which can be changed in any of
+   the ways that a configuration parameter can be set.  The mode used for
+   any one transaction depends on the value of
+   <TT
+CLASS="VARNAME"
+>synchronous_commit</TT
+> when transaction commit begins.
+  </P
+><P
+>   Certain utility commands, for instance <TT
+CLASS="COMMAND"
+>DROP TABLE</TT
+>, are
+   forced to commit synchronously regardless of the setting of
+   <TT
+CLASS="VARNAME"
+>synchronous_commit</TT
+>.  This is to ensure consistency
+   between the server's file system and the logical state of the database.
+   The commands supporting two-phase commit, such as <TT
+CLASS="COMMAND"
+>PREPARE
+   TRANSACTION</TT
+>, are also always synchronous.
+  </P
+><P
+>   If the database crashes during the risk window between an
+   asynchronous commit and the writing of the transaction's
+   <ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+> records,
+   then changes made during that transaction <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>will</I
+></SPAN
+> be lost.
+   The duration of the
+   risk window is limited because a background process (the <SPAN
+CLASS="QUOTE"
+>"WAL
+   writer"</SPAN
+>) flushes unwritten <ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+> records to disk
+   every <A
+HREF="runtime-config-wal.html#GUC-WAL-WRITER-DELAY"
+>wal_writer_delay</A
+> milliseconds.
+   The actual maximum duration of the risk window is three times
+   <TT
+CLASS="VARNAME"
+>wal_writer_delay</TT
+> because the WAL writer is
+   designed to favor writing whole pages at a time during busy periods.
+  </P
+><DIV
+CLASS="CAUTION"
+><P
+></P
+><TABLE
+CLASS="CAUTION"
+BORDER="1"
+WIDTH="100%"
+><TR
+><TD
+ALIGN="CENTER"
+><B
+>Caution</B
+></TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+><P
+>    An immediate-mode shutdown is equivalent to a server crash, and will
+    therefore cause loss of any unflushed asynchronous commits.
+   </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>   Asynchronous commit provides behavior different from setting
+   <A
+HREF="runtime-config-wal.html#GUC-FSYNC"
+>fsync</A
+> = off.
+   <TT
+CLASS="VARNAME"
+>fsync</TT
+> is a server-wide
+   setting that will alter the behavior of all transactions.  It disables
+   all logic within <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> that attempts to synchronize
+   writes to different portions of the database, and therefore a system
+   crash (that is, a hardware or operating system crash, not a failure of
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> itself) could result in arbitrarily bad
+   corruption of the database state.  In many scenarios, asynchronous
+   commit provides most of the performance improvement that could be
+   obtained by turning off <TT
+CLASS="VARNAME"
+>fsync</TT
+>, but without the risk
+   of data corruption.
+  </P
+><P
+>   <A
+HREF="runtime-config-wal.html#GUC-COMMIT-DELAY"
+>commit_delay</A
+> also sounds very similar to
+   asynchronous commit, but it is actually a synchronous commit method
+   (in fact, <TT
+CLASS="VARNAME"
+>commit_delay</TT
+> is ignored during an
+   asynchronous commit).  <TT
+CLASS="VARNAME"
+>commit_delay</TT
+> causes a delay
+   just before a transaction flushes <ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+> to disk, in
+   the hope that a single flush executed by one such transaction can also
+   serve other transactions committing at about the same time.  The
+   setting can be thought of as a way of increasing the time window in
+   which transactions can join a group about to participate in a single
+   flush, to amortize the cost of the flush among multiple transactions.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="wal-intro.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="wal-configuration.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Write-Ahead Logging (<ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+>)</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="wal.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+> Configuration</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

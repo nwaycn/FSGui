@@ -1,0 +1,1088 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.4.6</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.4.7"
+HREF="release-9-4-7.html"><LINK
+REL="NEXT"
+TITLE="Release 9.4.5"
+HREF="release-9-4-5.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.4.7"
+HREF="release-9-4-7.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.4.5"
+HREF="release-9-4-5.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-4-6"
+>E.9. Release 9.4.6</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2016-02-11</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 9.4.5.
+   For information about new features in the 9.4 major release, see
+   <A
+HREF="release-9-4.html"
+>Section E.15</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN128285"
+>E.9.1. Migration to Version 9.4.6</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.4.X.
+   </P
+><P
+>    However, if you are upgrading an installation that contains any GIN
+    indexes that use the (non-default) <TT
+CLASS="LITERAL"
+>jsonb_path_ops</TT
+> operator
+    class, see the first changelog entry below.
+   </P
+><P
+>    Also, if you are upgrading from a version earlier than 9.4.4,
+    see <A
+HREF="release-9-4-4.html"
+>Section E.11</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN128292"
+>E.9.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix inconsistent hash calculations in <TT
+CLASS="LITERAL"
+>jsonb_path_ops</TT
+> GIN
+      indexes (Tom Lane)
+     </P
+><P
+>      When processing <TT
+CLASS="TYPE"
+>jsonb</TT
+> values that contain both scalars and
+      sub-objects at the same nesting level, for example an array containing
+      both scalars and sub-arrays, key hash values could be calculated
+      differently than they would be for the same key in a different context.
+      This could result in queries not finding entries that they should find.
+      Fixing this means that existing indexes may now be inconsistent with the
+      new hash calculation code.  Users
+      should <TT
+CLASS="COMMAND"
+>REINDEX</TT
+> <TT
+CLASS="LITERAL"
+>jsonb_path_ops</TT
+> GIN indexes after
+      installing this update to make sure that all searches work as expected.
+     </P
+></LI
+><LI
+><P
+>      Fix infinite loops and buffer-overrun problems in regular expressions
+      (Tom Lane)
+     </P
+><P
+>      Very large character ranges in bracket expressions could cause
+      infinite loops in some cases, and memory overwrites in other cases.
+      (CVE-2016-0773)
+     </P
+></LI
+><LI
+><P
+>      Perform an immediate shutdown if the <TT
+CLASS="FILENAME"
+>postmaster.pid</TT
+> file
+      is removed (Tom Lane)
+     </P
+><P
+>      The postmaster now checks every minute or so
+      that <TT
+CLASS="FILENAME"
+>postmaster.pid</TT
+> is still there and still contains its
+      own PID.  If not, it performs an immediate shutdown, as though it had
+      received <SPAN
+CLASS="SYSTEMITEM"
+>SIGQUIT</SPAN
+>.  The main motivation for this change
+      is to ensure that failed buildfarm runs will get cleaned up without
+      manual intervention; but it also serves to limit the bad effects if a
+      DBA forcibly removes <TT
+CLASS="FILENAME"
+>postmaster.pid</TT
+> and then starts a new
+      postmaster.
+     </P
+></LI
+><LI
+><P
+>      In <TT
+CLASS="LITERAL"
+>SERIALIZABLE</TT
+> transaction isolation mode, serialization
+      anomalies could be missed due to race conditions during insertions
+      (Kevin Grittner, Thomas Munro)
+     </P
+></LI
+><LI
+><P
+>      Fix failure to emit appropriate WAL records when doing <TT
+CLASS="LITERAL"
+>ALTER
+      TABLE ... SET TABLESPACE</TT
+> for unlogged relations (Michael Paquier,
+      Andres Freund)
+     </P
+><P
+>      Even though the relation's data is unlogged, the move must be logged or
+      the relation will be inaccessible after a standby is promoted to master.
+     </P
+></LI
+><LI
+><P
+>      Fix possible misinitialization of unlogged relations at the end of
+      crash recovery (Andres Freund, Michael Paquier)
+     </P
+></LI
+><LI
+><P
+>      Ensure walsender slots are fully re-initialized when being re-used
+      (Magnus Hagander)
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>ALTER COLUMN TYPE</TT
+> to reconstruct inherited check
+      constraints properly (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>REASSIGN OWNED</TT
+> to change ownership of composite types
+      properly (&Aacute;lvaro Herrera)
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>REASSIGN OWNED</TT
+> and <TT
+CLASS="COMMAND"
+>ALTER OWNER</TT
+> to correctly
+      update granted-permissions lists when changing owners of data types,
+      foreign data wrappers, or foreign servers (Bruce Momjian,
+      &Aacute;lvaro Herrera)
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>REASSIGN OWNED</TT
+> to ignore foreign user mappings,
+      rather than fail (&Aacute;lvaro Herrera)
+     </P
+></LI
+><LI
+><P
+>      Fix possible crash after doing query rewrite for an updatable view
+      (Stephen Frost)
+     </P
+></LI
+><LI
+><P
+>      Fix planner's handling of <TT
+CLASS="LITERAL"
+>LATERAL</TT
+> references (Tom
+      Lane)
+     </P
+><P
+>      This fixes some corner cases that led to <SPAN
+CLASS="QUOTE"
+>"failed to build any
+      N-way joins"</SPAN
+> or <SPAN
+CLASS="QUOTE"
+>"could not devise a query plan"</SPAN
+> planner
+      failures.
+     </P
+></LI
+><LI
+><P
+>      Add more defenses against bad planner cost estimates for GIN index
+      scans when the index's internal statistics are very out-of-date
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Make planner cope with hypothetical GIN indexes suggested by an index
+      advisor plug-in (Julien Rouhaud)
+     </P
+></LI
+><LI
+><P
+>      Speed up generation of unique table aliases in <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+> and
+      rule dumping, and ensure that generated aliases do not
+      exceed <TT
+CLASS="LITERAL"
+>NAMEDATALEN</TT
+> (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix dumping of whole-row Vars in <TT
+CLASS="LITERAL"
+>ROW()</TT
+>
+      and <TT
+CLASS="LITERAL"
+>VALUES()</TT
+> lists (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Translation of minus-infinity dates and timestamps to <TT
+CLASS="TYPE"
+>json</TT
+>
+      or <TT
+CLASS="TYPE"
+>jsonb</TT
+> incorrectly rendered them as plus-infinity (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix possible internal overflow in <TT
+CLASS="TYPE"
+>numeric</TT
+> division
+      (Dean Rasheed)
+     </P
+></LI
+><LI
+><P
+>      Fix enforcement of restrictions inside parentheses within regular
+      expression lookahead constraints (Tom Lane)
+     </P
+><P
+>      Lookahead constraints aren't allowed to contain backrefs, and
+      parentheses within them are always considered non-capturing, according
+      to the manual.  However, the code failed to handle these cases properly
+      inside a parenthesized subexpression, and would give unexpected
+      results.
+     </P
+></LI
+><LI
+><P
+>      Conversion of regular expressions to indexscan bounds could produce
+      incorrect bounds from regexps containing lookahead constraints
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix regular-expression compiler to handle loops of constraint arcs
+      (Tom Lane)
+     </P
+><P
+>      The code added for CVE-2007-4772 was both incomplete, in that it didn't
+      handle loops involving more than one state, and incorrect, in that it
+      could cause assertion failures (though there seem to be no bad
+      consequences of that in a non-assert build).  Multi-state loops would
+      cause the compiler to run until the query was canceled or it reached
+      the too-many-states error condition.
+     </P
+></LI
+><LI
+><P
+>      Improve memory-usage accounting in regular-expression compiler
+      (Tom Lane)
+     </P
+><P
+>      This causes the code to emit <SPAN
+CLASS="QUOTE"
+>"regular expression is too
+      complex"</SPAN
+> errors in some cases that previously used unreasonable
+      amounts of time and memory.
+     </P
+></LI
+><LI
+><P
+>      Improve performance of regular-expression compiler (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Make <TT
+CLASS="LITERAL"
+>%h</TT
+> and <TT
+CLASS="LITERAL"
+>%r</TT
+> escapes
+      in <TT
+CLASS="VARNAME"
+>log_line_prefix</TT
+> work for messages emitted due
+      to <TT
+CLASS="VARNAME"
+>log_connections</TT
+> (Tom Lane)
+     </P
+><P
+>      Previously, <TT
+CLASS="LITERAL"
+>%h</TT
+>/<TT
+CLASS="LITERAL"
+>%r</TT
+> started to work just after a
+      new session had emitted the <SPAN
+CLASS="QUOTE"
+>"connection received"</SPAN
+> log message;
+      now they work for that message too.
+     </P
+></LI
+><LI
+><P
+>      On Windows, ensure the shared-memory mapping handle gets closed in
+      child processes that don't need it (Tom Lane, Amit Kapila)
+     </P
+><P
+>      This oversight resulted in failure to recover from crashes
+      whenever <TT
+CLASS="VARNAME"
+>logging_collector</TT
+> is turned on.
+     </P
+></LI
+><LI
+><P
+>      Fix possible failure to detect socket EOF in non-blocking mode on
+      Windows (Tom Lane)
+     </P
+><P
+>      It's not entirely clear whether this problem can happen in pre-9.5
+      branches, but if it did, the symptom would be that a walsender process
+      would wait indefinitely rather than noticing a loss of connection.
+     </P
+></LI
+><LI
+><P
+>      Avoid leaking a token handle during SSPI authentication
+      (Christian Ullrich)
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>, ensure that <SPAN
+CLASS="APPLICATION"
+>libreadline</SPAN
+>'s idea
+      of the screen size is updated when the terminal window size changes
+      (Merlin Moncure)
+     </P
+><P
+>      Previously, <SPAN
+CLASS="APPLICATION"
+>libreadline</SPAN
+> did not notice if the window
+      was resized during query output, leading to strange behavior during
+      later input of multiline queries.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s <TT
+CLASS="LITERAL"
+>\det</TT
+> command to interpret its
+      pattern argument the same way as other <TT
+CLASS="LITERAL"
+>\d</TT
+> commands with
+      potentially schema-qualified patterns do (Reece Hart)
+     </P
+></LI
+><LI
+><P
+>      Avoid possible crash in <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s <TT
+CLASS="LITERAL"
+>\c</TT
+> command
+      when previous connection was via Unix socket and command specifies a
+      new hostname and same username (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      In <TT
+CLASS="LITERAL"
+>pg_ctl start -w</TT
+>, test child process status directly
+      rather than relying on heuristics (Tom Lane, Michael Paquier)
+     </P
+><P
+>      Previously, <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> relied on an assumption that the new
+      postmaster would always create <TT
+CLASS="FILENAME"
+>postmaster.pid</TT
+> within five
+      seconds.  But that can fail on heavily-loaded systems,
+      causing <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> to report incorrectly that the
+      postmaster failed to start.
+     </P
+><P
+>      Except on Windows, this change also means that a <TT
+CLASS="LITERAL"
+>pg_ctl start
+      -w</TT
+> done immediately after another such command will now reliably
+      fail, whereas previously it would report success if done within two
+      seconds of the first command.
+     </P
+></LI
+><LI
+><P
+>      In <TT
+CLASS="LITERAL"
+>pg_ctl start -w</TT
+>, don't attempt to use a wildcard listen
+      address to connect to the postmaster (Kondo Yuta)
+     </P
+><P
+>      On Windows, <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> would fail to detect postmaster
+      startup if <TT
+CLASS="VARNAME"
+>listen_addresses</TT
+> is set to <TT
+CLASS="LITERAL"
+>0.0.0.0</TT
+>
+      or <TT
+CLASS="LITERAL"
+>::</TT
+>, because it would try to use that value verbatim as
+      the address to connect to, which doesn't work.  Instead assume
+      that <TT
+CLASS="LITERAL"
+>127.0.0.1</TT
+> or <TT
+CLASS="LITERAL"
+>::1</TT
+>, respectively, is the
+      right thing to use.
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> on Windows, check service status to decide
+      where to send output, rather than checking if standard output is a
+      terminal (Michael Paquier)
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> and <SPAN
+CLASS="APPLICATION"
+>pg_basebackup</SPAN
+>, adopt
+      the GNU convention for handling tar-archive members exceeding 8GB
+      (Tom Lane)
+     </P
+><P
+>      The POSIX standard for <TT
+CLASS="LITERAL"
+>tar</TT
+> file format does not allow
+      archive member files to exceed 8GB, but most modern implementations
+      of <SPAN
+CLASS="APPLICATION"
+>tar</SPAN
+> support an extension that fixes that.  Adopt
+      this extension so that <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> with <TT
+CLASS="OPTION"
+>-Ft</TT
+> no
+      longer fails on tables with more than 8GB of data, and so
+      that <SPAN
+CLASS="APPLICATION"
+>pg_basebackup</SPAN
+> can handle files larger than 8GB.
+      In addition, fix some portability issues that could cause failures for
+      members between 4GB and 8GB on some platforms.  Potentially these
+      problems could cause unrecoverable data loss due to unreadable backup
+      files.
+     </P
+></LI
+><LI
+><P
+>      Fix assorted corner-case bugs in <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>'s processing
+      of extension member objects (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> mark a view's triggers as needing to be
+      processed after its rule, to prevent possible failure during
+      parallel <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Ensure that relation option values are properly quoted
+      in <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> (Kouhei Sutou, Tom Lane)
+     </P
+><P
+>      A reloption value that isn't a simple identifier or number could lead
+      to dump/reload failures due to syntax errors in CREATE statements
+      issued by <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>.  This is not an issue with any
+      reloption currently supported by core <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>, but
+      extensions could allow reloptions that cause the problem.
+     </P
+></LI
+><LI
+><P
+>      Avoid repeated password prompts during parallel <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>
+      (Zeus Kronion)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>'s file-copying code to handle errors
+      properly on Windows (Bruce Momjian)
+     </P
+></LI
+><LI
+><P
+>      Install guards in <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> against corner-case overflow
+      conditions during evaluation of script-specified division or modulo
+      operators (Fabien Coelho, Michael Paquier)
+     </P
+></LI
+><LI
+><P
+>      Fix failure to localize messages emitted
+      by <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+> and <SPAN
+CLASS="APPLICATION"
+>pg_recvlogical</SPAN
+>
+      (Ioseph Kim)
+     </P
+></LI
+><LI
+><P
+>      Avoid dump/reload problems when using both <SPAN
+CLASS="APPLICATION"
+>plpython2</SPAN
+>
+      and <SPAN
+CLASS="APPLICATION"
+>plpython3</SPAN
+> (Tom Lane)
+     </P
+><P
+>      In principle, both versions of <SPAN
+CLASS="APPLICATION"
+>PL/Python</SPAN
+> can be used in
+      the same database, though not in the same session (because the two
+      versions of <SPAN
+CLASS="APPLICATION"
+>libpython</SPAN
+> cannot safely be used concurrently).
+      However, <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> and <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> both
+      do things that can fall foul of the same-session restriction.  Work
+      around that by changing the timing of the check.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>PL/Python</SPAN
+> regression tests to pass with Python 3.5
+      (Peter Eisentraut)
+     </P
+></LI
+><LI
+><P
+>      Fix premature clearing of <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>'s input buffer when
+      socket EOF is seen (Tom Lane)
+     </P
+><P
+>      This mistake caused <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> to sometimes not report the
+      backend's final error message before reporting <SPAN
+CLASS="QUOTE"
+>"server closed the
+      connection unexpectedly"</SPAN
+>.
+     </P
+></LI
+><LI
+><P
+>      Prevent certain <SPAN
+CLASS="APPLICATION"
+>PL/Java</SPAN
+> parameters from being set by
+      non-superusers (Noah Misch)
+     </P
+><P
+>      This change mitigates a <SPAN
+CLASS="APPLICATION"
+>PL/Java</SPAN
+> security bug
+      (CVE-2016-0766), which was fixed in <SPAN
+CLASS="APPLICATION"
+>PL/Java</SPAN
+> by marking
+      these parameters as superuser-only.  To fix the security hazard for
+      sites that update <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> more frequently
+      than <SPAN
+CLASS="APPLICATION"
+>PL/Java</SPAN
+>, make the core code aware of them also.
+     </P
+></LI
+><LI
+><P
+>      Improve <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>'s handling of out-of-memory situations
+      (Michael Paquier, Amit Kapila, Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Fix order of arguments
+      in <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>-generated <TT
+CLASS="LITERAL"
+>typedef</TT
+> statements
+      (Michael Meskes)
+     </P
+></LI
+><LI
+><P
+>      Use <TT
+CLASS="LITERAL"
+>%g</TT
+> not <TT
+CLASS="LITERAL"
+>%f</TT
+> format
+      in <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>'s <CODE
+CLASS="FUNCTION"
+>PGTYPESnumeric_from_double()</CODE
+>
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>-supplied header files to not contain comments
+      continued from a preprocessor directive line onto the next line
+      (Michael Meskes)
+     </P
+><P
+>      Such a comment is rejected by <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>.  It's not yet clear
+      whether <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+> itself should be changed.
+     </P
+></LI
+><LI
+><P
+>      Fix <CODE
+CLASS="FUNCTION"
+>hstore_to_json_loose()</CODE
+>'s test for whether
+      an <TT
+CLASS="TYPE"
+>hstore</TT
+> value can be converted to a JSON number (Tom Lane)
+     </P
+><P
+>      Previously this function could be fooled by non-alphanumeric trailing
+      characters, leading to emitting syntactically-invalid JSON.
+     </P
+></LI
+><LI
+><P
+>      Ensure that <TT
+CLASS="FILENAME"
+>contrib/pgcrypto</TT
+>'s <CODE
+CLASS="FUNCTION"
+>crypt()</CODE
+>
+      function can be interrupted by query cancel (Andreas Karlsson)
+     </P
+></LI
+><LI
+><P
+>      In <TT
+CLASS="FILENAME"
+>contrib/postgres_fdw</TT
+>, fix bugs triggered by use
+      of <TT
+CLASS="LITERAL"
+>tableoid</TT
+> in data-modifying commands (Etsuro Fujita,
+      Robert Haas)
+     </P
+></LI
+><LI
+><P
+>      Accept <SPAN
+CLASS="APPLICATION"
+>flex</SPAN
+> versions later than 2.5.x
+      (Tom Lane, Michael Paquier)
+     </P
+><P
+>      Now that flex 2.6.0 has been released, the version checks in our build
+      scripts needed to be adjusted.
+     </P
+></LI
+><LI
+><P
+>      Improve reproducibility of build output by ensuring filenames are given
+      to the linker in a fixed order (Christoph Berg)
+     </P
+><P
+>      This avoids possible bitwise differences in the produced executable
+      files from one build to the next.
+     </P
+></LI
+><LI
+><P
+>      Install our <TT
+CLASS="FILENAME"
+>missing</TT
+> script where PGXS builds can find it
+      (Jim Nasby)
+     </P
+><P
+>      This allows sane behavior in a PGXS build done on a machine where build
+      tools such as <SPAN
+CLASS="APPLICATION"
+>bison</SPAN
+> are missing.
+     </P
+></LI
+><LI
+><P
+>      Ensure that <TT
+CLASS="FILENAME"
+>dynloader.h</TT
+> is included in the installed
+      header files in MSVC builds (Bruce Momjian, Michael Paquier)
+     </P
+></LI
+><LI
+><P
+>      Add variant regression test expected-output file to match behavior of
+      current <SPAN
+CLASS="APPLICATION"
+>libxml2</SPAN
+> (Tom Lane)
+     </P
+><P
+>      The fix for <SPAN
+CLASS="APPLICATION"
+>libxml2</SPAN
+>'s CVE-2015-7499 causes it not to
+      output error context reports in some cases where it used to do so.
+      This seems to be a bug, but we'll probably have to live with it for
+      some time, so work around it.
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2016a for
+      DST law changes in Cayman Islands, Metlakatla, and Trans-Baikal
+      Territory (Zabaykalsky Krai), plus historical corrections for Pakistan.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-4-7.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-4-5.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.4.7</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.4.5</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

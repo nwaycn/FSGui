@@ -1,0 +1,476 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>CREATE FOREIGN DATA WRAPPER</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="CREATE EXTENSION"
+HREF="sql-createextension.html"><LINK
+REL="NEXT"
+TITLE="CREATE FOREIGN TABLE"
+HREF="sql-createforeigntable.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="CREATE EXTENSION"
+HREF="sql-createextension.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="CREATE FOREIGN TABLE"
+HREF="sql-createforeigntable.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-CREATEFOREIGNDATAWRAPPER"
+></A
+>CREATE FOREIGN DATA WRAPPER</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN75801"
+></A
+><H2
+>Name</H2
+>CREATE FOREIGN DATA WRAPPER&nbsp;--&nbsp;define a new foreign-data wrapper</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN75804"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>CREATE FOREIGN DATA WRAPPER <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>
+    [ HANDLER <TT
+CLASS="REPLACEABLE"
+><I
+>handler_function</I
+></TT
+> | NO HANDLER ]
+    [ VALIDATOR <TT
+CLASS="REPLACEABLE"
+><I
+>validator_function</I
+></TT
+> | NO VALIDATOR ]
+    [ OPTIONS ( <TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+> '<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>' [, ... ] ) ]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75811"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>CREATE FOREIGN DATA WRAPPER</TT
+> creates a new
+   foreign-data wrapper.  The user who defines a foreign-data wrapper
+   becomes its owner.
+  </P
+><P
+>   The foreign-data wrapper name must be unique within the database.
+  </P
+><P
+>   Only superusers can create foreign-data wrappers.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75817"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></DT
+><DD
+><P
+>      The name of the foreign-data wrapper to be created.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>HANDLER <TT
+CLASS="REPLACEABLE"
+><I
+>handler_function</I
+></TT
+></TT
+></DT
+><DD
+><P
+><TT
+CLASS="REPLACEABLE"
+><I
+>handler_function</I
+></TT
+> is the
+      name of a previously registered function that will be called to
+      retrieve the execution functions for foreign tables.
+      The handler function must take no arguments, and
+      its return type must be <TT
+CLASS="TYPE"
+>fdw_handler</TT
+>.
+     </P
+><P
+>      It is possible to create a foreign-data wrapper with no handler
+      function, but foreign tables using such a wrapper can only be declared,
+      not accessed.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>VALIDATOR <TT
+CLASS="REPLACEABLE"
+><I
+>validator_function</I
+></TT
+></TT
+></DT
+><DD
+><P
+><TT
+CLASS="REPLACEABLE"
+><I
+>validator_function</I
+></TT
+>
+      is the name of a previously registered function that will be called to
+      check the generic options given to the foreign-data wrapper, as
+      well as options for foreign servers, user mappings and foreign tables
+      using the foreign-data wrapper.  If no validator function or <TT
+CLASS="LITERAL"
+>NO
+      VALIDATOR</TT
+> is specified, then options will not be
+      checked at creation time.  (Foreign-data wrappers will possibly
+      ignore or reject invalid option specifications at run time,
+      depending on the implementation.)  The validator function must
+      take two arguments: one of type <TT
+CLASS="TYPE"
+>text[]</TT
+>, which will
+      contain the array of options as stored in the system catalogs,
+      and one of type <TT
+CLASS="TYPE"
+>oid</TT
+>, which will be the OID of the
+      system catalog containing the options. The return type is ignored;
+      the function should report invalid options using the
+      <CODE
+CLASS="FUNCTION"
+>ereport(ERROR)</CODE
+> function.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>OPTIONS ( <TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+> '<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>' [, ... ] )</TT
+></DT
+><DD
+><P
+>      This clause specifies options for the new foreign-data wrapper.
+      The allowed option names and values are specific to each foreign
+      data wrapper and are validated using the foreign-data wrapper's
+      validator function.  Option names must be unique.
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75852"
+></A
+><H2
+>Notes</H2
+><P
+>   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>'s foreign-data functionality is still under
+   active development.  Optimization of queries is primitive (and mostly left
+   to the wrapper, too).  Thus, there is considerable room for future
+   performance improvements.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75856"
+></A
+><H2
+>Examples</H2
+><P
+>   Create a useless foreign-data wrapper <TT
+CLASS="LITERAL"
+>dummy</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FOREIGN DATA WRAPPER dummy;</PRE
+><P>
+  </P
+><P
+>   Create a foreign-data wrapper <TT
+CLASS="LITERAL"
+>file</TT
+> with
+   handler function <TT
+CLASS="LITERAL"
+>file_fdw_handler</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FOREIGN DATA WRAPPER file HANDLER file_fdw_handler;</PRE
+><P>
+  </P
+><P
+>   Create a foreign-data wrapper <TT
+CLASS="LITERAL"
+>mywrapper</TT
+> with some
+   options:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FOREIGN DATA WRAPPER mywrapper
+    OPTIONS (debug 'true');</PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75868"
+></A
+><H2
+>Compatibility</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>CREATE FOREIGN DATA WRAPPER</TT
+> conforms to ISO/IEC
+   9075-9 (SQL/MED), with the exception that the <TT
+CLASS="LITERAL"
+>HANDLER</TT
+>
+   and <TT
+CLASS="LITERAL"
+>VALIDATOR</TT
+> clauses are extensions and the standard
+   clauses <TT
+CLASS="LITERAL"
+>LIBRARY</TT
+> and <TT
+CLASS="LITERAL"
+>LANGUAGE</TT
+>
+   are not implemented in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>.
+  </P
+><P
+>   Note, however, that the SQL/MED functionality as a whole is not yet
+   conforming.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75878"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-alterforeigndatawrapper.html"
+>ALTER FOREIGN DATA WRAPPER</A
+>, <A
+HREF="sql-dropforeigndatawrapper.html"
+>DROP FOREIGN DATA WRAPPER</A
+>, <A
+HREF="sql-createserver.html"
+>CREATE SERVER</A
+>, <A
+HREF="sql-createusermapping.html"
+>CREATE USER MAPPING</A
+>, <A
+HREF="sql-createforeigntable.html"
+>CREATE FOREIGN TABLE</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-createextension.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-createforeigntable.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>CREATE EXTENSION</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>CREATE FOREIGN TABLE</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,365 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Trigger Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="PL/Python - Python Procedural Language"
+HREF="plpython.html"><LINK
+REL="PREVIOUS"
+TITLE="Anonymous Code Blocks"
+HREF="plpython-do.html"><LINK
+REL="NEXT"
+TITLE="Database Access"
+HREF="plpython-database.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Anonymous Code Blocks"
+HREF="plpython-do.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plpython.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 43. PL/Python - Python Procedural Language</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Database Access"
+HREF="plpython-database.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PLPYTHON-TRIGGER"
+>43.6. Trigger Functions</A
+></H1
+><P
+>   When a function is used as a trigger, the dictionary
+   <TT
+CLASS="LITERAL"
+>TD</TT
+> contains trigger-related values:
+   <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>TD["event"]</TT
+></DT
+><DD
+><P
+>       contains the event as a string:
+       <TT
+CLASS="LITERAL"
+>INSERT</TT
+>, <TT
+CLASS="LITERAL"
+>UPDATE</TT
+>,
+       <TT
+CLASS="LITERAL"
+>DELETE</TT
+>, or <TT
+CLASS="LITERAL"
+>TRUNCATE</TT
+>.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>TD["when"]</TT
+></DT
+><DD
+><P
+>       contains one of <TT
+CLASS="LITERAL"
+>BEFORE</TT
+>, <TT
+CLASS="LITERAL"
+>AFTER</TT
+>, or
+       <TT
+CLASS="LITERAL"
+>INSTEAD OF</TT
+>.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>TD["level"]</TT
+></DT
+><DD
+><P
+>       contains <TT
+CLASS="LITERAL"
+>ROW</TT
+> or <TT
+CLASS="LITERAL"
+>STATEMENT</TT
+>.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>TD["new"]</TT
+><BR><TT
+CLASS="LITERAL"
+>TD["old"]</TT
+></DT
+><DD
+><P
+>       For a row-level trigger, one or both of these fields contain
+       the respective trigger rows, depending on the trigger event.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>TD["name"]</TT
+></DT
+><DD
+><P
+>       contains the trigger name.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>TD["table_name"]</TT
+></DT
+><DD
+><P
+>       contains the name of the table on which the trigger occurred.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>TD["table_schema"]</TT
+></DT
+><DD
+><P
+>       contains the schema of the table on which the trigger occurred.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>TD["relid"]</TT
+></DT
+><DD
+><P
+>       contains the OID of the table on which the trigger occurred.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>TD["args"]</TT
+></DT
+><DD
+><P
+>       If the <TT
+CLASS="COMMAND"
+>CREATE TRIGGER</TT
+> command
+       included arguments, they are available in <TT
+CLASS="LITERAL"
+>TD["args"][0]</TT
+> to
+       <TT
+CLASS="LITERAL"
+>TD["args"][<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>-1]</TT
+>.
+      </P
+></DD
+></DL
+></DIV
+><P>
+  </P
+><P
+>   If <TT
+CLASS="LITERAL"
+>TD["when"]</TT
+> is <TT
+CLASS="LITERAL"
+>BEFORE</TT
+> or
+   <TT
+CLASS="LITERAL"
+>INSTEAD OF</TT
+> and
+   <TT
+CLASS="LITERAL"
+>TD["level"]</TT
+> is <TT
+CLASS="LITERAL"
+>ROW</TT
+>, you can
+   return <TT
+CLASS="LITERAL"
+>None</TT
+> or <TT
+CLASS="LITERAL"
+>"OK"</TT
+> from the
+   Python function to indicate the row is unmodified,
+   <TT
+CLASS="LITERAL"
+>"SKIP"</TT
+> to abort the event, or if <TT
+CLASS="LITERAL"
+>TD["event"]</TT
+>
+   is <TT
+CLASS="COMMAND"
+>INSERT</TT
+> or <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> you can return
+   <TT
+CLASS="LITERAL"
+>"MODIFY"</TT
+> to indicate you've modified the new row.
+   Otherwise the return value is ignored.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plpython-do.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="plpython-database.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Anonymous Code Blocks</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="plpython.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Database Access</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

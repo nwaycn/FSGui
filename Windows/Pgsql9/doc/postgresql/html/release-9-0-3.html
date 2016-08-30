@@ -1,0 +1,409 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.0.3</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.0.4"
+HREF="release-9-0-4.html"><LINK
+REL="NEXT"
+TITLE="Release 9.0.2"
+HREF="release-9-0-2.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.0.4"
+HREF="release-9-0-4.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.0.2"
+HREF="release-9-0-2.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-0-3"
+>E.94. Release 9.0.3</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2011-01-31</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 9.0.2.
+   For information about new features in the 9.0 major release, see
+   <A
+HREF="release-9-0.html"
+>Section E.97</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN145576"
+>E.94.1. Migration to Version 9.0.3</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.0.X.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN145579"
+>E.94.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Before exiting <SPAN
+CLASS="APPLICATION"
+>walreceiver</SPAN
+>, ensure all the received WAL
+      is fsync'd to disk (Heikki Linnakangas)
+     </P
+><P
+>      Otherwise the standby server could replay some un-synced WAL, conceivably
+      leading to data corruption if the system crashes just at that point.
+     </P
+></LI
+><LI
+><P
+>      Avoid excess fsync activity in <SPAN
+CLASS="APPLICATION"
+>walreceiver</SPAN
+>
+      (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Make <TT
+CLASS="COMMAND"
+>ALTER TABLE</TT
+> revalidate uniqueness and exclusion
+      constraints when needed (Noah Misch)
+     </P
+><P
+>      This was broken in 9.0 by a change that was intended to suppress
+      revalidation during <TT
+CLASS="COMMAND"
+>VACUUM FULL</TT
+> and <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+>,
+      but unintentionally affected <TT
+CLASS="COMMAND"
+>ALTER TABLE</TT
+> as well.
+     </P
+></LI
+><LI
+><P
+>      Fix EvalPlanQual for <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> of an inheritance tree in which
+      the tables are not all alike (Tom Lane)
+     </P
+><P
+>      Any variation in the table row types (including dropped columns present
+      in only some child tables) would confuse the EvalPlanQual code, leading
+      to misbehavior or even crashes.  Since EvalPlanQual is only executed
+      during concurrent updates to the same row, the problem was only seen
+      intermittently.
+     </P
+></LI
+><LI
+><P
+>      Avoid failures when <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+> tries to display a simple-form
+      <TT
+CLASS="LITERAL"
+>CASE</TT
+> expression (Tom Lane)
+     </P
+><P
+>      If the <TT
+CLASS="LITERAL"
+>CASE</TT
+>'s test expression was a constant, the planner
+      could simplify the <TT
+CLASS="LITERAL"
+>CASE</TT
+> into a form that confused the
+      expression-display code, resulting in <SPAN
+CLASS="QUOTE"
+>"unexpected CASE WHEN
+      clause"</SPAN
+> errors.
+     </P
+></LI
+><LI
+><P
+>      Fix assignment to an array slice that is before the existing range
+      of subscripts (Tom Lane)
+     </P
+><P
+>      If there was a gap between the newly added subscripts and the first
+      pre-existing subscript, the code miscalculated how many entries needed
+      to be copied from the old array's null bitmap, potentially leading to
+      data corruption or crash.
+     </P
+></LI
+><LI
+><P
+>      Avoid unexpected conversion overflow in planner for very distant date
+      values (Tom Lane)
+     </P
+><P
+>      The <TT
+CLASS="TYPE"
+>date</TT
+> type supports a wider range of dates than can be
+      represented by the <TT
+CLASS="TYPE"
+>timestamp</TT
+> types, but the planner assumed it
+      could always convert a date to timestamp with impunity.
+     </P
+></LI
+><LI
+><P
+>      Fix PL/Python crash when an array contains null entries (Alex Hunsaker)
+     </P
+></LI
+><LI
+><P
+>      Remove <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>'s fixed length limit for constants defining
+      an array dimension (Michael Meskes)
+     </P
+></LI
+><LI
+><P
+>      Fix erroneous parsing of <TT
+CLASS="TYPE"
+>tsquery</TT
+> values containing
+      <TT
+CLASS="LITERAL"
+>... &amp; !(subexpression) | ...</TT
+> (Tom Lane)
+     </P
+><P
+>      Queries containing this combination of operators were not executed
+      correctly.  The same error existed in <TT
+CLASS="FILENAME"
+>contrib/intarray</TT
+>'s
+      <TT
+CLASS="TYPE"
+>query_int</TT
+> type and <TT
+CLASS="FILENAME"
+>contrib/ltree</TT
+>'s
+      <TT
+CLASS="TYPE"
+>ltxtquery</TT
+> type.
+     </P
+></LI
+><LI
+><P
+>      Fix buffer overrun in <TT
+CLASS="FILENAME"
+>contrib/intarray</TT
+>'s input function
+      for the <TT
+CLASS="TYPE"
+>query_int</TT
+> type (Apple)
+     </P
+><P
+>      This bug is a security risk since the function's return address could
+      be overwritten.  Thanks to Apple Inc's security team for reporting this
+      issue and supplying the fix.  (CVE-2010-4015)
+     </P
+></LI
+><LI
+><P
+>      Fix bug in <TT
+CLASS="FILENAME"
+>contrib/seg</TT
+>'s GiST picksplit algorithm
+      (Alexander Korotkov)
+     </P
+><P
+>      This could result in considerable inefficiency, though not actually
+      incorrect answers, in a GiST index on a <TT
+CLASS="TYPE"
+>seg</TT
+> column.
+      If you have such an index, consider <TT
+CLASS="COMMAND"
+>REINDEX</TT
+>ing it after
+      installing this update.  (This is identical to the bug that was fixed in
+      <TT
+CLASS="FILENAME"
+>contrib/cube</TT
+> in the previous update.)
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-0-4.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-0-2.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.0.4</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.0.2</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,1004 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Built-in Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="PL/Perl - Perl Procedural Language"
+HREF="plperl.html"><LINK
+REL="PREVIOUS"
+TITLE="Data Values in PL/Perl"
+HREF="plperl-data.html"><LINK
+REL="NEXT"
+TITLE="Global Values in PL/Perl"
+HREF="plperl-global.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Data Values in PL/Perl"
+HREF="plperl-data.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plperl.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 42. PL/Perl - Perl Procedural Language</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Global Values in PL/Perl"
+HREF="plperl-global.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PLPERL-BUILTINS"
+>42.3. Built-in Functions</A
+></H1
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="PLPERL-DATABASE"
+>42.3.1. Database Access from PL/Perl</A
+></H2
+><P
+>   Access to the database itself from your Perl function can be done
+   via the following functions:
+  </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>spi_exec_query</CODE
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>query</I
+></TT
+> [, <TT
+CLASS="REPLACEABLE"
+><I
+>max-rows</I
+></TT
+>])</TT
+>
+      </DT
+><DD
+><P
+>       <TT
+CLASS="LITERAL"
+>spi_exec_query</TT
+> executes an SQL command and
+returns the entire row set as a reference to an array of hash
+references.  <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>You should only use this command when you know
+that the result set will be relatively small.</I
+></SPAN
+>  Here is an
+example of a query (<TT
+CLASS="COMMAND"
+>SELECT</TT
+> command) with the
+optional maximum number of rows:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>$rv = spi_exec_query('SELECT * FROM my_table', 5);</PRE
+><P>
+        This returns up to 5 rows from the table
+        <TT
+CLASS="LITERAL"
+>my_table</TT
+>.  If <TT
+CLASS="LITERAL"
+>my_table</TT
+>
+        has a column <TT
+CLASS="LITERAL"
+>my_column</TT
+>, you can get that
+        value from row <TT
+CLASS="LITERAL"
+>$i</TT
+> of the result like this:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>$foo = $rv-&gt;{rows}[$i]-&gt;{my_column};</PRE
+><P>
+       The total number of rows returned from a <TT
+CLASS="COMMAND"
+>SELECT</TT
+>
+       query can be accessed like this:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>$nrows = $rv-&gt;{processed}</PRE
+><P>
+      </P
+><P
+>       Here is an example using a different command type:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>$query = "INSERT INTO my_table VALUES (1, 'test')";
+$rv = spi_exec_query($query);</PRE
+><P>
+       You can then access the command status (e.g.,
+       <TT
+CLASS="LITERAL"
+>SPI_OK_INSERT</TT
+>) like this:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>$res = $rv-&gt;{status};</PRE
+><P>
+       To get the number of rows affected, do:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>$nrows = $rv-&gt;{processed};</PRE
+><P>
+      </P
+><P
+>       Here is a complete example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE test (
+    i int,
+    v varchar
+);
+
+INSERT INTO test (i, v) VALUES (1, 'first line');
+INSERT INTO test (i, v) VALUES (2, 'second line');
+INSERT INTO test (i, v) VALUES (3, 'third line');
+INSERT INTO test (i, v) VALUES (4, 'immortal');
+
+CREATE OR REPLACE FUNCTION test_munge() RETURNS SETOF test AS $$
+    my $rv = spi_exec_query('select i, v from test;');
+    my $status = $rv-&gt;{status};
+    my $nrows = $rv-&gt;{processed};
+    foreach my $rn (0 .. $nrows - 1) {
+        my $row = $rv-&gt;{rows}[$rn];
+        $row-&gt;{i} += 200 if defined($row-&gt;{i});
+        $row-&gt;{v} =~ tr/A-Za-z/a-zA-Z/ if (defined($row-&gt;{v}));
+        return_next($row);
+    }
+    return undef;
+$$ LANGUAGE plperl;
+
+SELECT * FROM test_munge();</PRE
+><P>
+    </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>spi_query(<TT
+CLASS="REPLACEABLE"
+><I
+>command</I
+></TT
+>)</CODE
+></TT
+>
+      <BR><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>spi_fetchrow(<TT
+CLASS="REPLACEABLE"
+><I
+>cursor</I
+></TT
+>)</CODE
+></TT
+>
+      <BR><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>spi_cursor_close(<TT
+CLASS="REPLACEABLE"
+><I
+>cursor</I
+></TT
+>)</CODE
+></TT
+>
+      </DT
+><DD
+><P
+>    <TT
+CLASS="LITERAL"
+>spi_query</TT
+> and <TT
+CLASS="LITERAL"
+>spi_fetchrow</TT
+>
+    work together as a pair for row sets which might be large, or for cases
+    where you wish to return rows as they arrive.
+    <TT
+CLASS="LITERAL"
+>spi_fetchrow</TT
+> works <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>only</I
+></SPAN
+> with
+    <TT
+CLASS="LITERAL"
+>spi_query</TT
+>. The following example illustrates how
+    you use them together:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TYPE foo_type AS (the_num INTEGER, the_text TEXT);
+
+CREATE OR REPLACE FUNCTION lotsa_md5 (INTEGER) RETURNS SETOF foo_type AS $$
+    use Digest::MD5 qw(md5_hex);
+    my $file = '/usr/share/dict/words';
+    my $t = localtime;
+    elog(NOTICE, "opening file $file at $t" );
+    open my $fh, '&lt;', $file # ooh, it's a file access!
+        or elog(ERROR, "cannot open $file for reading: $!");
+    my @words = &lt;$fh&gt;;
+    close $fh;
+    $t = localtime;
+    elog(NOTICE, "closed file $file at $t");
+    chomp(@words);
+    my $row;
+    my $sth = spi_query("SELECT * FROM generate_series(1,$_[0]) AS b(a)");
+    while (defined ($row = spi_fetchrow($sth))) {
+        return_next({
+            the_num =&gt; $row-&gt;{a},
+            the_text =&gt; md5_hex($words[rand @words])
+        });
+    }
+    return;
+$$ LANGUAGE plperlu;
+
+SELECT * from lotsa_md5(500);</PRE
+><P>
+    </P
+><P
+>     Normally, <CODE
+CLASS="FUNCTION"
+>spi_fetchrow</CODE
+> should be repeated until it
+     returns <TT
+CLASS="LITERAL"
+>undef</TT
+>, indicating that there are no more
+     rows to read.  The cursor returned by <TT
+CLASS="LITERAL"
+>spi_query</TT
+>
+     is automatically freed when
+     <CODE
+CLASS="FUNCTION"
+>spi_fetchrow</CODE
+> returns <TT
+CLASS="LITERAL"
+>undef</TT
+>.
+     If you do not wish to read all the rows, instead call
+     <CODE
+CLASS="FUNCTION"
+>spi_cursor_close</CODE
+> to free the cursor.
+     Failure to do so will result in memory leaks.
+    </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>spi_prepare(<TT
+CLASS="REPLACEABLE"
+><I
+>command</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>argument types</I
+></TT
+>)</CODE
+></TT
+>
+      <BR><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>spi_query_prepared(<TT
+CLASS="REPLACEABLE"
+><I
+>plan</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>arguments</I
+></TT
+>)</CODE
+></TT
+>
+      <BR><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>spi_exec_prepared(<TT
+CLASS="REPLACEABLE"
+><I
+>plan</I
+></TT
+> [, <TT
+CLASS="REPLACEABLE"
+><I
+>attributes</I
+></TT
+>], <TT
+CLASS="REPLACEABLE"
+><I
+>arguments</I
+></TT
+>)</CODE
+></TT
+>
+      <BR><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>spi_freeplan(<TT
+CLASS="REPLACEABLE"
+><I
+>plan</I
+></TT
+>)</CODE
+></TT
+>
+      </DT
+><DD
+><P
+>    <TT
+CLASS="LITERAL"
+>spi_prepare</TT
+>, <TT
+CLASS="LITERAL"
+>spi_query_prepared</TT
+>, <TT
+CLASS="LITERAL"
+>spi_exec_prepared</TT
+>,
+    and <TT
+CLASS="LITERAL"
+>spi_freeplan</TT
+> implement the same functionality but for prepared queries.
+    <TT
+CLASS="LITERAL"
+>spi_prepare</TT
+> accepts a query string with numbered argument placeholders ($1, $2, etc)
+    and a string list of argument types:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>$plan = spi_prepare('SELECT * FROM test WHERE id &gt; $1 AND name = $2',
+                                                     'INTEGER', 'TEXT');</PRE
+><P>
+    Once a query plan is prepared by a call to <TT
+CLASS="LITERAL"
+>spi_prepare</TT
+>, the plan can be used instead
+    of the string query, either in <TT
+CLASS="LITERAL"
+>spi_exec_prepared</TT
+>, where the result is the same as returned
+    by <TT
+CLASS="LITERAL"
+>spi_exec_query</TT
+>, or in <TT
+CLASS="LITERAL"
+>spi_query_prepared</TT
+> which returns a cursor
+    exactly as <TT
+CLASS="LITERAL"
+>spi_query</TT
+> does, which can be later passed to <TT
+CLASS="LITERAL"
+>spi_fetchrow</TT
+>.
+    The optional second parameter to <TT
+CLASS="LITERAL"
+>spi_exec_prepared</TT
+> is a hash reference of attributes;
+    the only attribute currently supported is <TT
+CLASS="LITERAL"
+>limit</TT
+>, which sets the maximum number of rows returned by a query.
+    </P
+><P
+>    The advantage of prepared queries is that is it possible to use one prepared plan for more
+    than one query execution. After the plan is not needed anymore, it can be freed with
+    <TT
+CLASS="LITERAL"
+>spi_freeplan</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE OR REPLACE FUNCTION init() RETURNS VOID AS $$
+        $_SHARED{my_plan} = spi_prepare('SELECT (now() + $1)::date AS now',
+                                        'INTERVAL');
+$$ LANGUAGE plperl;
+
+CREATE OR REPLACE FUNCTION add_time( INTERVAL ) RETURNS TEXT AS $$
+        return spi_exec_prepared(
+                $_SHARED{my_plan},
+                $_[0]
+        )-&#62;{rows}-&#62;[0]-&#62;{now};
+$$ LANGUAGE plperl;
+
+CREATE OR REPLACE FUNCTION done() RETURNS VOID AS $$
+        spi_freeplan( $_SHARED{my_plan});
+        undef $_SHARED{my_plan};
+$$ LANGUAGE plperl;
+
+SELECT init();
+SELECT add_time('1 day'), add_time('2 days'), add_time('3 days');
+SELECT done();
+
+  add_time  |  add_time  |  add_time
+------------+------------+------------
+ 2005-12-10 | 2005-12-11 | 2005-12-12</PRE
+><P>
+    Note that the parameter subscript in <TT
+CLASS="LITERAL"
+>spi_prepare</TT
+> is defined via
+    $1, $2, $3, etc, so avoid declaring query strings in double quotes that might easily
+    lead to hard-to-catch bugs.
+    </P
+><P
+>    Another example illustrates usage of an optional parameter in <TT
+CLASS="LITERAL"
+>spi_exec_prepared</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE hosts AS SELECT id, ('192.168.1.'||id)::inet AS address
+                      FROM generate_series(1,3) AS id;
+
+CREATE OR REPLACE FUNCTION init_hosts_query() RETURNS VOID AS $$
+        $_SHARED{plan} = spi_prepare('SELECT * FROM hosts
+                                      WHERE address &lt;&lt; $1', 'inet');
+$$ LANGUAGE plperl;
+
+CREATE OR REPLACE FUNCTION query_hosts(inet) RETURNS SETOF hosts AS $$
+        return spi_exec_prepared(
+                $_SHARED{plan},
+                {limit =&gt; 2},
+                $_[0]
+        )-&#62;{rows};
+$$ LANGUAGE plperl;
+
+CREATE OR REPLACE FUNCTION release_hosts_query() RETURNS VOID AS $$
+        spi_freeplan($_SHARED{plan});
+        undef $_SHARED{plan};
+$$ LANGUAGE plperl;
+
+SELECT init_hosts_query();
+SELECT query_hosts('192.168.1.0/30');
+SELECT release_hosts_query();
+
+    query_hosts    
+-----------------
+ (1,192.168.1.1)
+ (2,192.168.1.2)
+(2 rows)</PRE
+><P>
+    </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="PLPERL-UTILITY-FUNCTIONS"
+>42.3.2. Utility Functions in PL/Perl</A
+></H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>elog(<TT
+CLASS="REPLACEABLE"
+><I
+>level</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>msg</I
+></TT
+>)</CODE
+></TT
+>
+      </DT
+><DD
+><P
+>       Emit a log or error message. Possible levels are
+       <TT
+CLASS="LITERAL"
+>DEBUG</TT
+>, <TT
+CLASS="LITERAL"
+>LOG</TT
+>, <TT
+CLASS="LITERAL"
+>INFO</TT
+>,
+       <TT
+CLASS="LITERAL"
+>NOTICE</TT
+>, <TT
+CLASS="LITERAL"
+>WARNING</TT
+>, and <TT
+CLASS="LITERAL"
+>ERROR</TT
+>.
+       <TT
+CLASS="LITERAL"
+>ERROR</TT
+>
+        raises an error condition; if this is not trapped by the surrounding
+        Perl code, the error propagates out to the calling query, causing
+        the current transaction or subtransaction to be aborted.  This
+        is effectively the same as the Perl <TT
+CLASS="LITERAL"
+>die</TT
+> command.
+        The other levels only generate messages of different
+        priority levels.
+        Whether messages of a particular priority are reported to the client,
+        written to the server log, or both is controlled by the
+        <A
+HREF="runtime-config-logging.html#GUC-LOG-MIN-MESSAGES"
+>log_min_messages</A
+> and
+        <A
+HREF="runtime-config-logging.html#GUC-CLIENT-MIN-MESSAGES"
+>client_min_messages</A
+> configuration
+        variables. See <A
+HREF="runtime-config.html"
+>Chapter 18</A
+> for more
+        information.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>quote_literal(<TT
+CLASS="REPLACEABLE"
+><I
+>string</I
+></TT
+>)</CODE
+></TT
+>
+      </DT
+><DD
+><P
+>        Return the given string suitably quoted to be used as a string literal in an SQL
+        statement string. Embedded single-quotes and backslashes are properly doubled.
+        Note that <CODE
+CLASS="FUNCTION"
+>quote_literal</CODE
+> returns undef on undef input; if the argument
+        might be undef, <CODE
+CLASS="FUNCTION"
+>quote_nullable</CODE
+> is often more suitable.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>quote_nullable(<TT
+CLASS="REPLACEABLE"
+><I
+>string</I
+></TT
+>)</CODE
+></TT
+>
+      </DT
+><DD
+><P
+>        Return the given string suitably quoted to be used as a string literal in an SQL
+        statement string; or, if the argument is undef, return the unquoted string "NULL".
+        Embedded single-quotes and backslashes are properly doubled.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>quote_ident(<TT
+CLASS="REPLACEABLE"
+><I
+>string</I
+></TT
+>)</CODE
+></TT
+>
+      </DT
+><DD
+><P
+>        Return the given string suitably quoted to be used as an identifier in
+        an SQL statement string. Quotes are added only if necessary (i.e., if
+        the string contains non-identifier characters or would be case-folded).
+        Embedded quotes are properly doubled.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>decode_bytea(<TT
+CLASS="REPLACEABLE"
+><I
+>string</I
+></TT
+>)</CODE
+></TT
+>
+      </DT
+><DD
+><P
+>        Return the unescaped binary data represented by the contents of the given string,
+        which should be <TT
+CLASS="TYPE"
+>bytea</TT
+> encoded.
+        </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>encode_bytea(<TT
+CLASS="REPLACEABLE"
+><I
+>string</I
+></TT
+>)</CODE
+></TT
+>
+      </DT
+><DD
+><P
+>        Return the <TT
+CLASS="TYPE"
+>bytea</TT
+> encoded form of the binary data contents of the given string.
+        </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>encode_array_literal(<TT
+CLASS="REPLACEABLE"
+><I
+>array</I
+></TT
+>)</CODE
+></TT
+>
+      <BR><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>encode_array_literal(<TT
+CLASS="REPLACEABLE"
+><I
+>array</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>delimiter</I
+></TT
+>)</CODE
+></TT
+></DT
+><DD
+><P
+>        Returns the contents of the referenced array as a string in array literal format
+        (see <A
+HREF="arrays.html#ARRAYS-INPUT"
+>Section 8.15.2</A
+>).
+        Returns the argument value unaltered if it's not a reference to an array.
+        The delimiter used between elements of the array literal defaults to "<TT
+CLASS="LITERAL"
+>, </TT
+>"
+        if a delimiter is not specified or is undef.
+        </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>encode_typed_literal(<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>typename</I
+></TT
+>)</CODE
+></TT
+>
+      </DT
+><DD
+><P
+>         Converts a Perl variable to the value of the data type passed as a
+         second argument and returns a string representation of this value.
+         Correctly handles nested arrays and values of composite types.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>encode_array_constructor(<TT
+CLASS="REPLACEABLE"
+><I
+>array</I
+></TT
+>)</CODE
+></TT
+>
+      </DT
+><DD
+><P
+>        Returns the contents of the referenced array as a string in array constructor format
+        (see <A
+HREF="sql-expressions.html#SQL-SYNTAX-ARRAY-CONSTRUCTORS"
+>Section 4.2.12</A
+>).
+        Individual values are quoted using <CODE
+CLASS="FUNCTION"
+>quote_nullable</CODE
+>.
+        Returns the argument value, quoted using <CODE
+CLASS="FUNCTION"
+>quote_nullable</CODE
+>,
+        if it's not a reference to an array.
+        </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>looks_like_number(<TT
+CLASS="REPLACEABLE"
+><I
+>string</I
+></TT
+>)</CODE
+></TT
+>
+      </DT
+><DD
+><P
+>        Returns a true value if the content of the given string looks like a
+        number, according to Perl, returns false otherwise.
+        Returns undef if the argument is undef.  Leading and trailing space is
+        ignored. <TT
+CLASS="LITERAL"
+>Inf</TT
+> and <TT
+CLASS="LITERAL"
+>Infinity</TT
+> are regarded as numbers.
+        </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>is_array_ref(<TT
+CLASS="REPLACEABLE"
+><I
+>argument</I
+></TT
+>)</CODE
+></TT
+>
+      </DT
+><DD
+><P
+>        Returns a true value if the given argument may be treated as an
+        array reference, that is, if ref of the argument is <TT
+CLASS="LITERAL"
+>ARRAY</TT
+> or
+        <TT
+CLASS="LITERAL"
+>PostgreSQL::InServer::ARRAY</TT
+>.  Returns false otherwise.
+      </P
+></DD
+></DL
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plperl-data.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="plperl-global.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Data Values in PL/Perl</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="plperl.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Global Values in PL/Perl</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

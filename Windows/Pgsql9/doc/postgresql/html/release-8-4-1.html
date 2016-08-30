@@ -1,0 +1,578 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.4.1</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.4.2"
+HREF="release-8-4-2.html"><LINK
+REL="NEXT"
+TITLE="Release 8.4"
+HREF="release-8-4.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.4.2"
+HREF="release-8-4-2.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.4"
+HREF="release-8-4.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-4-1"
+>E.119. Release 8.4.1</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2009-09-09</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.4.
+   For information about new features in the 8.4 major release, see
+   <A
+HREF="release-8-4.html"
+>Section E.120</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN149851"
+>E.119.1. Migration to Version 8.4.1</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.4.X.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN149854"
+>E.119.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix WAL page header initialization at the end of archive recovery
+      (Heikki)
+     </P
+><P
+>      This could lead to failure to process the WAL in a subsequent
+      archive recovery.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="QUOTE"
+>"cannot make new WAL entries during recovery"</SPAN
+> error (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix problem that could make expired rows visible after a crash (Tom)
+     </P
+><P
+>      This bug involved a page status bit potentially not being set
+      correctly after a server crash.
+     </P
+></LI
+><LI
+><P
+>      Disallow <TT
+CLASS="COMMAND"
+>RESET ROLE</TT
+> and <TT
+CLASS="COMMAND"
+>RESET SESSION
+      AUTHORIZATION</TT
+> inside security-definer functions (Tom, Heikki)
+     </P
+><P
+>      This covers a case that was missed in the previous patch that
+      disallowed <TT
+CLASS="COMMAND"
+>SET ROLE</TT
+> and <TT
+CLASS="COMMAND"
+>SET SESSION
+      AUTHORIZATION</TT
+> inside security-definer functions.
+      (See CVE-2007-6600)
+     </P
+></LI
+><LI
+><P
+>      Make <TT
+CLASS="COMMAND"
+>LOAD</TT
+> of an already-loaded loadable module
+      into a no-op (Tom)
+     </P
+><P
+>      Formerly, <TT
+CLASS="COMMAND"
+>LOAD</TT
+> would attempt to unload and re-load the
+      module, but this is unsafe and not all that useful.
+     </P
+></LI
+><LI
+><P
+>      Make window function <TT
+CLASS="LITERAL"
+>PARTITION BY</TT
+> and <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+>
+      items always be interpreted as simple expressions (Tom)
+     </P
+><P
+>      In 8.4.0 these lists were parsed following the rules used for
+      top-level <TT
+CLASS="LITERAL"
+>GROUP BY</TT
+> and <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> lists.
+      But this was not correct per the SQL standard, and it led to possible
+      circularity.
+     </P
+></LI
+><LI
+><P
+>      Fix several errors in planning of semi-joins (Tom)
+     </P
+><P
+>      These led to wrong query results in some cases where <TT
+CLASS="LITERAL"
+>IN</TT
+>
+      or <TT
+CLASS="LITERAL"
+>EXISTS</TT
+> was used together with another join.
+     </P
+></LI
+><LI
+><P
+>      Fix handling of whole-row references to subqueries that are within
+      an outer join (Tom)
+     </P
+><P
+>      An example is
+      <TT
+CLASS="LITERAL"
+>SELECT COUNT(ss.*) FROM ... LEFT JOIN (SELECT ...) ss ON ...</TT
+>.
+      Here, <TT
+CLASS="LITERAL"
+>ss.*</TT
+> would be treated as <TT
+CLASS="LITERAL"
+>ROW(NULL,NULL,...)</TT
+>
+      for null-extended join rows, which is not the same as a simple NULL.
+      Now it is treated as a simple NULL.
+     </P
+></LI
+><LI
+><P
+>      Fix Windows shared-memory allocation code (Tsutomu Yamada, Magnus)
+     </P
+><P
+>      This bug led to the often-reported <SPAN
+CLASS="QUOTE"
+>"could not reattach
+      to shared memory"</SPAN
+> error message.
+     </P
+></LI
+><LI
+><P
+>      Fix locale handling with plperl (Heikki)
+     </P
+><P
+>      This bug could cause the server's locale setting to change when a
+      plperl function is called, leading to data corruption.
+     </P
+></LI
+><LI
+><P
+>      Fix handling of reloptions to ensure setting one option doesn't
+      force default values for others (Itagaki Takahiro)
+     </P
+></LI
+><LI
+><P
+>      Ensure that a <SPAN
+CLASS="QUOTE"
+>"fast shutdown"</SPAN
+> request will forcibly terminate
+      open sessions, even if a <SPAN
+CLASS="QUOTE"
+>"smart shutdown"</SPAN
+> was already in progress
+      (Fujii Masao)
+     </P
+></LI
+><LI
+><P
+>      Avoid memory leak for <CODE
+CLASS="FUNCTION"
+>array_agg()</CODE
+> in <TT
+CLASS="LITERAL"
+>GROUP BY</TT
+>
+      queries (Tom)
+     </P
+></LI
+><LI
+><P
+>      Treat <CODE
+CLASS="FUNCTION"
+>to_char(..., 'TH')</CODE
+> as an uppercase ordinal
+      suffix with <TT
+CLASS="LITERAL"
+>'HH'</TT
+>/<TT
+CLASS="LITERAL"
+>'HH12'</TT
+> (Heikki)
+     </P
+><P
+>      It was previously handled as <TT
+CLASS="LITERAL"
+>'th'</TT
+> (lowercase).
+     </P
+></LI
+><LI
+><P
+>      Include the fractional part in the result of
+      <CODE
+CLASS="FUNCTION"
+>EXTRACT(second)</CODE
+> and
+      <CODE
+CLASS="FUNCTION"
+>EXTRACT(milliseconds)</CODE
+> for
+      <TT
+CLASS="TYPE"
+>time</TT
+> and <TT
+CLASS="TYPE"
+>time with time zone</TT
+> inputs (Tom)
+     </P
+><P
+>      This has always worked for floating-point datetime configurations,
+      but was broken in the integer datetime code.
+     </P
+></LI
+><LI
+><P
+>      Fix overflow for <TT
+CLASS="LITERAL"
+>INTERVAL '<TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> ms'</TT
+>
+      when <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> is more than 2 million and integer
+      datetimes are in use (Alex Hunsaker)
+     </P
+></LI
+><LI
+><P
+>      Improve performance when processing toasted values in index scans (Tom)
+     </P
+><P
+>      This is particularly useful for <A
+HREF="http://postgis.net/"
+TARGET="_top"
+>PostGIS</A
+>.
+     </P
+></LI
+><LI
+><P
+>      Fix a typo that disabled <TT
+CLASS="VARNAME"
+>commit_delay</TT
+> (Jeff Janes)
+     </P
+></LI
+><LI
+><P
+>      Output early-startup messages to <TT
+CLASS="FILENAME"
+>postmaster.log</TT
+> if the
+      server is started in silent mode (Tom)
+     </P
+><P
+>      Previously such error messages were discarded, leading to
+      difficulty in debugging.
+     </P
+></LI
+><LI
+><P
+>      Remove translated FAQs (Peter)
+     </P
+><P
+>      They are now on the <A
+HREF="http://wiki.postgresql.org/wiki/FAQ"
+TARGET="_top"
+>wiki</A
+>.  The
+      main FAQ was moved to the wiki some time ago.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> to not go into an infinite loop if
+      <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> is empty (Jeff Davis)
+     </P
+></LI
+><LI
+><P
+>      Fix several errors in <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>'s
+      <TT
+CLASS="LITERAL"
+>--binary-upgrade</TT
+> mode (Bruce, Tom)
+     </P
+><P
+>      <TT
+CLASS="LITERAL"
+>pg_dump --binary-upgrade</TT
+> is used by pg_migrator.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="FILENAME"
+>contrib/xml2</TT
+>'s <CODE
+CLASS="FUNCTION"
+>xslt_process()</CODE
+> to
+      properly handle the maximum number of parameters (twenty) (Tom)
+     </P
+></LI
+><LI
+><P
+>      Improve robustness of <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>'s code to recover
+      from errors during <TT
+CLASS="COMMAND"
+>COPY FROM STDIN</TT
+> (Tom)
+     </P
+></LI
+><LI
+><P
+>      Avoid including conflicting readline and editline header files
+      when both libraries are installed (Zdenek Kotala)
+     </P
+></LI
+><LI
+><P
+>      Work around gcc bug that causes <SPAN
+CLASS="QUOTE"
+>"floating-point exception"</SPAN
+>
+      instead of <SPAN
+CLASS="QUOTE"
+>"division by zero"</SPAN
+> on some platforms (Tom)
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2009l
+      for DST law changes in Bangladesh, Egypt, Mauritius.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-4-2.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-4.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.4.2</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.4</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

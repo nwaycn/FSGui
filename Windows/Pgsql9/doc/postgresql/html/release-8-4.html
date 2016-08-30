@@ -1,0 +1,5247 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.4</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.4.1"
+HREF="release-8-4-1.html"><LINK
+REL="NEXT"
+TITLE="Release 8.3.23"
+HREF="release-8-3-23.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.4.1"
+HREF="release-8-4-1.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.3.23"
+HREF="release-8-3-23.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-4"
+>E.120. Release 8.4</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2009-07-01</P
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN149979"
+>E.120.1. Overview</A
+></H2
+><P
+>    After many years of development, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> has
+    become feature-complete in many areas.   This release shows a
+    targeted approach to adding features (e.g., authentication,
+    monitoring, space reuse), and adds capabilities defined in the
+    later SQL standards.  The major areas of enhancement are:
+   </P
+><P
+></P
+><UL
+><LI
+><P
+>      Windowing Functions
+     </P
+></LI
+><LI
+><P
+>      Common Table Expressions and Recursive Queries
+     </P
+></LI
+><LI
+><P
+>      Default and variadic parameters for functions
+     </P
+></LI
+><LI
+><P
+>      Parallel Restore
+     </P
+></LI
+><LI
+><P
+>      Column Permissions
+     </P
+></LI
+><LI
+><P
+>      Per-database locale settings
+     </P
+></LI
+><LI
+><P
+>      Improved hash indexes
+     </P
+></LI
+><LI
+><P
+>      Improved join performance for <TT
+CLASS="LITERAL"
+>EXISTS</TT
+> and <TT
+CLASS="LITERAL"
+>NOT EXISTS</TT
+> queries
+     </P
+></LI
+><LI
+><P
+>      Easier-to-use Warm Standby
+     </P
+></LI
+><LI
+><P
+>      Automatic sizing of the Free Space Map
+     </P
+></LI
+><LI
+><P
+>      Visibility Map (greatly reduces vacuum overhead for slowly-changing tables)
+     </P
+></LI
+><LI
+><P
+>      Version-aware psql (backslash commands work against older servers)
+     </P
+></LI
+><LI
+><P
+>      Support SSL certificates for user authentication
+     </P
+></LI
+><LI
+><P
+>      Per-function runtime statistics
+     </P
+></LI
+><LI
+><P
+>      Easy editing of functions in psql
+     </P
+></LI
+><LI
+><P
+>      New contrib modules: pg_stat_statements, auto_explain, citext, btree_gin
+     </P
+></LI
+></UL
+><P
+>    The above items are explained in more detail in the sections below.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN150019"
+>E.120.2. Migration to Version 8.4</A
+></H2
+><P
+>    A dump/restore using <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> is
+    required for those wishing to migrate data from any previous
+    release.
+   </P
+><P
+>    Observe the following incompatibilities:
+   </P
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN150024"
+>E.120.2.1. General</A
+></H3
+><P
+></P
+><UL
+><LI
+><P
+>       Use 64-bit integer datetimes by default (Neil Conway)
+      </P
+><P
+>       Previously this was selected by <SPAN
+CLASS="APPLICATION"
+>configure</SPAN
+>'s
+       <TT
+CLASS="OPTION"
+>--enable-integer-datetimes</TT
+> option.  To retain
+       the old behavior, build with <TT
+CLASS="OPTION"
+>--disable-integer-datetimes</TT
+>.
+      </P
+></LI
+><LI
+><P
+>       Remove <SPAN
+CLASS="APPLICATION"
+>ipcclean</SPAN
+> utility command (Bruce)
+      </P
+><P
+>       The utility only worked on a few platforms.  Users should use
+       their operating system tools instead.
+      </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN150037"
+>E.120.2.2. Server Settings</A
+></H3
+><P
+></P
+><UL
+><LI
+><P
+>       Change default setting for
+       <TT
+CLASS="LITERAL"
+>log_min_messages</TT
+> to <TT
+CLASS="LITERAL"
+>warning</TT
+> (previously
+       it was <TT
+CLASS="LITERAL"
+>notice</TT
+>) to reduce log file volume (Tom)
+      </P
+></LI
+><LI
+><P
+>       Change default setting for <TT
+CLASS="LITERAL"
+>max_prepared_transactions</TT
+> to
+       zero (previously it was 5) (Tom)
+      </P
+></LI
+><LI
+><P
+>       Make <TT
+CLASS="LITERAL"
+>debug_print_parse</TT
+>, <TT
+CLASS="LITERAL"
+>debug_print_rewritten</TT
+>,
+       and <TT
+CLASS="LITERAL"
+>debug_print_plan</TT
+>
+       output appear at <TT
+CLASS="LITERAL"
+>LOG</TT
+> message level, not
+       <TT
+CLASS="LITERAL"
+>DEBUG1</TT
+> as formerly (Tom)
+      </P
+></LI
+><LI
+><P
+>       Make <TT
+CLASS="LITERAL"
+>debug_pretty_print</TT
+> default to <TT
+CLASS="LITERAL"
+>on</TT
+> (Tom)
+      </P
+></LI
+><LI
+><P
+>       Remove <TT
+CLASS="VARNAME"
+>explain_pretty_print</TT
+> parameter (no longer needed) (Tom)
+      </P
+></LI
+><LI
+><P
+>       Make <TT
+CLASS="VARNAME"
+>log_temp_files</TT
+> settable by superusers only, like other
+       logging options (Simon Riggs)
+      </P
+></LI
+><LI
+><P
+>       Remove automatic appending of the epoch timestamp when no <TT
+CLASS="LITERAL"
+>%</TT
+>
+       escapes are present in <TT
+CLASS="LITERAL"
+>log_filename</TT
+> (Robert Haas)
+      </P
+><P
+>       This change was made because some users wanted a fixed log filename,
+       for use with an external log rotation tool.
+      </P
+></LI
+><LI
+><P
+>       Remove <TT
+CLASS="VARNAME"
+>log_restartpoints</TT
+> from <TT
+CLASS="FILENAME"
+>recovery.conf</TT
+>;
+       instead use <TT
+CLASS="VARNAME"
+>log_checkpoints</TT
+> (Simon)
+      </P
+></LI
+><LI
+><P
+>       Remove <TT
+CLASS="VARNAME"
+>krb_realm</TT
+> and <TT
+CLASS="VARNAME"
+>krb_server_hostname</TT
+>;
+       these are now set in <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> instead (Magnus)
+      </P
+></LI
+><LI
+><P
+>       There are also significant changes in <A
+HREF="release-8-4.html#RELEASE-8-4-PG-HBA-CONF"
+><TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+></A
+>,
+       as described below.
+      </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN150084"
+>E.120.2.3. Queries</A
+></H3
+><P
+></P
+><UL
+><LI
+><P
+>       Change <TT
+CLASS="COMMAND"
+>TRUNCATE</TT
+> and <TT
+CLASS="COMMAND"
+>LOCK</TT
+> to
+       apply to child tables of the specified table(s) (Peter)
+      </P
+><P
+>       These commands now accept an <TT
+CLASS="LITERAL"
+>ONLY</TT
+> option that prevents
+       processing child tables; this option must be used if the old
+       behavior is needed.
+      </P
+></LI
+><LI
+><P
+>       <TT
+CLASS="COMMAND"
+>SELECT DISTINCT</TT
+> and
+       <TT
+CLASS="LITERAL"
+>UNION</TT
+>/<TT
+CLASS="LITERAL"
+>INTERSECT</TT
+>/<TT
+CLASS="LITERAL"
+>EXCEPT</TT
+>
+       no longer always produce sorted output (Tom)
+      </P
+><P
+>       Previously, these types of queries always removed duplicate rows
+       by means of Sort/Unique processing (i.e., sort then remove adjacent
+       duplicates).  Now they can be implemented by hashing, which will not
+       produce sorted output.  If an application relied on the output being
+       in sorted order, the recommended fix is to add an <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+>
+       clause.  As a short-term workaround, the previous behavior can be
+       restored by disabling <TT
+CLASS="LITERAL"
+>enable_hashagg</TT
+>, but that is a very
+       performance-expensive fix.  <TT
+CLASS="LITERAL"
+>SELECT DISTINCT ON</TT
+> never uses
+       hashing, however, so its behavior is unchanged.
+      </P
+></LI
+><LI
+><P
+>       Force child tables to inherit <TT
+CLASS="LITERAL"
+>CHECK</TT
+> constraints from parents
+       (Alex Hunsaker, Nikhil Sontakke, Tom)
+      </P
+><P
+>       Formerly it was possible to drop such a constraint from a child
+       table, allowing rows that violate the constraint to be visible
+       when scanning the parent table.  This was deemed inconsistent,
+       as well as contrary to SQL standard.
+      </P
+></LI
+><LI
+><P
+>       Disallow negative <TT
+CLASS="LITERAL"
+>LIMIT</TT
+> or <TT
+CLASS="LITERAL"
+>OFFSET</TT
+>
+       values, rather than treating them as zero (Simon)
+      </P
+></LI
+><LI
+><P
+>       Disallow <TT
+CLASS="COMMAND"
+>LOCK TABLE</TT
+> outside a transaction block
+       (Tom)
+      </P
+><P
+>       Such an operation is useless because the lock would be released
+       immediately.
+      </P
+></LI
+><LI
+><P
+>       Sequences now contain an additional <TT
+CLASS="STRUCTFIELD"
+>start_value</TT
+> column
+       (Zoltan Boszormenyi)
+      </P
+><P
+>       This supports <TT
+CLASS="COMMAND"
+>ALTER SEQUENCE ... RESTART</TT
+>.
+      </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN150120"
+>E.120.2.4. Functions and Operators</A
+></H3
+><P
+></P
+><UL
+><LI
+><P
+>       Make <TT
+CLASS="TYPE"
+>numeric</TT
+> zero raised to a fractional power return
+       <TT
+CLASS="LITERAL"
+>0</TT
+>, rather than throwing an error, and make
+       <TT
+CLASS="TYPE"
+>numeric</TT
+> zero raised to the zero power return <TT
+CLASS="LITERAL"
+>1</TT
+>,
+       rather than error (Bruce)
+      </P
+><P
+>       This matches the longstanding <TT
+CLASS="TYPE"
+>float8</TT
+> behavior.
+      </P
+></LI
+><LI
+><P
+>       Allow unary minus of floating-point values to produce minus zero (Tom)
+      </P
+><P
+>       The changed behavior is more <ACRONYM
+CLASS="ACRONYM"
+>IEEE</ACRONYM
+>-standard
+       compliant.
+      </P
+></LI
+><LI
+><P
+>       Throw an error if an escape character is the last character in
+       a <TT
+CLASS="LITERAL"
+>LIKE</TT
+> pattern (i.e., it has nothing to escape) (Tom)
+      </P
+><P
+>       Previously, such an escape character was silently ignored,
+       thus possibly masking application logic errors.
+      </P
+></LI
+><LI
+><P
+>       Remove <TT
+CLASS="LITERAL"
+>~=~</TT
+> and <TT
+CLASS="LITERAL"
+>~&lt;&gt;~</TT
+> operators
+       formerly used for <TT
+CLASS="LITERAL"
+>LIKE</TT
+> index comparisons (Tom)
+      </P
+><P
+>       Pattern indexes now use the regular equality operator.
+      </P
+></LI
+><LI
+><P
+>       <CODE
+CLASS="FUNCTION"
+>xpath()</CODE
+> now passes its arguments to <SPAN
+CLASS="APPLICATION"
+>libxml</SPAN
+>
+       without any changes (Andrew)
+      </P
+><P
+>       This means that the XML argument must be a well-formed XML document.
+       The previous coding attempted to allow XML fragments, but it did not
+       work well.
+      </P
+></LI
+><LI
+><P
+>       Make <CODE
+CLASS="FUNCTION"
+>xmlelement()</CODE
+> format attribute values just like
+       content values (Peter)
+      </P
+><P
+>       Previously, attribute values were formatted according to the
+       normal SQL output behavior, which is sometimes at odds with
+       XML rules.
+      </P
+></LI
+><LI
+><P
+>       Rewrite memory management for <SPAN
+CLASS="APPLICATION"
+>libxml</SPAN
+>-using functions
+       (Tom)
+      </P
+><P
+>       This change should avoid some compatibility problems with use of
+       <SPAN
+CLASS="APPLICATION"
+>libxml</SPAN
+> in PL/Perl and other add-on code.
+      </P
+></LI
+><LI
+><P
+>       Adopt a faster algorithm for hash functions (Kenneth Marshall,
+       based on work of Bob Jenkins)
+      </P
+><P
+>       Many of the built-in hash functions now deliver different results on
+       little-endian and big-endian platforms.
+      </P
+></LI
+></UL
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN150162"
+>E.120.2.4.1. Temporal Functions and Operators</A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        <TT
+CLASS="VARNAME"
+>DateStyle</TT
+> no longer controls <TT
+CLASS="TYPE"
+>interval</TT
+> output
+        formatting; instead there is a new variable <TT
+CLASS="VARNAME"
+>IntervalStyle</TT
+>
+        (Ron Mayer)
+       </P
+></LI
+><LI
+><P
+>        Improve consistency of handling of fractional seconds in
+        <TT
+CLASS="TYPE"
+>timestamp</TT
+> and <TT
+CLASS="TYPE"
+>interval</TT
+> output (Ron Mayer)
+       </P
+><P
+>        This may result in displaying a different number of fractional
+        digits than before, or rounding instead of truncating.
+       </P
+></LI
+><LI
+><P
+>        Make <CODE
+CLASS="FUNCTION"
+>to_char()</CODE
+>'s localized month/day names depend
+        on <TT
+CLASS="VARNAME"
+>LC_TIME</TT
+>, not <TT
+CLASS="VARNAME"
+>LC_MESSAGES</TT
+> (Euler
+        Taveira de Oliveira)
+       </P
+></LI
+><LI
+><P
+>        Cause <CODE
+CLASS="FUNCTION"
+>to_date()</CODE
+> and <CODE
+CLASS="FUNCTION"
+>to_timestamp()</CODE
+>
+        to more consistently report errors for invalid input (Brendan
+        Jurd)
+       </P
+><P
+>        Previous versions would often ignore or silently misread input
+        that did not match the format string.  Such cases will now
+        result in an error.
+       </P
+></LI
+><LI
+><P
+>        Fix <CODE
+CLASS="FUNCTION"
+>to_timestamp()</CODE
+> to not require upper/lower case
+        matching for meridian (<TT
+CLASS="LITERAL"
+>AM</TT
+>/<TT
+CLASS="LITERAL"
+>PM</TT
+>) and era
+        (<TT
+CLASS="LITERAL"
+>BC</TT
+>/<TT
+CLASS="LITERAL"
+>AD</TT
+>) format designations  (Brendan
+        Jurd)
+       </P
+><P
+>        For example, input value <TT
+CLASS="LITERAL"
+>ad</TT
+> now matches the format
+        string <TT
+CLASS="LITERAL"
+>AD</TT
+>.
+       </P
+></LI
+></UL
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN150195"
+>E.120.3. Changes</A
+></H2
+><P
+>    Below you will find a detailed account of the changes between
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 8.4 and the previous major
+    release.
+   </P
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN150199"
+>E.120.3.1. Performance</A
+></H3
+><P
+></P
+><UL
+><LI
+><P
+>       Improve optimizer statistics calculations (Jan Urbanski, Tom)
+      </P
+><P
+>       In particular, estimates for full-text-search operators are
+       greatly improved.
+      </P
+></LI
+><LI
+><P
+>       Allow <TT
+CLASS="COMMAND"
+>SELECT DISTINCT</TT
+> and
+       <TT
+CLASS="LITERAL"
+>UNION</TT
+>/<TT
+CLASS="LITERAL"
+>INTERSECT</TT
+>/<TT
+CLASS="LITERAL"
+>EXCEPT</TT
+> to
+       use hashing (Tom)
+      </P
+><P
+>       This means that these types of queries no longer automatically
+       produce sorted output.
+      </P
+></LI
+><LI
+><P
+>       Create explicit concepts of semi-joins and anti-joins (Tom)
+      </P
+><P
+>       This work formalizes our previous ad-hoc treatment of <TT
+CLASS="LITERAL"
+>IN
+       (SELECT ...)</TT
+> clauses, and extends it to <TT
+CLASS="LITERAL"
+>EXISTS</TT
+> and
+       <TT
+CLASS="LITERAL"
+>NOT EXISTS</TT
+> clauses.  It should result in significantly
+       better planning of <TT
+CLASS="LITERAL"
+>EXISTS</TT
+> and <TT
+CLASS="LITERAL"
+>NOT EXISTS</TT
+>
+       queries.  In general, logically equivalent <TT
+CLASS="LITERAL"
+>IN</TT
+> and
+       <TT
+CLASS="LITERAL"
+>EXISTS</TT
+> clauses should now have similar performance,
+       whereas previously <TT
+CLASS="LITERAL"
+>IN</TT
+> often won.
+      </P
+></LI
+><LI
+><P
+>       Improve optimization of sub-selects beneath outer joins (Tom)
+      </P
+><P
+>       Formerly, a sub-select or view could not be optimized very well if it
+       appeared within the nullable side of an outer join and contained
+       non-strict expressions (for instance, constants) in its result list.
+      </P
+></LI
+><LI
+><P
+>       Improve the performance of <CODE
+CLASS="FUNCTION"
+>text_position()</CODE
+> and
+       related functions by using Boyer-Moore-Horspool searching (David
+       Rowley)
+      </P
+><P
+>       This is particularly helpful for long search patterns.
+      </P
+></LI
+><LI
+><P
+>       Reduce I/O load of writing the statistics collection file
+       by writing the file only when requested (Martin Pihlak)
+      </P
+></LI
+><LI
+><P
+>       Improve performance for bulk inserts (Robert Haas, Simon)
+      </P
+></LI
+><LI
+><P
+>       Increase the default value of <TT
+CLASS="VARNAME"
+>default_statistics_target</TT
+>
+       from <TT
+CLASS="LITERAL"
+>10</TT
+> to <TT
+CLASS="LITERAL"
+>100</TT
+> (Greg Sabino Mullane,
+       Tom)
+      </P
+><P
+>       The maximum value was also increased from <TT
+CLASS="LITERAL"
+>1000</TT
+> to
+       <TT
+CLASS="LITERAL"
+>10000</TT
+>.
+      </P
+></LI
+><LI
+><P
+>       Perform <TT
+CLASS="VARNAME"
+>constraint_exclusion</TT
+> checking by default
+       in queries involving inheritance or <TT
+CLASS="LITERAL"
+>UNION ALL</TT
+> (Tom)
+      </P
+><P
+>       A new <TT
+CLASS="VARNAME"
+>constraint_exclusion</TT
+> setting,
+       <TT
+CLASS="LITERAL"
+>partition</TT
+>, was added to specify this behavior.
+      </P
+></LI
+><LI
+><P
+>       Allow I/O read-ahead for bitmap index scans (Greg Stark)
+      </P
+><P
+>       The amount of read-ahead is controlled by
+       <TT
+CLASS="VARNAME"
+>effective_io_concurrency</TT
+>.  This feature is available only
+       if the kernel has <CODE
+CLASS="FUNCTION"
+>posix_fadvise()</CODE
+> support.
+      </P
+></LI
+><LI
+><P
+>       Inline simple set-returning <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> functions in
+       <TT
+CLASS="LITERAL"
+>FROM</TT
+> clauses (Richard Rowell)
+      </P
+></LI
+><LI
+><P
+>       Improve performance of multi-batch hash joins by providing a special
+       case for join key values that are especially common in the outer
+       relation (Bryce Cutt, Ramon Lawrence)
+      </P
+></LI
+><LI
+><P
+>       Reduce volume of temporary data in multi-batch hash joins
+       by suppressing <SPAN
+CLASS="QUOTE"
+>"physical tlist"</SPAN
+> optimization (Michael
+       Henderson, Ramon Lawrence)
+      </P
+></LI
+><LI
+><P
+>       Avoid waiting for idle-in-transaction sessions during
+       <TT
+CLASS="COMMAND"
+>CREATE INDEX CONCURRENTLY</TT
+> (Simon)
+      </P
+></LI
+><LI
+><P
+>       Improve performance of shared cache invalidation (Tom)
+      </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN150268"
+>E.120.3.2. Server</A
+></H3
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN150270"
+>E.120.3.2.1. Settings</A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Convert many <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> settings to enumerated
+        values so that <TT
+CLASS="LITERAL"
+>pg_settings</TT
+> can display the valid
+        values (Magnus)
+       </P
+></LI
+><LI
+><P
+>        Add <TT
+CLASS="VARNAME"
+>cursor_tuple_fraction</TT
+> parameter to control the
+        fraction of a cursor's rows that the planner assumes will be
+        fetched (Robert Hell)
+       </P
+></LI
+><LI
+><P
+>        Allow underscores in the names of custom variable
+        classes in <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> (Tom)
+       </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN150283"
+>E.120.3.2.2. Authentication and security</A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Remove support for the (insecure) <TT
+CLASS="LITERAL"
+>crypt</TT
+> authentication method
+        (Magnus)
+       </P
+><P
+>        This effectively obsoletes pre-<SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 7.2 client
+        libraries, as there is no longer any non-plaintext password method that
+        they can use.
+       </P
+></LI
+><LI
+><P
+>        Support regular expressions in <TT
+CLASS="FILENAME"
+>pg_ident.conf</TT
+>
+        (Magnus)
+       </P
+></LI
+><LI
+><P
+>        Allow <SPAN
+CLASS="PRODUCTNAME"
+>Kerberos</SPAN
+>/<ACRONYM
+CLASS="ACRONYM"
+>GSSAPI</ACRONYM
+> parameters
+        to be changed without restarting the postmaster (Magnus)
+       </P
+></LI
+><LI
+><P
+>        Support <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> certificate chains in server certificate
+        file (Andrew Gierth)
+       </P
+><P
+>        Including the full certificate chain makes the client able
+        to verify the certificate without having all intermediate CA
+        certificates present in the local store, which is often the case for
+        commercial CAs.
+       </P
+></LI
+><LI
+><P
+>        Report appropriate error message for combination of <TT
+CLASS="LITERAL"
+>MD5</TT
+>
+        authentication and <TT
+CLASS="VARNAME"
+>db_user_namespace</TT
+> enabled (Bruce)
+       </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="RELEASE-8-4-PG-HBA-CONF"
+>E.120.3.2.3. <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+></A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Change all authentication options to use <TT
+CLASS="LITERAL"
+>name=value</TT
+>
+        syntax (Magnus)
+       </P
+><P
+>        This makes incompatible changes to the <TT
+CLASS="LITERAL"
+>ldap</TT
+>,
+        <TT
+CLASS="LITERAL"
+>pam</TT
+> and <TT
+CLASS="LITERAL"
+>ident</TT
+> authentication methods. All
+        <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> entries with these methods need to be
+        rewritten using the new format.
+       </P
+></LI
+><LI
+><P
+>        Remove the <TT
+CLASS="LITERAL"
+>ident sameuser</TT
+> option, instead making that
+        behavior the default if no usermap is specified (Magnus)
+       </P
+></LI
+><LI
+><P
+>        Allow a usermap parameter for all external authentication methods
+        (Magnus)
+       </P
+><P
+>        Previously a usermap was only supported for <TT
+CLASS="LITERAL"
+>ident</TT
+>
+        authentication.
+       </P
+></LI
+><LI
+><P
+>        Add <TT
+CLASS="LITERAL"
+>clientcert</TT
+> option to control requesting of a
+        client certificate (Magnus)
+       </P
+><P
+>        Previously this was controlled by the presence of a root
+        certificate file in the server's data directory.
+       </P
+></LI
+><LI
+><P
+>        Add <TT
+CLASS="LITERAL"
+>cert</TT
+> authentication method to allow
+        <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>user</I
+></SPAN
+> authentication via <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> certificates
+        (Magnus)
+       </P
+><P
+>        Previously <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> certificates could only verify that
+        the client had access to a certificate, not authenticate a
+        user.
+       </P
+></LI
+><LI
+><P
+>        Allow <TT
+CLASS="LITERAL"
+>krb5</TT
+>, <TT
+CLASS="LITERAL"
+>gssapi</TT
+> and <TT
+CLASS="LITERAL"
+>sspi</TT
+>
+        realm and <TT
+CLASS="LITERAL"
+>krb5</TT
+> host settings to be specified in
+        <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> (Magnus)
+       </P
+><P
+>        These override the settings in <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>.
+       </P
+></LI
+><LI
+><P
+>        Add <TT
+CLASS="VARNAME"
+>include_realm</TT
+> parameter for <TT
+CLASS="LITERAL"
+>krb5</TT
+>,
+        <TT
+CLASS="LITERAL"
+>gssapi</TT
+>, and <TT
+CLASS="LITERAL"
+>sspi</TT
+> methods (Magnus)
+       </P
+><P
+>        This allows identical usernames from different realms to be
+        authenticated as different database users using usermaps.
+       </P
+></LI
+><LI
+><P
+>        Parse <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> fully when it is loaded,
+        so that errors are reported immediately (Magnus)
+       </P
+><P
+>        Previously, most errors in the file wouldn't be detected until clients
+        tried to connect, so an erroneous file could render the system
+        unusable.  With the new behavior, if an error is detected during
+        reload then the bad file is rejected and the postmaster continues
+        to use its old copy.
+       </P
+></LI
+><LI
+><P
+>        Show all parsing errors in <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> instead of
+        aborting after the first one (Selena Deckelmann)
+       </P
+></LI
+><LI
+><P
+>        Support <TT
+CLASS="LITERAL"
+>ident</TT
+> authentication over Unix-domain sockets
+        on <SPAN
+CLASS="PRODUCTNAME"
+>Solaris</SPAN
+> (Garick Hamlin)
+       </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN150363"
+>E.120.3.2.4. Continuous Archiving</A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Provide an option to <CODE
+CLASS="FUNCTION"
+>pg_start_backup()</CODE
+> to force its
+        implied checkpoint to finish as quickly as possible (Tom)
+       </P
+><P
+>        The default behavior avoids excess I/O consumption, but that is
+        pointless if no concurrent query activity is going on.
+       </P
+></LI
+><LI
+><P
+>        Make <CODE
+CLASS="FUNCTION"
+>pg_stop_backup()</CODE
+> wait for modified <ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+>
+        files to be archived (Simon)
+       </P
+><P
+>        This guarantees that the backup is valid at the time
+        <CODE
+CLASS="FUNCTION"
+>pg_stop_backup()</CODE
+> completes.
+       </P
+></LI
+><LI
+><P
+>        When archiving is enabled, rotate the last WAL segment at shutdown
+        so that all transactions can be archived immediately
+        (Guillaume Smet, Heikki)
+       </P
+></LI
+><LI
+><P
+>        Delay <SPAN
+CLASS="QUOTE"
+>"smart"</SPAN
+> shutdown while a continuous archiving base backup
+        is in progress (Laurenz Albe)
+       </P
+></LI
+><LI
+><P
+>        Cancel a continuous archiving base backup if <SPAN
+CLASS="QUOTE"
+>"fast"</SPAN
+> shutdown
+        is requested (Laurenz Albe)
+       </P
+></LI
+><LI
+><P
+>        Allow <TT
+CLASS="FILENAME"
+>recovery.conf</TT
+> boolean variables to take the
+        same range of string values as <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+        boolean variables
+        (Bruce)
+       </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN150388"
+>E.120.3.2.5. Monitoring</A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Add <CODE
+CLASS="FUNCTION"
+>pg_conf_load_time()</CODE
+> to report when
+        the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> configuration files were last loaded
+        (George Gensure)
+       </P
+></LI
+><LI
+><P
+>        Add <CODE
+CLASS="FUNCTION"
+>pg_terminate_backend()</CODE
+> to safely terminate a
+        backend (the <TT
+CLASS="LITERAL"
+>SIGTERM</TT
+> signal works also) (Tom, Bruce)
+       </P
+><P
+>        While it's always been possible to <TT
+CLASS="LITERAL"
+>SIGTERM</TT
+> a single
+        backend, this was previously considered unsupported; and testing
+        of the case found some bugs that are now fixed.
+       </P
+></LI
+><LI
+><P
+>        Add ability to track user-defined functions' call counts and
+        runtimes (Martin Pihlak)
+       </P
+><P
+>        Function statistics appear in a new system view,
+        <TT
+CLASS="LITERAL"
+>pg_stat_user_functions</TT
+>.  Tracking is controlled
+        by the new parameter <TT
+CLASS="VARNAME"
+>track_functions</TT
+>.
+       </P
+></LI
+><LI
+><P
+>        Allow specification of the maximum query string size in
+        <TT
+CLASS="LITERAL"
+>pg_stat_activity</TT
+> via new
+        <TT
+CLASS="VARNAME"
+>track_activity_query_size</TT
+> parameter (Thomas Lee)
+       </P
+></LI
+><LI
+><P
+>        Increase the maximum line length sent to <SPAN
+CLASS="APPLICATION"
+>syslog</SPAN
+>, in
+        hopes of improving performance (Tom)
+       </P
+></LI
+><LI
+><P
+>        Add read-only configuration variables <TT
+CLASS="VARNAME"
+>segment_size</TT
+>,
+        <TT
+CLASS="VARNAME"
+>wal_block_size</TT
+>, and <TT
+CLASS="VARNAME"
+>wal_segment_size</TT
+>
+        (Bernd Helmle)
+       </P
+></LI
+><LI
+><P
+>        When reporting a deadlock, report the text of all queries involved
+        in the deadlock to the server log  (Itagaki Takahiro)
+       </P
+></LI
+><LI
+><P
+>        Add <CODE
+CLASS="FUNCTION"
+>pg_stat_get_activity(pid)</CODE
+> function to return
+        information about a specific process id (Magnus)
+       </P
+></LI
+><LI
+><P
+>        Allow the location of the server's statistics file to be specified
+        via <TT
+CLASS="VARNAME"
+>stats_temp_directory</TT
+> (Magnus)
+       </P
+><P
+>        This allows the statistics file to be placed in a
+        <ACRONYM
+CLASS="ACRONYM"
+>RAM</ACRONYM
+>-resident directory to reduce I/O requirements.
+        On startup/shutdown, the file is copied to its traditional location
+        (<TT
+CLASS="LITERAL"
+>$PGDATA/global/</TT
+>) so it is preserved across restarts.
+       </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN150429"
+>E.120.3.3. Queries</A
+></H3
+><P
+></P
+><UL
+><LI
+><P
+>       Add support for <TT
+CLASS="LITERAL"
+>WINDOW</TT
+> functions (Hitoshi Harada)
+      </P
+></LI
+><LI
+><P
+>       Add support for <TT
+CLASS="LITERAL"
+>WITH</TT
+> clauses (CTEs), including <TT
+CLASS="LITERAL"
+>WITH
+       RECURSIVE</TT
+> (Yoshiyuki Asaba, Tatsuo Ishii, Tom)
+      </P
+></LI
+><LI
+><P
+>       Add <TT
+CLASS="COMMAND"
+>TABLE</TT
+> command (Peter)
+      </P
+><P
+>       <TT
+CLASS="LITERAL"
+>TABLE tablename</TT
+> is a SQL standard short-hand for
+       <TT
+CLASS="LITERAL"
+>SELECT * FROM tablename</TT
+>.
+      </P
+></LI
+><LI
+><P
+>       Allow <TT
+CLASS="LITERAL"
+>AS</TT
+> to be optional when specifying a
+       <TT
+CLASS="COMMAND"
+>SELECT</TT
+> (or <TT
+CLASS="LITERAL"
+>RETURNING</TT
+>) column output
+       label (Hiroshi Saito)
+      </P
+><P
+>       This works so long as the column label is not any
+       <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> keyword; otherwise <TT
+CLASS="LITERAL"
+>AS</TT
+> is still
+       needed.
+      </P
+></LI
+><LI
+><P
+>       Support set-returning functions in <TT
+CLASS="COMMAND"
+>SELECT</TT
+> result lists
+       even for functions that return their result via a tuplestore (Tom)
+      </P
+><P
+>       In particular, this means that functions written in PL/pgSQL
+       and other PL languages can now be called this way.
+      </P
+></LI
+><LI
+><P
+>       Support set-returning functions in the output of aggregation
+       and grouping queries (Tom)
+      </P
+></LI
+><LI
+><P
+>       Allow <TT
+CLASS="COMMAND"
+>SELECT FOR UPDATE</TT
+>/<TT
+CLASS="LITERAL"
+>SHARE</TT
+> to work
+       on inheritance trees (Tom)
+      </P
+></LI
+><LI
+><P
+>       Add infrastructure for <ACRONYM
+CLASS="ACRONYM"
+>SQL/MED</ACRONYM
+> (Martin Pihlak,
+       Peter)
+      </P
+><P
+>       There are no remote or external <ACRONYM
+CLASS="ACRONYM"
+>SQL/MED</ACRONYM
+> capabilities
+       yet, but this change provides a standardized and future-proof
+       system for managing connection information for modules like
+       <TT
+CLASS="FILENAME"
+>dblink</TT
+> and <TT
+CLASS="FILENAME"
+>plproxy</TT
+>.
+      </P
+></LI
+><LI
+><P
+>       Invalidate cached plans when referenced schemas, functions, operators,
+       or operator classes are modified (Martin Pihlak, Tom)
+      </P
+><P
+>       This improves the system's ability to respond to on-the-fly
+       DDL changes.
+      </P
+></LI
+><LI
+><P
+>       Allow comparison of composite types and allow arrays of
+       anonymous composite types (Tom)
+      </P
+><P
+>       This allows constructs such as
+       <TT
+CLASS="LITERAL"
+>row(1, 1.1) = any (array[row(7, 7.7), row(1, 1.0)])</TT
+>.
+       This is particularly useful in recursive queries.
+      </P
+></LI
+><LI
+><P
+>       Add support for Unicode string literal and identifier specifications
+       using code points, e.g. <TT
+CLASS="LITERAL"
+>U&amp;'d\0061t\+000061'</TT
+>
+       (Peter)
+      </P
+></LI
+><LI
+><P
+>       Reject <TT
+CLASS="LITERAL"
+>\000</TT
+> in string literals and <TT
+CLASS="COMMAND"
+>COPY</TT
+> data
+       (Tom)
+      </P
+><P
+>       Previously, this was accepted but had the effect of terminating
+       the string contents.
+      </P
+></LI
+><LI
+><P
+>       Improve the parser's ability to report error locations (Tom)
+      </P
+><P
+>       An error location is now reported for many semantic errors,
+       such as mismatched datatypes, that previously could not be localized.
+      </P
+></LI
+></UL
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN150488"
+>E.120.3.3.1. <TT
+CLASS="COMMAND"
+>TRUNCATE</TT
+></A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Support statement-level <TT
+CLASS="LITERAL"
+>ON TRUNCATE</TT
+> triggers (Simon)
+       </P
+></LI
+><LI
+><P
+>        Add <TT
+CLASS="LITERAL"
+>RESTART</TT
+>/<TT
+CLASS="LITERAL"
+>CONTINUE IDENTITY</TT
+> options
+        for <TT
+CLASS="COMMAND"
+>TRUNCATE TABLE</TT
+>
+        (Zoltan Boszormenyi)
+       </P
+><P
+>        The start value of a sequence can be changed by <TT
+CLASS="COMMAND"
+>ALTER
+        SEQUENCE START WITH</TT
+>.
+       </P
+></LI
+><LI
+><P
+>        Allow <TT
+CLASS="COMMAND"
+>TRUNCATE tab1, tab1</TT
+> to succeed (Bruce)
+       </P
+></LI
+><LI
+><P
+>        Add a separate <TT
+CLASS="COMMAND"
+>TRUNCATE</TT
+> permission (Robert Haas)
+       </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN150508"
+>E.120.3.3.2. <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+></A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Make <TT
+CLASS="COMMAND"
+>EXPLAIN VERBOSE</TT
+> show the output columns of each
+        plan node (Tom)
+       </P
+><P
+>        Previously <TT
+CLASS="COMMAND"
+>EXPLAIN VERBOSE</TT
+> output an internal
+        representation of the query plan.  (That behavior is now
+        available via <TT
+CLASS="VARNAME"
+>debug_print_plan</TT
+>.)
+       </P
+></LI
+><LI
+><P
+>        Make <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+> identify subplans and initplans with
+        individual labels (Tom)
+       </P
+></LI
+><LI
+><P
+>        Make <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+> honor <TT
+CLASS="VARNAME"
+>debug_print_plan</TT
+> (Tom)
+       </P
+></LI
+><LI
+><P
+>        Allow <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+> on <TT
+CLASS="COMMAND"
+>CREATE TABLE AS</TT
+> (Peter)
+       </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN150529"
+>E.120.3.3.3. <TT
+CLASS="LITERAL"
+>LIMIT</TT
+>/<TT
+CLASS="LITERAL"
+>OFFSET</TT
+></A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Allow sub-selects in <TT
+CLASS="LITERAL"
+>LIMIT</TT
+> and <TT
+CLASS="LITERAL"
+>OFFSET</TT
+> (Tom)
+       </P
+></LI
+><LI
+><P
+>        Add <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+>-standard syntax for
+        <TT
+CLASS="LITERAL"
+>LIMIT</TT
+>/<TT
+CLASS="LITERAL"
+>OFFSET</TT
+> capabilities (Peter)
+       </P
+><P
+>        To wit,
+        <TT
+CLASS="LITERAL"
+>OFFSET num {ROW|ROWS} FETCH {FIRST|NEXT} [num] {ROW|ROWS}
+        ONLY</TT
+>.
+       </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN150545"
+>E.120.3.4. Object Manipulation</A
+></H3
+><P
+></P
+><UL
+><LI
+><P
+>       Add support for column-level privileges (Stephen Frost, KaiGai
+       Kohei)
+      </P
+></LI
+><LI
+><P
+>       Refactor multi-object <TT
+CLASS="COMMAND"
+>DROP</TT
+> operations to reduce the
+       need for <TT
+CLASS="LITERAL"
+>CASCADE</TT
+> (Alex Hunsaker)
+      </P
+><P
+>       For example, if table <TT
+CLASS="LITERAL"
+>B</TT
+> has a dependency on table
+       <TT
+CLASS="LITERAL"
+>A</TT
+>, the command <TT
+CLASS="LITERAL"
+>DROP TABLE A, B</TT
+> no longer
+       requires the <TT
+CLASS="LITERAL"
+>CASCADE</TT
+> option.
+      </P
+></LI
+><LI
+><P
+>       Fix various problems with concurrent <TT
+CLASS="COMMAND"
+>DROP</TT
+> commands
+       by ensuring that locks are taken before we begin to drop dependencies
+       of an object (Tom)
+      </P
+></LI
+><LI
+><P
+>       Improve reporting of dependencies during <TT
+CLASS="COMMAND"
+>DROP</TT
+>
+       commands (Tom)
+      </P
+></LI
+><LI
+><P
+>       Add <TT
+CLASS="LITERAL"
+>WITH [NO] DATA</TT
+> clause to <TT
+CLASS="COMMAND"
+>CREATE TABLE
+       AS</TT
+>, per the <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> standard (Peter, Tom)
+      </P
+></LI
+><LI
+><P
+>       Add support for user-defined I/O conversion casts (Heikki)
+      </P
+></LI
+><LI
+><P
+>       Allow <TT
+CLASS="COMMAND"
+>CREATE AGGREGATE</TT
+> to use an <TT
+CLASS="TYPE"
+>internal</TT
+>
+       transition datatype (Tom)
+      </P
+></LI
+><LI
+><P
+>       Add <TT
+CLASS="LITERAL"
+>LIKE</TT
+> clause to <TT
+CLASS="COMMAND"
+>CREATE TYPE</TT
+> (Tom)
+      </P
+><P
+>       This simplifies creation of data types that use the same internal
+       representation as an existing type.
+      </P
+></LI
+><LI
+><P
+>       Allow specification of the type category and <SPAN
+CLASS="QUOTE"
+>"preferred"</SPAN
+>
+       status for user-defined base types (Tom)
+      </P
+><P
+>       This allows more control over the coercion behavior of user-defined
+       types.
+      </P
+></LI
+><LI
+><P
+>       Allow <TT
+CLASS="COMMAND"
+>CREATE OR REPLACE VIEW</TT
+> to add columns to the
+       end of a view (Robert Haas)
+      </P
+></LI
+></UL
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN150588"
+>E.120.3.4.1. <TT
+CLASS="COMMAND"
+>ALTER</TT
+></A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Add <TT
+CLASS="COMMAND"
+>ALTER TYPE RENAME</TT
+> (Petr Jelinek)
+       </P
+></LI
+><LI
+><P
+>        Add <TT
+CLASS="COMMAND"
+>ALTER SEQUENCE ... RESTART</TT
+> (with no parameter) to
+        reset a sequence to its initial value (Zoltan Boszormenyi)
+       </P
+></LI
+><LI
+><P
+>        Modify the <TT
+CLASS="COMMAND"
+>ALTER TABLE</TT
+> syntax to allow all reasonable
+        combinations for tables, indexes, sequences, and views (Tom)
+       </P
+><P
+>        This change allows the following new syntaxes:
+
+        <P
+></P
+></P><UL
+><LI
+><P
+>           <TT
+CLASS="COMMAND"
+>ALTER SEQUENCE OWNER TO</TT
+>
+          </P
+></LI
+><LI
+><P
+>           <TT
+CLASS="COMMAND"
+>ALTER VIEW ALTER COLUMN SET/DROP DEFAULT</TT
+>
+          </P
+></LI
+><LI
+><P
+>           <TT
+CLASS="COMMAND"
+>ALTER VIEW OWNER TO</TT
+>
+          </P
+></LI
+><LI
+><P
+>           <TT
+CLASS="COMMAND"
+>ALTER VIEW SET SCHEMA</TT
+>
+          </P
+></LI
+></UL
+><P>
+
+        There is no actual new functionality here, but formerly
+        you had to say <TT
+CLASS="COMMAND"
+>ALTER TABLE</TT
+> to do these things,
+        which was confusing.
+       </P
+></LI
+><LI
+><P
+>        Add support for the syntax <TT
+CLASS="COMMAND"
+>ALTER TABLE ... ALTER COLUMN
+        ... SET DATA TYPE</TT
+> (Peter)
+       </P
+><P
+>        This is <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+>-standard syntax for functionality that
+        was already supported.
+       </P
+></LI
+><LI
+><P
+>        Make <TT
+CLASS="COMMAND"
+>ALTER TABLE SET WITHOUT OIDS</TT
+> rewrite the table
+        to physically remove <TT
+CLASS="TYPE"
+>OID</TT
+> values (Tom)
+       </P
+><P
+>        Also, add <TT
+CLASS="COMMAND"
+>ALTER TABLE SET WITH OIDS</TT
+> to rewrite the
+        table to add <TT
+CLASS="TYPE"
+>OID</TT
+>s.
+       </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN150628"
+>E.120.3.4.2. Database Manipulation</A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Improve reporting of
+        <TT
+CLASS="COMMAND"
+>CREATE</TT
+>/<TT
+CLASS="COMMAND"
+>DROP</TT
+>/<TT
+CLASS="COMMAND"
+>RENAME DATABASE</TT
+>
+        failure when uncommitted prepared transactions are the cause
+        (Tom)
+       </P
+></LI
+><LI
+><P
+>        Make <TT
+CLASS="VARNAME"
+>LC_COLLATE</TT
+> and <TT
+CLASS="VARNAME"
+>LC_CTYPE</TT
+> into
+        per-database settings (Radek Strnad, Heikki)
+       </P
+><P
+>        This makes collation similar to encoding, which was always
+        configurable per database.
+       </P
+></LI
+><LI
+><P
+>        Improve checks that the database encoding, collation
+        (<TT
+CLASS="VARNAME"
+>LC_COLLATE</TT
+>), and character classes
+        (<TT
+CLASS="VARNAME"
+>LC_CTYPE</TT
+>) match (Heikki, Tom)
+       </P
+><P
+>        Note in particular that a new database's encoding and locale
+        settings can be changed only when copying from <TT
+CLASS="LITERAL"
+>template0</TT
+>.
+        This prevents possibly copying data that doesn't match the settings.
+       </P
+></LI
+><LI
+><P
+>        Add <TT
+CLASS="COMMAND"
+>ALTER DATABASE SET TABLESPACE</TT
+> to move a database
+        to a new tablespace (Guillaume Lelarge, Bernd Helmle)
+       </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN150650"
+>E.120.3.5. Utility Operations</A
+></H3
+><P
+></P
+><UL
+><LI
+><P
+>       Add a <TT
+CLASS="LITERAL"
+>VERBOSE</TT
+> option to the <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+> command and
+       <SPAN
+CLASS="APPLICATION"
+>clusterdb</SPAN
+> (Jim Cox)
+      </P
+></LI
+><LI
+><P
+>       Decrease memory requirements for recording pending trigger
+       events (Tom)
+      </P
+></LI
+></UL
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN150660"
+>E.120.3.5.1. Indexes</A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Dramatically improve the speed of building and accessing hash
+        indexes (Tom Raney, Shreya Bhargava)
+       </P
+><P
+>        This allows hash indexes to be sometimes faster than btree
+        indexes.  However, hash indexes are still not crash-safe.
+       </P
+></LI
+><LI
+><P
+>        Make hash indexes store only the hash code, not the full value of
+        the indexed column (Xiao Meng)
+       </P
+><P
+>        This greatly reduces the size of hash indexes for long indexed
+        values, improving performance.
+       </P
+></LI
+><LI
+><P
+>        Implement fast update option for GIN indexes (Teodor, Oleg)
+       </P
+><P
+>        This option greatly improves update speed at a small penalty in search
+        speed.
+       </P
+></LI
+><LI
+><P
+>        <TT
+CLASS="LITERAL"
+>xxx_pattern_ops</TT
+> indexes can now be used for simple
+        equality comparisons, not only for <TT
+CLASS="LITERAL"
+>LIKE</TT
+> (Tom)
+       </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN150676"
+>E.120.3.5.2. Full Text Indexes</A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Remove the requirement to use <TT
+CLASS="LITERAL"
+>@@@</TT
+> when doing
+        <ACRONYM
+CLASS="ACRONYM"
+>GIN</ACRONYM
+> weighted lookups on full text indexes (Tom, Teodor)
+       </P
+><P
+>        The normal <TT
+CLASS="LITERAL"
+>@@</TT
+> text search operator can be used
+        instead.
+       </P
+></LI
+><LI
+><P
+>        Add an optimizer selectivity function for <TT
+CLASS="LITERAL"
+>@@</TT
+> text
+        search operations (Jan Urbanski)
+       </P
+></LI
+><LI
+><P
+>        Allow prefix matching in full text searches (Teodor Sigaev,
+        Oleg Bartunov)
+       </P
+></LI
+><LI
+><P
+>        Support multi-column <ACRONYM
+CLASS="ACRONYM"
+>GIN</ACRONYM
+> indexes (Teodor Sigaev)
+       </P
+></LI
+><LI
+><P
+>        Improve support for Nepali language and Devanagari alphabet (Teodor)
+       </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN150695"
+>E.120.3.5.3. <TT
+CLASS="COMMAND"
+>VACUUM</TT
+></A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Track free space in separate per-relation <SPAN
+CLASS="QUOTE"
+>"fork"</SPAN
+> files (Heikki)
+       </P
+><P
+>        Free space discovered by <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> is now recorded in
+        <TT
+CLASS="FILENAME"
+>*_fsm</TT
+> files, rather than in a fixed-sized shared memory
+        area.  The <TT
+CLASS="VARNAME"
+>max_fsm_pages</TT
+> and <TT
+CLASS="VARNAME"
+>max_fsm_relations</TT
+>
+        settings have been removed, greatly simplifying administration of
+        free space management.
+       </P
+></LI
+><LI
+><P
+>        Add a visibility map to track pages that do not require
+        vacuuming (Heikki)
+       </P
+><P
+>        This allows <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> to avoid scanning all of
+        a table when only a portion of the table needs vacuuming.
+        The visibility map is stored in per-relation <SPAN
+CLASS="QUOTE"
+>"fork"</SPAN
+> files.
+       </P
+></LI
+><LI
+><P
+>        Add <TT
+CLASS="VARNAME"
+>vacuum_freeze_table_age</TT
+> parameter to control
+        when <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> should ignore the visibility map and
+        do a full table scan to freeze tuples (Heikki)
+       </P
+></LI
+><LI
+><P
+>        Track transaction snapshots more carefully (Alvaro)
+       </P
+><P
+>        This improves <TT
+CLASS="COMMAND"
+>VACUUM</TT
+>'s ability to reclaim space
+        in the presence of long-running transactions.
+       </P
+></LI
+><LI
+><P
+>        Add ability to specify per-relation autovacuum and <ACRONYM
+CLASS="ACRONYM"
+>TOAST</ACRONYM
+>
+        parameters in <TT
+CLASS="COMMAND"
+>CREATE TABLE</TT
+> (Alvaro, Euler Taveira de
+        Oliveira)
+       </P
+><P
+>        Autovacuum options used to be stored in a system table.
+       </P
+></LI
+><LI
+><P
+>        Add <TT
+CLASS="LITERAL"
+>--freeze</TT
+> option to <SPAN
+CLASS="APPLICATION"
+>vacuumdb</SPAN
+>
+        (Bruce)
+       </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN150729"
+>E.120.3.6. Data Types</A
+></H3
+><P
+></P
+><UL
+><LI
+><P
+>       Add a <TT
+CLASS="LITERAL"
+>CaseSensitive</TT
+> option for text search synonym
+       dictionaries (Simon)
+      </P
+></LI
+><LI
+><P
+>       Improve the precision of <TT
+CLASS="TYPE"
+>NUMERIC</TT
+> division (Tom)
+      </P
+></LI
+><LI
+><P
+>       Add basic arithmetic operators for <TT
+CLASS="TYPE"
+>int2</TT
+> with <TT
+CLASS="TYPE"
+>int8</TT
+>
+       (Tom)
+      </P
+><P
+>       This eliminates the need for explicit casting in some situations.
+      </P
+></LI
+><LI
+><P
+>       Allow <TT
+CLASS="TYPE"
+>UUID</TT
+> input to accept an optional hyphen after
+       every fourth digit (Robert Haas)
+      </P
+></LI
+><LI
+><P
+>       Allow <TT
+CLASS="LITERAL"
+>on</TT
+>/<TT
+CLASS="LITERAL"
+>off</TT
+> as input for the boolean data type
+       (Itagaki Takahiro)
+      </P
+></LI
+><LI
+><P
+>       Allow spaces around <TT
+CLASS="LITERAL"
+>NaN</TT
+> in the input string for
+       type <TT
+CLASS="TYPE"
+>numeric</TT
+> (Sam Mason)
+      </P
+></LI
+></UL
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN150754"
+>E.120.3.6.1. Temporal Data Types</A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Reject year <TT
+CLASS="LITERAL"
+>0 BC</TT
+> and years <TT
+CLASS="LITERAL"
+>000</TT
+> and
+        <TT
+CLASS="LITERAL"
+>0000</TT
+> (Tom)
+       </P
+><P
+>        Previously these were interpreted as <TT
+CLASS="LITERAL"
+>1 BC</TT
+>.
+        (Note: years <TT
+CLASS="LITERAL"
+>0</TT
+> and <TT
+CLASS="LITERAL"
+>00</TT
+> are still assumed to be
+        the year 2000.)
+       </P
+></LI
+><LI
+><P
+>        Include <TT
+CLASS="LITERAL"
+>SGT</TT
+> (Singapore time) in the default list of
+        known time zone abbreviations (Tom)
+       </P
+></LI
+><LI
+><P
+>        Support <TT
+CLASS="LITERAL"
+>infinity</TT
+> and <TT
+CLASS="LITERAL"
+>-infinity</TT
+> as
+        values of type <TT
+CLASS="TYPE"
+>date</TT
+> (Tom)
+       </P
+></LI
+><LI
+><P
+>        Make parsing of <TT
+CLASS="TYPE"
+>interval</TT
+> literals more standard-compliant
+        (Tom, Ron Mayer)
+       </P
+><P
+>        For example, <TT
+CLASS="LITERAL"
+>INTERVAL '1' YEAR</TT
+> now does what it's
+        supposed to.
+       </P
+></LI
+><LI
+><P
+>        Allow <TT
+CLASS="TYPE"
+>interval</TT
+> fractional-seconds precision to be specified
+        after the <TT
+CLASS="LITERAL"
+>second</TT
+> keyword, for <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> standard
+        compliance (Tom)
+       </P
+><P
+>        Formerly the precision had to be specified after the keyword
+        <TT
+CLASS="TYPE"
+>interval</TT
+>.  (For backwards compatibility, this syntax is still
+        supported, though deprecated.)  Data type definitions will now be
+        output using the standard format.
+       </P
+></LI
+><LI
+><P
+>        Support the <ACRONYM
+CLASS="ACRONYM"
+>IS0 8601</ACRONYM
+> <TT
+CLASS="TYPE"
+>interval</TT
+> syntax (Ron
+        Mayer, Kevin Grittner)
+       </P
+><P
+>        For example, <TT
+CLASS="LITERAL"
+>INTERVAL 'P1Y2M3DT4H5M6.7S'</TT
+> is now
+        supported.
+       </P
+></LI
+><LI
+><P
+>        Add <TT
+CLASS="VARNAME"
+>IntervalStyle</TT
+> parameter
+        which controls how <TT
+CLASS="TYPE"
+>interval</TT
+> values are output (Ron Mayer)
+       </P
+><P
+>        Valid values are:  <TT
+CLASS="LITERAL"
+>postgres</TT
+>, <TT
+CLASS="LITERAL"
+>postgres_verbose</TT
+>,
+        <TT
+CLASS="LITERAL"
+>sql_standard</TT
+>, <TT
+CLASS="LITERAL"
+>iso_8601</TT
+>.  This setting also
+        controls the handling of negative <TT
+CLASS="TYPE"
+>interval</TT
+> input when only
+        some fields have positive/negative designations.
+       </P
+></LI
+><LI
+><P
+>        Improve consistency of handling of fractional seconds in
+        <TT
+CLASS="TYPE"
+>timestamp</TT
+> and <TT
+CLASS="TYPE"
+>interval</TT
+> output (Ron Mayer)
+       </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN150806"
+>E.120.3.6.2. Arrays</A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Improve the handling of casts applied to <TT
+CLASS="LITERAL"
+>ARRAY[]</TT
+>
+        constructs, such as <TT
+CLASS="LITERAL"
+>ARRAY[...]::integer[]</TT
+>
+        (Brendan Jurd)
+       </P
+><P
+>        Formerly <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> attempted to determine a data type
+        for the <TT
+CLASS="LITERAL"
+>ARRAY[]</TT
+> construct without reference to the ensuing
+        cast.  This could fail unnecessarily in many cases, in particular when
+        the <TT
+CLASS="LITERAL"
+>ARRAY[]</TT
+> construct was empty or contained only
+        ambiguous entries such as <TT
+CLASS="LITERAL"
+>NULL</TT
+>.  Now the cast is consulted
+        to determine the type that the array elements must be.
+       </P
+></LI
+><LI
+><P
+>        Make <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+>-syntax <TT
+CLASS="TYPE"
+>ARRAY</TT
+> dimensions optional
+        to match the <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> standard (Peter)
+       </P
+></LI
+><LI
+><P
+>        Add <CODE
+CLASS="FUNCTION"
+>array_ndims()</CODE
+> to return the number
+        of dimensions of an array (Robert Haas)
+       </P
+></LI
+><LI
+><P
+>        Add <CODE
+CLASS="FUNCTION"
+>array_length()</CODE
+> to return the length
+        of an array for a specified dimension (Jim Nasby, Robert
+        Haas, Peter Eisentraut)
+       </P
+></LI
+><LI
+><P
+>        Add aggregate function <CODE
+CLASS="FUNCTION"
+>array_agg()</CODE
+>, which
+        returns all aggregated values as a single array (Robert Haas,
+        Jeff Davis, Peter)
+       </P
+></LI
+><LI
+><P
+>        Add <CODE
+CLASS="FUNCTION"
+>unnest()</CODE
+>, which converts an array to
+        individual row values (Tom)
+       </P
+><P
+>        This is the opposite of <CODE
+CLASS="FUNCTION"
+>array_agg()</CODE
+>.
+       </P
+></LI
+><LI
+><P
+>        Add <CODE
+CLASS="FUNCTION"
+>array_fill()</CODE
+> to create arrays initialized with
+        a value (Pavel Stehule)
+       </P
+></LI
+><LI
+><P
+>        Add <CODE
+CLASS="FUNCTION"
+>generate_subscripts()</CODE
+> to simplify generating
+        the range of an array's subscripts (Pavel Stehule)
+       </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN150843"
+>E.120.3.6.3. Wide-Value Storage (<ACRONYM
+CLASS="ACRONYM"
+>TOAST</ACRONYM
+>)</A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Consider <ACRONYM
+CLASS="ACRONYM"
+>TOAST</ACRONYM
+> compression on values as short as
+        32 bytes (previously 256 bytes) (Greg Stark)
+       </P
+></LI
+><LI
+><P
+>        Require 25% minimum space savings before using <ACRONYM
+CLASS="ACRONYM"
+>TOAST</ACRONYM
+>
+        compression (previously 20% for small values and any-savings-at-all
+        for large values) (Greg)
+       </P
+></LI
+><LI
+><P
+>        Improve <ACRONYM
+CLASS="ACRONYM"
+>TOAST</ACRONYM
+> heuristics for rows that have a mix of large
+        and small toastable fields, so that we prefer to push large values out
+        of line and don't compress small values unnecessarily (Greg, Tom)
+       </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN150856"
+>E.120.3.7. Functions</A
+></H3
+><P
+></P
+><UL
+><LI
+><P
+>       Document that <CODE
+CLASS="FUNCTION"
+>setseed()</CODE
+> allows values from
+       <TT
+CLASS="LITERAL"
+>-1</TT
+> to <TT
+CLASS="LITERAL"
+>1</TT
+> (not just <TT
+CLASS="LITERAL"
+>0</TT
+> to
+       <TT
+CLASS="LITERAL"
+>1</TT
+>), and enforce the valid range (Kris Jurka)
+      </P
+></LI
+><LI
+><P
+>       Add server-side function <CODE
+CLASS="FUNCTION"
+>lo_import(filename, oid)</CODE
+>
+       (Tatsuo)
+      </P
+></LI
+><LI
+><P
+>       Add <CODE
+CLASS="FUNCTION"
+>quote_nullable()</CODE
+>, which behaves like
+       <CODE
+CLASS="FUNCTION"
+>quote_literal()</CODE
+> but returns the string <TT
+CLASS="LITERAL"
+>NULL</TT
+> for
+       a null argument (Brendan Jurd)
+      </P
+></LI
+><LI
+><P
+>       Improve full text search <CODE
+CLASS="FUNCTION"
+>headline()</CODE
+> function to
+       allow extracting several fragments of text (Sushant Sinha)
+      </P
+></LI
+><LI
+><P
+>       Add <CODE
+CLASS="FUNCTION"
+>suppress_redundant_updates_trigger()</CODE
+> trigger
+       function to avoid overhead for non-data-changing updates (Andrew)
+      </P
+></LI
+><LI
+><P
+>       Add <CODE
+CLASS="FUNCTION"
+>div(numeric, numeric)</CODE
+> to perform <TT
+CLASS="TYPE"
+>numeric</TT
+>
+       division without rounding (Tom)
+      </P
+></LI
+><LI
+><P
+>       Add <TT
+CLASS="TYPE"
+>timestamp</TT
+> and <TT
+CLASS="TYPE"
+>timestamptz</TT
+> versions of
+       <CODE
+CLASS="FUNCTION"
+>generate_series()</CODE
+> (Hitoshi Harada)
+      </P
+></LI
+></UL
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN150889"
+>E.120.3.7.1. Object Information Functions</A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Implement <CODE
+CLASS="FUNCTION"
+>current_query()</CODE
+> for use by functions
+        that need to know the currently running query (Tomas Doran)
+       </P
+></LI
+><LI
+><P
+>        Add <CODE
+CLASS="FUNCTION"
+>pg_get_keywords()</CODE
+> to return a list of the
+        parser keywords (Dave Page)
+       </P
+></LI
+><LI
+><P
+>        Add <CODE
+CLASS="FUNCTION"
+>pg_get_functiondef()</CODE
+> to see a function's
+        definition (Abhijit Menon-Sen)
+       </P
+></LI
+><LI
+><P
+>        Allow the second argument of <CODE
+CLASS="FUNCTION"
+>pg_get_expr()</CODE
+> to be zero
+        when deparsing an expression that does not contain variables (Tom)
+       </P
+></LI
+><LI
+><P
+>        Modify <CODE
+CLASS="FUNCTION"
+>pg_relation_size()</CODE
+> to use <TT
+CLASS="LITERAL"
+>regclass</TT
+>
+        (Heikki)
+       </P
+><P
+>        <CODE
+CLASS="FUNCTION"
+>pg_relation_size(data_type_name)</CODE
+> no longer works.
+       </P
+></LI
+><LI
+><P
+>        Add <TT
+CLASS="LITERAL"
+>boot_val</TT
+> and <TT
+CLASS="LITERAL"
+>reset_val</TT
+> columns to
+        <TT
+CLASS="LITERAL"
+>pg_settings</TT
+> output (Greg Smith)
+       </P
+></LI
+><LI
+><P
+>        Add source file name and line number columns to
+        <TT
+CLASS="LITERAL"
+>pg_settings</TT
+> output for variables set in a configuration
+        file (Magnus, Alvaro)
+       </P
+><P
+>        For security reasons, these columns are only visible to superusers.
+       </P
+></LI
+><LI
+><P
+>        Add support for <TT
+CLASS="VARNAME"
+>CURRENT_CATALOG</TT
+>,
+        <TT
+CLASS="VARNAME"
+>CURRENT_SCHEMA</TT
+>, <TT
+CLASS="VARNAME"
+>SET CATALOG</TT
+>, <TT
+CLASS="VARNAME"
+>SET
+        SCHEMA</TT
+> (Peter)
+       </P
+><P
+>        These provide <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+>-standard syntax for existing features.
+       </P
+></LI
+><LI
+><P
+>        Add <CODE
+CLASS="FUNCTION"
+>pg_typeof()</CODE
+> which returns the data type
+        of any value (Brendan Jurd)
+       </P
+></LI
+><LI
+><P
+>        Make <CODE
+CLASS="FUNCTION"
+>version()</CODE
+> return information about whether
+        the server is a 32- or 64-bit binary (Bruce)
+       </P
+></LI
+><LI
+><P
+>        Fix the behavior of information schema columns
+        <TT
+CLASS="STRUCTFIELD"
+>is_insertable_into</TT
+> and <TT
+CLASS="STRUCTFIELD"
+>is_updatable</TT
+> to
+        be consistent (Peter)
+       </P
+></LI
+><LI
+><P
+>        Improve the behavior of information schema
+        <TT
+CLASS="STRUCTFIELD"
+>datetime_precision</TT
+> columns (Peter)
+       </P
+><P
+>        These columns now show zero for <TT
+CLASS="TYPE"
+>date</TT
+> columns, and 6
+        (the default precision) for <TT
+CLASS="TYPE"
+>time</TT
+>, <TT
+CLASS="TYPE"
+>timestamp</TT
+>, and
+        <TT
+CLASS="TYPE"
+>interval</TT
+> without a declared precision, rather than showing
+        null as formerly.
+       </P
+></LI
+><LI
+><P
+>        Convert remaining builtin set-returning functions to use
+        <TT
+CLASS="LITERAL"
+>OUT</TT
+> parameters (Jaime Casanova)
+       </P
+><P
+>        This makes it possible to call these functions without specifying
+        a column list:  <CODE
+CLASS="FUNCTION"
+>pg_show_all_settings()</CODE
+>,
+        <CODE
+CLASS="FUNCTION"
+>pg_lock_status()</CODE
+>, <CODE
+CLASS="FUNCTION"
+>pg_prepared_xact()</CODE
+>,
+        <CODE
+CLASS="FUNCTION"
+>pg_prepared_statement()</CODE
+>, <CODE
+CLASS="FUNCTION"
+>pg_cursor()</CODE
+>
+       </P
+></LI
+><LI
+><P
+>        Make <CODE
+CLASS="FUNCTION"
+>pg_*_is_visible()</CODE
+> and
+        <CODE
+CLASS="FUNCTION"
+>has_*_privilege()</CODE
+> functions return <TT
+CLASS="LITERAL"
+>NULL</TT
+>
+        for invalid OIDs, rather than reporting an error (Tom)
+       </P
+></LI
+><LI
+><P
+>        Extend <CODE
+CLASS="FUNCTION"
+>has_*_privilege()</CODE
+> functions to allow inquiring
+        about the OR of multiple privileges in one call (Stephen
+        Frost, Tom)
+       </P
+></LI
+><LI
+><P
+>        Add <CODE
+CLASS="FUNCTION"
+>has_column_privilege()</CODE
+> and
+        <CODE
+CLASS="FUNCTION"
+>has_any_column_privilege()</CODE
+> functions (Stephen
+        Frost, Tom)
+       </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN150966"
+>E.120.3.7.2. Function Creation</A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Support variadic functions (functions with a variable number
+        of arguments) (Pavel Stehule)
+       </P
+><P
+>        Only trailing arguments can be optional, and they all must be
+        of the same data type.
+       </P
+></LI
+><LI
+><P
+>        Support default values for function arguments (Pavel Stehule)
+       </P
+></LI
+><LI
+><P
+>        Add <TT
+CLASS="COMMAND"
+>CREATE FUNCTION ... RETURNS TABLE</TT
+> clause (Pavel
+        Stehule)
+       </P
+></LI
+><LI
+><P
+>        Allow <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+>-language functions to return the output
+        of an <TT
+CLASS="COMMAND"
+>INSERT</TT
+>/<TT
+CLASS="COMMAND"
+>UPDATE</TT
+>/<TT
+CLASS="COMMAND"
+>DELETE</TT
+>
+        <TT
+CLASS="LITERAL"
+>RETURNING</TT
+> clause (Tom)
+       </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN150984"
+>E.120.3.7.3. PL/pgSQL Server-Side Language</A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Support <TT
+CLASS="LITERAL"
+>EXECUTE USING</TT
+> for easier insertion of data
+        values into a dynamic query string (Pavel Stehule)
+       </P
+></LI
+><LI
+><P
+>        Allow looping over the results of a cursor using a <TT
+CLASS="LITERAL"
+>FOR</TT
+>
+        loop (Pavel Stehule)
+       </P
+></LI
+><LI
+><P
+>        Support <TT
+CLASS="LITERAL"
+>RETURN QUERY EXECUTE</TT
+> (Pavel
+        Stehule)
+       </P
+></LI
+><LI
+><P
+>        Improve the <TT
+CLASS="LITERAL"
+>RAISE</TT
+> command (Pavel Stehule)
+
+        <P
+></P
+></P><UL
+><LI
+><P
+>           Support <TT
+CLASS="LITERAL"
+>DETAIL</TT
+> and <TT
+CLASS="LITERAL"
+>HINT</TT
+> fields
+          </P
+></LI
+><LI
+><P
+>           Support specification of the <TT
+CLASS="LITERAL"
+>SQLSTATE</TT
+> error code
+          </P
+></LI
+><LI
+><P
+>           Support an exception name parameter
+          </P
+></LI
+><LI
+><P
+>           Allow <TT
+CLASS="LITERAL"
+>RAISE</TT
+> without parameters in an exception
+           block to re-throw the current error
+          </P
+></LI
+></UL
+><P>
+       </P
+></LI
+><LI
+><P
+>        Allow specification of <TT
+CLASS="VARNAME"
+>SQLSTATE</TT
+> codes
+        in <TT
+CLASS="LITERAL"
+>EXCEPTION</TT
+> lists (Pavel Stehule)
+       </P
+><P
+>        This is useful for handling custom <TT
+CLASS="VARNAME"
+>SQLSTATE</TT
+> codes.
+       </P
+></LI
+><LI
+><P
+>        Support the <TT
+CLASS="LITERAL"
+>CASE</TT
+> statement (Pavel Stehule)
+       </P
+></LI
+><LI
+><P
+>        Make <TT
+CLASS="COMMAND"
+>RETURN QUERY</TT
+> set the special <TT
+CLASS="LITERAL"
+>FOUND</TT
+> and
+        <TT
+CLASS="COMMAND"
+>GET DIAGNOSTICS</TT
+> <TT
+CLASS="LITERAL"
+>ROW_COUNT</TT
+> variables
+        (Pavel Stehule)
+       </P
+></LI
+><LI
+><P
+>        Make <TT
+CLASS="COMMAND"
+>FETCH</TT
+> and <TT
+CLASS="COMMAND"
+>MOVE</TT
+> set the
+        <TT
+CLASS="COMMAND"
+>GET DIAGNOSTICS</TT
+> <TT
+CLASS="LITERAL"
+>ROW_COUNT</TT
+> variable
+        (Andrew Gierth)
+       </P
+></LI
+><LI
+><P
+>        Make <TT
+CLASS="COMMAND"
+>EXIT</TT
+> without a label always exit the innermost
+        loop (Tom)
+       </P
+><P
+>        Formerly, if there were a <TT
+CLASS="LITERAL"
+>BEGIN</TT
+> block more closely nested
+        than any loop, it would exit that block instead.  The new behavior
+        matches Oracle(TM) and is also what was previously stated by our own
+        documentation.
+       </P
+></LI
+><LI
+><P
+>        Make processing of string literals and nested block comments
+        match the main SQL parser's processing (Tom)
+       </P
+><P
+>        In particular, the format string in <TT
+CLASS="COMMAND"
+>RAISE</TT
+> now works
+        the same as any other string literal, including being subject
+        to <TT
+CLASS="VARNAME"
+>standard_conforming_strings</TT
+>.  This change also
+        fixes other cases in which valid commands would fail when
+        <TT
+CLASS="VARNAME"
+>standard_conforming_strings</TT
+> is on.
+       </P
+></LI
+><LI
+><P
+>        Avoid memory leakage when the same function is called at varying
+        exception-block nesting depths (Tom)
+       </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN151046"
+>E.120.3.8. Client Applications</A
+></H3
+><P
+></P
+><UL
+><LI
+><P
+>       Fix <TT
+CLASS="LITERAL"
+>pg_ctl restart</TT
+> to preserve command-line arguments
+       (Bruce)
+      </P
+></LI
+><LI
+><P
+>       Add <TT
+CLASS="LITERAL"
+>-w</TT
+>/<TT
+CLASS="LITERAL"
+>--no-password</TT
+> option that
+       prevents password prompting in all utilities that have a
+       <TT
+CLASS="LITERAL"
+>-W</TT
+>/<TT
+CLASS="LITERAL"
+>--password</TT
+> option (Peter)
+      </P
+></LI
+><LI
+><P
+>       Remove <TT
+CLASS="OPTION"
+>-q</TT
+> (quiet) option of <SPAN
+CLASS="APPLICATION"
+>createdb</SPAN
+>,
+       <SPAN
+CLASS="APPLICATION"
+>createuser</SPAN
+>, <SPAN
+CLASS="APPLICATION"
+>dropdb</SPAN
+>,
+       <SPAN
+CLASS="APPLICATION"
+>dropuser</SPAN
+> (Peter)
+      </P
+><P
+>       These options have had no effect since <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+       8.3.
+      </P
+></LI
+></UL
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN151067"
+>E.120.3.8.1. <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+></A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Remove verbose startup banner; now just suggest <TT
+CLASS="LITERAL"
+>help</TT
+>
+        (Joshua Drake)
+       </P
+></LI
+><LI
+><P
+>        Make <TT
+CLASS="LITERAL"
+>help</TT
+> show common backslash commands (Greg
+        Sabino Mullane)
+       </P
+></LI
+><LI
+><P
+>        Add <TT
+CLASS="LITERAL"
+>\pset format wrapped</TT
+> mode to wrap output to the
+        screen width, or file/pipe output too if <TT
+CLASS="LITERAL"
+>\pset columns</TT
+>
+        is set (Bryce Nesbitt)
+       </P
+></LI
+><LI
+><P
+>        Allow all supported spellings of boolean values in <TT
+CLASS="COMMAND"
+>\pset</TT
+>,
+        rather than just <TT
+CLASS="LITERAL"
+>on</TT
+> and <TT
+CLASS="LITERAL"
+>off</TT
+> (Bruce)
+       </P
+><P
+>        Formerly, any string other than <SPAN
+CLASS="QUOTE"
+>"off"</SPAN
+> was silently taken
+        to mean <TT
+CLASS="LITERAL"
+>true</TT
+>.  <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> will now complain
+        about unrecognized spellings (but still take them as <TT
+CLASS="LITERAL"
+>true</TT
+>).
+       </P
+></LI
+><LI
+><P
+>        Use the pager for wide output (Bruce)
+       </P
+></LI
+><LI
+><P
+>        Require a space between a one-letter backslash command and its first
+        argument (Bernd Helmle)
+       </P
+><P
+>        This removes a historical source of ambiguity.
+       </P
+></LI
+><LI
+><P
+>        Improve tab completion support for schema-qualified and
+        quoted identifiers (Greg Sabino Mullane)
+       </P
+></LI
+><LI
+><P
+>        Add optional <TT
+CLASS="LITERAL"
+>on</TT
+>/<TT
+CLASS="LITERAL"
+>off</TT
+> argument for
+        <TT
+CLASS="COMMAND"
+>\timing</TT
+> (David Fetter)
+       </P
+></LI
+><LI
+><P
+>        Display access control rights on multiple lines (Brendan
+        Jurd, Andreas Scherbaum)
+       </P
+></LI
+><LI
+><P
+>        Make <TT
+CLASS="COMMAND"
+>\l</TT
+> show database access privileges (Andrew Gilligan)
+       </P
+></LI
+><LI
+><P
+>        Make <TT
+CLASS="COMMAND"
+>\l+</TT
+> show database sizes, if permissions
+        allow (Andrew Gilligan)
+       </P
+></LI
+><LI
+><P
+>        Add the <TT
+CLASS="COMMAND"
+>\ef</TT
+> command to edit function definitions
+        (Abhijit Menon-Sen)
+       </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN151114"
+>E.120.3.8.2. <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> \d* commands</A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Make <TT
+CLASS="COMMAND"
+>\d*</TT
+> commands that do not have a pattern argument
+        show system objects only if the <TT
+CLASS="LITERAL"
+>S</TT
+> modifier is specified
+        (Greg Sabino Mullane, Bruce)
+       </P
+><P
+>        The former behavior was inconsistent across different variants
+        of <TT
+CLASS="COMMAND"
+>\d</TT
+>, and in most cases it provided no easy way to see
+        just user objects.
+       </P
+></LI
+><LI
+><P
+>        Improve <TT
+CLASS="COMMAND"
+>\d*</TT
+> commands to work with older
+        <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> server versions (back to 7.4),
+        not only the current server version
+        (Guillaume Lelarge)
+       </P
+></LI
+><LI
+><P
+>        Make <TT
+CLASS="COMMAND"
+>\d</TT
+> show foreign-key constraints that reference
+        the selected table (Kenneth D'Souza)
+       </P
+></LI
+><LI
+><P
+>        Make <TT
+CLASS="COMMAND"
+>\d</TT
+> on a sequence show its column values
+        (Euler Taveira de Oliveira)
+       </P
+></LI
+><LI
+><P
+>        Add column storage type and other relation options to the
+        <TT
+CLASS="COMMAND"
+>\d+</TT
+> display (Gregory Stark, Euler Taveira de
+        Oliveira)
+       </P
+></LI
+><LI
+><P
+>        Show relation size in <TT
+CLASS="COMMAND"
+>\dt+</TT
+> output (Dickson S.
+        Guedes)
+       </P
+></LI
+><LI
+><P
+>        Show the possible values of <TT
+CLASS="LITERAL"
+>enum</TT
+> types in <TT
+CLASS="COMMAND"
+>\dT+</TT
+>
+        (David Fetter)
+       </P
+></LI
+><LI
+><P
+>        Allow <TT
+CLASS="COMMAND"
+>\dC</TT
+> to accept a wildcard pattern, which matches
+        either datatype involved in the cast (Tom)
+       </P
+></LI
+><LI
+><P
+>        Add a function type column to <TT
+CLASS="COMMAND"
+>\df</TT
+>'s output, and add
+        options to list only selected types of functions (David Fetter)
+       </P
+></LI
+><LI
+><P
+>        Make <TT
+CLASS="COMMAND"
+>\df</TT
+> not hide functions that take or return
+        type <TT
+CLASS="TYPE"
+>cstring</TT
+> (Tom)
+       </P
+><P
+>        Previously, such functions were hidden because most of them are
+        datatype I/O functions, which were deemed uninteresting.  The new
+        policy about hiding system functions by default makes this wart
+        unnecessary.
+       </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN151155"
+>E.120.3.8.3. <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+></A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Add a <TT
+CLASS="LITERAL"
+>--no-tablespaces</TT
+> option to
+        <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>/<SPAN
+CLASS="APPLICATION"
+>pg_dumpall</SPAN
+>/<SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+>
+        so that dumps can be restored to clusters that have non-matching
+        tablespace layouts (Gavin Roy)
+       </P
+></LI
+><LI
+><P
+>        Remove <TT
+CLASS="OPTION"
+>-d</TT
+> and <TT
+CLASS="OPTION"
+>-D</TT
+> options from
+        <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> and <SPAN
+CLASS="APPLICATION"
+>pg_dumpall</SPAN
+> (Tom)
+       </P
+><P
+>        These options were too frequently confused with the option to
+        select a database name in other <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+        client applications.  The functionality is still available,
+        but you must now spell out the long option name
+        <TT
+CLASS="OPTION"
+>--inserts</TT
+> or <TT
+CLASS="OPTION"
+>--column-inserts</TT
+>.
+       </P
+></LI
+><LI
+><P
+>        Remove <TT
+CLASS="OPTION"
+>-i</TT
+>/<TT
+CLASS="OPTION"
+>--ignore-version</TT
+> option from
+        <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> and <SPAN
+CLASS="APPLICATION"
+>pg_dumpall</SPAN
+> (Tom)
+       </P
+><P
+>        Use of this option does not throw an error, but it has no
+        effect.  This option was removed because the version checks
+        are necessary for safety.
+       </P
+></LI
+><LI
+><P
+>        Disable <TT
+CLASS="VARNAME"
+>statement_timeout</TT
+> during dump and restore
+        (Joshua Drake)
+       </P
+></LI
+><LI
+><P
+>        Add <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>/<SPAN
+CLASS="APPLICATION"
+>pg_dumpall</SPAN
+> option
+        <TT
+CLASS="OPTION"
+>--lock-wait-timeout</TT
+> (David Gould)
+       </P
+><P
+>        This allows dumps to fail if unable to acquire a shared lock
+        within the specified amount of time.
+       </P
+></LI
+><LI
+><P
+>        Reorder <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> <TT
+CLASS="LITERAL"
+>--data-only</TT
+> output
+        to dump tables referenced by foreign keys before
+        the referencing tables (Tom)
+       </P
+><P
+>        This allows data loads when foreign keys are already present.
+        If circular references make a safe ordering impossible, a
+        <TT
+CLASS="LITERAL"
+>NOTICE</TT
+> is issued.
+       </P
+></LI
+><LI
+><P
+>        Allow <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>, <SPAN
+CLASS="APPLICATION"
+>pg_dumpall</SPAN
+>, and
+        <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> to use a specified role (Benedek
+        L&aacute;szl&oacute;)
+       </P
+></LI
+><LI
+><P
+>        Allow <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> to use multiple concurrent
+        connections to do the restore (Andrew)
+       </P
+><P
+>        The number of concurrent connections is controlled by the option
+        <TT
+CLASS="LITERAL"
+>--jobs</TT
+>.  This is supported only for custom-format archives.
+       </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN151207"
+>E.120.3.9. Programming Tools</A
+></H3
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN151209"
+>E.120.3.9.1. <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+></A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Allow the <TT
+CLASS="TYPE"
+>OID</TT
+> to be specified when importing a large
+        object, via new function <CODE
+CLASS="FUNCTION"
+>lo_import_with_oid()</CODE
+> (Tatsuo)
+       </P
+></LI
+><LI
+><P
+>        Add <SPAN
+CLASS="QUOTE"
+>"events"</SPAN
+> support (Andrew Chernow, Merlin Moncure)
+       </P
+><P
+>        This adds the ability to register callbacks to manage private
+        data associated with <TT
+CLASS="STRUCTNAME"
+>PGconn</TT
+> and <TT
+CLASS="STRUCTNAME"
+>PGresult</TT
+>
+        objects.
+       </P
+></LI
+><LI
+><P
+>        Improve error handling to allow the return of multiple
+        error messages as multi-line error reports (Magnus)
+       </P
+></LI
+><LI
+><P
+>        Make <CODE
+CLASS="FUNCTION"
+>PQexecParams()</CODE
+> and related functions return
+        <TT
+CLASS="VARNAME"
+>PGRES_EMPTY_QUERY</TT
+> for an empty query (Tom)
+       </P
+><P
+>        They previously returned <TT
+CLASS="VARNAME"
+>PGRES_COMMAND_OK</TT
+>.
+       </P
+></LI
+><LI
+><P
+>        Document how to avoid the overhead of <CODE
+CLASS="FUNCTION"
+>WSACleanup()</CODE
+>
+        on Windows (Andrew Chernow)
+       </P
+></LI
+><LI
+><P
+>        Do not rely on Kerberos tickets to determine the default database
+        username (Magnus)
+       </P
+><P
+>        Previously, a Kerberos-capable build of libpq would use the
+        principal name from any available Kerberos ticket as default
+        database username, even if the connection wasn't using Kerberos
+        authentication.  This was deemed inconsistent and confusing.
+        The default username is now determined the same way with or
+        without Kerberos.  Note however that the database username must still
+        match the ticket when Kerberos authentication is used.
+       </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN151237"
+>E.120.3.9.2. <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> (Secure Sockets Layer)
+      support</A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Fix certificate validation for <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> connections
+        (Magnus)
+       </P
+><P
+>        <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> now supports verifying both the certificate
+        and the name of the server when making <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+>
+        connections. If a root certificate is not available to use for
+        verification, <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> connections will fail. The
+        <TT
+CLASS="LITERAL"
+>sslmode</TT
+> parameter is used to enable certificate
+        verification and set the level of checking.
+        The default is still not to do any verification, allowing connections
+        to SSL-enabled servers without requiring a root certificate on the
+        client.
+       </P
+></LI
+><LI
+><P
+>        Support wildcard server certificates (Magnus)
+       </P
+><P
+>        If a certificate <ACRONYM
+CLASS="ACRONYM"
+>CN</ACRONYM
+> starts with <TT
+CLASS="LITERAL"
+>*</TT
+>, it will
+        be treated as a wildcard when matching the hostname, allowing the
+        use of the same certificate for multiple servers.
+       </P
+></LI
+><LI
+><P
+>        Allow the file locations for client certificates to be specified
+        (Mark Woodward, Alvaro, Magnus)
+       </P
+></LI
+><LI
+><P
+>        Add a <CODE
+CLASS="FUNCTION"
+>PQinitOpenSSL</CODE
+> function to allow greater control
+        over OpenSSL/libcrypto initialization (Andrew Chernow)
+       </P
+></LI
+><LI
+><P
+>        Make <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> unregister its <SPAN
+CLASS="APPLICATION"
+>OpenSSL</SPAN
+>
+        callbacks when no database connections remain open
+        (Bruce, Magnus, Russell Smith)
+       </P
+><P
+>        This is required for applications that unload the libpq library,
+        otherwise invalid <SPAN
+CLASS="APPLICATION"
+>OpenSSL</SPAN
+> callbacks will remain.
+       </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN151266"
+>E.120.3.9.3. <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+></A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Add localization support for messages (Euler Taveira de
+        Oliveira)
+       </P
+></LI
+><LI
+><P
+>        ecpg parser is now automatically generated from the server
+        parser (Michael)
+       </P
+><P
+>        Previously the ecpg parser was hand-maintained.
+       </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN151275"
+>E.120.3.9.4. Server Programming Interface (<ACRONYM
+CLASS="ACRONYM"
+>SPI</ACRONYM
+>)</A
+></H4
+><P
+></P
+><UL
+><LI
+><P
+>        Add support for single-use plans with out-of-line
+        parameters (Tom)
+       </P
+></LI
+><LI
+><P
+>        Add new <TT
+CLASS="VARNAME"
+>SPI_OK_REWRITTEN</TT
+> return code for
+        <CODE
+CLASS="FUNCTION"
+>SPI_execute()</CODE
+> (Heikki)
+       </P
+><P
+>        This is used when a command is rewritten to another type of
+        command.
+       </P
+></LI
+><LI
+><P
+>        Remove unnecessary inclusions from <TT
+CLASS="FILENAME"
+>executor/spi.h</TT
+> (Tom)
+       </P
+><P
+>        SPI-using modules might need to add some <TT
+CLASS="LITERAL"
+>#include</TT
+>
+        lines if they were depending on <TT
+CLASS="FILENAME"
+>spi.h</TT
+> to include
+        things for them.
+       </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN151292"
+>E.120.3.10. Build Options</A
+></H3
+><P
+></P
+><UL
+><LI
+><P
+>       Update build system to use <SPAN
+CLASS="PRODUCTNAME"
+>Autoconf</SPAN
+> 2.61 (Peter)
+      </P
+></LI
+><LI
+><P
+>       Require <SPAN
+CLASS="PRODUCTNAME"
+>GNU bison</SPAN
+> for source code builds (Peter)
+      </P
+><P
+>       This has effectively been required for several years, but now there
+       is no infrastructure claiming to support other parser tools.
+      </P
+></LI
+><LI
+><P
+>       Add <SPAN
+CLASS="APPLICATION"
+>pg_config</SPAN
+> <TT
+CLASS="LITERAL"
+>--htmldir</TT
+> option
+       (Peter)
+      </P
+></LI
+><LI
+><P
+>       Pass <TT
+CLASS="TYPE"
+>float4</TT
+> by value inside the server (Zoltan
+       Boszormenyi)
+      </P
+><P
+>       Add <SPAN
+CLASS="APPLICATION"
+>configure</SPAN
+> option
+       <TT
+CLASS="LITERAL"
+>--disable-float4-byval</TT
+> to use the old behavior.
+       External C functions that use old-style (version 0) call convention
+       and pass or return <TT
+CLASS="TYPE"
+>float4</TT
+> values will be broken by this
+       change, so you may need the <SPAN
+CLASS="APPLICATION"
+>configure</SPAN
+> option if you
+       have such functions and don't want to update them.
+      </P
+></LI
+><LI
+><P
+>       Pass <TT
+CLASS="TYPE"
+>float8</TT
+>, <TT
+CLASS="TYPE"
+>int8</TT
+>, and related datatypes
+       by value inside the server on 64-bit platforms (Zoltan Boszormenyi)
+      </P
+><P
+>       Add <SPAN
+CLASS="APPLICATION"
+>configure</SPAN
+> option
+       <TT
+CLASS="LITERAL"
+>--disable-float8-byval</TT
+> to use the old behavior.
+       As above, this change might break old-style external C functions.
+      </P
+></LI
+><LI
+><P
+>       Add configure options <TT
+CLASS="LITERAL"
+>--with-segsize</TT
+>,
+       <TT
+CLASS="LITERAL"
+>--with-blocksize</TT
+>, <TT
+CLASS="LITERAL"
+>--with-wal-blocksize</TT
+>,
+       <TT
+CLASS="LITERAL"
+>--with-wal-segsize</TT
+> (Zdenek Kotala, Tom)
+      </P
+><P
+>       This simplifies build-time control over several constants that
+       previously could only be changed by editing
+       <TT
+CLASS="FILENAME"
+>pg_config_manual.h</TT
+>.
+      </P
+></LI
+><LI
+><P
+>       Allow threaded builds on <SPAN
+CLASS="PRODUCTNAME"
+>Solaris</SPAN
+> 2.5 (Bruce)
+      </P
+></LI
+><LI
+><P
+>       Use the system's <CODE
+CLASS="FUNCTION"
+>getopt_long()</CODE
+> on <SPAN
+CLASS="PRODUCTNAME"
+>Solaris</SPAN
+>
+       (Zdenek Kotala, Tom)
+      </P
+><P
+>       This makes option processing more consistent with what Solaris users
+       expect.
+      </P
+></LI
+><LI
+><P
+>       Add support for the <SPAN
+CLASS="PRODUCTNAME"
+>Sun Studio</SPAN
+> compiler on
+       <SPAN
+CLASS="PRODUCTNAME"
+>Linux</SPAN
+> (Julius Stroffek)
+      </P
+></LI
+><LI
+><P
+>       Append the major version number to the backend <SPAN
+CLASS="APPLICATION"
+>gettext</SPAN
+>
+       domain, and the <TT
+CLASS="LITERAL"
+>soname</TT
+> major version number to
+       libraries' <SPAN
+CLASS="APPLICATION"
+>gettext</SPAN
+> domain (Peter)
+      </P
+><P
+>       This simplifies parallel installations of multiple versions.
+      </P
+></LI
+><LI
+><P
+>       Add support for code coverage testing with <SPAN
+CLASS="APPLICATION"
+>gcov</SPAN
+>
+       (Michelle Caisse)
+      </P
+></LI
+><LI
+><P
+>       Allow out-of-tree builds on <SPAN
+CLASS="PRODUCTNAME"
+>Mingw</SPAN
+> and
+       <SPAN
+CLASS="PRODUCTNAME"
+>Cygwin</SPAN
+> (Richard Evans)
+      </P
+></LI
+><LI
+><P
+>       Fix the use of <SPAN
+CLASS="PRODUCTNAME"
+>Mingw</SPAN
+> as a cross-compiling source
+       platform (Peter)
+      </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN151357"
+>E.120.3.11. Source Code</A
+></H3
+><P
+></P
+><UL
+><LI
+><P
+>       Support 64-bit time zone data files (Heikki)
+      </P
+><P
+>       This adds support for daylight saving time (<ACRONYM
+CLASS="ACRONYM"
+>DST</ACRONYM
+>)
+       calculations beyond the year 2038.
+      </P
+></LI
+><LI
+><P
+>       Deprecate use of platform's <TT
+CLASS="TYPE"
+>time_t</TT
+> data type (Tom)
+      </P
+><P
+>       Some platforms have migrated to 64-bit <TT
+CLASS="TYPE"
+>time_t</TT
+>, some have
+       not, and Windows can't make up its mind what it's doing.  Define
+       <TT
+CLASS="TYPE"
+>pg_time_t</TT
+> to have the same meaning as <TT
+CLASS="TYPE"
+>time_t</TT
+>,
+       but always be 64 bits (unless the platform has no 64-bit integer type),
+       and use that type in all module APIs and on-disk data formats.
+      </P
+></LI
+><LI
+><P
+>       Fix bug in handling of the time zone database when cross-compiling
+       (Richard Evans)
+      </P
+></LI
+><LI
+><P
+>       Link backend object files in one step, rather than in stages
+       (Peter)
+      </P
+></LI
+><LI
+><P
+>       Improve <SPAN
+CLASS="APPLICATION"
+>gettext</SPAN
+> support to allow better translation
+       of plurals (Peter)
+      </P
+></LI
+><LI
+><P
+>       Add message translation support to the PL languages (Alvaro, Peter)
+      </P
+></LI
+><LI
+><P
+>       Add more <SPAN
+CLASS="APPLICATION"
+>DTrace</SPAN
+> probes (Robert Lor)
+      </P
+></LI
+><LI
+><P
+>       Enable <SPAN
+CLASS="APPLICATION"
+>DTrace</SPAN
+> support on <SPAN
+CLASS="APPLICATION"
+>Mac OS X
+       Leopard</SPAN
+> and other non-Solaris platforms (Robert Lor)
+      </P
+></LI
+><LI
+><P
+>       Simplify and standardize conversions between C strings and
+       <TT
+CLASS="TYPE"
+>text</TT
+> datums, by providing common functions for the purpose
+       (Brendan Jurd, Tom)
+      </P
+></LI
+><LI
+><P
+>       Clean up the <TT
+CLASS="FILENAME"
+>include/catalog/</TT
+> header files so that
+       frontend programs can include them without including
+       <TT
+CLASS="FILENAME"
+>postgres.h</TT
+>
+       (Zdenek Kotala)
+      </P
+></LI
+><LI
+><P
+>       Make <TT
+CLASS="TYPE"
+>name</TT
+> char-aligned, and suppress zero-padding of
+       <TT
+CLASS="TYPE"
+>name</TT
+> entries in indexes (Tom)
+      </P
+></LI
+><LI
+><P
+>       Recover better if dynamically-loaded code executes <CODE
+CLASS="FUNCTION"
+>exit()</CODE
+>
+       (Tom)
+      </P
+></LI
+><LI
+><P
+>       Add a hook to let plug-ins monitor the executor (Itagaki
+       Takahiro)
+      </P
+></LI
+><LI
+><P
+>       Add a hook to allow the planner's statistics lookup behavior to
+       be overridden (Simon Riggs)
+      </P
+></LI
+><LI
+><P
+>       Add <CODE
+CLASS="FUNCTION"
+>shmem_startup_hook()</CODE
+> for custom shared memory
+       requirements (Tom)
+      </P
+></LI
+><LI
+><P
+>       Replace the index access method <CODE
+CLASS="FUNCTION"
+>amgetmulti</CODE
+> entry point
+       with <CODE
+CLASS="FUNCTION"
+>amgetbitmap</CODE
+>, and extend the API for
+       <CODE
+CLASS="FUNCTION"
+>amgettuple</CODE
+> to support run-time determination of
+       operator lossiness (Heikki, Tom, Teodor)
+      </P
+><P
+>       The API for GIN and GiST opclass <CODE
+CLASS="FUNCTION"
+>consistent</CODE
+> functions
+       has been extended as well.
+      </P
+></LI
+><LI
+><P
+>       Add support for partial-match searches in <ACRONYM
+CLASS="ACRONYM"
+>GIN</ACRONYM
+> indexes
+       (Teodor Sigaev, Oleg Bartunov)
+      </P
+></LI
+><LI
+><P
+>       Replace <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+> column <TT
+CLASS="STRUCTFIELD"
+>reltriggers</TT
+>
+       with boolean <TT
+CLASS="STRUCTFIELD"
+>relhastriggers</TT
+> (Simon)
+      </P
+><P
+>       Also remove unused <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+> columns
+       <TT
+CLASS="STRUCTFIELD"
+>relukeys</TT
+>, <TT
+CLASS="STRUCTFIELD"
+>relfkeys</TT
+>, and
+       <TT
+CLASS="STRUCTFIELD"
+>relrefs</TT
+>.
+      </P
+></LI
+><LI
+><P
+>       Add a <TT
+CLASS="STRUCTFIELD"
+>relistemp</TT
+> column to <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+>
+       to ease identification of temporary tables (Tom)
+      </P
+></LI
+><LI
+><P
+>       Move platform <ACRONYM
+CLASS="ACRONYM"
+>FAQ</ACRONYM
+>s into the main documentation
+       (Peter)
+      </P
+></LI
+><LI
+><P
+>       Prevent parser input files from being built with any conflicts
+       (Peter)
+      </P
+></LI
+><LI
+><P
+>       Add support for the <TT
+CLASS="LITERAL"
+>KOI8U</TT
+> (Ukrainian) encoding
+       (Peter)
+      </P
+></LI
+><LI
+><P
+>       Add Japanese message translations (Japan PostgreSQL Users Group)
+      </P
+><P
+>       This used to be maintained as a separate project.
+      </P
+></LI
+><LI
+><P
+>       Fix problem when setting <TT
+CLASS="VARNAME"
+>LC_MESSAGES</TT
+> on
+       <SPAN
+CLASS="APPLICATION"
+>MSVC</SPAN
+>-built systems (Hiroshi Inoue, Hiroshi
+       Saito, Magnus)
+      </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN151447"
+>E.120.3.12. Contrib</A
+></H3
+><P
+></P
+><UL
+><LI
+><P
+>       Add <TT
+CLASS="FILENAME"
+>contrib/auto_explain</TT
+> to automatically run
+       <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+> on queries exceeding a specified duration
+       (Itagaki Takahiro, Tom)
+      </P
+></LI
+><LI
+><P
+>       Add <TT
+CLASS="FILENAME"
+>contrib/btree_gin</TT
+> to allow GIN indexes to
+       handle more datatypes (Oleg, Teodor)
+      </P
+></LI
+><LI
+><P
+>       Add <TT
+CLASS="FILENAME"
+>contrib/citext</TT
+> to provide a case-insensitive,
+       multibyte-aware text data type (David Wheeler)
+      </P
+></LI
+><LI
+><P
+>       Add <TT
+CLASS="FILENAME"
+>contrib/pg_stat_statements</TT
+> for server-wide
+       tracking of statement execution statistics (Itagaki Takahiro)
+      </P
+></LI
+><LI
+><P
+>       Add duration and query mode options to <TT
+CLASS="FILENAME"
+>contrib/pgbench</TT
+>
+       (Itagaki Takahiro)
+      </P
+></LI
+><LI
+><P
+>       Make <TT
+CLASS="FILENAME"
+>contrib/pgbench</TT
+> use table names
+       <TT
+CLASS="STRUCTNAME"
+>pgbench_accounts</TT
+>, <TT
+CLASS="STRUCTNAME"
+>pgbench_branches</TT
+>,
+       <TT
+CLASS="STRUCTNAME"
+>pgbench_history</TT
+>, and <TT
+CLASS="STRUCTNAME"
+>pgbench_tellers</TT
+>,
+       rather than just <TT
+CLASS="STRUCTNAME"
+>accounts</TT
+>, <TT
+CLASS="STRUCTNAME"
+>branches</TT
+>,
+       <TT
+CLASS="STRUCTNAME"
+>history</TT
+>, and <TT
+CLASS="STRUCTNAME"
+>tellers</TT
+> (Tom)
+      </P
+><P
+>       This is to reduce the risk of accidentally destroying real data
+       by running <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+>.
+      </P
+></LI
+><LI
+><P
+>       Fix <TT
+CLASS="FILENAME"
+>contrib/pgstattuple</TT
+> to handle tables and
+       indexes with over 2 billion pages (Tatsuhito Kasahara)
+      </P
+></LI
+><LI
+><P
+>       In <TT
+CLASS="FILENAME"
+>contrib/fuzzystrmatch</TT
+>, add a version of the
+       Levenshtein string-distance function that allows the user to
+       specify the costs of insertion, deletion, and substitution
+       (Volkan Yazici)
+      </P
+></LI
+><LI
+><P
+>       Make <TT
+CLASS="FILENAME"
+>contrib/ltree</TT
+> support multibyte encodings
+       (laser)
+      </P
+></LI
+><LI
+><P
+>       Enable <TT
+CLASS="FILENAME"
+>contrib/dblink</TT
+> to use connection information
+       stored in the SQL/MED catalogs (Joe Conway)
+      </P
+></LI
+><LI
+><P
+>       Improve <TT
+CLASS="FILENAME"
+>contrib/dblink</TT
+>'s reporting of errors from
+       the remote server (Joe Conway)
+      </P
+></LI
+><LI
+><P
+>       Make <TT
+CLASS="FILENAME"
+>contrib/dblink</TT
+> set <TT
+CLASS="VARNAME"
+>client_encoding</TT
+>
+       to match the local database's encoding (Joe Conway)
+      </P
+><P
+>       This prevents encoding problems when communicating with a remote
+       database that uses a different encoding.
+      </P
+></LI
+><LI
+><P
+>       Make sure <TT
+CLASS="FILENAME"
+>contrib/dblink</TT
+> uses a password supplied
+       by the user, and not accidentally taken from the server's
+       <TT
+CLASS="FILENAME"
+>.pgpass</TT
+> file (Joe Conway)
+      </P
+><P
+>       This is a minor security enhancement.
+      </P
+></LI
+><LI
+><P
+>       Add <CODE
+CLASS="FUNCTION"
+>fsm_page_contents()</CODE
+>
+       to <TT
+CLASS="FILENAME"
+>contrib/pageinspect</TT
+> (Heikki)
+      </P
+></LI
+><LI
+><P
+>       Modify <CODE
+CLASS="FUNCTION"
+>get_raw_page()</CODE
+> to support free space map
+       (<TT
+CLASS="FILENAME"
+>*_fsm</TT
+>) files.  Also update
+       <TT
+CLASS="FILENAME"
+>contrib/pg_freespacemap</TT
+>.
+      </P
+></LI
+><LI
+><P
+>       Add support for multibyte encodings to <TT
+CLASS="FILENAME"
+>contrib/pg_trgm</TT
+>
+       (Teodor)
+      </P
+></LI
+><LI
+><P
+>       Rewrite <TT
+CLASS="FILENAME"
+>contrib/intagg</TT
+> to use new
+       functions <CODE
+CLASS="FUNCTION"
+>array_agg()</CODE
+> and <CODE
+CLASS="FUNCTION"
+>unnest()</CODE
+>
+       (Tom)
+      </P
+></LI
+><LI
+><P
+>       Make <TT
+CLASS="FILENAME"
+>contrib/pg_standby</TT
+> recover all available WAL before
+       failover (Fujii Masao, Simon, Heikki)
+      </P
+><P
+>       To make this work safely, you now need to set the new
+       <TT
+CLASS="LITERAL"
+>recovery_end_command</TT
+> option in <TT
+CLASS="FILENAME"
+>recovery.conf</TT
+>
+       to clean up the trigger file after failover. <SPAN
+CLASS="APPLICATION"
+>pg_standby</SPAN
+>
+       will no longer remove the trigger file itself.
+      </P
+></LI
+><LI
+><P
+>       <TT
+CLASS="FILENAME"
+>contrib/pg_standby</TT
+>'s <TT
+CLASS="OPTION"
+>-l</TT
+> option is now a no-op,
+       because it is unsafe to use a symlink (Simon)
+      </P
+></LI
+></UL
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-4-1.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-3-23.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.4.1</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.3.23</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

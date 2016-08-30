@@ -1,0 +1,821 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Version and Platform Compatibility</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Configuration"
+HREF="runtime-config.html"><LINK
+REL="PREVIOUS"
+TITLE="Lock Management"
+HREF="runtime-config-locks.html"><LINK
+REL="NEXT"
+TITLE="Error Handling"
+HREF="runtime-config-error-handling.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Lock Management"
+HREF="runtime-config-locks.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 18. Server Configuration</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Error Handling"
+HREF="runtime-config-error-handling.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RUNTIME-CONFIG-COMPATIBLE"
+>18.13. Version and Platform Compatibility</A
+></H1
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-COMPATIBLE-VERSION"
+>18.13.1. Previous PostgreSQL Versions</A
+></H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-ARRAY-NULLS"
+></A
+><TT
+CLASS="VARNAME"
+>array_nulls</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        This controls whether the array input parser recognizes
+        unquoted <TT
+CLASS="LITERAL"
+>NULL</TT
+> as specifying a null array element.
+        By default, this is <TT
+CLASS="LITERAL"
+>on</TT
+>, allowing array values containing
+        null values to be entered.  However, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> versions
+        before 8.2 did not support null values in arrays, and therefore would
+        treat <TT
+CLASS="LITERAL"
+>NULL</TT
+> as specifying a normal array element with
+        the string value <SPAN
+CLASS="QUOTE"
+>"NULL"</SPAN
+>.  For backward compatibility with
+        applications that require the old behavior, this variable can be
+        turned <TT
+CLASS="LITERAL"
+>off</TT
+>.
+       </P
+><P
+>        Note that it is possible to create array values containing null values
+        even when this variable is <TT
+CLASS="LITERAL"
+>off</TT
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-BACKSLASH-QUOTE"
+></A
+><TT
+CLASS="VARNAME"
+>backslash_quote</TT
+> (<TT
+CLASS="TYPE"
+>enum</TT
+>)
+      
+      </DT
+><DD
+><P
+>        This controls whether a quote mark can be represented by
+        <TT
+CLASS="LITERAL"
+>\'</TT
+> in a string literal.  The preferred, SQL-standard way
+        to represent a quote mark is by doubling it (<TT
+CLASS="LITERAL"
+>''</TT
+>) but
+        <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> has historically also accepted
+        <TT
+CLASS="LITERAL"
+>\'</TT
+>. However, use of <TT
+CLASS="LITERAL"
+>\'</TT
+> creates security risks
+        because in some client character set encodings, there are multibyte
+        characters in which the last byte is numerically equivalent to ASCII
+        <TT
+CLASS="LITERAL"
+>\</TT
+>.  If client-side code does escaping incorrectly then a
+        SQL-injection attack is possible.  This risk can be prevented by
+        making the server reject queries in which a quote mark appears to be
+        escaped by a backslash.
+        The allowed values of <TT
+CLASS="VARNAME"
+>backslash_quote</TT
+> are
+        <TT
+CLASS="LITERAL"
+>on</TT
+> (allow <TT
+CLASS="LITERAL"
+>\'</TT
+> always),
+        <TT
+CLASS="LITERAL"
+>off</TT
+> (reject always), and
+        <TT
+CLASS="LITERAL"
+>safe_encoding</TT
+> (allow only if client encoding does not
+        allow ASCII <TT
+CLASS="LITERAL"
+>\</TT
+> within a multibyte character).
+        <TT
+CLASS="LITERAL"
+>safe_encoding</TT
+> is the default setting.
+       </P
+><P
+>        Note that in a standard-conforming string literal, <TT
+CLASS="LITERAL"
+>\</TT
+> just
+        means <TT
+CLASS="LITERAL"
+>\</TT
+> anyway.  This parameter only affects the handling of
+        non-standard-conforming literals, including
+        escape string syntax (<TT
+CLASS="LITERAL"
+>E'...'</TT
+>).
+       </P
+></DD
+><DT
+><A
+NAME="GUC-DEFAULT-WITH-OIDS"
+></A
+><TT
+CLASS="VARNAME"
+>default_with_oids</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        This controls whether <TT
+CLASS="COMMAND"
+>CREATE TABLE</TT
+> and
+        <TT
+CLASS="COMMAND"
+>CREATE TABLE AS</TT
+> include an OID column in
+        newly-created tables, if neither <TT
+CLASS="LITERAL"
+>WITH OIDS</TT
+>
+        nor <TT
+CLASS="LITERAL"
+>WITHOUT OIDS</TT
+> is specified. It also
+        determines whether OIDs will be included in tables created by
+        <TT
+CLASS="COMMAND"
+>SELECT INTO</TT
+>. The parameter is <TT
+CLASS="LITERAL"
+>off</TT
+>
+        by default; in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 8.0 and earlier, it
+        was <TT
+CLASS="LITERAL"
+>on</TT
+> by default.
+       </P
+><P
+>        The use of OIDs in user tables is considered deprecated, so
+        most installations should leave this variable disabled.
+        Applications that require OIDs for a particular table should
+        specify <TT
+CLASS="LITERAL"
+>WITH OIDS</TT
+> when creating the
+        table. This variable can be enabled for compatibility with old
+        applications that do not follow this behavior.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-ESCAPE-STRING-WARNING"
+></A
+><TT
+CLASS="VARNAME"
+>escape_string_warning</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      
+      </DT
+><DD
+><P
+>        When on, a warning is issued if a backslash (<TT
+CLASS="LITERAL"
+>\</TT
+>)
+        appears in an ordinary string literal (<TT
+CLASS="LITERAL"
+>'...'</TT
+>
+        syntax) and <TT
+CLASS="VARNAME"
+>standard_conforming_strings</TT
+> is off.
+        The default is <TT
+CLASS="LITERAL"
+>on</TT
+>.
+       </P
+><P
+>        Applications that wish to use backslash as escape should be
+        modified to use escape string syntax (<TT
+CLASS="LITERAL"
+>E'...'</TT
+>),
+        because the default behavior of ordinary strings is now to treat
+        backslash as an ordinary character, per SQL standard.  This variable
+        can be enabled to help locate code that needs to be changed.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-LO-COMPAT-PRIVILEGES"
+></A
+><TT
+CLASS="VARNAME"
+>lo_compat_privileges</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        In <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> releases prior to 9.0, large objects
+        did not have access privileges and were, therefore, always readable
+        and writable by all users.  Setting this variable to <TT
+CLASS="LITERAL"
+>on</TT
+>
+        disables the new privilege checks, for compatibility with prior
+        releases.  The default is <TT
+CLASS="LITERAL"
+>off</TT
+>.
+        Only superusers can change this setting.
+       </P
+><P
+>        Setting this variable does not disable all security checks related to
+        large objects &mdash; only those for which the default behavior has
+        changed in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 9.0.
+        For example, <TT
+CLASS="LITERAL"
+>lo_import()</TT
+> and
+        <TT
+CLASS="LITERAL"
+>lo_export()</TT
+> need superuser privileges regardless
+        of this setting.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-OPERATOR-PRECEDENCE-WARNING"
+></A
+><TT
+CLASS="VARNAME"
+>operator_precedence_warning</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        When on, the parser will emit a warning for any construct that might
+        have changed meanings since <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 9.4 as a result
+        of changes in operator precedence.  This is useful for auditing
+        applications to see if precedence changes have broken anything; but it
+        is not meant to be kept turned on in production, since it will warn
+        about some perfectly valid, standard-compliant SQL code.
+        The default is <TT
+CLASS="LITERAL"
+>off</TT
+>.
+       </P
+><P
+>        See <A
+HREF="sql-syntax-lexical.html#SQL-PRECEDENCE"
+>Section 4.1.6</A
+> for more information.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-QUOTE-ALL-IDENTIFIERS"
+></A
+><TT
+CLASS="VARNAME"
+>quote_all_identifiers</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        When the database generates SQL, force all identifiers to be quoted,
+        even if they are not (currently) keywords.  This will affect the
+        output of <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+> as well as the results of functions
+        like <CODE
+CLASS="FUNCTION"
+>pg_get_viewdef</CODE
+>.  See also the
+        <TT
+CLASS="OPTION"
+>--quote-all-identifiers</TT
+> option of
+        <A
+HREF="app-pgdump.html"
+>pg_dump</A
+> and <A
+HREF="app-pg-dumpall.html"
+><SPAN
+CLASS="APPLICATION"
+>pg_dumpall</SPAN
+></A
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-SQL-INHERITANCE"
+></A
+><TT
+CLASS="VARNAME"
+>sql_inheritance</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      
+      </DT
+><DD
+><P
+>        This setting controls whether undecorated table references are
+        considered to include inheritance child tables.  The default is
+        <TT
+CLASS="LITERAL"
+>on</TT
+>, which means child tables are included (thus,
+        a <TT
+CLASS="LITERAL"
+>*</TT
+> suffix is assumed by default).  If turned
+        <TT
+CLASS="LITERAL"
+>off</TT
+>, child tables are not included (thus, an
+        <TT
+CLASS="LITERAL"
+>ONLY</TT
+> prefix is assumed).  The SQL standard
+        requires child tables to be included, so the <TT
+CLASS="LITERAL"
+>off</TT
+> setting
+        is not spec-compliant, but it is provided for compatibility with
+        <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> releases prior to 7.1.
+        See <A
+HREF="ddl-inherit.html"
+>Section 5.9</A
+> for more information.
+       </P
+><P
+>        Turning <TT
+CLASS="VARNAME"
+>sql_inheritance</TT
+> off is deprecated, because that
+        behavior has been found to be error-prone as well as contrary to SQL
+        standard.  Discussions of inheritance behavior elsewhere in this
+        manual generally assume that it is <TT
+CLASS="LITERAL"
+>on</TT
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-STANDARD-CONFORMING-STRINGS"
+></A
+><TT
+CLASS="VARNAME"
+>standard_conforming_strings</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      
+      </DT
+><DD
+><P
+>        This controls whether ordinary string literals
+        (<TT
+CLASS="LITERAL"
+>'...'</TT
+>) treat backslashes literally, as specified in
+        the SQL standard.
+        Beginning in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 9.1, the default is
+        <TT
+CLASS="LITERAL"
+>on</TT
+> (prior releases defaulted to <TT
+CLASS="LITERAL"
+>off</TT
+>).
+        Applications can check this
+        parameter to determine how string literals will be processed.
+        The presence of this parameter can also be taken as an indication
+        that the escape string syntax (<TT
+CLASS="LITERAL"
+>E'...'</TT
+>) is supported.
+        Escape string syntax (<A
+HREF="sql-syntax-lexical.html#SQL-SYNTAX-STRINGS-ESCAPE"
+>Section 4.1.2.2</A
+>)
+        should be used if an application desires
+        backslashes to be treated as escape characters.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-SYNCHRONIZE-SEQSCANS"
+></A
+><TT
+CLASS="VARNAME"
+>synchronize_seqscans</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        This allows sequential scans of large tables to synchronize with each
+        other, so that concurrent scans read the same block at about the
+        same time and hence share the I/O workload.  When this is enabled,
+        a scan might start in the middle of the table and then <SPAN
+CLASS="QUOTE"
+>"wrap
+        around"</SPAN
+> the end to cover all rows, so as to synchronize with the
+        activity of scans already in progress.  This can result in
+        unpredictable changes in the row ordering returned by queries that
+        have no <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> clause.  Setting this parameter to
+        <TT
+CLASS="LITERAL"
+>off</TT
+> ensures the pre-8.3 behavior in which a sequential
+        scan always starts from the beginning of the table.  The default
+        is <TT
+CLASS="LITERAL"
+>on</TT
+>.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-COMPATIBLE-CLIENTS"
+>18.13.2. Platform and Client Compatibility</A
+></H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-TRANSFORM-NULL-EQUALS"
+></A
+><TT
+CLASS="VARNAME"
+>transform_null_equals</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      
+      </DT
+><DD
+><P
+>        When on, expressions of the form <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>expr</I
+></TT
+> =
+        NULL</TT
+> (or <TT
+CLASS="LITERAL"
+>NULL =
+        <TT
+CLASS="REPLACEABLE"
+><I
+>expr</I
+></TT
+></TT
+>) are treated as
+        <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>expr</I
+></TT
+> IS NULL</TT
+>, that is, they
+        return true if <TT
+CLASS="REPLACEABLE"
+><I
+>expr</I
+></TT
+> evaluates to the null value,
+        and false otherwise. The correct SQL-spec-compliant behavior of
+        <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>expr</I
+></TT
+> = NULL</TT
+> is to always
+        return null (unknown). Therefore this parameter defaults to
+        <TT
+CLASS="LITERAL"
+>off</TT
+>.
+       </P
+><P
+>        However, filtered forms in <SPAN
+CLASS="PRODUCTNAME"
+>Microsoft
+        Access</SPAN
+> generate queries that appear to use
+        <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>expr</I
+></TT
+> = NULL</TT
+> to test for
+        null values, so if you use that interface to access the database you
+        might want to turn this option on.  Since expressions of the
+        form <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>expr</I
+></TT
+> = NULL</TT
+> always
+        return the null value (using the SQL standard interpretation), they are not
+        very useful and do not appear often in normal applications so
+        this option does little harm in practice.  But new users are
+        frequently confused about the semantics of expressions
+        involving null values, so this option is off by default.
+       </P
+><P
+>        Note that this option only affects the exact form <TT
+CLASS="LITERAL"
+>= NULL</TT
+>,
+        not other comparison operators or other expressions
+        that are computationally equivalent to some expression
+        involving the equals operator (such as <TT
+CLASS="LITERAL"
+>IN</TT
+>).
+        Thus, this option is not a general fix for bad programming.
+       </P
+><P
+>        Refer to <A
+HREF="functions-comparison.html"
+>Section 9.2</A
+> for related information.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime-config-locks.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="runtime-config-error-handling.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Lock Management</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="runtime-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Error Handling</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

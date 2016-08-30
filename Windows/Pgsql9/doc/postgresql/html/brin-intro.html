@@ -1,0 +1,264 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Introduction</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="BRIN Indexes"
+HREF="brin.html"><LINK
+REL="PREVIOUS"
+TITLE="BRIN Indexes"
+HREF="brin.html"><LINK
+REL="NEXT"
+TITLE="Built-in Operator Classes"
+HREF="brin-builtin-opclasses.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="BRIN Indexes"
+HREF="brin.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="brin.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 62. BRIN Indexes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Built-in Operator Classes"
+HREF="brin-builtin-opclasses.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="BRIN-INTRO"
+>62.1. Introduction</A
+></H1
+><P
+>  <ACRONYM
+CLASS="ACRONYM"
+>BRIN</ACRONYM
+> stands for Block Range Index.
+  <ACRONYM
+CLASS="ACRONYM"
+>BRIN</ACRONYM
+> is designed for handling very large tables
+  in which certain columns have some natural correlation with their
+  physical location within the table.
+  A <I
+CLASS="FIRSTTERM"
+>block range</I
+> is a group of pages that are physically
+  adjacent in the table; for each block range, some summary info is stored
+  by the index.
+  For example, a table storing a store's sale orders might have
+  a date column on which each order was placed, and most of the time
+  the entries for earlier orders will appear earlier in the table as well;
+  a table storing a ZIP code column might have all codes for a city
+  grouped together naturally.
+ </P
+><P
+>  <ACRONYM
+CLASS="ACRONYM"
+>BRIN</ACRONYM
+> indexes can satisfy queries via regular bitmap
+  index scans, and will return all tuples in all pages within each range if
+  the summary info stored by the index is <I
+CLASS="FIRSTTERM"
+>consistent</I
+> with the
+  query conditions.
+  The query executor is in charge of rechecking these tuples and discarding
+  those that do not match the query conditions &mdash; in other words, these
+  indexes are lossy.
+  Because a <ACRONYM
+CLASS="ACRONYM"
+>BRIN</ACRONYM
+> index is very small, scanning the index
+  adds little overhead compared to a sequential scan, but may avoid scanning
+  large parts of the table that are known not to contain matching tuples.
+ </P
+><P
+>  The specific data that a <ACRONYM
+CLASS="ACRONYM"
+>BRIN</ACRONYM
+> index will store,
+  as well as the specific queries that the index will be able to satisfy,
+  depend on the operator class selected for each column of the index.
+  Data types having a linear sort order can have operator classes that
+  store the minimum and maximum value within each block range, for instance;
+  geometrical types might store the bounding box for all the objects
+  in the block range.
+ </P
+><P
+>  The size of the block range is determined at index creation time by
+  the <TT
+CLASS="LITERAL"
+>pages_per_range</TT
+> storage parameter.  The number of index
+  entries will be equal to the size of the relation in pages divided by
+  the selected value for <TT
+CLASS="LITERAL"
+>pages_per_range</TT
+>.  Therefore, the smaller
+  the number, the larger the index becomes (because of the need to
+  store more index entries), but at the same time the summary data stored can
+  be more precise and more data blocks can be skipped during an index scan.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="BRIN-OPERATION"
+>62.1.1. Index Maintenance</A
+></H2
+><P
+>   At the time of creation, all existing index pages are scanned and a
+   summary index tuple is created for each range, including the
+   possibly-incomplete range at the end.
+   As new pages are filled with data, page ranges that are already
+   summarized will cause the summary information to be updated with data
+   from the new tuples.
+   When a new page is created that does not fall within the last
+   summarized range, that range does not automatically acquire a summary
+   tuple; those tuples remain unsummarized until a summarization run is
+   invoked later, creating initial summaries.
+   This process can be invoked manually using the
+   <CODE
+CLASS="FUNCTION"
+>brin_summarize_new_values(regclass)</CODE
+> function,
+   or automatically when <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> processes the table.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="brin.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="brin-builtin-opclasses.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>BRIN Indexes</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="brin.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Built-in Operator Classes</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

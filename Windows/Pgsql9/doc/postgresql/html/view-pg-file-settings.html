@@ -1,0 +1,387 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_file_settings</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="System Catalogs"
+HREF="catalogs.html"><LINK
+REL="PREVIOUS"
+TITLE="pg_cursors"
+HREF="view-pg-cursors.html"><LINK
+REL="NEXT"
+TITLE="pg_group"
+HREF="view-pg-group.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pg_cursors"
+HREF="view-pg-cursors.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="catalogs.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 49. System Catalogs</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pg_group"
+HREF="view-pg-group.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="VIEW-PG-FILE-SETTINGS"
+>49.60. <TT
+CLASS="STRUCTNAME"
+>pg_file_settings</TT
+></A
+></H1
+><P
+>   The view <TT
+CLASS="STRUCTNAME"
+>pg_file_settings</TT
+> provides a summary of
+   the contents of the server's configuration file(s).  A row appears in
+   this view for each <SPAN
+CLASS="QUOTE"
+>"name = value"</SPAN
+> entry appearing in the files,
+   with annotations indicating whether the value could be applied
+   successfully.  Additional row(s) may appear for problems not linked to
+   a <SPAN
+CLASS="QUOTE"
+>"name = value"</SPAN
+> entry, such as syntax errors in the files.
+  </P
+><P
+>   This view is helpful for checking whether planned changes in the
+   configuration files will work, or for diagnosing a previous failure.
+   Note that this view reports on the <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>current</I
+></SPAN
+> contents of the
+   files, not on what was last applied by the server.  (The
+   <A
+HREF="view-pg-settings.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_settings</TT
+></A
+>
+   view is usually sufficient to determine that.)
+  </P
+><P
+>   The <TT
+CLASS="STRUCTNAME"
+>pg_file_settings</TT
+> view can be read only by
+   superusers.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="AEN106768"
+></A
+><P
+><B
+>Table 49-61. <TT
+CLASS="STRUCTNAME"
+>pg_file_settings</TT
+> Columns</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>sourcefile</TT
+></TD
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>text</TT
+></TD
+><TD
+>Full path name of the configuration file</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>sourceline</TT
+></TD
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>integer</TT
+></TD
+><TD
+>      Line number within the configuration file where the entry appears
+     </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>seqno</TT
+></TD
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>integer</TT
+></TD
+><TD
+>Order in which the entries are processed (1..<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>name</TT
+></TD
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>text</TT
+></TD
+><TD
+>Configuration parameter name</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>setting</TT
+></TD
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>text</TT
+></TD
+><TD
+>Value to be assigned to the parameter</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>applied</TT
+></TD
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>boolean</TT
+></TD
+><TD
+>True if the value can be applied successfully</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>error</TT
+></TD
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>text</TT
+></TD
+><TD
+>If not null, an error message indicating why this entry could
+      not be applied</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   If the configuration file contains syntax errors or invalid parameter
+   names, the server will not attempt to apply any settings from it, and
+   therefore all the <TT
+CLASS="STRUCTFIELD"
+>applied</TT
+> fields will read as false.
+   In such a case there will be one or more rows with
+   non-null <TT
+CLASS="STRUCTFIELD"
+>error</TT
+> fields indicating the
+   problem(s).  Otherwise, individual settings will be applied if possible.
+   If an individual setting cannot be applied (e.g., invalid value, or the
+   setting cannot be changed after server start) it will have an appropriate
+   message in the <TT
+CLASS="STRUCTFIELD"
+>error</TT
+> field.  Another way that
+   an entry might have <TT
+CLASS="STRUCTFIELD"
+>applied</TT
+> = false is that it is
+   overridden by a later entry for the same parameter name; this case is not
+   considered an error so nothing appears in
+   the <TT
+CLASS="STRUCTFIELD"
+>error</TT
+> field.
+  </P
+><P
+>   See <A
+HREF="config-setting.html"
+>Section 18.1</A
+> for more information about the various
+   ways to change run-time parameters.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="view-pg-cursors.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="view-pg-group.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><TT
+CLASS="STRUCTNAME"
+>pg_cursors</TT
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="catalogs.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><TT
+CLASS="STRUCTNAME"
+>pg_group</TT
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

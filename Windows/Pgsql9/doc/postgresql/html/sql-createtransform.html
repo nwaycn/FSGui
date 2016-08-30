@@ -1,0 +1,514 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>CREATE TRANSFORM</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="CREATE TEXT SEARCH TEMPLATE"
+HREF="sql-createtstemplate.html"><LINK
+REL="NEXT"
+TITLE="CREATE TRIGGER"
+HREF="sql-createtrigger.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="CREATE TEXT SEARCH TEMPLATE"
+HREF="sql-createtstemplate.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="CREATE TRIGGER"
+HREF="sql-createtrigger.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-CREATETRANSFORM"
+></A
+>CREATE TRANSFORM</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN79897"
+></A
+><H2
+>Name</H2
+>CREATE TRANSFORM&nbsp;--&nbsp;define a new transform</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN79900"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>CREATE [ OR REPLACE ] TRANSFORM FOR <TT
+CLASS="REPLACEABLE"
+><I
+>type_name</I
+></TT
+> LANGUAGE <TT
+CLASS="REPLACEABLE"
+><I
+>lang_name</I
+></TT
+> (
+    FROM SQL WITH FUNCTION <TT
+CLASS="REPLACEABLE"
+><I
+>from_sql_function_name</I
+></TT
+> (<TT
+CLASS="REPLACEABLE"
+><I
+>argument_type</I
+></TT
+> [, ...]),
+    TO SQL WITH FUNCTION <TT
+CLASS="REPLACEABLE"
+><I
+>to_sql_function_name</I
+></TT
+> (<TT
+CLASS="REPLACEABLE"
+><I
+>argument_type</I
+></TT
+> [, ...])
+);</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-CREATETRANSFORM-DESCRIPTION"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>CREATE TRANSFORM</TT
+> defines a new transform.
+   <TT
+CLASS="COMMAND"
+>CREATE OR REPLACE TRANSFORM</TT
+> will either create a new
+   transform, or replace an existing definition.
+  </P
+><P
+>   A transform specifies how to adapt a data type to a procedural language.
+   For example, when writing a function in PL/Python using
+   the <TT
+CLASS="TYPE"
+>hstore</TT
+> type, PL/Python has no prior knowledge how to
+   present <TT
+CLASS="TYPE"
+>hstore</TT
+> values in the Python environment.  Language
+   implementations usually default to using the text representation, but that
+   is inconvenient when, for example, an associative array or a list would be
+   more appropriate.
+  </P
+><P
+>   A transform specifies two functions:
+   <P
+></P
+></P><UL
+><LI
+><P
+>      A <SPAN
+CLASS="QUOTE"
+>"from SQL"</SPAN
+> function that converts the type from the SQL
+      environment to the language.  This function will be invoked on the
+      arguments of a function written in the language.
+     </P
+></LI
+><LI
+><P
+>      A <SPAN
+CLASS="QUOTE"
+>"to SQL"</SPAN
+> function that converts the type from the
+      language to the SQL environment.  This function will be invoked on the
+      return value of a function written in the language.
+     </P
+></LI
+></UL
+><P>
+   It is not necessary to provide both of these functions.  If one is not
+   specified, the language-specific default behavior will be used if
+   necessary.  (To prevent a transformation in a certain direction from
+   happening at all, you could also write a transform function that always
+   errors out.)
+  </P
+><P
+>   To be able to create a transform, you must own and
+   have <TT
+CLASS="LITERAL"
+>USAGE</TT
+> privilege on the type, have
+   <TT
+CLASS="LITERAL"
+>USAGE</TT
+> privilege on the language, and own and
+   have <TT
+CLASS="LITERAL"
+>EXECUTE</TT
+> privilege on the from-SQL and to-SQL
+   functions, if specified.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN79928"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>type_name</I
+></TT
+></DT
+><DD
+><P
+>       The name of the data type of the transform.
+      </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>lang_name</I
+></TT
+></DT
+><DD
+><P
+>       The name of the language of the transform.
+      </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>from_sql_function_name</I
+></TT
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>argument_type</I
+></TT
+> [, ...])</DT
+><DD
+><P
+>       The name of the function for converting the type from the SQL
+       environment to the language.  It must take one argument of
+       type <TT
+CLASS="TYPE"
+>internal</TT
+> and return type <TT
+CLASS="TYPE"
+>internal</TT
+>.  The
+       actual argument will be of the type for the transform, and the function
+       should be coded as if it were.  (But it is not allowed to declare an
+       SQL-level function returning <TT
+CLASS="TYPE"
+>internal</TT
+> without at
+       least one argument of type <TT
+CLASS="TYPE"
+>internal</TT
+>.)  The actual return
+       value will be something specific to the language implementation.
+      </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>to_sql_function_name</I
+></TT
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>argument_type</I
+></TT
+> [, ...])</DT
+><DD
+><P
+>       The name of the function for converting the type from the language to
+       the SQL environment.  It must take one argument of type
+       <TT
+CLASS="TYPE"
+>internal</TT
+> and return the type that is the type for the
+       transform.  The actual argument value will be something specific to the
+       language implementation.
+      </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-CREATETRANSFORM-NOTES"
+></A
+><H2
+>Notes</H2
+><P
+>   Use <A
+HREF="sql-droptransform.html"
+>DROP TRANSFORM</A
+> to remove transforms.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-CREATETRANSFORM-EXAMPLES"
+></A
+><H2
+>Examples</H2
+><P
+>   To create a transform for type <TT
+CLASS="TYPE"
+>hstore</TT
+> and language
+   <TT
+CLASS="LITERAL"
+>plpythonu</TT
+>, first set up the type and the language:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TYPE hstore ...;
+
+CREATE LANGUAGE plpythonu ...;</PRE
+><P>
+   Then create the necessary functions:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION hstore_to_plpython(val internal) RETURNS internal
+LANGUAGE C STRICT IMMUTABLE
+AS ...;
+
+CREATE FUNCTION plpython_to_hstore(val internal) RETURNS hstore
+LANGUAGE C STRICT IMMUTABLE
+AS ...;</PRE
+><P>
+   And finally create the transform to connect them all together:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TRANSFORM FOR hstore LANGUAGE plpythonu (
+    FROM SQL WITH FUNCTION hstore_to_plpython(internal),
+    TO SQL WITH FUNCTION plpython_to_hstore(internal)
+);</PRE
+><P>
+   In practice, these commands would be wrapped up in extensions.
+  </P
+><P
+>   The <TT
+CLASS="FILENAME"
+>contrib</TT
+> section contains a number of extensions
+   that provide transforms, which can serve as real-world examples.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-CREATETRANSFORM-COMPAT"
+></A
+><H2
+>Compatibility</H2
+><P
+>   This form of <TT
+CLASS="COMMAND"
+>CREATE TRANSFORM</TT
+> is a
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> extension.  There is a <TT
+CLASS="COMMAND"
+>CREATE
+   TRANSFORM</TT
+> command in the <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> standard, but it
+   is for adapting data types to client languages.  That usage is not supported
+   by <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-CREATETRANSFORM-SEEALSO"
+></A
+><H2
+>See Also</H2
+><P
+>   <A
+HREF="sql-createfunction.html"
+>CREATE FUNCTION</A
+>,
+   <A
+HREF="sql-createlanguage.html"
+>CREATE LANGUAGE</A
+>,
+   <A
+HREF="sql-createtype.html"
+>CREATE TYPE</A
+>,
+   <A
+HREF="sql-droptransform.html"
+>DROP TRANSFORM</A
+>
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-createtstemplate.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-createtrigger.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>CREATE TEXT SEARCH TEMPLATE</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>CREATE TRIGGER</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

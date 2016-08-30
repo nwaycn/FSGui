@@ -1,0 +1,429 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Template Databases</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Managing Databases"
+HREF="managing-databases.html"><LINK
+REL="PREVIOUS"
+TITLE="Creating a Database"
+HREF="manage-ag-createdb.html"><LINK
+REL="NEXT"
+TITLE="Database Configuration"
+HREF="manage-ag-config.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Creating a Database"
+HREF="manage-ag-createdb.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="managing-databases.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 21. Managing Databases</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Database Configuration"
+HREF="manage-ag-config.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="MANAGE-AG-TEMPLATEDBS"
+>21.3. Template Databases</A
+></H1
+><P
+>   <TT
+CLASS="COMMAND"
+>CREATE DATABASE</TT
+> actually works by copying an existing
+   database.  By default, it copies the standard system database named
+   <TT
+CLASS="LITERAL"
+>template1</TT
+>. Thus that
+   database is the <SPAN
+CLASS="QUOTE"
+>"template"</SPAN
+> from which new databases are
+   made.  If you add objects to <TT
+CLASS="LITERAL"
+>template1</TT
+>, these objects
+   will be copied into subsequently created user databases.  This
+   behavior allows site-local modifications to the standard set of
+   objects in databases.  For example, if you install the procedural
+   language <SPAN
+CLASS="APPLICATION"
+>PL/Perl</SPAN
+> in <TT
+CLASS="LITERAL"
+>template1</TT
+>, it will
+   automatically be available in user databases without any extra
+   action being taken when those databases are created.
+  </P
+><P
+>   There is a second standard system database named
+   <TT
+CLASS="LITERAL"
+>template0</TT
+>. This
+   database contains the same data as the initial contents of
+   <TT
+CLASS="LITERAL"
+>template1</TT
+>, that is, only the standard objects
+   predefined by your version of
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>.  <TT
+CLASS="LITERAL"
+>template0</TT
+>
+   should never be changed after the database cluster has been
+   initialized.  By instructing
+   <TT
+CLASS="COMMAND"
+>CREATE DATABASE</TT
+> to copy <TT
+CLASS="LITERAL"
+>template0</TT
+> instead
+   of <TT
+CLASS="LITERAL"
+>template1</TT
+>, you can create a <SPAN
+CLASS="QUOTE"
+>"virgin"</SPAN
+> user
+   database that contains none of the site-local additions in
+   <TT
+CLASS="LITERAL"
+>template1</TT
+>.  This is particularly handy when restoring a
+   <TT
+CLASS="LITERAL"
+>pg_dump</TT
+> dump: the dump script should be restored in a
+   virgin database to ensure that one recreates the correct contents
+   of the dumped database, without conflicting with objects that
+   might have been added to <TT
+CLASS="LITERAL"
+>template1</TT
+> later on.
+  </P
+><P
+>   Another common reason for copying <TT
+CLASS="LITERAL"
+>template0</TT
+> instead
+   of <TT
+CLASS="LITERAL"
+>template1</TT
+> is that new encoding and locale settings
+   can be specified when copying <TT
+CLASS="LITERAL"
+>template0</TT
+>, whereas a copy
+   of <TT
+CLASS="LITERAL"
+>template1</TT
+> must use the same settings it does.
+   This is because <TT
+CLASS="LITERAL"
+>template1</TT
+> might contain encoding-specific
+   or locale-specific data, while <TT
+CLASS="LITERAL"
+>template0</TT
+> is known not to.
+  </P
+><P
+>   To create a database by copying <TT
+CLASS="LITERAL"
+>template0</TT
+>, use:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE DATABASE <TT
+CLASS="REPLACEABLE"
+><I
+>dbname</I
+></TT
+> TEMPLATE template0;</PRE
+><P>
+   from the SQL environment, or:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>createdb -T template0 <TT
+CLASS="REPLACEABLE"
+><I
+>dbname</I
+></TT
+></PRE
+><P>
+   from the shell.
+  </P
+><P
+>   It is possible to create additional template databases, and indeed
+   one can copy any database in a cluster by specifying its name
+   as the template for <TT
+CLASS="COMMAND"
+>CREATE DATABASE</TT
+>.  It is important to
+   understand, however, that this is not (yet) intended as
+   a general-purpose <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="COMMAND"
+>COPY DATABASE</TT
+>"</SPAN
+> facility.
+   The principal limitation is that no other sessions can be connected to
+   the source database while it is being copied.  <TT
+CLASS="COMMAND"
+>CREATE
+   DATABASE</TT
+> will fail if any other connection exists when it starts;
+   during the copy operation, new connections to the source database
+   are prevented.
+  </P
+><P
+>   Two useful flags exist in <TT
+CLASS="LITERAL"
+>pg_database</TT
+> for each
+   database: the columns <TT
+CLASS="LITERAL"
+>datistemplate</TT
+> and
+   <TT
+CLASS="LITERAL"
+>datallowconn</TT
+>.  <TT
+CLASS="LITERAL"
+>datistemplate</TT
+>
+   can be set to indicate that a database is intended as a template for
+   <TT
+CLASS="COMMAND"
+>CREATE DATABASE</TT
+>.  If this flag is set, the database can be
+   cloned by any user with <TT
+CLASS="LITERAL"
+>CREATEDB</TT
+> privileges; if it is not set,
+   only superusers and the owner of the database can clone it.
+   If <TT
+CLASS="LITERAL"
+>datallowconn</TT
+> is false, then no new connections
+   to that database will be allowed (but existing sessions are not terminated
+   simply by setting the flag false).  The <TT
+CLASS="LITERAL"
+>template0</TT
+>
+   database is normally marked <TT
+CLASS="LITERAL"
+>datallowconn = false</TT
+> to prevent its modification.
+   Both <TT
+CLASS="LITERAL"
+>template0</TT
+> and <TT
+CLASS="LITERAL"
+>template1</TT
+>
+   should always be marked with <TT
+CLASS="LITERAL"
+>datistemplate = true</TT
+>.
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    <TT
+CLASS="LITERAL"
+>template1</TT
+> and <TT
+CLASS="LITERAL"
+>template0</TT
+> do not have any special
+    status beyond the fact that the name <TT
+CLASS="LITERAL"
+>template1</TT
+> is the default
+    source database name for <TT
+CLASS="COMMAND"
+>CREATE DATABASE</TT
+>.
+    For example, one could drop <TT
+CLASS="LITERAL"
+>template1</TT
+> and recreate it from
+    <TT
+CLASS="LITERAL"
+>template0</TT
+> without any ill effects.  This course of action
+    might be advisable if one has carelessly added a bunch of junk in
+    <TT
+CLASS="LITERAL"
+>template1</TT
+>. (To delete <TT
+CLASS="LITERAL"
+>template1</TT
+>,
+    it must have <TT
+CLASS="LITERAL"
+>pg_database.datistemplate = false</TT
+>.)
+   </P
+><P
+>    The <TT
+CLASS="LITERAL"
+>postgres</TT
+> database is also created when a database
+    cluster is initialized.  This database is meant as a default database for
+    users and applications to connect to. It is simply a copy of
+    <TT
+CLASS="LITERAL"
+>template1</TT
+> and can be dropped and recreated if necessary.
+   </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="manage-ag-createdb.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="manage-ag-config.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Creating a Database</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="managing-databases.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Database Configuration</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

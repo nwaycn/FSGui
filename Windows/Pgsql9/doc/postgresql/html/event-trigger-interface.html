@@ -1,0 +1,342 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Writing Event Trigger Functions in C</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Event Triggers"
+HREF="event-triggers.html"><LINK
+REL="PREVIOUS"
+TITLE="Event Trigger Firing Matrix"
+HREF="event-trigger-matrix.html"><LINK
+REL="NEXT"
+TITLE="A Complete Event Trigger Example"
+HREF="event-trigger-example.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Event Trigger Firing Matrix"
+HREF="event-trigger-matrix.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="event-triggers.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 37. Event Triggers</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="A Complete Event Trigger Example"
+HREF="event-trigger-example.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="EVENT-TRIGGER-INTERFACE"
+>37.3. Writing Event Trigger Functions in C</A
+></H1
+><P
+>    This section describes the low-level details of the interface to an
+    event trigger function. This information is only needed when writing
+    event trigger functions in C. If you are using a higher-level language
+    then these details are handled for you. In most cases you should
+    consider using a procedural language before writing your event triggers
+    in C. The documentation of each procedural language explains how to
+    write an event trigger in that language.
+   </P
+><P
+>    Event trigger functions must use the <SPAN
+CLASS="QUOTE"
+>"version 1"</SPAN
+> function
+    manager interface.
+   </P
+><P
+>    When a function is called by the event trigger manager, it is not passed
+    any normal arguments, but it is passed a <SPAN
+CLASS="QUOTE"
+>"context"</SPAN
+> pointer
+    pointing to a <TT
+CLASS="STRUCTNAME"
+>EventTriggerData</TT
+> structure. C functions can
+    check whether they were called from the event trigger manager or not by
+    executing the macro:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CALLED_AS_EVENT_TRIGGER(fcinfo)</PRE
+><P>
+    which expands to:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>((fcinfo)-&gt;context != NULL &amp;&amp; IsA((fcinfo)-&gt;context, EventTriggerData))</PRE
+><P>
+    If this returns true, then it is safe to cast
+    <TT
+CLASS="LITERAL"
+>fcinfo-&gt;context</TT
+> to type <TT
+CLASS="LITERAL"
+>EventTriggerData
+    *</TT
+> and make use of the pointed-to
+    <TT
+CLASS="STRUCTNAME"
+>EventTriggerData</TT
+> structure.  The function must
+    <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+> alter the <TT
+CLASS="STRUCTNAME"
+>EventTriggerData</TT
+>
+    structure or any of the data it points to.
+   </P
+><P
+>    <TT
+CLASS="STRUCTNAME"
+>struct EventTriggerData</TT
+> is defined in
+    <TT
+CLASS="FILENAME"
+>commands/event_trigger.h</TT
+>:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>typedef struct EventTriggerData
+{
+    NodeTag     type;
+    const char *event;      /* event name */
+    Node       *parsetree;  /* parse tree */
+    const char *tag;        /* command tag */
+} EventTriggerData;</PRE
+><P>
+
+    where the members are defined as follows:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="STRUCTFIELD"
+>type</TT
+></DT
+><DD
+><P
+>        Always <TT
+CLASS="LITERAL"
+>T_EventTriggerData</TT
+>.
+       </P
+></DD
+><DT
+><TT
+CLASS="STRUCTFIELD"
+>event</TT
+></DT
+><DD
+><P
+>        Describes the event for which the function is called, one of
+        <TT
+CLASS="LITERAL"
+>"ddl_command_start"</TT
+>, <TT
+CLASS="LITERAL"
+>"ddl_command_end"</TT
+>,
+        <TT
+CLASS="LITERAL"
+>"sql_drop"</TT
+>, <TT
+CLASS="LITERAL"
+>"table_rewrite"</TT
+>.
+        See <A
+HREF="event-trigger-definition.html"
+>Section 37.1</A
+> for the meaning of these
+        events.
+       </P
+></DD
+><DT
+><TT
+CLASS="STRUCTFIELD"
+>parsetree</TT
+></DT
+><DD
+><P
+>        A pointer to the parse tree of the command.  Check the PostgreSQL
+        source code for details.  The parse tree structure is subject to change
+        without notice.
+       </P
+></DD
+><DT
+><TT
+CLASS="STRUCTFIELD"
+>tag</TT
+></DT
+><DD
+><P
+>        The command tag associated with the event for which the event trigger
+        is run, for example <TT
+CLASS="LITERAL"
+>"CREATE FUNCTION"</TT
+>.
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+><P
+>    An event trigger function must return a <TT
+CLASS="SYMBOL"
+>NULL</TT
+> pointer
+    (<SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+> an SQL null value, that is, do not
+    set <TT
+CLASS="PARAMETER"
+>isNull</TT
+> true).
+   </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="event-trigger-matrix.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="event-trigger-example.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Event Trigger Firing Matrix</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="event-triggers.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>A Complete Event Trigger Example</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

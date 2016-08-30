@@ -1,0 +1,234 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Preventing Server Spoofing</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Setup and Operation"
+HREF="runtime.html"><LINK
+REL="PREVIOUS"
+TITLE="Upgrading a PostgreSQL Cluster"
+HREF="upgrading.html"><LINK
+REL="NEXT"
+TITLE="Encryption Options"
+HREF="encryption-options.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Upgrading a PostgreSQL Cluster"
+HREF="upgrading.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 17. Server Setup and Operation</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Encryption Options"
+HREF="encryption-options.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PREVENTING-SERVER-SPOOFING"
+>17.7. Preventing Server Spoofing</A
+></H1
+><P
+>   While the server is running, it is not possible for a malicious user
+   to take the place of the normal database server.  However, when the
+   server is down, it is possible for a local user to spoof the normal
+   server by starting their own server.  The spoof server could read
+   passwords and queries sent by clients, but could not return any data
+   because the <TT
+CLASS="VARNAME"
+>PGDATA</TT
+> directory would still be secure because
+   of directory permissions. Spoofing is possible because any user can
+   start a database server; a client cannot identify an invalid server
+   unless it is specially configured.
+  </P
+><P
+>   The simplest way to prevent spoofing for <TT
+CLASS="LITERAL"
+>local</TT
+>
+   connections is to use a Unix domain socket directory (<A
+HREF="runtime-config-connection.html#GUC-UNIX-SOCKET-DIRECTORIES"
+>unix_socket_directories</A
+>) that has write permission only
+   for a trusted local user.  This prevents a malicious user from creating
+   their own socket file in that directory.  If you are concerned that
+   some applications might still reference <TT
+CLASS="FILENAME"
+>/tmp</TT
+> for the
+   socket file and hence be vulnerable to spoofing, during operating system
+   startup create a symbolic link <TT
+CLASS="FILENAME"
+>/tmp/.s.PGSQL.5432</TT
+> that points
+   to the relocated socket file.  You also might need to modify your
+   <TT
+CLASS="FILENAME"
+>/tmp</TT
+> cleanup script to prevent removal of the symbolic link.
+  </P
+><P
+>   To prevent spoofing on TCP connections, the best solution is to use
+   SSL certificates and make sure that clients check the server's certificate.
+   To do that, the server
+   must be configured to accept only <TT
+CLASS="LITERAL"
+>hostssl</TT
+> connections (<A
+HREF="auth-pg-hba-conf.html"
+>Section 19.1</A
+>) and have SSL key and certificate files
+   (<A
+HREF="ssl-tcp.html"
+>Section 17.9</A
+>). The TCP client must connect using
+   <TT
+CLASS="LITERAL"
+>sslmode=verify-ca</TT
+> or
+   <TT
+CLASS="LITERAL"
+>verify-full</TT
+> and have the appropriate root certificate
+   file installed (<A
+HREF="libpq-ssl.html#LIBQ-SSL-CERTIFICATES"
+>Section 31.18.1</A
+>).
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="upgrading.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="encryption-options.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Upgrading a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> Cluster</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="runtime.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Encryption Options</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

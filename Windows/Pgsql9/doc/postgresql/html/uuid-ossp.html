@@ -1,0 +1,517 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>uuid-ossp</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="unaccent"
+HREF="unaccent.html"><LINK
+REL="NEXT"
+TITLE="xml2"
+HREF="xml2.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="unaccent"
+HREF="unaccent.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="xml2"
+HREF="xml2.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="UUID-OSSP"
+>F.43. uuid-ossp</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>uuid-ossp</TT
+> module provides functions to generate universally
+  unique identifiers (UUIDs) using one of several standard algorithms.  There
+  are also functions to produce certain special UUID constants.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN176233"
+>F.43.1. <TT
+CLASS="LITERAL"
+>uuid-ossp</TT
+> Functions</A
+></H2
+><P
+>   <A
+HREF="uuid-ossp.html#UUID-OSSP-FUNCTIONS"
+>Table F-31</A
+> shows the functions available to
+   generate UUIDs.
+   The relevant standards ITU-T Rec. X.667, ISO/IEC 9834-8:2005, and RFC
+   4122 specify four algorithms for generating UUIDs, identified by the
+   version numbers 1, 3, 4, and 5.  (There is no version 2 algorithm.)
+   Each of these algorithms could be suitable for a different set of
+   applications.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="UUID-OSSP-FUNCTIONS"
+></A
+><P
+><B
+>Table F-31. Functions for UUID Generation</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>uuid_generate_v1()</CODE
+></TD
+><TD
+>       <P
+>        This function generates a version 1 UUID.  This involves the MAC
+        address of the computer and a time stamp.  Note that UUIDs of this
+        kind reveal the identity of the computer that created the identifier
+        and the time at which it did so, which might make it unsuitable for
+        certain security-sensitive applications.
+       </P
+>
+      </TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>uuid_generate_v1mc()</CODE
+></TD
+><TD
+>       <P
+>        This function generates a version 1 UUID but uses a random multicast
+        MAC address instead of the real MAC address of the computer.
+       </P
+>
+      </TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>uuid_generate_v3(namespace uuid, name text)</CODE
+></TD
+><TD
+>       <P
+>        This function generates a version 3 UUID in the given namespace using
+        the specified input name.  The namespace should be one of the special
+        constants produced by the <CODE
+CLASS="FUNCTION"
+>uuid_ns_*()</CODE
+> functions shown
+        in <A
+HREF="uuid-ossp.html#UUID-OSSP-CONSTANTS"
+>Table F-32</A
+>.  (It could be any UUID in theory.)  The name is an identifier
+        in the selected namespace.
+       </P
+>
+
+       <P
+>        For example:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT uuid_generate_v3(uuid_ns_url(), 'http://www.postgresql.org');</PRE
+><P>
+
+        The name parameter will be MD5-hashed, so the cleartext cannot be
+        derived from the generated UUID.
+        The generation of UUIDs by this method has no random or
+        environment-dependent element and is therefore reproducible.
+       </P
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>uuid_generate_v4()</TT
+></TD
+><TD
+>       <P
+>        This function generates a version 4 UUID, which is derived entirely
+        from random numbers.
+       </P
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>uuid_generate_v5(namespace uuid, name text)</TT
+></TD
+><TD
+>       <P
+>        This function generates a version 5 UUID, which works like a version 3
+        UUID except that SHA-1 is used as a hashing method.  Version 5 should
+        be preferred over version 3 because SHA-1 is thought to be more secure
+        than MD5.
+       </P
+>
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><DIV
+CLASS="TABLE"
+><A
+NAME="UUID-OSSP-CONSTANTS"
+></A
+><P
+><B
+>Table F-32. Functions Returning UUID Constants</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>uuid_nil()</TT
+></TD
+><TD
+>       <P
+>        A <SPAN
+CLASS="QUOTE"
+>"nil"</SPAN
+> UUID constant, which does not occur as a real UUID.
+       </P
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>uuid_ns_dns()</TT
+></TD
+><TD
+>       <P
+>        Constant designating the DNS namespace for UUIDs.
+       </P
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>uuid_ns_url()</TT
+></TD
+><TD
+>       <P
+>        Constant designating the URL namespace for UUIDs.
+       </P
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>uuid_ns_oid()</TT
+></TD
+><TD
+>       <P
+>        Constant designating the ISO object identifier (OID) namespace for
+        UUIDs.  (This pertains to ASN.1 OIDs, which are unrelated to the OIDs
+        used in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>.)
+       </P
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>uuid_ns_x500()</TT
+></TD
+><TD
+>       <P
+>        Constant designating the X.500 distinguished name (DN) namespace for
+        UUIDs.
+       </P
+>
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN176312"
+>F.43.2. Building <TT
+CLASS="FILENAME"
+>uuid-ossp</TT
+></A
+></H2
+><P
+>   Historically this module depended on the OSSP UUID library, which accounts
+   for the module's name.  While the OSSP UUID library can still be found
+   at <A
+HREF="http://www.ossp.org/pkg/lib/uuid/"
+TARGET="_top"
+>http://www.ossp.org/pkg/lib/uuid/</A
+>, it is not well
+   maintained, and is becoming increasingly difficult to port to newer
+   platforms.  <TT
+CLASS="FILENAME"
+>uuid-ossp</TT
+> can now be built without the OSSP
+   library on some platforms.  On FreeBSD, NetBSD, and some other BSD-derived
+   platforms, suitable UUID creation functions are included in the
+   core <TT
+CLASS="FILENAME"
+>libc</TT
+> library.  On Linux, OS X, and some other
+   platforms, suitable functions are provided in the <TT
+CLASS="FILENAME"
+>libuuid</TT
+>
+   library, which originally came from the <TT
+CLASS="LITERAL"
+>e2fsprogs</TT
+> project
+   (though on modern Linux it is considered part
+   of <TT
+CLASS="LITERAL"
+>util-linux-ng</TT
+>).  When invoking <TT
+CLASS="FILENAME"
+>configure</TT
+>,
+   specify <TT
+CLASS="OPTION"
+>--with-uuid=bsd</TT
+> to use the BSD functions,
+   or <TT
+CLASS="OPTION"
+>--with-uuid=e2fs</TT
+> to
+   use <TT
+CLASS="LITERAL"
+>e2fsprogs</TT
+>' <TT
+CLASS="FILENAME"
+>libuuid</TT
+>, or
+   <TT
+CLASS="OPTION"
+>--with-uuid=ossp</TT
+> to use the OSSP UUID library.
+   More than one of these libraries might be available on a particular
+   machine, so <TT
+CLASS="FILENAME"
+>configure</TT
+> does not automatically choose one.
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    If you only need randomly-generated (version 4) UUIDs,
+    consider using the <CODE
+CLASS="FUNCTION"
+>gen_random_uuid()</CODE
+> function
+    from the <A
+HREF="pgcrypto.html"
+>pgcrypto</A
+> module instead.
+   </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN176333"
+>F.43.3. Author</A
+></H2
+><P
+>   Peter Eisentraut <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:peter_e@gmx.net"
+>peter_e@gmx.net</A
+>&#62;</CODE
+>
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="unaccent.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="xml2.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>unaccent</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>xml2</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

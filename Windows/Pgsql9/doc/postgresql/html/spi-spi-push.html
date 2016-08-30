@@ -1,0 +1,235 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>SPI_push</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Interface Functions"
+HREF="spi-interface.html"><LINK
+REL="PREVIOUS"
+TITLE="SPI_finish"
+HREF="spi-spi-finish.html"><LINK
+REL="NEXT"
+TITLE="SPI_pop"
+HREF="spi-spi-pop.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="SPI_finish"
+HREF="spi-spi-finish.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="spi-interface.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="SPI_pop"
+HREF="spi-spi-pop.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SPI-SPI-PUSH"
+></A
+>SPI_push</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN66115"
+></A
+><H2
+>Name</H2
+>SPI_push&nbsp;--&nbsp;push SPI stack to allow recursive SPI usage</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN66118"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>void SPI_push(void)</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN66120"
+></A
+><H2
+>Description</H2
+><P
+>   <CODE
+CLASS="FUNCTION"
+>SPI_push</CODE
+> should be called before executing another
+   procedure that might itself wish to use SPI.
+   After <CODE
+CLASS="FUNCTION"
+>SPI_push</CODE
+>, SPI is no longer in a
+   <SPAN
+CLASS="QUOTE"
+>"connected"</SPAN
+> state, and SPI function calls will be rejected unless
+   a fresh <CODE
+CLASS="FUNCTION"
+>SPI_connect</CODE
+> is done.  This ensures a clean
+   separation between your procedure's SPI state and that of another procedure
+   you call.  After the other procedure returns, call
+   <CODE
+CLASS="FUNCTION"
+>SPI_pop</CODE
+> to restore access to your own SPI state.
+  </P
+><P
+>   Note that <CODE
+CLASS="FUNCTION"
+>SPI_execute</CODE
+> and related functions
+   automatically do the equivalent of <CODE
+CLASS="FUNCTION"
+>SPI_push</CODE
+> before
+   passing control back to the SQL execution engine, so it is not necessary
+   for you to worry about this when using those functions.
+   Only when you are directly calling arbitrary code that might contain
+   <CODE
+CLASS="FUNCTION"
+>SPI_connect</CODE
+> calls do you need to issue
+   <CODE
+CLASS="FUNCTION"
+>SPI_push</CODE
+> and <CODE
+CLASS="FUNCTION"
+>SPI_pop</CODE
+>.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="spi-spi-finish.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="spi-spi-pop.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>SPI_finish</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="spi-interface.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>SPI_pop</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

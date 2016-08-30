@@ -1,0 +1,393 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 7.4.19</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 7.4.20"
+HREF="release-7-4-20.html"><LINK
+REL="NEXT"
+TITLE="Release 7.4.18"
+HREF="release-7-4-18.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 7.4.20"
+HREF="release-7-4-20.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 7.4.18"
+HREF="release-7-4-18.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-7-4-19"
+>E.231. Release 7.4.19</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2008-01-07</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 7.4.18,
+   including fixes for significant security issues.
+   For information about new features in the 7.4 major release, see
+   <A
+HREF="release-7-4.html"
+>Section E.250</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN163456"
+>E.231.1. Migration to Version 7.4.19</A
+></H2
+><P
+>    A dump/restore is not required for those running 7.4.X.  However,
+    if you are upgrading from a version earlier than 7.4.11,
+    see <A
+HREF="release-7-4-11.html"
+>Section E.239</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN163460"
+>E.231.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Prevent functions in indexes from executing with the privileges of
+      the user running <TT
+CLASS="COMMAND"
+>VACUUM</TT
+>, <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+>, etc (Tom)
+     </P
+><P
+>      Functions used in index expressions and partial-index
+      predicates are evaluated whenever a new table entry is made.  It has
+      long been understood that this poses a risk of trojan-horse code
+      execution if one modifies a table owned by an untrustworthy user.
+      (Note that triggers, defaults, check constraints, etc. pose the
+      same type of risk.)  But functions in indexes pose extra danger
+      because they will be executed by routine maintenance operations
+      such as <TT
+CLASS="COMMAND"
+>VACUUM FULL</TT
+>, which are commonly performed
+      automatically under a superuser account.  For example, a nefarious user
+      can execute code with superuser privileges by setting up a
+      trojan-horse index definition and waiting for the next routine vacuum.
+      The fix arranges for standard maintenance operations
+      (including <TT
+CLASS="COMMAND"
+>VACUUM</TT
+>, <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+>, <TT
+CLASS="COMMAND"
+>REINDEX</TT
+>,
+      and <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+>) to execute as the table owner rather than
+      the calling user, using the same privilege-switching mechanism already
+      used for <TT
+CLASS="LITERAL"
+>SECURITY DEFINER</TT
+> functions.  To prevent bypassing
+      this security measure, execution of <TT
+CLASS="COMMAND"
+>SET SESSION
+      AUTHORIZATION</TT
+> and <TT
+CLASS="COMMAND"
+>SET ROLE</TT
+> is now forbidden within a
+      <TT
+CLASS="LITERAL"
+>SECURITY DEFINER</TT
+> context.  (CVE-2007-6600)
+     </P
+></LI
+><LI
+><P
+>      Repair assorted bugs in the regular-expression package (Tom, Will Drewry)
+     </P
+><P
+>      Suitably crafted regular-expression patterns could cause crashes,
+      infinite or near-infinite looping, and/or massive memory consumption,
+      all of which pose denial-of-service hazards for applications that
+      accept regex search patterns from untrustworthy sources.
+      (CVE-2007-4769, CVE-2007-4772, CVE-2007-6067)
+     </P
+></LI
+><LI
+><P
+>      Require non-superusers who use <TT
+CLASS="FILENAME"
+>/contrib/dblink</TT
+> to use only
+      password authentication, as a security measure (Joe)
+     </P
+><P
+>      The fix that appeared for this in 7.4.18 was incomplete, as it plugged
+      the hole for only some <TT
+CLASS="FILENAME"
+>dblink</TT
+> functions.  (CVE-2007-6601,
+      CVE-2007-3278)
+     </P
+></LI
+><LI
+><P
+>      Fix planner failure in some cases of <TT
+CLASS="LITERAL"
+>WHERE false AND var IN
+      (SELECT ...)</TT
+> (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix potential crash in <CODE
+CLASS="FUNCTION"
+>translate()</CODE
+> when using a multibyte
+      database encoding (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix PL/Python to not crash on long exception messages (Alvaro)
+     </P
+></LI
+><LI
+><P
+>      <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+> parser fixes (Michael)
+     </P
+></LI
+><LI
+><P
+>      Make <TT
+CLASS="FILENAME"
+>contrib/tablefunc</TT
+>'s <CODE
+CLASS="FUNCTION"
+>crosstab()</CODE
+> handle
+      NULL rowid as a category in its own right, rather than crashing (Joe)
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="TYPE"
+>tsvector</TT
+> and <TT
+CLASS="TYPE"
+>tsquery</TT
+> output routines to
+      escape backslashes correctly (Teodor, Bruce)
+     </P
+></LI
+><LI
+><P
+>      Fix crash of <CODE
+CLASS="FUNCTION"
+>to_tsvector()</CODE
+> on huge input strings (Teodor)
+     </P
+></LI
+><LI
+><P
+>      Require a specific version of <SPAN
+CLASS="PRODUCTNAME"
+>Autoconf</SPAN
+> to be used
+      when re-generating the <TT
+CLASS="COMMAND"
+>configure</TT
+> script (Peter)
+     </P
+><P
+>      This affects developers and packagers only.  The change was made
+      to prevent accidental use of untested combinations of
+      <SPAN
+CLASS="PRODUCTNAME"
+>Autoconf</SPAN
+> and <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> versions.
+      You can remove the version check if you really want to use a
+      different <SPAN
+CLASS="PRODUCTNAME"
+>Autoconf</SPAN
+> version, but it's
+      your responsibility whether the result works or not.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-7-4-20.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-7-4-18.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 7.4.20</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 7.4.18</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

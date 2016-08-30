@@ -1,0 +1,314 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>SPI_saveplan</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Interface Functions"
+HREF="spi-interface.html"><LINK
+REL="PREVIOUS"
+TITLE="SPI_keepplan"
+HREF="spi-spi-keepplan.html"><LINK
+REL="NEXT"
+TITLE="Interface Support Functions"
+HREF="spi-interface-support.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="SPI_keepplan"
+HREF="spi-spi-keepplan.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="spi-interface.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Interface Support Functions"
+HREF="spi-interface-support.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SPI-SPI-SAVEPLAN"
+></A
+>SPI_saveplan</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN67634"
+></A
+><H2
+>Name</H2
+>SPI_saveplan&nbsp;--&nbsp;save a prepared statement</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN67637"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>SPIPlanPtr SPI_saveplan(SPIPlanPtr <TT
+CLASS="PARAMETER"
+>plan</TT
+>)</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN67640"
+></A
+><H2
+>Description</H2
+><P
+>   <CODE
+CLASS="FUNCTION"
+>SPI_saveplan</CODE
+> copies a passed statement (prepared by
+   <CODE
+CLASS="FUNCTION"
+>SPI_prepare</CODE
+>) into memory that will not be freed
+   by <CODE
+CLASS="FUNCTION"
+>SPI_finish</CODE
+> nor by the transaction manager,
+   and returns a pointer to the copied statement.  This gives you the
+   ability to reuse prepared statements in the subsequent invocations of
+   your procedure in the current session.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN67646"
+></A
+><H2
+>Arguments</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>SPIPlanPtr <TT
+CLASS="PARAMETER"
+>plan</TT
+></TT
+></DT
+><DD
+><P
+>      the prepared statement to be saved
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN67655"
+></A
+><H2
+>Return Value</H2
+><P
+>   Pointer to the copied statement; or <TT
+CLASS="SYMBOL"
+>NULL</TT
+> if unsuccessful.
+   On error, <TT
+CLASS="VARNAME"
+>SPI_result</TT
+> is set thus:
+
+   <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="SYMBOL"
+>SPI_ERROR_ARGUMENT</TT
+></DT
+><DD
+><P
+>       if <TT
+CLASS="PARAMETER"
+>plan</TT
+> is <TT
+CLASS="SYMBOL"
+>NULL</TT
+> or invalid
+      </P
+></DD
+><DT
+><TT
+CLASS="SYMBOL"
+>SPI_ERROR_UNCONNECTED</TT
+></DT
+><DD
+><P
+>       if called from an unconnected procedure
+      </P
+></DD
+></DL
+></DIV
+><P>
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN67673"
+></A
+><H2
+>Notes</H2
+><P
+>   The originally passed-in statement is not freed, so you might wish to do
+   <CODE
+CLASS="FUNCTION"
+>SPI_freeplan</CODE
+> on it to avoid leaking memory
+   until <CODE
+CLASS="FUNCTION"
+>SPI_finish</CODE
+>.
+  </P
+><P
+>   In most cases, <CODE
+CLASS="FUNCTION"
+>SPI_keepplan</CODE
+> is preferred to this
+   function, since it accomplishes largely the same result without needing
+   to physically copy the prepared statement's data structures.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="spi-spi-keepplan.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="spi-interface-support.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>SPI_keepplan</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="spi-interface.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Interface Support Functions</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

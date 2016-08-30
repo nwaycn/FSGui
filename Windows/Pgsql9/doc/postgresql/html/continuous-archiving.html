@@ -1,0 +1,1820 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Continuous Archiving and Point-in-Time Recovery (PITR)</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Backup and Restore"
+HREF="backup.html"><LINK
+REL="PREVIOUS"
+TITLE="File System Level Backup"
+HREF="backup-file.html"><LINK
+REL="NEXT"
+TITLE="High Availability, Load Balancing, and Replication"
+HREF="high-availability.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="File System Level Backup"
+HREF="backup-file.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="backup.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 24. Backup and Restore</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="High Availability, Load Balancing, and Replication"
+HREF="high-availability.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="CONTINUOUS-ARCHIVING"
+>24.3. Continuous Archiving and Point-in-Time Recovery (PITR)</A
+></H1
+><P
+>   At all times, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> maintains a
+   <I
+CLASS="FIRSTTERM"
+>write ahead log</I
+> (WAL) in the <TT
+CLASS="FILENAME"
+>pg_xlog/</TT
+>
+   subdirectory of the cluster's data directory. The log records
+   every change made to the database's data files.  This log exists
+   primarily for crash-safety purposes: if the system crashes, the
+   database can be restored to consistency by <SPAN
+CLASS="QUOTE"
+>"replaying"</SPAN
+> the
+   log entries made since the last checkpoint.  However, the existence
+   of the log makes it possible to use a third strategy for backing up
+   databases: we can combine a file-system-level backup with backup of
+   the WAL files.  If recovery is needed, we restore the file system backup and
+   then replay from the backed-up WAL files to bring the system to a
+   current state.  This approach is more complex to administer than
+   either of the previous approaches, but it has some significant
+   benefits:
+  <P
+></P
+></P><UL
+><LI
+><P
+>     We do not need a perfectly consistent file system backup as the starting point.
+     Any internal inconsistency in the backup will be corrected by log
+     replay (this is not significantly different from what happens during
+     crash recovery).  So we do not need a file system snapshot capability,
+     just <SPAN
+CLASS="APPLICATION"
+>tar</SPAN
+> or a similar archiving tool.
+    </P
+></LI
+><LI
+><P
+>     Since we can combine an indefinitely long sequence of WAL files
+     for replay, continuous backup can be achieved simply by continuing to archive
+     the WAL files.  This is particularly valuable for large databases, where
+     it might not be convenient to take a full backup frequently.
+    </P
+></LI
+><LI
+><P
+>     It is not necessary to replay the WAL entries all the
+     way to the end.  We could stop the replay at any point and have a
+     consistent snapshot of the database as it was at that time.  Thus,
+     this technique supports <I
+CLASS="FIRSTTERM"
+>point-in-time recovery</I
+>: it is
+     possible to restore the database to its state at any time since your base
+     backup was taken.
+    </P
+></LI
+><LI
+><P
+>     If we continuously feed the series of WAL files to another
+     machine that has been loaded with the same base backup file, we
+     have a <I
+CLASS="FIRSTTERM"
+>warm standby</I
+> system: at any point we can bring up
+     the second machine and it will have a nearly-current copy of the
+     database.
+    </P
+></LI
+></UL
+><P>
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> and
+    <SPAN
+CLASS="APPLICATION"
+>pg_dumpall</SPAN
+> do not produce file-system-level
+    backups and cannot be used as part of a continuous-archiving solution.
+    Such dumps are <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>logical</I
+></SPAN
+> and do not contain enough
+    information to be used by WAL replay.
+   </P
+></BLOCKQUOTE
+></DIV
+><P
+>   As with the plain file-system-backup technique, this method can only
+   support restoration of an entire database cluster, not a subset.
+   Also, it requires a lot of archival storage: the base backup might be bulky,
+   and a busy system will generate many megabytes of WAL traffic that
+   have to be archived.  Still, it is the preferred backup technique in
+   many situations where high reliability is needed.
+  </P
+><P
+>   To recover successfully using continuous archiving (also called
+   <SPAN
+CLASS="QUOTE"
+>"online backup"</SPAN
+> by many database vendors), you need a continuous
+   sequence of archived WAL files that extends back at least as far as the
+   start time of your backup.  So to get started, you should set up and test
+   your procedure for archiving WAL files <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>before</I
+></SPAN
+> you take your
+   first base backup.  Accordingly, we first discuss the mechanics of
+   archiving WAL files.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="BACKUP-ARCHIVING-WAL"
+>24.3.1. Setting Up WAL Archiving</A
+></H2
+><P
+>    In an abstract sense, a running <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> system
+    produces an indefinitely long sequence of WAL records.  The system
+    physically divides this sequence into WAL <I
+CLASS="FIRSTTERM"
+>segment
+    files</I
+>, which are normally 16MB apiece (although the segment size
+    can be altered when building <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>).  The segment
+    files are given numeric names that reflect their position in the
+    abstract WAL sequence.  When not using WAL archiving, the system
+    normally creates just a few segment files and then
+    <SPAN
+CLASS="QUOTE"
+>"recycles"</SPAN
+> them by renaming no-longer-needed segment files
+    to higher segment numbers.  It's assumed that segment files whose
+    contents precede the checkpoint-before-last are no longer of
+    interest and can be recycled.
+   </P
+><P
+>    When archiving WAL data, we need to capture the contents of each segment
+    file once it is filled, and save that data somewhere before the segment
+    file is recycled for reuse.  Depending on the application and the
+    available hardware, there could be many different ways of <SPAN
+CLASS="QUOTE"
+>"saving
+    the data somewhere"</SPAN
+>: we could copy the segment files to an NFS-mounted
+    directory on another machine, write them onto a tape drive (ensuring that
+    you have a way of identifying the original name of each file), or batch
+    them together and burn them onto CDs, or something else entirely.  To
+    provide the database administrator with flexibility,
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> tries not to make any assumptions about how
+    the archiving will be done.  Instead, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> lets
+    the administrator specify a shell command to be executed to copy a
+    completed segment file to wherever it needs to go.  The command could be
+    as simple as a <TT
+CLASS="LITERAL"
+>cp</TT
+>, or it could invoke a complex shell
+    script &mdash; it's all up to you.
+   </P
+><P
+>    To enable WAL archiving, set the <A
+HREF="runtime-config-wal.html#GUC-WAL-LEVEL"
+>wal_level</A
+>
+    configuration parameter to <TT
+CLASS="LITERAL"
+>archive</TT
+> or higher,
+    <A
+HREF="runtime-config-wal.html#GUC-ARCHIVE-MODE"
+>archive_mode</A
+> to <TT
+CLASS="LITERAL"
+>on</TT
+>,
+    and specify the shell command to use in the <A
+HREF="runtime-config-wal.html#GUC-ARCHIVE-COMMAND"
+>archive_command</A
+> configuration parameter.  In practice
+    these settings will always be placed in the
+    <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> file.
+    In <TT
+CLASS="VARNAME"
+>archive_command</TT
+>,
+    <TT
+CLASS="LITERAL"
+>%p</TT
+> is replaced by the path name of the file to
+    archive, while <TT
+CLASS="LITERAL"
+>%f</TT
+> is replaced by only the file name.
+    (The path name is relative to the current working directory,
+    i.e., the cluster's data directory.)
+    Use <TT
+CLASS="LITERAL"
+>%%</TT
+> if you need to embed an actual <TT
+CLASS="LITERAL"
+>%</TT
+>
+    character in the command.  The simplest useful command is something
+    like:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>archive_command = 'test ! -f /mnt/server/archivedir/%f &amp;&amp; cp %p /mnt/server/archivedir/%f'  # Unix
+archive_command = 'copy "%p" "C:\\server\\archivedir\\%f"'  # Windows</PRE
+><P>
+    which will copy archivable WAL segments to the directory
+    <TT
+CLASS="FILENAME"
+>/mnt/server/archivedir</TT
+>.  (This is an example, not a
+    recommendation, and might not work on all platforms.)  After the
+    <TT
+CLASS="LITERAL"
+>%p</TT
+> and <TT
+CLASS="LITERAL"
+>%f</TT
+> parameters have been replaced,
+    the actual command executed might look like this:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>test ! -f /mnt/server/archivedir/00000001000000A900000065 &amp;&amp; cp pg_xlog/00000001000000A900000065 /mnt/server/archivedir/00000001000000A900000065</PRE
+><P>
+    A similar command will be generated for each new file to be archived.
+   </P
+><P
+>    The archive command will be executed under the ownership of the same
+    user that the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> server is running as.  Since
+    the series of WAL files being archived contains effectively everything
+    in your database, you will want to be sure that the archived data is
+    protected from prying eyes; for example, archive into a directory that
+    does not have group or world read access.
+   </P
+><P
+>    It is important that the archive command return zero exit status if and
+    only if it succeeds.  Upon getting a zero result,
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> will assume that the file has been
+    successfully archived, and will remove or recycle it.  However, a nonzero
+    status tells <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> that the file was not archived;
+    it will try again periodically until it succeeds.
+   </P
+><P
+>    The archive command should generally be designed to refuse to overwrite
+    any pre-existing archive file.  This is an important safety feature to
+    preserve the integrity of your archive in case of administrator error
+    (such as sending the output of two different servers to the same archive
+    directory).
+   </P
+><P
+>    It is advisable to test your proposed archive command to ensure that it
+    indeed does not overwrite an existing file, <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>and that it returns
+    nonzero status in this case</I
+></SPAN
+>.
+    The example command above for Unix ensures this by including a separate
+    <TT
+CLASS="COMMAND"
+>test</TT
+> step.  On some Unix platforms, <TT
+CLASS="COMMAND"
+>cp</TT
+> has
+    switches such as <TT
+CLASS="OPTION"
+>-i</TT
+> that can be used to do the same thing
+    less verbosely, but you should not rely on these without verifying that
+    the right exit status is returned.  (In particular, GNU <TT
+CLASS="COMMAND"
+>cp</TT
+>
+    will return status zero when <TT
+CLASS="OPTION"
+>-i</TT
+> is used and the target file
+    already exists, which is <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+> the desired behavior.)
+   </P
+><P
+>    While designing your archiving setup, consider what will happen if
+    the archive command fails repeatedly because some aspect requires
+    operator intervention or the archive runs out of space. For example, this
+    could occur if you write to tape without an autochanger; when the tape
+    fills, nothing further can be archived until the tape is swapped.
+    You should ensure that any error condition or request to a human operator
+    is reported appropriately so that the situation can be
+    resolved reasonably quickly. The <TT
+CLASS="FILENAME"
+>pg_xlog/</TT
+> directory will
+    continue to fill with WAL segment files until the situation is resolved.
+    (If the file system containing <TT
+CLASS="FILENAME"
+>pg_xlog/</TT
+> fills up,
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> will do a PANIC shutdown.  No committed
+    transactions will be lost, but the database will remain offline until
+    you free some space.)
+   </P
+><P
+>    The speed of the archiving command is unimportant as long as it can keep up
+    with the average rate at which your server generates WAL data.  Normal
+    operation continues even if the archiving process falls a little behind.
+    If archiving falls significantly behind, this will increase the amount of
+    data that would be lost in the event of a disaster. It will also mean that
+    the <TT
+CLASS="FILENAME"
+>pg_xlog/</TT
+> directory will contain large numbers of
+    not-yet-archived segment files, which could eventually exceed available
+    disk space. You are advised to monitor the archiving process to ensure that
+    it is working as you intend.
+   </P
+><P
+>    In writing your archive command, you should assume that the file names to
+    be archived can be up to 64 characters long and can contain any
+    combination of ASCII letters, digits, and dots.  It is not necessary to
+    preserve the original relative path (<TT
+CLASS="LITERAL"
+>%p</TT
+>) but it is necessary to
+    preserve the file name (<TT
+CLASS="LITERAL"
+>%f</TT
+>).
+   </P
+><P
+>    Note that although WAL archiving will allow you to restore any
+    modifications made to the data in your <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> database,
+    it will not restore changes made to configuration files (that is,
+    <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>, <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> and
+    <TT
+CLASS="FILENAME"
+>pg_ident.conf</TT
+>), since those are edited manually rather
+    than through SQL operations.
+    You might wish to keep the configuration files in a location that will
+    be backed up by your regular file system backup procedures.  See
+    <A
+HREF="runtime-config-file-locations.html"
+>Section 18.2</A
+> for how to relocate the
+    configuration files.
+   </P
+><P
+>    The archive command is only invoked on completed WAL segments.  Hence,
+    if your server generates only little WAL traffic (or has slack periods
+    where it does so), there could be a long delay between the completion
+    of a transaction and its safe recording in archive storage.  To put
+    a limit on how old unarchived data can be, you can set
+    <A
+HREF="runtime-config-wal.html#GUC-ARCHIVE-TIMEOUT"
+>archive_timeout</A
+> to force the server to switch
+    to a new WAL segment file at least that often.  Note that archived
+    files that are archived early due to a forced switch are still the same
+    length as completely full files.  It is therefore unwise to set a very
+    short <TT
+CLASS="VARNAME"
+>archive_timeout</TT
+> &mdash; it will bloat your archive
+    storage.  <TT
+CLASS="VARNAME"
+>archive_timeout</TT
+> settings of a minute or so are
+    usually reasonable.
+   </P
+><P
+>    Also, you can force a segment switch manually with
+    <CODE
+CLASS="FUNCTION"
+>pg_switch_xlog</CODE
+> if you want to ensure that a
+    just-finished transaction is archived as soon as possible.  Other utility
+    functions related to WAL management are listed in <A
+HREF="functions-admin.html#FUNCTIONS-ADMIN-BACKUP-TABLE"
+>Table 9-68</A
+>.
+   </P
+><P
+>    When <TT
+CLASS="VARNAME"
+>wal_level</TT
+> is <TT
+CLASS="LITERAL"
+>minimal</TT
+> some SQL commands
+    are optimized to avoid WAL logging, as described in <A
+HREF="populate.html#POPULATE-PITR"
+>Section 14.4.7</A
+>.  If archiving or streaming replication were
+    turned on during execution of one of these statements, WAL would not
+    contain enough information for archive recovery.  (Crash recovery is
+    unaffected.)  For this reason, <TT
+CLASS="VARNAME"
+>wal_level</TT
+> can only be changed at
+    server start.  However, <TT
+CLASS="VARNAME"
+>archive_command</TT
+> can be changed with a
+    configuration file reload.  If you wish to temporarily stop archiving,
+    one way to do it is to set <TT
+CLASS="VARNAME"
+>archive_command</TT
+> to the empty
+    string (<TT
+CLASS="LITERAL"
+>''</TT
+>).
+    This will cause WAL files to accumulate in <TT
+CLASS="FILENAME"
+>pg_xlog/</TT
+> until a
+    working <TT
+CLASS="VARNAME"
+>archive_command</TT
+> is re-established.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="BACKUP-BASE-BACKUP"
+>24.3.2. Making a Base Backup</A
+></H2
+><P
+>    The easiest way to perform a base backup is to use the
+    <A
+HREF="app-pgbasebackup.html"
+>pg_basebackup</A
+> tool. It can create
+    a base backup either as regular files or as a tar archive. If more
+    flexibility than <A
+HREF="app-pgbasebackup.html"
+>pg_basebackup</A
+> can provide is
+    required, you can also make a base backup using the low level API
+    (see <A
+HREF="continuous-archiving.html#BACKUP-LOWLEVEL-BASE-BACKUP"
+>Section 24.3.3</A
+>).
+   </P
+><P
+>    It is not necessary to be concerned about the amount of time it takes
+    to make a base backup. However, if you normally run the
+    server with <TT
+CLASS="VARNAME"
+>full_page_writes</TT
+> disabled, you might notice a drop
+    in performance while the backup runs since <TT
+CLASS="VARNAME"
+>full_page_writes</TT
+> is
+    effectively forced on during backup mode.
+   </P
+><P
+>    To make use of the backup, you will need to keep all the WAL
+    segment files generated during and after the file system backup.
+    To aid you in doing this, the base backup process
+    creates a <I
+CLASS="FIRSTTERM"
+>backup history file</I
+> that is immediately
+    stored into the WAL archive area. This file is named after the first
+    WAL segment file that you need for the file system backup.
+    For example, if the starting WAL file is
+    <TT
+CLASS="LITERAL"
+>0000000100001234000055CD</TT
+> the backup history file will be
+    named something like
+    <TT
+CLASS="LITERAL"
+>0000000100001234000055CD.007C9330.backup</TT
+>. (The second
+    part of the file name stands for an exact position within the WAL
+    file, and can ordinarily be ignored.) Once you have safely archived
+    the file system backup and the WAL segment files used during the
+    backup (as specified in the backup history file), all archived WAL
+    segments with names numerically less are no longer needed to recover
+    the file system backup and can be deleted. However, you should
+    consider keeping several backup sets to be absolutely certain that
+    you can recover your data.
+   </P
+><P
+>    The backup history file is just a small text file. It contains the
+    label string you gave to <A
+HREF="app-pgbasebackup.html"
+>pg_basebackup</A
+>, as well as
+    the starting and ending times and WAL segments of the backup.
+    If you used the label to identify the associated dump file,
+    then the archived history file is enough to tell you which dump file to
+    restore.
+   </P
+><P
+>    Since you have to keep around all the archived WAL files back to your
+    last base backup, the interval between base backups should usually be
+    chosen based on how much storage you want to expend on archived WAL
+    files.  You should also consider how long you are prepared to spend
+    recovering, if recovery should be necessary &mdash; the system will have to
+    replay all those WAL segments, and that could take awhile if it has
+    been a long time since the last base backup.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="BACKUP-LOWLEVEL-BASE-BACKUP"
+>24.3.3. Making a Base Backup Using the Low Level API</A
+></H2
+><P
+>    The procedure for making a base backup using the low level
+    APIs contains a few more steps than
+    the <A
+HREF="app-pgbasebackup.html"
+>pg_basebackup</A
+> method, but is relatively
+    simple. It is very important that these steps are executed in
+    sequence, and that the success of a step is verified before
+    proceeding to the next step.
+  <P
+></P
+></P><OL
+TYPE="1"
+><LI
+><P
+>     Ensure that WAL archiving is enabled and working.
+    </P
+></LI
+><LI
+><P
+>     Connect to the database as a superuser and issue the command:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT pg_start_backup('label');</PRE
+><P>
+     where <TT
+CLASS="LITERAL"
+>label</TT
+> is any string you want to use to uniquely
+     identify this backup operation.  (One good practice is to use the
+     full path where you intend to put the backup dump file.)
+     <CODE
+CLASS="FUNCTION"
+>pg_start_backup</CODE
+> creates a <I
+CLASS="FIRSTTERM"
+>backup label</I
+> file,
+     called <TT
+CLASS="FILENAME"
+>backup_label</TT
+>, in the cluster directory with
+     information about your backup, including the start time and label
+     string.  The function also creates a <I
+CLASS="FIRSTTERM"
+>tablespace map</I
+> file,
+     called <TT
+CLASS="FILENAME"
+>tablespace_map</TT
+>, in the cluster directory with
+     information about tablespace symbolic links in <TT
+CLASS="FILENAME"
+>pg_tblspc/</TT
+>
+     if one or more such link is present.  Both files are critical to the
+     integrity of the backup, should you need to restore from it.
+    </P
+><P
+>     It does not matter which database within the cluster you connect to to
+     issue this command.  You can ignore the result returned by the function;
+     but if it reports an error, deal with that before proceeding.
+    </P
+><P
+>     By default, <CODE
+CLASS="FUNCTION"
+>pg_start_backup</CODE
+> can take a long time to finish.
+     This is because it performs a checkpoint, and the I/O
+     required for the checkpoint will be spread out over a significant
+     period of time, by default half your inter-checkpoint interval
+     (see the configuration parameter
+     <A
+HREF="runtime-config-wal.html#GUC-CHECKPOINT-COMPLETION-TARGET"
+>checkpoint_completion_target</A
+>).  This is
+     usually what you want, because it minimizes the impact on query
+     processing.  If you want to start the backup as soon as
+     possible, use:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT pg_start_backup('label', true);</PRE
+><P>
+     This forces the checkpoint to be done as quickly as possible.
+    </P
+></LI
+><LI
+><P
+>     Perform the backup, using any convenient file-system-backup tool
+     such as <SPAN
+CLASS="APPLICATION"
+>tar</SPAN
+> or <SPAN
+CLASS="APPLICATION"
+>cpio</SPAN
+> (not
+     <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> or
+     <SPAN
+CLASS="APPLICATION"
+>pg_dumpall</SPAN
+>).  It is neither
+     necessary nor desirable to stop normal operation of the database
+     while you do this.
+    </P
+></LI
+><LI
+><P
+>     Again connect to the database as a superuser, and issue the command:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT pg_stop_backup();</PRE
+><P>
+     This terminates the backup mode and performs an automatic switch to
+     the next WAL segment.  The reason for the switch is to arrange for
+     the last WAL segment file written during the backup interval to be
+     ready to archive.
+    </P
+></LI
+><LI
+><P
+>     Once the WAL segment files active during the backup are archived, you are
+     done.  The file identified by <CODE
+CLASS="FUNCTION"
+>pg_stop_backup</CODE
+>'s result is
+     the last segment that is required to form a complete set of backup files.
+     If <TT
+CLASS="VARNAME"
+>archive_mode</TT
+> is enabled,
+     <CODE
+CLASS="FUNCTION"
+>pg_stop_backup</CODE
+> does not return until the last segment has
+     been archived.
+     Archiving of these files happens automatically since you have
+     already configured <TT
+CLASS="VARNAME"
+>archive_command</TT
+>. In most cases this
+     happens quickly, but you are advised to monitor your archive
+     system to ensure there are no delays.
+     If the archive process has fallen behind
+     because of failures of the archive command, it will keep retrying
+     until the archive succeeds and the backup is complete.
+     If you wish to place a time limit on the execution of
+     <CODE
+CLASS="FUNCTION"
+>pg_stop_backup</CODE
+>, set an appropriate
+     <TT
+CLASS="VARNAME"
+>statement_timeout</TT
+> value.
+    </P
+></LI
+></OL
+><P>
+   </P
+><P
+>    Some file system backup tools emit warnings or errors
+    if the files they are trying to copy change while the copy proceeds.
+    When taking a base backup of an active database, this situation is normal
+    and not an error.  However, you need to ensure that you can distinguish
+    complaints of this sort from real errors.  For example, some versions
+    of <SPAN
+CLASS="APPLICATION"
+>rsync</SPAN
+> return a separate exit code for
+    <SPAN
+CLASS="QUOTE"
+>"vanished source files"</SPAN
+>, and you can write a driver script to
+    accept this exit code as a non-error case.  Also, some versions of
+    GNU <SPAN
+CLASS="APPLICATION"
+>tar</SPAN
+> return an error code indistinguishable from
+    a fatal error if a file was truncated while <SPAN
+CLASS="APPLICATION"
+>tar</SPAN
+> was
+    copying it.  Fortunately, GNU <SPAN
+CLASS="APPLICATION"
+>tar</SPAN
+> versions 1.16 and
+    later exit with 1 if a file was changed during the backup,
+    and 2 for other errors.  With GNU <SPAN
+CLASS="APPLICATION"
+>tar</SPAN
+> version 1.23 and
+    later, you can use the warning options <TT
+CLASS="LITERAL"
+>--warning=no-file-changed
+    --warning=no-file-removed</TT
+> to hide the related warning messages.
+   </P
+><P
+>    Be certain that your backup dump includes all of the files under
+    the database cluster directory (e.g., <TT
+CLASS="FILENAME"
+>/usr/local/pgsql/data</TT
+>).
+    If you are using tablespaces that do not reside underneath this directory,
+    be careful to include them as well (and be sure that your backup dump
+    archives symbolic links as links, otherwise the restore will corrupt
+    your tablespaces).
+   </P
+><P
+>    You can, however, omit from the backup dump the files within the
+    cluster's <TT
+CLASS="FILENAME"
+>pg_xlog/</TT
+> subdirectory.  This
+    slight adjustment is worthwhile because it reduces the risk
+    of mistakes when restoring.  This is easy to arrange if
+    <TT
+CLASS="FILENAME"
+>pg_xlog/</TT
+> is a symbolic link pointing to someplace outside
+    the cluster directory, which is a common setup anyway for performance
+    reasons.  You might also want to exclude <TT
+CLASS="FILENAME"
+>postmaster.pid</TT
+>
+    and <TT
+CLASS="FILENAME"
+>postmaster.opts</TT
+>, which record information
+    about the running <SPAN
+CLASS="APPLICATION"
+>postmaster</SPAN
+>, not about the
+    <SPAN
+CLASS="APPLICATION"
+>postmaster</SPAN
+> which will eventually use this backup.
+    (These files can confuse <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+>.)
+   </P
+><P
+>    It is often a good idea to also omit from the backup dump the files
+    within the cluster's <TT
+CLASS="FILENAME"
+>pg_replslot/</TT
+> directory, so that
+    replication slots that exist on the master do not become part of the
+    backup.  Otherwise, the subsequent use of the backup to create a standby
+    may result in indefinite retention of WAL files on the standby, and
+    possibly bloat on the master if hot standby feedback is enabled, because
+    the clients that are using those replication slots will still be connecting
+    to and updating the slots on the master, not the standby.  Even if the
+    backup is only intended for use in creating a new master, copying the
+    replication slots isn't expected to be particularly useful, since the
+    contents of those slots will likely be badly out of date by the time
+    the new master comes on line.
+   </P
+><P
+>    It's also worth noting that the <CODE
+CLASS="FUNCTION"
+>pg_start_backup</CODE
+> function
+    makes files named <TT
+CLASS="FILENAME"
+>backup_label</TT
+> and
+    <TT
+CLASS="FILENAME"
+>tablespace_map</TT
+> in the database cluster directory,
+    which are removed by <CODE
+CLASS="FUNCTION"
+>pg_stop_backup</CODE
+>.  These files will of
+    course be archived as a part of your backup dump file.  The backup label
+    file includes the label string you gave to <CODE
+CLASS="FUNCTION"
+>pg_start_backup</CODE
+>,
+    as well as the time at which <CODE
+CLASS="FUNCTION"
+>pg_start_backup</CODE
+> was run, and
+    the name of the starting WAL file.  In case of confusion it is therefore
+    possible to look inside a backup dump file and determine exactly which
+    backup session the dump file came from.  The tablespace map file includes
+    the symbolic link names as they exist in the directory
+    <TT
+CLASS="FILENAME"
+>pg_tblspc/</TT
+> and the full path of each symbolic link.
+    These files are not merely for your information; their presence and
+    contents are critical to the proper operation of the system's recovery
+    process.
+   </P
+><P
+>    It is also possible to make a backup dump while the server is
+    stopped.  In this case, you obviously cannot use
+    <CODE
+CLASS="FUNCTION"
+>pg_start_backup</CODE
+> or <CODE
+CLASS="FUNCTION"
+>pg_stop_backup</CODE
+>, and
+    you will therefore be left to your own devices to keep track of which
+    backup dump is which and how far back the associated WAL files go.
+    It is generally better to follow the continuous archiving procedure above.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="BACKUP-PITR-RECOVERY"
+>24.3.4. Recovering Using a Continuous Archive Backup</A
+></H2
+><P
+>    Okay, the worst has happened and you need to recover from your backup.
+    Here is the procedure:
+  <P
+></P
+></P><OL
+TYPE="1"
+><LI
+><P
+>     Stop the server, if it's running.
+    </P
+></LI
+><LI
+><P
+>     If you have the space to do so,
+     copy the whole cluster data directory and any tablespaces to a temporary
+     location in case you need them later. Note that this precaution will
+     require that you have enough free space on your system to hold two
+     copies of your existing database. If you do not have enough space,
+     you should at least save the contents of the cluster's <TT
+CLASS="FILENAME"
+>pg_xlog</TT
+>
+     subdirectory, as it might contain logs which
+     were not archived before the system went down.
+    </P
+></LI
+><LI
+><P
+>     Remove all existing files and subdirectories under the cluster data
+     directory and under the root directories of any tablespaces you are using.
+    </P
+></LI
+><LI
+><P
+>     Restore the database files from your file system backup.  Be sure that they
+     are restored with the right ownership (the database system user, not
+     <TT
+CLASS="LITERAL"
+>root</TT
+>!) and with the right permissions.  If you are using
+     tablespaces,
+     you should verify that the symbolic links in <TT
+CLASS="FILENAME"
+>pg_tblspc/</TT
+>
+     were correctly restored.
+    </P
+></LI
+><LI
+><P
+>     Remove any files present in <TT
+CLASS="FILENAME"
+>pg_xlog/</TT
+>; these came from the
+     file system backup and are therefore probably obsolete rather than current.
+     If you didn't archive <TT
+CLASS="FILENAME"
+>pg_xlog/</TT
+> at all, then recreate
+     it with proper permissions,
+     being careful to ensure that you re-establish it as a symbolic link
+     if you had it set up that way before.
+    </P
+></LI
+><LI
+><P
+>     If you have unarchived WAL segment files that you saved in step 2,
+     copy them into <TT
+CLASS="FILENAME"
+>pg_xlog/</TT
+>.  (It is best to copy them,
+     not move them, so you still have the unmodified files if a
+     problem occurs and you have to start over.)
+    </P
+></LI
+><LI
+><P
+>     Create a recovery command file <TT
+CLASS="FILENAME"
+>recovery.conf</TT
+> in the cluster
+     data directory (see <A
+HREF="recovery-config.html"
+>Chapter 26</A
+>). You might
+     also want to temporarily modify <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> to prevent
+     ordinary users from connecting until you are sure the recovery was successful.
+    </P
+></LI
+><LI
+><P
+>     Start the server.  The server will go into recovery mode and
+     proceed to read through the archived WAL files it needs.  Should the
+     recovery be terminated because of an external error, the server can
+     simply be restarted and it will continue recovery.  Upon completion
+     of the recovery process, the server will rename
+     <TT
+CLASS="FILENAME"
+>recovery.conf</TT
+> to <TT
+CLASS="FILENAME"
+>recovery.done</TT
+> (to prevent
+     accidentally re-entering recovery mode later) and then
+     commence normal database operations.
+    </P
+></LI
+><LI
+><P
+>     Inspect the contents of the database to ensure you have recovered to
+     the desired state.  If not, return to step 1.  If all is well,
+     allow your users to connect by restoring <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> to normal.
+    </P
+></LI
+></OL
+><P>
+   </P
+><P
+>    The key part of all this is to set up a recovery configuration file that
+    describes how you want to recover and how far the recovery should
+    run.  You can use <TT
+CLASS="FILENAME"
+>recovery.conf.sample</TT
+> (normally
+    located in the installation's <TT
+CLASS="FILENAME"
+>share/</TT
+> directory) as a
+    prototype.  The one thing that you absolutely must specify in
+    <TT
+CLASS="FILENAME"
+>recovery.conf</TT
+> is the <TT
+CLASS="VARNAME"
+>restore_command</TT
+>,
+    which tells <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> how to retrieve archived
+    WAL file segments.  Like the <TT
+CLASS="VARNAME"
+>archive_command</TT
+>, this is
+    a shell command string.  It can contain <TT
+CLASS="LITERAL"
+>%f</TT
+>, which is
+    replaced by the name of the desired log file, and <TT
+CLASS="LITERAL"
+>%p</TT
+>,
+    which is replaced by the path name to copy the log file to.
+    (The path name is relative to the current working directory,
+    i.e., the cluster's data directory.)
+    Write <TT
+CLASS="LITERAL"
+>%%</TT
+> if you need to embed an actual <TT
+CLASS="LITERAL"
+>%</TT
+>
+    character in the command.  The simplest useful command is
+    something like:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>restore_command = 'cp /mnt/server/archivedir/%f %p'</PRE
+><P>
+    which will copy previously archived WAL segments from the directory
+    <TT
+CLASS="FILENAME"
+>/mnt/server/archivedir</TT
+>.  Of course, you can use something
+    much more complicated, perhaps even a shell script that requests the
+    operator to mount an appropriate tape.
+   </P
+><P
+>    It is important that the command return nonzero exit status on failure.
+    The command <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>will</I
+></SPAN
+> be called requesting files that are not
+    present in the archive; it must return nonzero when so asked.  This is not
+    an error condition.  An exception is that if the command was terminated by
+    a signal (other than <SPAN
+CLASS="SYSTEMITEM"
+>SIGTERM</SPAN
+>, which is used as
+    part of a database server shutdown) or an error by the shell (such as
+    command not found), then recovery will abort and the server will not start
+    up.
+   </P
+><P
+>    Not all of the requested files will be WAL segment
+    files; you should also expect requests for files with a suffix of
+    <TT
+CLASS="LITERAL"
+>.backup</TT
+> or <TT
+CLASS="LITERAL"
+>.history</TT
+>. Also be aware that
+    the base name of the <TT
+CLASS="LITERAL"
+>%p</TT
+> path will be different from
+    <TT
+CLASS="LITERAL"
+>%f</TT
+>; do not expect them to be interchangeable.
+   </P
+><P
+>    WAL segments that cannot be found in the archive will be sought in
+    <TT
+CLASS="FILENAME"
+>pg_xlog/</TT
+>; this allows use of recent un-archived segments.
+    However, segments that are available from the archive will be used in
+    preference to files in <TT
+CLASS="FILENAME"
+>pg_xlog/</TT
+>.
+   </P
+><P
+>    Normally, recovery will proceed through all available WAL segments,
+    thereby restoring the database to the current point in time (or as
+    close as possible given the available WAL segments).  Therefore, a normal
+    recovery will end with a <SPAN
+CLASS="QUOTE"
+>"file not found"</SPAN
+> message, the exact text
+    of the error message depending upon your choice of
+    <TT
+CLASS="VARNAME"
+>restore_command</TT
+>.  You may also see an error message
+    at the start of recovery for a file named something like
+    <TT
+CLASS="FILENAME"
+>00000001.history</TT
+>.  This is also normal and does not
+    indicate a problem in simple recovery situations; see
+    <A
+HREF="continuous-archiving.html#BACKUP-TIMELINES"
+>Section 24.3.5</A
+> for discussion.
+   </P
+><P
+>    If you want to recover to some previous point in time (say, right before
+    the junior DBA dropped your main transaction table), just specify the
+    required <A
+HREF="recovery-target-settings.html"
+>stopping point</A
+> in <TT
+CLASS="FILENAME"
+>recovery.conf</TT
+>.  You can specify
+    the stop point, known as the <SPAN
+CLASS="QUOTE"
+>"recovery target"</SPAN
+>, either by
+    date/time, named restore point or by completion of a specific transaction
+    ID.  As of this writing only the date/time and named restore point options
+    are very usable, since there are no tools to help you identify with any
+    accuracy which transaction ID to use.
+   </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>      The stop point must be after the ending time of the base backup, i.e.,
+      the end time of <CODE
+CLASS="FUNCTION"
+>pg_stop_backup</CODE
+>.  You cannot use a base backup
+      to recover to a time when that backup was in progress.  (To
+      recover to such a time, you must go back to your previous base backup
+      and roll forward from there.)
+     </P
+></BLOCKQUOTE
+></DIV
+><P
+>    If recovery finds corrupted WAL data, recovery will
+    halt at that point and the server will not start. In such a case the
+    recovery process could be re-run from the beginning, specifying a
+    <SPAN
+CLASS="QUOTE"
+>"recovery target"</SPAN
+> before the point of corruption so that recovery
+    can complete normally.
+    If recovery fails for an external reason, such as a system crash or
+    if the WAL archive has become inaccessible, then the recovery can simply
+    be restarted and it will restart almost from where it failed.
+    Recovery restart works much like checkpointing in normal operation:
+    the server periodically forces all its state to disk, and then updates
+    the <TT
+CLASS="FILENAME"
+>pg_control</TT
+> file to indicate that the already-processed
+    WAL data need not be scanned again.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="BACKUP-TIMELINES"
+>24.3.5. Timelines</A
+></H2
+><P
+>    The ability to restore the database to a previous point in time creates
+    some complexities that are akin to science-fiction stories about time
+    travel and parallel universes.  For example, in the original history of the database,
+    suppose you dropped a critical table at 5:15PM on Tuesday evening, but
+    didn't realize your mistake until Wednesday noon.
+    Unfazed, you get out your backup, restore to the point-in-time 5:14PM
+    Tuesday evening, and are up and running.  In <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>this</I
+></SPAN
+> history of
+    the database universe, you never dropped the table.  But suppose
+    you later realize this wasn't such a great idea, and would like
+    to return to sometime Wednesday morning in the original history.
+    You won't be able
+    to if, while your database was up-and-running, it overwrote some of the
+    WAL segment files that led up to the time you now wish you
+    could get back to.  Thus, to avoid this, you need to distinguish the series of
+    WAL records generated after you've done a point-in-time recovery from
+    those that were generated in the original database history.
+   </P
+><P
+>    To deal with this problem, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> has a notion
+    of <I
+CLASS="FIRSTTERM"
+>timelines</I
+>.  Whenever an archive recovery completes,
+    a new timeline is created to identify the series of WAL records
+    generated after that recovery.  The timeline
+    ID number is part of WAL segment file names so a new timeline does
+    not overwrite the WAL data generated by previous timelines.  It is
+    in fact possible to archive many different timelines.  While that might
+    seem like a useless feature, it's often a lifesaver.  Consider the
+    situation where you aren't quite sure what point-in-time to recover to,
+    and so have to do several point-in-time recoveries by trial and error
+    until you find the best place to branch off from the old history.  Without
+    timelines this process would soon generate an unmanageable mess.  With
+    timelines, you can recover to <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>any</I
+></SPAN
+> prior state, including
+    states in timeline branches that you abandoned earlier.
+   </P
+><P
+>    Every time a new timeline is created, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> creates
+    a <SPAN
+CLASS="QUOTE"
+>"timeline history"</SPAN
+> file that shows which timeline it branched
+    off from and when.  These history files are necessary to allow the system
+    to pick the right WAL segment files when recovering from an archive that
+    contains multiple timelines.  Therefore, they are archived into the WAL
+    archive area just like WAL segment files.  The history files are just
+    small text files, so it's cheap and appropriate to keep them around
+    indefinitely (unlike the segment files which are large).  You can, if
+    you like, add comments to a history file to record your own notes about
+    how and why this particular timeline was created.  Such comments will be
+    especially valuable when you have a thicket of different timelines as
+    a result of experimentation.
+   </P
+><P
+>    The default behavior of recovery is to recover along the same timeline
+    that was current when the base backup was taken.  If you wish to recover
+    into some child timeline (that is, you want to return to some state that
+    was itself generated after a recovery attempt), you need to specify the
+    target timeline ID in <TT
+CLASS="FILENAME"
+>recovery.conf</TT
+>.  You cannot recover into
+    timelines that branched off earlier than the base backup.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="BACKUP-TIPS"
+>24.3.6. Tips and Examples</A
+></H2
+><P
+>    Some tips for configuring continuous archiving are given here.
+   </P
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="BACKUP-STANDALONE"
+>24.3.6.1. Standalone Hot Backups</A
+></H3
+><P
+>      It is possible to use <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>'s backup facilities to
+      produce standalone hot backups. These are backups that cannot be used
+      for point-in-time recovery, yet are typically much faster to backup and
+      restore than <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> dumps.  (They are also much larger
+      than <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> dumps, so in some cases the speed advantage
+      might be negated.)
+     </P
+><P
+>      As with base backups, the easiest way to produce a standalone
+      hot backup is to use the <A
+HREF="app-pgbasebackup.html"
+>pg_basebackup</A
+>
+      tool. If you include the <TT
+CLASS="LITERAL"
+>-X</TT
+> parameter when calling
+      it, all the transaction log required to use the backup will be
+      included in the backup automatically, and no special action is
+      required to restore the backup.
+     </P
+><P
+>      If more flexibility in copying the backup files is needed, a lower
+      level process can be used for standalone hot backups as well.
+      To prepare for low level standalone hot backups, set <TT
+CLASS="VARNAME"
+>wal_level</TT
+> to
+      <TT
+CLASS="LITERAL"
+>archive</TT
+> or higher, <TT
+CLASS="VARNAME"
+>archive_mode</TT
+> to
+      <TT
+CLASS="LITERAL"
+>on</TT
+>, and set up an <TT
+CLASS="VARNAME"
+>archive_command</TT
+> that performs
+      archiving only when a <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>switch file</I
+></SPAN
+> exists.  For example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>archive_command = 'test ! -f /var/lib/pgsql/backup_in_progress || (test ! -f /var/lib/pgsql/archive/%f &amp;&amp; cp %p /var/lib/pgsql/archive/%f)'</PRE
+><P>
+      This command will perform archiving when
+      <TT
+CLASS="FILENAME"
+>/var/lib/pgsql/backup_in_progress</TT
+> exists, and otherwise
+      silently return zero exit status (allowing <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+      to recycle the unwanted WAL file).
+     </P
+><P
+>      With this preparation, a backup can be taken using a script like the
+      following:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>touch /var/lib/pgsql/backup_in_progress
+psql -c "select pg_start_backup('hot_backup');"
+tar -cf /var/lib/pgsql/backup.tar /var/lib/pgsql/data/
+psql -c "select pg_stop_backup();"
+rm /var/lib/pgsql/backup_in_progress
+tar -rf /var/lib/pgsql/backup.tar /var/lib/pgsql/archive/</PRE
+><P>
+      The switch file <TT
+CLASS="FILENAME"
+>/var/lib/pgsql/backup_in_progress</TT
+> is
+      created first, enabling archiving of completed WAL files to occur.
+      After the backup the switch file is removed. Archived WAL files are
+      then added to the backup so that both base backup and all required
+      WAL files are part of the same <SPAN
+CLASS="APPLICATION"
+>tar</SPAN
+> file.
+      Please remember to add error handling to your backup scripts.
+     </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="COMPRESSED-ARCHIVE-LOGS"
+>24.3.6.2. Compressed Archive Logs</A
+></H3
+><P
+>      If archive storage size is a concern, you can use
+      <SPAN
+CLASS="APPLICATION"
+>gzip</SPAN
+> to compress the archive files:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>archive_command = 'gzip &lt; %p &gt; /var/lib/pgsql/archive/%f'</PRE
+><P>
+      You will then need to use <SPAN
+CLASS="APPLICATION"
+>gunzip</SPAN
+> during recovery:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>restore_command = 'gunzip &lt; /mnt/server/archivedir/%f &gt; %p'</PRE
+><P>
+     </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="BACKUP-SCRIPTS"
+>24.3.6.3. <TT
+CLASS="VARNAME"
+>archive_command</TT
+> Scripts</A
+></H3
+><P
+>      Many people choose to use scripts to define their
+      <TT
+CLASS="VARNAME"
+>archive_command</TT
+>, so that their
+      <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> entry looks very simple:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>archive_command = 'local_backup_script.sh "%p" "%f"'</PRE
+><P>
+      Using a separate script file is advisable any time you want to use
+      more than a single command in the archiving process.
+      This allows all complexity to be managed within the script, which
+      can be written in a popular scripting language such as
+      <SPAN
+CLASS="APPLICATION"
+>bash</SPAN
+> or <SPAN
+CLASS="APPLICATION"
+>perl</SPAN
+>.
+     </P
+><P
+>      Examples of requirements that might be solved within a script include:
+      <P
+></P
+></P><UL
+><LI
+><P
+>         Copying data to secure off-site data storage
+        </P
+></LI
+><LI
+><P
+>         Batching WAL files so that they are transferred every three hours,
+         rather than one at a time
+        </P
+></LI
+><LI
+><P
+>         Interfacing with other backup and recovery software
+        </P
+></LI
+><LI
+><P
+>         Interfacing with monitoring software to report errors
+        </P
+></LI
+></UL
+><P>
+     </P
+><DIV
+CLASS="TIP"
+><BLOCKQUOTE
+CLASS="TIP"
+><P
+><B
+>Tip: </B
+>       When using an <TT
+CLASS="VARNAME"
+>archive_command</TT
+> script, it's desirable
+       to enable <A
+HREF="runtime-config-logging.html#GUC-LOGGING-COLLECTOR"
+>logging_collector</A
+>.
+       Any messages written to <SPAN
+CLASS="SYSTEMITEM"
+>stderr</SPAN
+> from the script will then
+       appear in the database server log, allowing complex configurations to
+       be diagnosed easily if they fail.
+      </P
+></BLOCKQUOTE
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="CONTINUOUS-ARCHIVING-CAVEATS"
+>24.3.7. Caveats</A
+></H2
+><P
+>    At this writing, there are several limitations of the continuous archiving
+    technique.  These will probably be fixed in future releases:
+
+  <P
+></P
+></P><UL
+><LI
+><P
+>     Operations on hash indexes are not presently WAL-logged, so
+     replay will not update these indexes.  This will mean that any new inserts
+     will be ignored by the index, updated rows will apparently disappear and
+     deleted rows will still retain pointers. In other words, if you modify a
+     table with a hash index on it then you will get incorrect query results
+     on a standby server.  When recovery completes it is recommended that you
+     manually <A
+HREF="sql-reindex.html"
+>REINDEX</A
+>
+     each such index after completing a recovery operation.
+    </P
+></LI
+><LI
+><P
+>     If a <A
+HREF="sql-createdatabase.html"
+>CREATE DATABASE</A
+>
+     command is executed while a base backup is being taken, and then
+     the template database that the <TT
+CLASS="COMMAND"
+>CREATE DATABASE</TT
+> copied
+     is modified while the base backup is still in progress, it is
+     possible that recovery will cause those modifications to be
+     propagated into the created database as well.  This is of course
+     undesirable.  To avoid this risk, it is best not to modify any
+     template databases while taking a base backup.
+    </P
+></LI
+><LI
+><P
+>     <A
+HREF="sql-createtablespace.html"
+>CREATE TABLESPACE</A
+>
+     commands are WAL-logged with the literal absolute path, and will
+     therefore be replayed as tablespace creations with the same
+     absolute path.  This might be undesirable if the log is being
+     replayed on a different machine.  It can be dangerous even if the
+     log is being replayed on the same machine, but into a new data
+     directory: the replay will still overwrite the contents of the
+     original tablespace.  To avoid potential gotchas of this sort,
+     the best practice is to take a new base backup after creating or
+     dropping tablespaces.
+    </P
+></LI
+></UL
+><P>
+   </P
+><P
+>    It should also be noted that the default <ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+>
+    format is fairly bulky since it includes many disk page snapshots.
+    These page snapshots are designed to support crash recovery, since
+    we might need to fix partially-written disk pages.  Depending on
+    your system hardware and software, the risk of partial writes might
+    be small enough to ignore, in which case you can significantly
+    reduce the total volume of archived logs by turning off page
+    snapshots using the <A
+HREF="runtime-config-wal.html#GUC-FULL-PAGE-WRITES"
+>full_page_writes</A
+>
+    parameter.  (Read the notes and warnings in <A
+HREF="wal.html"
+>Chapter 29</A
+>
+    before you do so.)  Turning off page snapshots does not prevent
+    use of the logs for PITR operations.  An area for future
+    development is to compress archived WAL data by removing
+    unnecessary page copies even when <TT
+CLASS="VARNAME"
+>full_page_writes</TT
+> is
+    on.  In the meantime, administrators might wish to reduce the number
+    of page snapshots included in WAL by increasing the checkpoint
+    interval parameters as much as feasible.
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="backup-file.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="high-availability.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>File System Level Backup</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="backup.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>High Availability, Load Balancing, and Replication</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

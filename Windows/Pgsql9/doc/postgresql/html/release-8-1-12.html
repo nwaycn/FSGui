@@ -1,0 +1,534 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.1.12</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.1.13"
+HREF="release-8-1-13.html"><LINK
+REL="NEXT"
+TITLE="Release 8.1.11"
+HREF="release-8-1-11.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.1.13"
+HREF="release-8-1-13.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.1.11"
+HREF="release-8-1-11.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-1-12"
+>E.180. Release 8.1.12</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>never released</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.1.11.
+   For information about new features in the 8.1 major release, see
+   <A
+HREF="release-8-1.html"
+>Section E.192</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN158647"
+>E.180.1. Migration to Version 8.1.12</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.1.X.
+    However, if you are upgrading from a version earlier than 8.1.2,
+    see <A
+HREF="release-8-1-2.html"
+>Section E.190</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN158651"
+>E.180.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>ALTER TABLE ADD COLUMN ... PRIMARY KEY</TT
+> so that the new
+      column is correctly checked to see if it's been initialized to all
+      non-nulls (Brendan Jurd)
+     </P
+><P
+>      Previous versions neglected to check this requirement at all.
+     </P
+></LI
+><LI
+><P
+>      Fix possible <TT
+CLASS="COMMAND"
+>CREATE TABLE</TT
+> failure when inheriting the
+      <SPAN
+CLASS="QUOTE"
+>"same"</SPAN
+> constraint from multiple parent relations that
+      inherited that constraint from a common ancestor (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix conversions between ISO-8859-5 and other encodings to handle
+      Cyrillic <SPAN
+CLASS="QUOTE"
+>"Yo"</SPAN
+> characters (<TT
+CLASS="LITERAL"
+>e</TT
+> and <TT
+CLASS="LITERAL"
+>E</TT
+> with
+      two dots) (Sergey Burladyan)
+     </P
+></LI
+><LI
+><P
+>      Fix a few datatype input functions
+      that were allowing unused bytes in their results to contain
+      uninitialized, unpredictable values (Tom)
+     </P
+><P
+>      This could lead to failures in which two apparently identical literal
+      values were not seen as equal, resulting in the parser complaining
+      about unmatched <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> and <TT
+CLASS="LITERAL"
+>DISTINCT</TT
+>
+      expressions.
+     </P
+></LI
+><LI
+><P
+>      Fix a corner case in regular-expression substring matching
+      (<TT
+CLASS="LITERAL"
+>substring(<TT
+CLASS="REPLACEABLE"
+><I
+>string</I
+></TT
+> from
+      <TT
+CLASS="REPLACEABLE"
+><I
+>pattern</I
+></TT
+>)</TT
+>) (Tom)
+     </P
+><P
+>      The problem occurs when there is a match to the pattern overall but
+      the user has specified a parenthesized subexpression and that
+      subexpression hasn't got a match.  An example is
+      <TT
+CLASS="LITERAL"
+>substring('foo' from 'foo(bar)?')</TT
+>.
+      This should return NULL, since <TT
+CLASS="LITERAL"
+>(bar)</TT
+> isn't matched, but
+      it was mistakenly returning the whole-pattern match instead (ie,
+      <TT
+CLASS="LITERAL"
+>foo</TT
+>).
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2008c (for
+      DST law changes in Morocco, Iraq, Choibalsan, Pakistan, Syria, Cuba,
+      Argentina/San_Luis, and Chile)
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect result from <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>'s
+      <CODE
+CLASS="FUNCTION"
+>PGTYPEStimestamp_sub()</CODE
+> function (Michael)
+     </P
+></LI
+><LI
+><P
+>      Fix core dump in <TT
+CLASS="FILENAME"
+>contrib/xml2</TT
+>'s
+      <CODE
+CLASS="FUNCTION"
+>xpath_table()</CODE
+> function when the input query returns a
+      NULL value (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="FILENAME"
+>contrib/xml2</TT
+>'s makefile to not override
+      <TT
+CLASS="LITERAL"
+>CFLAGS</TT
+> (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="LITERAL"
+>DatumGetBool</TT
+> macro to not fail with <SPAN
+CLASS="APPLICATION"
+>gcc</SPAN
+>
+      4.3 (Tom)
+     </P
+><P
+>      This problem affects <SPAN
+CLASS="QUOTE"
+>"old style"</SPAN
+> (V0) C functions that
+      return boolean.  The fix is already in 8.3, but the need to
+      back-patch it was not realized at the time.
+     </P
+></LI
+><LI
+><P
+>      Fix longstanding <TT
+CLASS="COMMAND"
+>LISTEN</TT
+>/<TT
+CLASS="COMMAND"
+>NOTIFY</TT
+>
+      race condition (Tom)
+     </P
+><P
+>      In rare cases a session that had just executed a
+      <TT
+CLASS="COMMAND"
+>LISTEN</TT
+> might not get a notification, even though
+      one would be expected because the concurrent transaction executing
+      <TT
+CLASS="COMMAND"
+>NOTIFY</TT
+> was observed to commit later.
+     </P
+><P
+>      A side effect of the fix is that a transaction that has executed
+      a not-yet-committed <TT
+CLASS="COMMAND"
+>LISTEN</TT
+> command will not see any
+      row in <TT
+CLASS="STRUCTNAME"
+>pg_listener</TT
+> for the <TT
+CLASS="COMMAND"
+>LISTEN</TT
+>,
+      should it choose to look; formerly it would have.  This behavior
+      was never documented one way or the other, but it is possible that
+      some applications depend on the old behavior.
+     </P
+></LI
+><LI
+><P
+>      Disallow <TT
+CLASS="COMMAND"
+>LISTEN</TT
+> and <TT
+CLASS="COMMAND"
+>UNLISTEN</TT
+> within a
+      prepared transaction (Tom)
+     </P
+><P
+>      This was formerly allowed but trying to do it had various unpleasant
+      consequences, notably that the originating backend could not exit
+      as long as an <TT
+CLASS="COMMAND"
+>UNLISTEN</TT
+> remained uncommitted.
+     </P
+></LI
+><LI
+><P
+>      Fix rare crash when an error occurs during a query using a hash index
+      (Heikki)
+     </P
+></LI
+><LI
+><P
+>      Fix input of datetime values for February 29 in years BC (Tom)
+     </P
+><P
+>      The former coding was mistaken about which years were leap years.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="QUOTE"
+>"unrecognized node type"</SPAN
+> error in some variants of
+      <TT
+CLASS="COMMAND"
+>ALTER OWNER</TT
+> (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> to correctly extract the postmaster's port
+      number from command-line options (Itagaki Takahiro, Tom)
+     </P
+><P
+>      Previously, <TT
+CLASS="LITERAL"
+>pg_ctl start -w</TT
+> could try to contact the
+      postmaster on the wrong port, leading to bogus reports of startup
+      failure.
+     </P
+></LI
+><LI
+><P
+>      Use <TT
+CLASS="OPTION"
+>-fwrapv</TT
+> to defend against possible misoptimization
+      in recent <SPAN
+CLASS="APPLICATION"
+>gcc</SPAN
+> versions (Tom)
+     </P
+><P
+>      This is known to be necessary when building <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+      with <SPAN
+CLASS="APPLICATION"
+>gcc</SPAN
+> 4.3 or later.
+     </P
+></LI
+><LI
+><P
+>      Fix display of constant expressions in <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+>
+      and <TT
+CLASS="LITERAL"
+>GROUP BY</TT
+> (Tom)
+     </P
+><P
+>      An explicitly casted constant would be shown incorrectly.  This could
+      for example lead to corruption of a view definition during
+      dump and reload.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> to handle NOTICE messages correctly
+      during COPY OUT (Tom)
+     </P
+><P
+>      This failure has only been observed to occur when a user-defined
+      datatype's output routine issues a NOTICE, but there is no
+      guarantee it couldn't happen due to other causes.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-1-13.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-1-11.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.1.13</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.1.11</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

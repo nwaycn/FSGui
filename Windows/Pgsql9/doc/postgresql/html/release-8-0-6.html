@@ -1,0 +1,325 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.0.6</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.0.7"
+HREF="release-8-0-7.html"><LINK
+REL="NEXT"
+TITLE="Release 8.0.5"
+HREF="release-8-0-5.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.0.7"
+HREF="release-8-0-7.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.0.5"
+HREF="release-8-0-5.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-0-6"
+>E.213. Release 8.0.6</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2006-01-09</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.0.5.
+   For information about new features in the 8.0 major release, see
+   <A
+HREF="release-8-0.html"
+>Section E.219</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN161476"
+>E.213.1. Migration to Version 8.0.6</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.0.X.  However,
+    if you are upgrading from a version earlier than 8.0.3,
+    see <A
+HREF="release-8-0-3.html"
+>Section E.216</A
+>.
+    Also, you might need to <TT
+CLASS="COMMAND"
+>REINDEX</TT
+> indexes on textual
+    columns after updating, if you are affected by the locale or
+    <SPAN
+CLASS="APPLICATION"
+>plperl</SPAN
+> issues described below.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN161482"
+>E.213.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>Fix Windows code so that postmaster will continue rather
+than exit if there is no more room in ShmemBackendArray (Magnus)</P
+><P
+>The previous behavior could lead to a denial-of-service situation if too
+many connection requests arrive close together.  This applies
+<SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>only</I
+></SPAN
+> to the Windows port.</P
+></LI
+><LI
+><P
+>Fix bug introduced in 8.0 that could allow ReadBuffer
+to return an already-used page as new, potentially causing loss of
+recently-committed data (Tom)</P
+></LI
+><LI
+><P
+>Fix for protocol-level Describe messages issued
+outside a transaction or in a failed transaction (Tom)</P
+></LI
+><LI
+><P
+>Fix character string comparison for locales that consider
+different character combinations as equal, such as Hungarian (Tom)</P
+><P
+>This might require <TT
+CLASS="COMMAND"
+>REINDEX</TT
+> to fix existing indexes on
+textual columns.</P
+></LI
+><LI
+><P
+>Set locale environment variables during postmaster startup
+to ensure that <SPAN
+CLASS="APPLICATION"
+>plperl</SPAN
+> won't change the locale later</P
+><P
+>This fixes a problem that occurred if the <SPAN
+CLASS="APPLICATION"
+>postmaster</SPAN
+> was
+started with environment variables specifying a different locale than what
+<SPAN
+CLASS="APPLICATION"
+>initdb</SPAN
+> had been told.  Under these conditions, any use of
+<SPAN
+CLASS="APPLICATION"
+>plperl</SPAN
+> was likely to lead to corrupt indexes.  You might need
+<TT
+CLASS="COMMAND"
+>REINDEX</TT
+> to fix existing indexes on
+textual columns if this has happened to you.</P
+></LI
+><LI
+><P
+>Allow more flexible relocation of installation
+directories (Tom)</P
+><P
+>Previous releases supported relocation only if all installation
+directory paths were the same except for the last component.</P
+></LI
+><LI
+><P
+>Fix longstanding bug in strpos() and regular expression
+handling in certain rarely used Asian multi-byte character sets (Tatsuo)</P
+></LI
+><LI
+><P
+>Various fixes for functions returning <TT
+CLASS="LITERAL"
+>RECORD</TT
+>s
+(Tom) </P
+></LI
+><LI
+><P
+>Fix bug in <TT
+CLASS="FILENAME"
+>/contrib/pgcrypto</TT
+> gen_salt,
+which caused it not to use all available salt space for MD5 and
+XDES algorithms (Marko Kreen, Solar Designer)</P
+><P
+>Salts for Blowfish and standard DES are unaffected.</P
+></LI
+><LI
+><P
+>Fix <TT
+CLASS="FILENAME"
+>/contrib/dblink</TT
+> to throw an error,
+rather than crashing, when the number of columns specified is different from
+what's actually returned by the query (Joe)</P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-0-7.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-0-5.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.0.7</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.0.5</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

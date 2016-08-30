@@ -1,0 +1,958 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>seg</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="postgres_fdw"
+HREF="postgres-fdw.html"><LINK
+REL="NEXT"
+TITLE="sepgsql"
+HREF="sepgsql.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="postgres_fdw"
+HREF="postgres-fdw.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="sepgsql"
+HREF="sepgsql.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="SEG"
+>F.32. seg</A
+></H1
+><P
+>  This module implements a data type <TT
+CLASS="TYPE"
+>seg</TT
+> for
+  representing line segments, or floating point intervals.
+  <TT
+CLASS="TYPE"
+>seg</TT
+> can represent uncertainty in the interval endpoints,
+  making it especially useful for representing laboratory measurements.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174936"
+>F.32.1. Rationale</A
+></H2
+><P
+>   The geometry of measurements is usually more complex than that of a
+   point in a numeric continuum. A measurement is usually a segment of
+   that continuum with somewhat fuzzy limits. The measurements come out
+   as intervals because of uncertainty and randomness, as well as because
+   the value being measured may naturally be an interval indicating some
+   condition, such as the temperature range of stability of a protein.
+  </P
+><P
+>   Using just common sense, it appears more convenient to store such data
+   as intervals, rather than pairs of numbers. In practice, it even turns
+   out more efficient in most applications.
+  </P
+><P
+>   Further along the line of common sense, the fuzziness of the limits
+   suggests that the use of traditional numeric data types leads to a
+   certain loss of information. Consider this: your instrument reads
+   6.50, and you input this reading into the database. What do you get
+   when you fetch it? Watch:
+
+</P><PRE
+CLASS="SCREEN"
+>test=&#62; select 6.50 :: float8 as "pH";
+ pH
+---
+6.5
+(1 row)</PRE
+><P>
+
+   In the world of measurements, 6.50 is not the same as 6.5. It may
+   sometimes be critically different. The experimenters usually write
+   down (and publish) the digits they trust. 6.50 is actually a fuzzy
+   interval contained within a bigger and even fuzzier interval, 6.5,
+   with their center points being (probably) the only common feature they
+   share. We definitely do not want such different data items to appear the
+   same.
+  </P
+><P
+>   Conclusion? It is nice to have a special data type that can record the
+   limits of an interval with arbitrarily variable precision. Variable in
+   the sense that each data element records its own precision.
+  </P
+><P
+>   Check this out:
+
+</P><PRE
+CLASS="SCREEN"
+>test=&#62; select '6.25 .. 6.50'::seg as "pH";
+          pH
+------------
+6.25 .. 6.50
+(1 row)</PRE
+><P>
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174945"
+>F.32.2. Syntax</A
+></H2
+><P
+>   The external representation of an interval is formed using one or two
+   floating-point numbers joined by the range operator (<TT
+CLASS="LITERAL"
+>..</TT
+>
+   or <TT
+CLASS="LITERAL"
+>...</TT
+>).  Alternatively, it can be specified as a
+   center point plus or minus a deviation.
+   Optional certainty indicators (<TT
+CLASS="LITERAL"
+>&lt;</TT
+>,
+   <TT
+CLASS="LITERAL"
+>&gt;</TT
+> or <TT
+CLASS="LITERAL"
+>~</TT
+>) can be stored as well.
+   (Certainty indicators are ignored by all the built-in operators, however.)
+   <A
+HREF="seg.html#SEG-REPR-TABLE"
+>Table F-25</A
+> gives an overview of allowed
+   representations; <A
+HREF="seg.html#SEG-INPUT-EXAMPLES"
+>Table F-26</A
+> shows some
+   examples.
+  </P
+><P
+>   In <A
+HREF="seg.html#SEG-REPR-TABLE"
+>Table F-25</A
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+>, and
+   <TT
+CLASS="REPLACEABLE"
+><I
+>delta</I
+></TT
+> denote
+   floating-point numbers.  <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> and <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+>, but
+   not <TT
+CLASS="REPLACEABLE"
+><I
+>delta</I
+></TT
+>, can be preceded by a certainty indicator.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="SEG-REPR-TABLE"
+></A
+><P
+><B
+>Table F-25. <TT
+CLASS="TYPE"
+>seg</TT
+> External Representations</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+></TT
+></TD
+><TD
+>Single value (zero-length interval)
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> .. <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+></TT
+></TD
+><TD
+>Interval from <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> to <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> (+-) <TT
+CLASS="REPLACEABLE"
+><I
+>delta</I
+></TT
+></TT
+></TD
+><TD
+>Interval from <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> - <TT
+CLASS="REPLACEABLE"
+><I
+>delta</I
+></TT
+> to
+      <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> + <TT
+CLASS="REPLACEABLE"
+><I
+>delta</I
+></TT
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> ..</TT
+></TD
+><TD
+>Open interval with lower bound <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>.. <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+></TT
+></TD
+><TD
+>Open interval with upper bound <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+>
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><DIV
+CLASS="TABLE"
+><A
+NAME="SEG-INPUT-EXAMPLES"
+></A
+><P
+><B
+>Table F-26. Examples of Valid <TT
+CLASS="TYPE"
+>seg</TT
+> Input</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>5.0</TT
+></TD
+><TD
+>       Creates a zero-length segment (a point, if you will)
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>~5.0</TT
+></TD
+><TD
+>       Creates a zero-length segment and records
+       <TT
+CLASS="LITERAL"
+>~</TT
+> in the data.  <TT
+CLASS="LITERAL"
+>~</TT
+> is ignored
+       by <TT
+CLASS="TYPE"
+>seg</TT
+> operations, but
+       is preserved as a comment.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>&lt;5.0</TT
+></TD
+><TD
+>       Creates a point at 5.0.  <TT
+CLASS="LITERAL"
+>&lt;</TT
+> is ignored but
+       is preserved as a comment.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>&gt;5.0</TT
+></TD
+><TD
+>       Creates a point at 5.0.  <TT
+CLASS="LITERAL"
+>&gt;</TT
+> is ignored but
+       is preserved as a comment.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>5(+-)0.3</TT
+></TD
+><TD
+>        Creates an interval <TT
+CLASS="LITERAL"
+>4.7 .. 5.3</TT
+>.
+        Note that the <TT
+CLASS="LITERAL"
+>(+-)</TT
+> notation isn't preserved.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>50 .. </TT
+></TD
+><TD
+>Everything that is greater than or equal to 50</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>.. 0</TT
+></TD
+><TD
+>Everything that is less than or equal to 0</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>1.5e-2 .. 2E-2 </TT
+></TD
+><TD
+>Creates an interval <TT
+CLASS="LITERAL"
+>0.015 .. 0.02</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>1 ... 2</TT
+></TD
+><TD
+>       The same as <TT
+CLASS="LITERAL"
+>1...2</TT
+>, or <TT
+CLASS="LITERAL"
+>1 .. 2</TT
+>,
+       or <TT
+CLASS="LITERAL"
+>1..2</TT
+>
+       (spaces around the range operator are ignored)
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   Because <TT
+CLASS="LITERAL"
+>...</TT
+> is widely used in data sources, it is allowed
+   as an alternative spelling of <TT
+CLASS="LITERAL"
+>..</TT
+>.  Unfortunately, this
+   creates a parsing ambiguity: it is not clear whether the upper bound
+   in <TT
+CLASS="LITERAL"
+>0...23</TT
+> is meant to be <TT
+CLASS="LITERAL"
+>23</TT
+> or <TT
+CLASS="LITERAL"
+>0.23</TT
+>.
+   This is resolved by requiring at least one digit before the decimal
+   point in all numbers in <TT
+CLASS="TYPE"
+>seg</TT
+> input.
+  </P
+><P
+>   As a sanity check, <TT
+CLASS="TYPE"
+>seg</TT
+> rejects intervals with the lower bound
+   greater than the upper, for example <TT
+CLASS="LITERAL"
+>5 .. 2</TT
+>.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN175065"
+>F.32.3. Precision</A
+></H2
+><P
+>   <TT
+CLASS="TYPE"
+>seg</TT
+> values are stored internally as pairs of 32-bit floating point
+   numbers. This means that numbers with more than 7 significant digits
+   will be truncated.
+  </P
+><P
+>   Numbers with 7 or fewer significant digits retain their
+   original precision. That is, if your query returns 0.00, you will be
+   sure that the trailing zeroes are not the artifacts of formatting: they
+   reflect the precision of the original data. The number of leading
+   zeroes does not affect precision: the value 0.0067 is considered to
+   have just 2 significant digits.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN175070"
+>F.32.4. Usage</A
+></H2
+><P
+>   The <TT
+CLASS="FILENAME"
+>seg</TT
+> module includes a GiST index operator class for
+   <TT
+CLASS="TYPE"
+>seg</TT
+> values.
+   The operators supported by the GiST operator class are shown in <A
+HREF="seg.html#SEG-GIST-OPERATORS"
+>Table F-27</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="SEG-GIST-OPERATORS"
+></A
+><P
+><B
+>Table F-27. Seg GiST Operators</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>Operator</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>[a, b] &lt;&lt; [c, d]</TT
+></TD
+><TD
+>[a, b] is entirely to the left of [c, d].  That is, [a,
+       b] &lt;&lt; [c, d] is true if b &lt; c and false otherwise.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>[a, b] &gt;&gt; [c, d]</TT
+></TD
+><TD
+>[a, b] is entirely to the right of [c, d].  That is, [a,
+       b] &gt;&gt; [c, d] is true if a &gt; d and false otherwise.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>[a, b] &amp;&lt; [c, d]</TT
+></TD
+><TD
+>Overlaps or is left of &mdash; This might be better read
+       as <SPAN
+CLASS="QUOTE"
+>"does not extend to right of"</SPAN
+>.  It is true when
+       b &lt;= d.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>[a, b] &amp;&gt; [c, d]</TT
+></TD
+><TD
+>Overlaps or is right of &mdash; This might be better read
+       as <SPAN
+CLASS="QUOTE"
+>"does not extend to left of"</SPAN
+>.  It is true when
+       a &gt;= c.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>[a, b] = [c, d]</TT
+></TD
+><TD
+>Same as &mdash; The segments [a, b] and [c, d] are
+       identical, that is, a = c and b = d.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>[a, b] &amp;&amp; [c, d]</TT
+></TD
+><TD
+>The segments [a, b] and [c, d] overlap.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>[a, b] @&gt; [c, d]</TT
+></TD
+><TD
+>The segment [a, b] contains the segment [c, d], that is,
+       a &lt;= c and b &gt;= d.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>[a, b] &lt;@ [c, d]</TT
+></TD
+><TD
+>The segment [a, b] is contained in [c, d], that is, a
+       &gt;= c and b &lt;= d.</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   (Before PostgreSQL 8.2, the containment operators <TT
+CLASS="LITERAL"
+>@&gt;</TT
+> and <TT
+CLASS="LITERAL"
+>&lt;@</TT
+> were
+   respectively called <TT
+CLASS="LITERAL"
+>@</TT
+> and <TT
+CLASS="LITERAL"
+>~</TT
+>.  These names are still available, but are
+   deprecated and will eventually be retired.  Notice that the old names
+   are reversed from the convention formerly followed by the core geometric
+   data types!)
+  </P
+><P
+>   The standard B-tree operators are also provided, for example
+
+  <DIV
+CLASS="INFORMALTABLE"
+><P
+></P
+><A
+NAME="AEN175124"
+></A
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>Operator</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>[a, b] &lt; [c, d]</TT
+></TD
+><TD
+>Less than</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>[a, b] &gt; [c, d]</TT
+></TD
+><TD
+>Greater than</TD
+></TR
+></TBODY
+></TABLE
+><P
+></P
+></DIV
+>
+
+   These operators do not make a lot of sense for any practical
+   purpose but sorting. These operators first compare (a) to (c),
+   and if these are equal, compare (b) to (d). That results in
+   reasonably good sorting in most cases, which is useful if
+   you want to use ORDER BY with this type.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN175139"
+>F.32.5. Notes</A
+></H2
+><P
+>   For examples of usage, see the regression test <TT
+CLASS="FILENAME"
+>sql/seg.sql</TT
+>.
+  </P
+><P
+>   The mechanism that converts <TT
+CLASS="LITERAL"
+>(+-)</TT
+> to regular ranges
+   isn't completely accurate in determining the number of significant digits
+   for the boundaries.  For example, it adds an extra digit to the lower
+   boundary if the resulting interval includes a power of ten:
+
+</P><PRE
+CLASS="SCREEN"
+>postgres=&#62; select '10(+-)1'::seg as seg;
+      seg
+---------
+9.0 .. 11             -- should be: 9 .. 11</PRE
+><P>
+  </P
+><P
+>   The performance of an R-tree index can largely depend on the initial
+   order of input values. It may be very helpful to sort the input table
+   on the <TT
+CLASS="TYPE"
+>seg</TT
+> column; see the script <TT
+CLASS="FILENAME"
+>sort-segments.pl</TT
+>
+   for an example.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN175149"
+>F.32.6. Credits</A
+></H2
+><P
+>   Original author: Gene Selkov, Jr. <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:selkovjr@mcs.anl.gov"
+>selkovjr@mcs.anl.gov</A
+>&#62;</CODE
+>,
+   Mathematics and Computer Science Division, Argonne National Laboratory.
+  </P
+><P
+>   My thanks are primarily to Prof. Joe Hellerstein
+   (<A
+HREF="http://db.cs.berkeley.edu/jmh/"
+TARGET="_top"
+>http://db.cs.berkeley.edu/jmh/</A
+>) for elucidating the
+   gist of the GiST (<A
+HREF="http://gist.cs.berkeley.edu/"
+TARGET="_top"
+>http://gist.cs.berkeley.edu/</A
+>). I am
+   also grateful to all Postgres developers, present and past, for enabling
+   myself to create my own world and live undisturbed in it. And I would like
+   to acknowledge my gratitude to Argonne Lab and to the U.S. Department of
+   Energy for the years of faithful support of my database research.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="postgres-fdw.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sepgsql.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>postgres_fdw</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>sepgsql</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

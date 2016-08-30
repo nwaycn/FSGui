@@ -1,0 +1,320 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>LDAP Lookup of Connection Parameters</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="libpq - C Library"
+HREF="libpq.html"><LINK
+REL="PREVIOUS"
+TITLE="The Connection Service File"
+HREF="libpq-pgservice.html"><LINK
+REL="NEXT"
+TITLE="SSL Support"
+HREF="libpq-ssl.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="The Connection Service File"
+HREF="libpq-pgservice.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="libpq.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 31. <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> - C Library</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="SSL Support"
+HREF="libpq-ssl.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="LIBPQ-LDAP"
+>31.17. LDAP Lookup of Connection Parameters</A
+></H1
+><P
+>   If <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> has been compiled with LDAP support (option
+   <TT
+CLASS="LITERAL"
+><TT
+CLASS="OPTION"
+>--with-ldap</TT
+></TT
+> for <TT
+CLASS="COMMAND"
+>configure</TT
+>)
+   it is possible to retrieve connection options like <TT
+CLASS="LITERAL"
+>host</TT
+>
+   or <TT
+CLASS="LITERAL"
+>dbname</TT
+> via LDAP from a central server.
+   The advantage is that if the connection parameters for a database change,
+   the connection information doesn't have to be updated on all client machines.
+  </P
+><P
+>   LDAP connection parameter lookup uses the connection service file
+   <TT
+CLASS="FILENAME"
+>pg_service.conf</TT
+> (see <A
+HREF="libpq-pgservice.html"
+>Section 31.16</A
+>).  A line in a
+   <TT
+CLASS="FILENAME"
+>pg_service.conf</TT
+> stanza that starts with
+   <TT
+CLASS="LITERAL"
+>ldap://</TT
+> will be recognized as an LDAP URL and an
+   LDAP query will be performed. The result must be a list of
+   <TT
+CLASS="LITERAL"
+>keyword = value</TT
+> pairs which will be used to set
+   connection options.  The URL must conform to RFC 1959 and be of the
+   form
+</P><PRE
+CLASS="SYNOPSIS"
+>ldap://[<TT
+CLASS="REPLACEABLE"
+><I
+>hostname</I
+></TT
+>[:<TT
+CLASS="REPLACEABLE"
+><I
+>port</I
+></TT
+>]]/<TT
+CLASS="REPLACEABLE"
+><I
+>search_base</I
+></TT
+>?<TT
+CLASS="REPLACEABLE"
+><I
+>attribute</I
+></TT
+>?<TT
+CLASS="REPLACEABLE"
+><I
+>search_scope</I
+></TT
+>?<TT
+CLASS="REPLACEABLE"
+><I
+>filter</I
+></TT
+></PRE
+><P>
+   where <TT
+CLASS="REPLACEABLE"
+><I
+>hostname</I
+></TT
+> defaults to
+   <TT
+CLASS="LITERAL"
+>localhost</TT
+> and <TT
+CLASS="REPLACEABLE"
+><I
+>port</I
+></TT
+>
+   defaults to 389.
+  </P
+><P
+>   Processing of <TT
+CLASS="FILENAME"
+>pg_service.conf</TT
+> is terminated after
+   a successful LDAP lookup, but is continued if the LDAP server cannot
+   be contacted.  This is to provide a fallback with further LDAP URL
+   lines that point to different LDAP servers, classical <TT
+CLASS="LITERAL"
+>keyword
+   = value</TT
+> pairs, or default connection options.  If you would
+   rather get an error message in this case, add a syntactically incorrect
+   line after the LDAP URL.
+  </P
+><P
+>   A sample LDAP entry that has been created with the LDIF file
+</P><PRE
+CLASS="PROGRAMLISTING"
+>version:1
+dn:cn=mydatabase,dc=mycompany,dc=com
+changetype:add
+objectclass:top
+objectclass:device
+cn:mydatabase
+description:host=dbserver.mycompany.com
+description:port=5439
+description:dbname=mydb
+description:user=mydb_user
+description:sslmode=require</PRE
+><P>
+   might be queried with the following LDAP URL:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ldap://ldap.mycompany.com/dc=mycompany,dc=com?description?one?(cn=mydatabase)</PRE
+><P>
+  </P
+><P
+>   You can also mix regular service file entries with LDAP lookups.
+   A complete example for a stanza in <TT
+CLASS="FILENAME"
+>pg_service.conf</TT
+>
+   would be:
+</P><PRE
+CLASS="PROGRAMLISTING"
+># only host and port are stored in LDAP, specify dbname and user explicitly
+[customerdb]
+dbname=customer
+user=appuser
+ldap://ldap.acme.com/cn=dbserver,cn=hosts?pgconnectinfo?base?(objectclass=*)</PRE
+><P>
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="libpq-pgservice.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="libpq-ssl.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>The Connection Service File</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="libpq.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>SSL Support</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

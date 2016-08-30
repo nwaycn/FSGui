@@ -1,0 +1,302 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>The Rule System</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Programming"
+HREF="server-programming.html"><LINK
+REL="PREVIOUS"
+TITLE="A Table Rewrite Event Trigger Example"
+HREF="event-trigger-table-rewrite-example.html"><LINK
+REL="NEXT"
+TITLE="The Query Tree"
+HREF="querytree.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="CHAPTER"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="A Table Rewrite Event Trigger Example"
+HREF="event-trigger-table-rewrite-example.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="server-programming.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="The Query Tree"
+HREF="querytree.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="RULES"
+></A
+>Chapter 38. The Rule System</H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+>38.1. <A
+HREF="querytree.html"
+>The Query Tree</A
+></DT
+><DT
+>38.2. <A
+HREF="rules-views.html"
+>Views and the Rule System</A
+></DT
+><DD
+><DL
+><DT
+>38.2.1. <A
+HREF="rules-views.html#RULES-SELECT"
+>How <TT
+CLASS="COMMAND"
+>SELECT</TT
+> Rules Work</A
+></DT
+><DT
+>38.2.2. <A
+HREF="rules-views.html#AEN61209"
+>View Rules in Non-<TT
+CLASS="COMMAND"
+>SELECT</TT
+> Statements</A
+></DT
+><DT
+>38.2.3. <A
+HREF="rules-views.html#AEN61265"
+>The Power of Views in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+></A
+></DT
+><DT
+>38.2.4. <A
+HREF="rules-views.html#RULES-VIEWS-UPDATE"
+>Updating a View</A
+></DT
+></DL
+></DD
+><DT
+>38.3. <A
+HREF="rules-materializedviews.html"
+>Materialized Views</A
+></DT
+><DT
+>38.4. <A
+HREF="rules-update.html"
+>Rules on <TT
+CLASS="COMMAND"
+>INSERT</TT
+>, <TT
+CLASS="COMMAND"
+>UPDATE</TT
+>, and <TT
+CLASS="COMMAND"
+>DELETE</TT
+></A
+></DT
+><DD
+><DL
+><DT
+>38.4.1. <A
+HREF="rules-update.html#AEN61397"
+>How Update Rules Work</A
+></DT
+><DT
+>38.4.2. <A
+HREF="rules-update.html#RULES-UPDATE-VIEWS"
+>Cooperation with Views</A
+></DT
+></DL
+></DD
+><DT
+>38.5. <A
+HREF="rules-privileges.html"
+>Rules and Privileges</A
+></DT
+><DT
+>38.6. <A
+HREF="rules-status.html"
+>Rules and Command Status</A
+></DT
+><DT
+>38.7. <A
+HREF="rules-triggers.html"
+>Rules Versus Triggers</A
+></DT
+></DL
+></DIV
+><P
+>     This chapter discusses the rule system in
+     <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>.  Production rule systems
+     are conceptually simple, but there are many subtle points
+     involved in actually using them.</P
+><P
+>     Some other database systems define active database rules, which
+     are usually stored procedures and triggers.  In
+     <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>, these can be implemented
+     using functions and triggers as well.</P
+><P
+>     The rule system (more precisely speaking, the query rewrite rule
+     system) is totally different from stored procedures and triggers.
+     It modifies queries to take rules into consideration, and then
+     passes the modified query to the query planner for planning and
+     execution.  It is very powerful, and can be used for many things
+     such as query language procedures, views, and versions.  The
+     theoretical foundations and the power of this rule system are
+     also discussed in <A
+HREF="biblio.html#STON90B"
+><I
+><A
+HREF="http://db.cs.berkeley.edu/papers/ERL-M90-36.pdf"
+TARGET="_top"
+>    On Rules, Procedures, Caching and Views in Database Systems
+    </A
+></I
+></A
+> and <A
+HREF="biblio.html#ONG90"
+><I
+>A Unified Framework for Version Modeling Using Production Rules in a Database System</I
+></A
+>.</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="event-trigger-table-rewrite-example.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="querytree.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>A Table Rewrite Event Trigger Example</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="server-programming.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>The Query Tree</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

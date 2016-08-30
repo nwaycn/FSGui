@@ -1,0 +1,619 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Parsers</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Full Text Search"
+HREF="textsearch.html"><LINK
+REL="PREVIOUS"
+TITLE="Additional Features"
+HREF="textsearch-features.html"><LINK
+REL="NEXT"
+TITLE="Dictionaries"
+HREF="textsearch-dictionaries.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Additional Features"
+HREF="textsearch-features.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="textsearch.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 12. Full Text Search</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Dictionaries"
+HREF="textsearch-dictionaries.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="TEXTSEARCH-PARSERS"
+>12.5. Parsers</A
+></H1
+><P
+>   Text search parsers are responsible for splitting raw document text
+   into <I
+CLASS="FIRSTTERM"
+>tokens</I
+> and identifying each token's type, where
+   the set of possible types is defined by the parser itself.
+   Note that a parser does not modify the text at all &mdash; it simply
+   identifies plausible word boundaries.  Because of this limited scope,
+   there is less need for application-specific custom parsers than there is
+   for custom dictionaries.  At present <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+   provides just one built-in parser, which has been found to be useful for a
+   wide range of applications.
+  </P
+><P
+>   The built-in parser is named <TT
+CLASS="LITERAL"
+>pg_catalog.default</TT
+>.
+   It recognizes 23 token types, shown in <A
+HREF="textsearch-parsers.html#TEXTSEARCH-DEFAULT-PARSER"
+>Table 12-1</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="TEXTSEARCH-DEFAULT-PARSER"
+></A
+><P
+><B
+>Table 12-1. Default Parser's Token Types</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Alias</TH
+><TH
+>Description</TH
+><TH
+>Example</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>asciiword</TT
+></TD
+><TD
+>Word, all ASCII letters</TD
+><TD
+><TT
+CLASS="LITERAL"
+>elephant</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>word</TT
+></TD
+><TD
+>Word, all letters</TD
+><TD
+><TT
+CLASS="LITERAL"
+>ma&ntilde;ana</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>numword</TT
+></TD
+><TD
+>Word, letters and digits</TD
+><TD
+><TT
+CLASS="LITERAL"
+>beta1</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>asciihword</TT
+></TD
+><TD
+>Hyphenated word, all ASCII</TD
+><TD
+><TT
+CLASS="LITERAL"
+>up-to-date</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>hword</TT
+></TD
+><TD
+>Hyphenated word, all letters</TD
+><TD
+><TT
+CLASS="LITERAL"
+>l&oacute;gico-matem&aacute;tica</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>numhword</TT
+></TD
+><TD
+>Hyphenated word, letters and digits</TD
+><TD
+><TT
+CLASS="LITERAL"
+>postgresql-beta1</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>hword_asciipart</TT
+></TD
+><TD
+>Hyphenated word part, all ASCII</TD
+><TD
+><TT
+CLASS="LITERAL"
+>postgresql</TT
+> in the context <TT
+CLASS="LITERAL"
+>postgresql-beta1</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>hword_part</TT
+></TD
+><TD
+>Hyphenated word part, all letters</TD
+><TD
+><TT
+CLASS="LITERAL"
+>l&oacute;gico</TT
+> or <TT
+CLASS="LITERAL"
+>matem&aacute;tica</TT
+>
+       in the context <TT
+CLASS="LITERAL"
+>l&oacute;gico-matem&aacute;tica</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>hword_numpart</TT
+></TD
+><TD
+>Hyphenated word part, letters and digits</TD
+><TD
+><TT
+CLASS="LITERAL"
+>beta1</TT
+> in the context
+       <TT
+CLASS="LITERAL"
+>postgresql-beta1</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>email</TT
+></TD
+><TD
+>Email address</TD
+><TD
+><TT
+CLASS="LITERAL"
+>foo@example.com</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>protocol</TT
+></TD
+><TD
+>Protocol head</TD
+><TD
+><TT
+CLASS="LITERAL"
+>http://</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>url</TT
+></TD
+><TD
+>URL</TD
+><TD
+><TT
+CLASS="LITERAL"
+>example.com/stuff/index.html</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>host</TT
+></TD
+><TD
+>Host</TD
+><TD
+><TT
+CLASS="LITERAL"
+>example.com</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>url_path</TT
+></TD
+><TD
+>URL path</TD
+><TD
+><TT
+CLASS="LITERAL"
+>/stuff/index.html</TT
+>, in the context of a URL</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>file</TT
+></TD
+><TD
+>File or path name</TD
+><TD
+><TT
+CLASS="LITERAL"
+>/usr/local/foo.txt</TT
+>, if not within a URL</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>sfloat</TT
+></TD
+><TD
+>Scientific notation</TD
+><TD
+><TT
+CLASS="LITERAL"
+>-1.234e56</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>float</TT
+></TD
+><TD
+>Decimal notation</TD
+><TD
+><TT
+CLASS="LITERAL"
+>-1.234</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>int</TT
+></TD
+><TD
+>Signed integer</TD
+><TD
+><TT
+CLASS="LITERAL"
+>-1234</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>uint</TT
+></TD
+><TD
+>Unsigned integer</TD
+><TD
+><TT
+CLASS="LITERAL"
+>1234</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>version</TT
+></TD
+><TD
+>Version number</TD
+><TD
+><TT
+CLASS="LITERAL"
+>8.3.0</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>tag</TT
+></TD
+><TD
+>XML tag</TD
+><TD
+><TT
+CLASS="LITERAL"
+>&lt;a href="dictionaries.html"&gt;</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>entity</TT
+></TD
+><TD
+>XML entity</TD
+><TD
+><TT
+CLASS="LITERAL"
+>&amp;amp;</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>blank</TT
+></TD
+><TD
+>Space symbols</TD
+><TD
+>(any whitespace or punctuation not otherwise recognized)</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    The parser's notion of a <SPAN
+CLASS="QUOTE"
+>"letter"</SPAN
+> is determined by the database's
+    locale setting, specifically <TT
+CLASS="VARNAME"
+>lc_ctype</TT
+>.  Words containing
+    only the basic ASCII letters are reported as a separate token type,
+    since it is sometimes useful to distinguish them.  In most European
+    languages, token types <TT
+CLASS="LITERAL"
+>word</TT
+> and <TT
+CLASS="LITERAL"
+>asciiword</TT
+>
+    should be treated alike.
+   </P
+><P
+>    <TT
+CLASS="LITERAL"
+>email</TT
+> does not support all valid email characters as
+    defined by RFC 5322.  Specifically, the only non-alphanumeric
+    characters supported for email user names are period, dash, and
+    underscore.
+   </P
+></BLOCKQUOTE
+></DIV
+><P
+>   It is possible for the parser to produce overlapping tokens from the same
+   piece of text.  As an example, a hyphenated word will be reported both
+   as the entire word and as each component:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT alias, description, token FROM ts_debug('foo-bar-beta1');
+      alias      |               description                |     token     
+-----------------+------------------------------------------+---------------
+ numhword        | Hyphenated word, letters and digits      | foo-bar-beta1
+ hword_asciipart | Hyphenated word part, all ASCII          | foo
+ blank           | Space symbols                            | -
+ hword_asciipart | Hyphenated word part, all ASCII          | bar
+ blank           | Space symbols                            | -
+ hword_numpart   | Hyphenated word part, letters and digits | beta1</PRE
+><P>
+
+   This behavior is desirable since it allows searches to work for both
+   the whole compound word and for components.  Here is another
+   instructive example:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT alias, description, token FROM ts_debug('http://example.com/stuff/index.html');
+  alias   |  description  |            token             
+----------+---------------+------------------------------
+ protocol | Protocol head | http://
+ url      | URL           | example.com/stuff/index.html
+ host     | Host          | example.com
+ url_path | URL path      | /stuff/index.html</PRE
+><P>
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="textsearch-features.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="textsearch-dictionaries.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Additional Features</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="textsearch.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Dictionaries</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

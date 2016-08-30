@@ -1,0 +1,516 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>earthdistance</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="dict_xsyn"
+HREF="dict-xsyn.html"><LINK
+REL="NEXT"
+TITLE="file_fdw"
+HREF="file-fdw.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="dict_xsyn"
+HREF="dict-xsyn.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="file_fdw"
+HREF="file-fdw.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="EARTHDISTANCE"
+>F.12. earthdistance</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>earthdistance</TT
+> module provides two different approaches to
+  calculating great circle distances on the surface of the Earth. The one
+  described first depends on the <TT
+CLASS="FILENAME"
+>cube</TT
+> module (which
+  <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>must</I
+></SPAN
+> be installed before <TT
+CLASS="FILENAME"
+>earthdistance</TT
+> can be
+  installed). The second one is based on the built-in <TT
+CLASS="TYPE"
+>point</TT
+> data type,
+  using longitude and latitude for the coordinates.
+ </P
+><P
+>  In this module, the Earth is assumed to be perfectly spherical.
+  (If that's too inaccurate for you, you might want to look at the
+  <SPAN
+CLASS="APPLICATION"
+><A
+HREF="http://postgis.net/"
+TARGET="_top"
+>PostGIS</A
+></SPAN
+>
+  project.)
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN170506"
+>F.12.1. Cube-based Earth Distances</A
+></H2
+><P
+>   Data is stored in cubes that are points (both corners are the same) using 3
+   coordinates representing the x, y, and z distance from the center of the
+   Earth.  A domain <TT
+CLASS="TYPE"
+>earth</TT
+> over <TT
+CLASS="TYPE"
+>cube</TT
+> is provided, which
+   includes constraint checks that the value meets these restrictions and
+   is reasonably close to the actual surface of the Earth.
+  </P
+><P
+>   The radius of the Earth is obtained from the <CODE
+CLASS="FUNCTION"
+>earth()</CODE
+>
+   function. It is given in meters. But by changing this one function you can
+   change the module to use some other units, or to use a different value of
+   the radius that you feel is more appropriate.
+  </P
+><P
+>   This package has applications to astronomical databases as well.
+   Astronomers will probably want to change <CODE
+CLASS="FUNCTION"
+>earth()</CODE
+> to return a
+   radius of <TT
+CLASS="LITERAL"
+>180/pi()</TT
+> so that distances are in degrees.
+  </P
+><P
+>   Functions are provided to support input in latitude and longitude (in
+   degrees), to support output of latitude and longitude, to calculate
+   the great circle distance between two points and to easily specify a
+   bounding box usable for index searches.
+  </P
+><P
+>   The provided functions are shown
+   in <A
+HREF="earthdistance.html#EARTHDISTANCE-CUBE-FUNCTIONS"
+>Table F-4</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="EARTHDISTANCE-CUBE-FUNCTIONS"
+></A
+><P
+><B
+>Table F-4. Cube-based Earthdistance Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Returns</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>earth()</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float8</TT
+></TD
+><TD
+>Returns the assumed radius of the Earth.</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>sec_to_gc(float8)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float8</TT
+></TD
+><TD
+>Converts the normal straight line
+       (secant) distance between two points on the surface of the Earth
+       to the great circle distance between them.
+      </TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>gc_to_sec(float8)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float8</TT
+></TD
+><TD
+>Converts the great circle distance between two points on the
+       surface of the Earth to the normal straight line (secant) distance
+       between them.
+      </TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>ll_to_earth(float8, float8)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>earth</TT
+></TD
+><TD
+>Returns the location of a point on the surface of the Earth given
+       its latitude (argument 1) and longitude (argument 2) in degrees.
+      </TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>latitude(earth)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float8</TT
+></TD
+><TD
+>Returns the latitude in degrees of a point on the surface of the
+       Earth.
+      </TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>longitude(earth)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float8</TT
+></TD
+><TD
+>Returns the longitude in degrees of a point on the surface of the
+       Earth.
+      </TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>earth_distance(earth, earth)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float8</TT
+></TD
+><TD
+>Returns the great circle distance between two points on the
+       surface of the Earth.
+      </TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>earth_box(earth, float8)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>cube</TT
+></TD
+><TD
+>Returns a box suitable for an indexed search using the cube
+       <TT
+CLASS="LITERAL"
+>@&gt;</TT
+>
+       operator for points within a given great circle distance of a location.
+       Some points in this box are further than the specified great circle
+       distance from the location, so a second check using
+       <CODE
+CLASS="FUNCTION"
+>earth_distance</CODE
+> should be included in the query.
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN170594"
+>F.12.2. Point-based Earth Distances</A
+></H2
+><P
+>   The second part of the module relies on representing Earth locations as
+   values of type <TT
+CLASS="TYPE"
+>point</TT
+>, in which the first component is taken to
+   represent longitude in degrees, and the second component is taken to
+   represent latitude in degrees.  Points are taken as (longitude, latitude)
+   and not vice versa because longitude is closer to the intuitive idea of
+   x-axis and latitude to y-axis.
+  </P
+><P
+>   A single operator is provided, shown
+   in <A
+HREF="earthdistance.html#EARTHDISTANCE-POINT-OPERATORS"
+>Table F-5</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="EARTHDISTANCE-POINT-OPERATORS"
+></A
+><P
+><B
+>Table F-5. Point-based Earthdistance Operators</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Operator</TH
+><TH
+>Returns</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>point</TT
+> <TT
+CLASS="LITERAL"
+>&lt;@&gt;</TT
+> <TT
+CLASS="TYPE"
+>point</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float8</TT
+></TD
+><TD
+>Gives the distance in statute miles between
+       two points on the Earth's surface.
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   Note that unlike the <TT
+CLASS="TYPE"
+>cube</TT
+>-based part of the module, units
+   are hardwired here: changing the <CODE
+CLASS="FUNCTION"
+>earth()</CODE
+> function will
+   not affect the results of this operator.
+  </P
+><P
+>   One disadvantage of the longitude/latitude representation is that
+   you need to be careful about the edge conditions near the poles
+   and near +/- 180 degrees of longitude.  The <TT
+CLASS="TYPE"
+>cube</TT
+>-based
+   representation avoids these discontinuities.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="dict-xsyn.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="file-fdw.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>dict_xsyn</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>file_fdw</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

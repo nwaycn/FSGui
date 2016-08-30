@@ -1,0 +1,409 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>sslinfo</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="spi"
+HREF="contrib-spi.html"><LINK
+REL="NEXT"
+TITLE="tablefunc"
+HREF="tablefunc.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="spi"
+HREF="contrib-spi.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="tablefunc"
+HREF="tablefunc.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="SSLINFO"
+>F.35. sslinfo</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>sslinfo</TT
+> module provides information about the SSL
+  certificate that the current client provided when connecting to
+  <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>.  The module is useless (most functions
+  will return NULL) if the current connection does not use SSL.
+ </P
+><P
+>  This extension won't build at all unless the installation was
+  configured with <TT
+CLASS="LITERAL"
+>--with-openssl</TT
+>.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN175578"
+>F.35.1. Functions Provided</A
+></H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><CODE
+CLASS="FUNCTION"
+>ssl_is_used() returns boolean</CODE
+>
+     </DT
+><DD
+><P
+>     Returns TRUE if current connection to server uses SSL, and FALSE
+     otherwise.
+    </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>ssl_version() returns text</CODE
+>
+     </DT
+><DD
+><P
+>     Returns the name of the protocol used for the SSL connection (e.g. SSLv2,
+     SSLv3, or TLSv1).
+    </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>ssl_cipher() returns text</CODE
+>
+     </DT
+><DD
+><P
+>     Returns the name of the cipher used for the SSL connection
+     (e.g. DHE-RSA-AES256-SHA).
+    </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>ssl_client_cert_present() returns boolean</CODE
+>
+     </DT
+><DD
+><P
+>     Returns TRUE if current client has presented a valid SSL client
+     certificate to the server, and FALSE otherwise.  (The server
+     might or might not be configured to require a client certificate.)
+    </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>ssl_client_serial() returns numeric</CODE
+>
+     </DT
+><DD
+><P
+>     Returns serial number of current client certificate.  The combination of
+     certificate serial number and certificate issuer is guaranteed to
+     uniquely identify a certificate (but not its owner &mdash; the owner
+     ought to regularly change his keys, and get new certificates from the
+     issuer).
+    </P
+><P
+>     So, if you run your own CA and allow only certificates from this CA to
+     be accepted by the server, the serial number is the most reliable (albeit
+     not very mnemonic) means to identify a user.
+    </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>ssl_client_dn() returns text</CODE
+>
+     </DT
+><DD
+><P
+>     Returns the full subject of the current client certificate, converting
+     character data into the current database encoding.  It is assumed that
+     if you use non-ASCII characters in the certificate names, your
+     database is able to represent these characters, too.  If your database
+     uses the SQL_ASCII encoding, non-ASCII characters in the name will be
+     represented as UTF-8 sequences.
+    </P
+><P
+>     The result looks like <TT
+CLASS="LITERAL"
+>/CN=Somebody /C=Some country/O=Some organization</TT
+>.
+    </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>ssl_issuer_dn() returns text</CODE
+>
+     </DT
+><DD
+><P
+>     Returns the full issuer name of the current client certificate, converting
+     character data into the current database encoding.  Encoding conversions
+     are handled the same as for <CODE
+CLASS="FUNCTION"
+>ssl_client_dn</CODE
+>.
+    </P
+><P
+>     The combination of the return value of this function with the
+     certificate serial number uniquely identifies the certificate.
+    </P
+><P
+>     This function is really useful only if you have more than one trusted CA
+     certificate in your server's <TT
+CLASS="FILENAME"
+>root.crt</TT
+> file, or if this CA
+     has issued some intermediate certificate authority certificates.
+    </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>ssl_client_dn_field(fieldname text) returns text</CODE
+>
+     </DT
+><DD
+><P
+>     This function returns the value of the specified field in the
+     certificate subject, or NULL if the field is not present.
+     Field names are string constants that are
+     converted into ASN1 object identifiers using the OpenSSL object
+     database.  The following values are acceptable:
+    </P
+><PRE
+CLASS="LITERALLAYOUT"
+>commonName (alias CN)
+surname (alias SN)
+name
+givenName (alias GN)
+countryName (alias C)
+localityName (alias L)
+stateOrProvinceName (alias ST)
+organizationName (alias O)
+organizationUnitName (alias OU)
+title
+description
+initials
+postalCode
+streetAddress
+generationQualifier
+description
+dnQualifier
+x500UniqueIdentifier
+pseudonym
+role
+emailAddress</PRE
+><P
+>     All of these fields are optional, except <TT
+CLASS="STRUCTFIELD"
+>commonName</TT
+>.
+     It depends
+     entirely on your CA's policy which of them would be included and which
+     wouldn't.  The meaning of these fields, however, is strictly defined by
+     the X.500 and X.509 standards, so you cannot just assign arbitrary
+     meaning to them.
+    </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>ssl_issuer_field(fieldname text) returns text</CODE
+>
+     </DT
+><DD
+><P
+>     Same as <CODE
+CLASS="FUNCTION"
+>ssl_client_dn_field</CODE
+>, but for the certificate issuer
+     rather than the certificate subject.
+    </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN175655"
+>F.35.2. Author</A
+></H2
+><P
+>   Victor Wagner <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:vitus@cryptocom.ru"
+>vitus@cryptocom.ru</A
+>&#62;</CODE
+>, Cryptocom LTD
+  </P
+><P
+>   E-Mail of Cryptocom OpenSSL development group:
+   <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:openssl@cryptocom.ru"
+>openssl@cryptocom.ru</A
+>&#62;</CODE
+>
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib-spi.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="tablefunc.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>spi</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>tablefunc</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

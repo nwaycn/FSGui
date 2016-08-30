@@ -1,0 +1,341 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Index Locking Considerations</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Index Access Method Interface Definition"
+HREF="indexam.html"><LINK
+REL="PREVIOUS"
+TITLE="Index Scanning"
+HREF="index-scanning.html"><LINK
+REL="NEXT"
+TITLE="Index Uniqueness Checks"
+HREF="index-unique-checks.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Index Scanning"
+HREF="index-scanning.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="indexam.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 58. Index Access Method Interface Definition</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Index Uniqueness Checks"
+HREF="index-unique-checks.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="INDEX-LOCKING"
+>58.4. Index Locking Considerations</A
+></H1
+><P
+>   Index access methods must handle concurrent updates
+   of the index by multiple processes.
+   The core <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> system obtains
+   <TT
+CLASS="LITERAL"
+>AccessShareLock</TT
+> on the index during an index scan, and
+   <TT
+CLASS="LITERAL"
+>RowExclusiveLock</TT
+> when updating the index (including plain
+   <TT
+CLASS="COMMAND"
+>VACUUM</TT
+>).  Since these lock types do not conflict, the access
+   method is responsible for handling any fine-grained locking it might need.
+   An exclusive lock on the index as a whole will be taken only during index
+   creation, destruction, or <TT
+CLASS="COMMAND"
+>REINDEX</TT
+>.
+  </P
+><P
+>   Building an index type that supports concurrent updates usually requires
+   extensive and subtle analysis of the required behavior.  For the b-tree
+   and hash index types, you can read about the design decisions involved in
+   <TT
+CLASS="FILENAME"
+>src/backend/access/nbtree/README</TT
+> and
+   <TT
+CLASS="FILENAME"
+>src/backend/access/hash/README</TT
+>.
+  </P
+><P
+>   Aside from the index's own internal consistency requirements, concurrent
+   updates create issues about consistency between the parent table (the
+   <I
+CLASS="FIRSTTERM"
+>heap</I
+>) and the index.  Because
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> separates accesses
+   and updates of the heap from those of the index, there are windows in
+   which the index might be inconsistent with the heap.  We handle this problem
+   with the following rules:
+
+    <P
+></P
+></P><UL
+><LI
+><P
+>       A new heap entry is made before making its index entries.  (Therefore
+       a concurrent index scan is likely to fail to see the heap entry.
+       This is okay because the index reader would be uninterested in an
+       uncommitted row anyway.  But see <A
+HREF="index-unique-checks.html"
+>Section 58.5</A
+>.)
+      </P
+></LI
+><LI
+><P
+>       When a heap entry is to be deleted (by <TT
+CLASS="COMMAND"
+>VACUUM</TT
+>), all its
+       index entries must be removed first.
+      </P
+></LI
+><LI
+><P
+>       An index scan must maintain a pin
+       on the index page holding the item last returned by
+       <CODE
+CLASS="FUNCTION"
+>amgettuple</CODE
+>, and <CODE
+CLASS="FUNCTION"
+>ambulkdelete</CODE
+> cannot delete
+       entries from pages that are pinned by other backends.  The need
+       for this rule is explained below.
+      </P
+></LI
+></UL
+><P>
+
+   Without the third rule, it is possible for an index reader to
+   see an index entry just before it is removed by <TT
+CLASS="COMMAND"
+>VACUUM</TT
+>, and
+   then to arrive at the corresponding heap entry after that was removed by
+   <TT
+CLASS="COMMAND"
+>VACUUM</TT
+>.
+   This creates no serious problems if that item
+   number is still unused when the reader reaches it, since an empty
+   item slot will be ignored by <CODE
+CLASS="FUNCTION"
+>heap_fetch()</CODE
+>.  But what if a
+   third backend has already re-used the item slot for something else?
+   When using an MVCC-compliant snapshot, there is no problem because
+   the new occupant of the slot is certain to be too new to pass the
+   snapshot test.  However, with a non-MVCC-compliant snapshot (such as
+   <TT
+CLASS="LITERAL"
+>SnapshotAny</TT
+>), it would be possible to accept and return
+   a row that does not in fact match the scan keys.  We could defend
+   against this scenario by requiring the scan keys to be rechecked
+   against the heap row in all cases, but that is too expensive.  Instead,
+   we use a pin on an index page as a proxy to indicate that the reader
+   might still be <SPAN
+CLASS="QUOTE"
+>"in flight"</SPAN
+> from the index entry to the matching
+   heap entry.  Making <CODE
+CLASS="FUNCTION"
+>ambulkdelete</CODE
+> block on such a pin ensures
+   that <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> cannot delete the heap entry before the reader
+   is done with it.  This solution costs little in run time, and adds blocking
+   overhead only in the rare cases where there actually is a conflict.
+  </P
+><P
+>   This solution requires that index scans be <SPAN
+CLASS="QUOTE"
+>"synchronous"</SPAN
+>: we have
+   to fetch each heap tuple immediately after scanning the corresponding index
+   entry.  This is expensive for a number of reasons.  An
+   <SPAN
+CLASS="QUOTE"
+>"asynchronous"</SPAN
+> scan in which we collect many TIDs from the index,
+   and only visit the heap tuples sometime later, requires much less index
+   locking overhead and can allow a more efficient heap access pattern.
+   Per the above analysis, we must use the synchronous approach for
+   non-MVCC-compliant snapshots, but an asynchronous scan is workable
+   for a query using an MVCC snapshot.
+  </P
+><P
+>   In an <CODE
+CLASS="FUNCTION"
+>amgetbitmap</CODE
+> index scan, the access method does not
+   keep an index pin on any of the returned tuples.  Therefore
+   it is only safe to use such scans with MVCC-compliant snapshots.
+  </P
+><P
+>   When the <TT
+CLASS="STRUCTFIELD"
+>ampredlocks</TT
+> flag is not set, any scan using that
+   index access method within a serializable transaction will acquire a
+   nonblocking predicate lock on the full index.  This will generate a
+   read-write conflict with the insert of any tuple into that index by a
+   concurrent serializable transaction.  If certain patterns of read-write
+   conflicts are detected among a set of concurrent serializable
+   transactions, one of those transactions may be canceled to protect data
+   integrity.  When the flag is set, it indicates that the index access
+   method implements finer-grained predicate locking, which will tend to
+   reduce the frequency of such transaction cancellations.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="index-scanning.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="index-unique-checks.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Index Scanning</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="indexam.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Index Uniqueness Checks</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

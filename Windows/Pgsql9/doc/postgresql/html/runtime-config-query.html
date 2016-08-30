@@ -1,0 +1,1191 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Query Planning</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Configuration"
+HREF="runtime-config.html"><LINK
+REL="PREVIOUS"
+TITLE="Replication"
+HREF="runtime-config-replication.html"><LINK
+REL="NEXT"
+TITLE="Error Reporting and Logging"
+HREF="runtime-config-logging.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Replication"
+HREF="runtime-config-replication.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 18. Server Configuration</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Error Reporting and Logging"
+HREF="runtime-config-logging.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RUNTIME-CONFIG-QUERY"
+>18.7. Query Planning</A
+></H1
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-QUERY-ENABLE"
+>18.7.1. Planner Method Configuration</A
+></H2
+><P
+>       These configuration parameters provide a crude method of
+       influencing the query plans chosen by the query optimizer. If
+       the default plan chosen by the optimizer for a particular query
+       is not optimal, a <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>temporary</I
+></SPAN
+> solution is to use one
+       of these configuration parameters to force the optimizer to
+       choose a different plan.
+       Better ways to improve the quality of the
+       plans chosen by the optimizer include adjusting the planer cost
+       constants (see <A
+HREF="runtime-config-query.html#RUNTIME-CONFIG-QUERY-CONSTANTS"
+>Section 18.7.2</A
+>),
+       running <A
+HREF="sql-analyze.html"
+>ANALYZE</A
+> manually, increasing
+       the value of the <A
+HREF="runtime-config-query.html#GUC-DEFAULT-STATISTICS-TARGET"
+>default_statistics_target</A
+> configuration parameter,
+       and increasing the amount of statistics collected for
+       specific columns using <TT
+CLASS="COMMAND"
+>ALTER TABLE SET
+       STATISTICS</TT
+>.
+      </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-ENABLE-BITMAPSCAN"
+></A
+><TT
+CLASS="VARNAME"
+>enable_bitmapscan</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      
+      </DT
+><DD
+><P
+>        Enables or disables the query planner's use of bitmap-scan plan
+        types. The default is <TT
+CLASS="LITERAL"
+>on</TT
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-ENABLE-HASHAGG"
+></A
+><TT
+CLASS="VARNAME"
+>enable_hashagg</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        Enables or disables the query planner's use of hashed
+        aggregation plan types. The default is <TT
+CLASS="LITERAL"
+>on</TT
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-ENABLE-HASHJOIN"
+></A
+><TT
+CLASS="VARNAME"
+>enable_hashjoin</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        Enables or disables the query planner's use of hash-join plan
+        types. The default is <TT
+CLASS="LITERAL"
+>on</TT
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-ENABLE-INDEXSCAN"
+></A
+><TT
+CLASS="VARNAME"
+>enable_indexscan</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      
+      </DT
+><DD
+><P
+>        Enables or disables the query planner's use of index-scan plan
+        types. The default is <TT
+CLASS="LITERAL"
+>on</TT
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-ENABLE-INDEXONLYSCAN"
+></A
+><TT
+CLASS="VARNAME"
+>enable_indexonlyscan</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      
+      </DT
+><DD
+><P
+>        Enables or disables the query planner's use of index-only-scan plan
+        types. The default is <TT
+CLASS="LITERAL"
+>on</TT
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-ENABLE-MATERIAL"
+></A
+><TT
+CLASS="VARNAME"
+>enable_material</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        Enables or disables the query planner's use of materialization.
+        It is impossible to suppress materialization entirely,
+        but turning this variable off prevents the planner from inserting
+        materialize nodes except in cases where it is required for correctness.
+        The default is <TT
+CLASS="LITERAL"
+>on</TT
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-ENABLE-MERGEJOIN"
+></A
+><TT
+CLASS="VARNAME"
+>enable_mergejoin</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        Enables or disables the query planner's use of merge-join plan
+        types. The default is <TT
+CLASS="LITERAL"
+>on</TT
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-ENABLE-NESTLOOP"
+></A
+><TT
+CLASS="VARNAME"
+>enable_nestloop</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        Enables or disables the query planner's use of nested-loop join
+        plans. It is impossible to suppress nested-loop joins entirely,
+        but turning this variable off discourages the planner from using
+        one if there are other methods available. The default is
+        <TT
+CLASS="LITERAL"
+>on</TT
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-ENABLE-SEQSCAN"
+></A
+><TT
+CLASS="VARNAME"
+>enable_seqscan</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      
+      </DT
+><DD
+><P
+>        Enables or disables the query planner's use of sequential scan
+        plan types. It is impossible to suppress sequential scans
+        entirely, but turning this variable off discourages the planner
+        from using one if there are other methods available. The
+        default is <TT
+CLASS="LITERAL"
+>on</TT
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-ENABLE-SORT"
+></A
+><TT
+CLASS="VARNAME"
+>enable_sort</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        Enables or disables the query planner's use of explicit sort
+        steps. It is impossible to suppress explicit sorts entirely,
+        but turning this variable off discourages the planner from
+        using one if there are other methods available. The default
+        is <TT
+CLASS="LITERAL"
+>on</TT
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-ENABLE-TIDSCAN"
+></A
+><TT
+CLASS="VARNAME"
+>enable_tidscan</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        Enables or disables the query planner's use of <ACRONYM
+CLASS="ACRONYM"
+>TID</ACRONYM
+>
+        scan plan types. The default is <TT
+CLASS="LITERAL"
+>on</TT
+>.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-QUERY-CONSTANTS"
+>18.7.2. Planner Cost Constants</A
+></H2
+><P
+>     The <I
+CLASS="FIRSTTERM"
+>cost</I
+> variables described in this section are measured
+     on an arbitrary scale.  Only their relative values matter, hence
+     scaling them all up or down by the same factor will result in no change
+     in the planner's choices.  By default, these cost variables are based on
+     the cost of sequential page fetches; that is,
+     <TT
+CLASS="VARNAME"
+>seq_page_cost</TT
+> is conventionally set to <TT
+CLASS="LITERAL"
+>1.0</TT
+>
+     and the other cost variables are set with reference to that.  But
+     you can use a different scale if you prefer, such as actual execution
+     times in milliseconds on a particular machine.
+    </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>     Unfortunately, there is no well-defined method for determining ideal
+     values for the cost variables.  They are best treated as averages over
+     the entire mix of queries that a particular installation will receive.  This
+     means that changing them on the basis of just a few experiments is very
+     risky.
+    </P
+></BLOCKQUOTE
+></DIV
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-SEQ-PAGE-COST"
+></A
+><TT
+CLASS="VARNAME"
+>seq_page_cost</TT
+> (<TT
+CLASS="TYPE"
+>floating point</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the planner's estimate of the cost of a disk page fetch
+        that is part of a series of sequential fetches.  The default is 1.0.
+        This value can be overridden for tables and indexes in a particular
+        tablespace by setting the tablespace parameter of the same name
+        (see <A
+HREF="sql-altertablespace.html"
+>ALTER TABLESPACE</A
+>).
+       </P
+></DD
+><DT
+><A
+NAME="GUC-RANDOM-PAGE-COST"
+></A
+><TT
+CLASS="VARNAME"
+>random_page_cost</TT
+> (<TT
+CLASS="TYPE"
+>floating point</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the planner's estimate of the cost of a
+        non-sequentially-fetched disk page.  The default is 4.0.
+        This value can be overridden for tables and indexes in a particular
+        tablespace by setting the tablespace parameter of the same name
+        (see <A
+HREF="sql-altertablespace.html"
+>ALTER TABLESPACE</A
+>).
+       </P
+><P
+>        Reducing this value relative to <TT
+CLASS="VARNAME"
+>seq_page_cost</TT
+>
+        will cause the system to prefer index scans; raising it will
+        make index scans look relatively more expensive.  You can raise
+        or lower both values together to change the importance of disk I/O
+        costs relative to CPU costs, which are described by the following
+        parameters.
+       </P
+><P
+>        Random access to mechanical disk storage is normally much more expensive
+        than four times sequential access.  However, a lower default is used
+        (4.0) because the majority of random accesses to disk, such as indexed
+        reads, are assumed to be in cache.  The default value can be thought of
+        as modeling random access as 40 times slower than sequential, while
+        expecting 90% of random reads to be cached.
+       </P
+><P
+>        If you believe a 90% cache rate is an incorrect assumption
+        for your workload, you can increase random_page_cost to better
+        reflect the true cost of random storage reads. Correspondingly,
+        if your data is likely to be completely in cache, such as when
+        the database is smaller than the total server memory, decreasing
+        random_page_cost can be appropriate.  Storage that has a low random
+        read cost relative to sequential, e.g. solid-state drives, might
+        also be better modeled with a lower value for random_page_cost.
+       </P
+><DIV
+CLASS="TIP"
+><BLOCKQUOTE
+CLASS="TIP"
+><P
+><B
+>Tip: </B
+>         Although the system will let you set <TT
+CLASS="VARNAME"
+>random_page_cost</TT
+> to
+         less than <TT
+CLASS="VARNAME"
+>seq_page_cost</TT
+>, it is not physically sensible
+         to do so.  However, setting them equal makes sense if the database
+         is entirely cached in RAM, since in that case there is no penalty
+         for touching pages out of sequence.  Also, in a heavily-cached
+         database you should lower both values relative to the CPU parameters,
+         since the cost of fetching a page already in RAM is much smaller
+         than it would normally be.
+        </P
+></BLOCKQUOTE
+></DIV
+></DD
+><DT
+><A
+NAME="GUC-CPU-TUPLE-COST"
+></A
+><TT
+CLASS="VARNAME"
+>cpu_tuple_cost</TT
+> (<TT
+CLASS="TYPE"
+>floating point</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the planner's estimate of the cost of processing
+        each row during a query.
+        The default is 0.01.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-CPU-INDEX-TUPLE-COST"
+></A
+><TT
+CLASS="VARNAME"
+>cpu_index_tuple_cost</TT
+> (<TT
+CLASS="TYPE"
+>floating point</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the planner's estimate of the cost of processing
+        each index entry during an index scan.
+        The default is 0.005.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-CPU-OPERATOR-COST"
+></A
+><TT
+CLASS="VARNAME"
+>cpu_operator_cost</TT
+> (<TT
+CLASS="TYPE"
+>floating point</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the planner's estimate of the cost of processing each
+        operator or function executed during a query.
+        The default is 0.0025.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-EFFECTIVE-CACHE-SIZE"
+></A
+><TT
+CLASS="VARNAME"
+>effective_cache_size</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the planner's assumption about the effective size of the
+        disk cache that is available to a single query.  This is
+        factored into estimates of the cost of using an index; a
+        higher value makes it more likely index scans will be used, a
+        lower value makes it more likely sequential scans will be
+        used. When setting this parameter you should consider both
+        <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>'s shared buffers and the
+        portion of the kernel's disk cache that will be used for
+        <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> data files.  Also, take
+        into account the expected number of concurrent queries on different
+        tables, since they will have to share the available
+        space.  This parameter has no effect on the size of shared
+        memory allocated by <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>, nor
+        does it reserve kernel disk cache; it is used only for estimation
+        purposes.  The system also does not assume data remains in
+        the disk cache between queries.  The default is 4 gigabytes
+        (<TT
+CLASS="LITERAL"
+>4GB</TT
+>).
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-QUERY-GEQO"
+>18.7.3. Genetic Query Optimizer</A
+></H2
+><P
+>      The genetic query optimizer (GEQO) is an algorithm that does query
+      planning using heuristic searching.  This reduces planning time for
+      complex queries (those joining many relations), at the cost of producing
+      plans that are sometimes inferior to those found by the normal
+      exhaustive-search algorithm.
+      For more information see <A
+HREF="geqo.html"
+>Chapter 57</A
+>.
+     </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-GEQO"
+></A
+><TT
+CLASS="VARNAME"
+>geqo</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      
+      
+      </DT
+><DD
+><P
+>        Enables or disables genetic query optimization.
+        This is on by default.  It is usually best not to turn it off in
+        production; the <TT
+CLASS="VARNAME"
+>geqo_threshold</TT
+> variable provides
+        more granular control of GEQO.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-GEQO-THRESHOLD"
+></A
+><TT
+CLASS="VARNAME"
+>geqo_threshold</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Use genetic query optimization to plan queries with at least
+        this many <TT
+CLASS="LITERAL"
+>FROM</TT
+> items involved. (Note that a
+        <TT
+CLASS="LITERAL"
+>FULL OUTER JOIN</TT
+> construct counts as only one <TT
+CLASS="LITERAL"
+>FROM</TT
+>
+        item.) The default is 12. For simpler queries it is usually best
+        to use the regular, exhaustive-search planner, but for queries with
+        many tables the exhaustive search takes too long, often
+        longer than the penalty of executing a suboptimal plan.  Thus,
+        a threshold on the size of the query is a convenient way to manage
+        use of GEQO.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-GEQO-EFFORT"
+></A
+><TT
+CLASS="VARNAME"
+>geqo_effort</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Controls the trade-off between planning time and query plan
+        quality in GEQO. This variable must be an integer in the
+        range from 1 to 10. The default value is five. Larger values
+        increase the time spent doing query planning, but also
+        increase the likelihood that an efficient query plan will be
+        chosen.
+       </P
+><P
+>        <TT
+CLASS="VARNAME"
+>geqo_effort</TT
+> doesn't actually do anything
+        directly; it is only used to compute the default values for
+        the other variables that influence GEQO behavior (described
+        below). If you prefer, you can set the other parameters by
+        hand instead.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-GEQO-POOL-SIZE"
+></A
+><TT
+CLASS="VARNAME"
+>geqo_pool_size</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Controls the pool size used by GEQO, that is the
+        number of individuals in the genetic population.  It must be
+        at least two, and useful values are typically 100 to 1000.  If
+        it is set to zero (the default setting) then a suitable
+        value is chosen based on <TT
+CLASS="VARNAME"
+>geqo_effort</TT
+> and
+        the number of tables in the query.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-GEQO-GENERATIONS"
+></A
+><TT
+CLASS="VARNAME"
+>geqo_generations</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Controls the number of generations used by GEQO, that is
+        the number of iterations of the algorithm.  It must
+        be at least one, and useful values are in the same range as
+        the pool size.  If it is set to zero (the default setting)
+        then a suitable value is chosen based on
+        <TT
+CLASS="VARNAME"
+>geqo_pool_size</TT
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-GEQO-SELECTION-BIAS"
+></A
+><TT
+CLASS="VARNAME"
+>geqo_selection_bias</TT
+> (<TT
+CLASS="TYPE"
+>floating point</TT
+>)
+      </DT
+><DD
+><P
+>        Controls the selection bias used by GEQO. The selection bias
+        is the selective pressure within the population. Values can be
+        from 1.50 to 2.00; the latter is the default.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-GEQO-SEED"
+></A
+><TT
+CLASS="VARNAME"
+>geqo_seed</TT
+> (<TT
+CLASS="TYPE"
+>floating point</TT
+>)
+      </DT
+><DD
+><P
+>        Controls the initial value of the random number generator used
+        by GEQO to select random paths through the join order search space.
+        The value can range from zero (the default) to one.  Varying the
+        value changes the set of join paths explored, and may result in a
+        better or worse best path being found.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-QUERY-OTHER"
+>18.7.4. Other Planner Options</A
+></H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-DEFAULT-STATISTICS-TARGET"
+></A
+><TT
+CLASS="VARNAME"
+>default_statistics_target</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the default statistics target for table columns without
+        a column-specific target set via <TT
+CLASS="COMMAND"
+>ALTER TABLE
+        SET STATISTICS</TT
+>.  Larger values increase the time needed to
+        do <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+>, but might improve the quality of the
+        planner's estimates. The default is 100. For more information
+        on the use of statistics by the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+        query planner, refer to <A
+HREF="planner-stats.html"
+>Section 14.2</A
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-CONSTRAINT-EXCLUSION"
+></A
+><TT
+CLASS="VARNAME"
+>constraint_exclusion</TT
+> (<TT
+CLASS="TYPE"
+>enum</TT
+>)
+      
+      </DT
+><DD
+><P
+>        Controls the query planner's use of table constraints to
+        optimize queries.
+        The allowed values of <TT
+CLASS="VARNAME"
+>constraint_exclusion</TT
+> are
+        <TT
+CLASS="LITERAL"
+>on</TT
+> (examine constraints for all tables),
+        <TT
+CLASS="LITERAL"
+>off</TT
+> (never examine constraints), and
+        <TT
+CLASS="LITERAL"
+>partition</TT
+> (examine constraints only for inheritance child
+        tables and <TT
+CLASS="LITERAL"
+>UNION ALL</TT
+> subqueries).
+        <TT
+CLASS="LITERAL"
+>partition</TT
+> is the default setting.
+        It is often used with inheritance and partitioned tables to
+        improve performance.
+      </P
+><P
+>        When this parameter allows it for a particular table, the planner
+        compares query conditions with the table's <TT
+CLASS="LITERAL"
+>CHECK</TT
+>
+        constraints, and omits scanning tables for which the conditions
+        contradict the constraints.  For example:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE parent(key integer, ...);
+CREATE TABLE child1000(check (key between 1000 and 1999)) INHERITS(parent);
+CREATE TABLE child2000(check (key between 2000 and 2999)) INHERITS(parent);
+...
+SELECT * FROM parent WHERE key = 2400;</PRE
+><P>
+
+        With constraint exclusion enabled, this <TT
+CLASS="COMMAND"
+>SELECT</TT
+>
+        will not scan <TT
+CLASS="STRUCTNAME"
+>child1000</TT
+> at all, improving performance.
+       </P
+><P
+>        Currently, constraint exclusion is enabled by default
+        only for cases that are often used to implement table partitioning.
+        Turning it on for all tables imposes extra planning overhead that is
+        quite noticeable on simple queries, and most often will yield no
+        benefit for simple queries.  If you have no partitioned tables
+        you might prefer to turn it off entirely.
+       </P
+><P
+>        Refer to <A
+HREF="ddl-partitioning.html#DDL-PARTITIONING-CONSTRAINT-EXCLUSION"
+>Section 5.10.4</A
+> for
+        more information on using constraint exclusion and partitioning.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-CURSOR-TUPLE-FRACTION"
+></A
+><TT
+CLASS="VARNAME"
+>cursor_tuple_fraction</TT
+> (<TT
+CLASS="TYPE"
+>floating point</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the planner's estimate of the fraction of a cursor's rows that
+        will be retrieved.  The default is 0.1.  Smaller values of this
+        setting bias the planner towards using <SPAN
+CLASS="QUOTE"
+>"fast start"</SPAN
+> plans
+        for cursors, which will retrieve the first few rows quickly while
+        perhaps taking a long time to fetch all rows.  Larger values
+        put more emphasis on the total estimated time.  At the maximum
+        setting of 1.0, cursors are planned exactly like regular queries,
+        considering only the total estimated time and not how soon the
+        first rows might be delivered.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-FROM-COLLAPSE-LIMIT"
+></A
+><TT
+CLASS="VARNAME"
+>from_collapse_limit</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        The planner will merge sub-queries into upper queries if the
+        resulting <TT
+CLASS="LITERAL"
+>FROM</TT
+> list would have no more than
+        this many items.  Smaller values reduce planning time but might
+        yield inferior query plans.  The default is eight.
+        For more information see <A
+HREF="explicit-joins.html"
+>Section 14.3</A
+>.
+       </P
+><P
+>        Setting this value to <A
+HREF="runtime-config-query.html#GUC-GEQO-THRESHOLD"
+>geqo_threshold</A
+> or more
+        may trigger use of the GEQO planner, resulting in non-optimal
+        plans.  See <A
+HREF="runtime-config-query.html#RUNTIME-CONFIG-QUERY-GEQO"
+>Section 18.7.3</A
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-JOIN-COLLAPSE-LIMIT"
+></A
+><TT
+CLASS="VARNAME"
+>join_collapse_limit</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        The planner will rewrite explicit <TT
+CLASS="LITERAL"
+>JOIN</TT
+>
+        constructs (except <TT
+CLASS="LITERAL"
+>FULL JOIN</TT
+>s) into lists of
+        <TT
+CLASS="LITERAL"
+>FROM</TT
+> items whenever a list of no more than this many items
+        would result.  Smaller values reduce planning time but might
+        yield inferior query plans.
+       </P
+><P
+>        By default, this variable is set the same as
+        <TT
+CLASS="VARNAME"
+>from_collapse_limit</TT
+>, which is appropriate
+        for most uses. Setting it to 1 prevents any reordering of
+        explicit <TT
+CLASS="LITERAL"
+>JOIN</TT
+>s. Thus, the explicit join order
+        specified in the query will be the actual order in which the
+        relations are joined. Because the query planner does not always choose
+        the optimal join order, advanced users can elect to
+        temporarily set this variable to 1, and then specify the join
+        order they desire explicitly.
+        For more information see <A
+HREF="explicit-joins.html"
+>Section 14.3</A
+>.
+       </P
+><P
+>        Setting this value to <A
+HREF="runtime-config-query.html#GUC-GEQO-THRESHOLD"
+>geqo_threshold</A
+> or more
+        may trigger use of the GEQO planner, resulting in non-optimal
+        plans.  See <A
+HREF="runtime-config-query.html#RUNTIME-CONFIG-QUERY-GEQO"
+>Section 18.7.3</A
+>.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime-config-replication.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="runtime-config-logging.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Replication</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="runtime-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Error Reporting and Logging</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

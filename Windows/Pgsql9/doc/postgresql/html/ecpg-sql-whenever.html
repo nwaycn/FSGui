@@ -1,0 +1,284 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>WHENEVER</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Embedded SQL Commands"
+HREF="ecpg-sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="VAR"
+HREF="ecpg-sql-var.html"><LINK
+REL="NEXT"
+TITLE="Informix Compatibility Mode"
+HREF="ecpg-informix-compat.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="VAR"
+HREF="ecpg-sql-var.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ecpg-sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Informix Compatibility Mode"
+HREF="ecpg-informix-compat.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="ECPG-SQL-WHENEVER"
+></A
+>WHENEVER</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN49973"
+></A
+><H2
+>Name</H2
+>WHENEVER&nbsp;--&nbsp;specify the action to be taken when an SQL statement causes a specific class condition to be raised</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN49976"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>WHENEVER { NOT FOUND | SQLERROR | SQLWARNING } <TT
+CLASS="REPLACEABLE"
+><I
+>action</I
+></TT
+></PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN49979"
+></A
+><H2
+>Description</H2
+><P
+>     Define a behavior which is called on the special cases (Rows not
+     found, SQL warnings or errors) in the result of SQL execution.
+    </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN49982"
+></A
+><H2
+>Parameters</H2
+><P
+>     See <A
+HREF="ecpg-errors.html#ECPG-WHENEVER"
+>Section 33.8.1</A
+> for a description of the
+     parameters.
+    </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN49986"
+></A
+><H2
+>Examples</H2
+><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL WHENEVER NOT FOUND CONTINUE;
+EXEC SQL WHENEVER NOT FOUND DO BREAK;
+EXEC SQL WHENEVER SQLWARNING SQLPRINT;
+EXEC SQL WHENEVER SQLWARNING DO warn();
+EXEC SQL WHENEVER SQLERROR sqlprint;
+EXEC SQL WHENEVER SQLERROR CALL print2();
+EXEC SQL WHENEVER SQLERROR DO handle_error("select");
+EXEC SQL WHENEVER SQLERROR DO sqlnotice(NULL, NONO);
+EXEC SQL WHENEVER SQLERROR DO sqlprint();
+EXEC SQL WHENEVER SQLERROR GOTO error_label;
+EXEC SQL WHENEVER SQLERROR STOP;</PRE
+><P
+>     A typical application is the use of <TT
+CLASS="LITERAL"
+>WHENEVER NOT FOUND
+     BREAK</TT
+> to handle looping through result sets:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>int
+main(void)
+{
+    EXEC SQL CONNECT TO testdb AS con1;
+    EXEC SQL ALLOCATE DESCRIPTOR d;
+    EXEC SQL DECLARE cur CURSOR FOR SELECT current_database(), 'hoge', 256;
+    EXEC SQL OPEN cur;
+
+    /* when end of result set reached, break out of while loop */
+    EXEC SQL WHENEVER NOT FOUND DO BREAK;
+
+    while (1)
+    {
+        EXEC SQL FETCH NEXT FROM cur INTO SQL DESCRIPTOR d;
+        ...
+    }
+
+    EXEC SQL CLOSE cur;
+    EXEC SQL COMMIT;
+
+    EXEC SQL DEALLOCATE DESCRIPTOR d;
+    EXEC SQL DISCONNECT ALL;
+
+    return 0;
+}</PRE
+><P>
+    </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN49992"
+></A
+><H2
+>Compatibility</H2
+><P
+>     <TT
+CLASS="COMMAND"
+>WHENEVER</TT
+> is specified in the SQL standard, but
+     most of the actions are PostgreSQL extensions.
+    </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ecpg-sql-var.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="ecpg-informix-compat.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>VAR</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="ecpg-sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><SPAN
+CLASS="PRODUCTNAME"
+>Informix</SPAN
+> Compatibility Mode</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,638 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Set Returning Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Functions and Operators"
+HREF="functions.html"><LINK
+REL="PREVIOUS"
+TITLE="Row and Array Comparisons"
+HREF="functions-comparisons.html"><LINK
+REL="NEXT"
+TITLE="System Information Functions"
+HREF="functions-info.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Row and Array Comparisons"
+HREF="functions-comparisons.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 9. Functions and Operators</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="System Information Functions"
+HREF="functions-info.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="FUNCTIONS-SRF"
+>9.24. Set Returning Functions</A
+></H1
+><P
+>   This section describes functions that possibly return more than one row.
+   The most widely used functions in this class are series generating
+   functions, as detailed in <A
+HREF="functions-srf.html#FUNCTIONS-SRF-SERIES"
+>Table 9-55</A
+> and
+   <A
+HREF="functions-srf.html#FUNCTIONS-SRF-SUBSCRIPTS"
+>Table 9-56</A
+>.  Other, more specialized
+   set-returning functions are described elsewhere in this manual.
+   See <A
+HREF="queries-table-expressions.html#QUERIES-TABLEFUNCTIONS"
+>Section 7.2.1.4</A
+> for ways to combine multiple
+   set-returning functions.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-SRF-SERIES"
+></A
+><P
+><B
+>Table 9-55. Series Generating Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Argument Type</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>generate_series(<TT
+CLASS="PARAMETER"
+>start</TT
+>, <TT
+CLASS="PARAMETER"
+>stop</TT
+>)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+>, <TT
+CLASS="TYPE"
+>bigint</TT
+> or <TT
+CLASS="TYPE"
+>numeric</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>setof int</TT
+>, <TT
+CLASS="TYPE"
+>setof bigint</TT
+>, or <TT
+CLASS="TYPE"
+>setof numeric</TT
+> (same as argument type)</TD
+><TD
+>       Generate a series of values, from <TT
+CLASS="PARAMETER"
+>start</TT
+> to <TT
+CLASS="PARAMETER"
+>stop</TT
+>
+       with a step size of one
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>generate_series(<TT
+CLASS="PARAMETER"
+>start</TT
+>, <TT
+CLASS="PARAMETER"
+>stop</TT
+>, <TT
+CLASS="PARAMETER"
+>step</TT
+>)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+>, <TT
+CLASS="TYPE"
+>bigint</TT
+> or <TT
+CLASS="TYPE"
+>numeric</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>setof int</TT
+>, <TT
+CLASS="TYPE"
+>setof bigint</TT
+> or <TT
+CLASS="TYPE"
+>setof numeric</TT
+> (same as argument type)</TD
+><TD
+>       Generate a series of values, from <TT
+CLASS="PARAMETER"
+>start</TT
+> to <TT
+CLASS="PARAMETER"
+>stop</TT
+>
+       with a step size of <TT
+CLASS="PARAMETER"
+>step</TT
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>generate_series(<TT
+CLASS="PARAMETER"
+>start</TT
+>, <TT
+CLASS="PARAMETER"
+>stop</TT
+>, <TT
+CLASS="PARAMETER"
+>step</TT
+> <TT
+CLASS="TYPE"
+>interval</TT
+>)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp</TT
+> or <TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>setof timestamp</TT
+> or <TT
+CLASS="TYPE"
+>setof timestamp with time zone</TT
+> (same as argument type)</TD
+><TD
+>       Generate a series of values, from <TT
+CLASS="PARAMETER"
+>start</TT
+> to <TT
+CLASS="PARAMETER"
+>stop</TT
+>
+       with a step size of <TT
+CLASS="PARAMETER"
+>step</TT
+>
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   When <TT
+CLASS="PARAMETER"
+>step</TT
+> is positive, zero rows are returned if
+   <TT
+CLASS="PARAMETER"
+>start</TT
+> is greater than <TT
+CLASS="PARAMETER"
+>stop</TT
+>.
+   Conversely, when <TT
+CLASS="PARAMETER"
+>step</TT
+> is negative, zero rows are
+   returned if <TT
+CLASS="PARAMETER"
+>start</TT
+> is less than <TT
+CLASS="PARAMETER"
+>stop</TT
+>.
+   Zero rows are also returned for <TT
+CLASS="LITERAL"
+>NULL</TT
+> inputs. It is an error
+   for <TT
+CLASS="PARAMETER"
+>step</TT
+> to be zero. Some examples follow:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT * FROM generate_series(2,4);
+ generate_series
+-----------------
+               2
+               3
+               4
+(3 rows)
+
+SELECT * FROM generate_series(5,1,-2);
+ generate_series
+-----------------
+               5
+               3
+               1
+(3 rows)
+
+SELECT * FROM generate_series(4,3);
+ generate_series
+-----------------
+(0 rows)
+
+SELECT generate_series(1.1, 4, 1.3);
+ generate_series 
+-----------------
+             1.1
+             2.4
+             3.7
+(3 rows)
+
+-- this example relies on the date-plus-integer operator
+SELECT current_date + s.a AS dates FROM generate_series(0,14,7) AS s(a);
+   dates
+------------
+ 2004-02-05
+ 2004-02-12
+ 2004-02-19
+(3 rows)
+
+SELECT * FROM generate_series('2008-03-01 00:00'::timestamp,
+                              '2008-03-04 12:00', '10 hours');
+   generate_series   
+---------------------
+ 2008-03-01 00:00:00
+ 2008-03-01 10:00:00
+ 2008-03-01 20:00:00
+ 2008-03-02 06:00:00
+ 2008-03-02 16:00:00
+ 2008-03-03 02:00:00
+ 2008-03-03 12:00:00
+ 2008-03-03 22:00:00
+ 2008-03-04 08:00:00
+(9 rows)</PRE
+><P>
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-SRF-SUBSCRIPTS"
+></A
+><P
+><B
+>Table 9-56. Subscript Generating Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>generate_subscripts(<TT
+CLASS="PARAMETER"
+>array anyarray</TT
+>, <TT
+CLASS="PARAMETER"
+>dim int</TT
+>)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>setof int</TT
+></TD
+><TD
+>       Generate a series comprising the given array's subscripts.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>generate_subscripts(<TT
+CLASS="PARAMETER"
+>array anyarray</TT
+>, <TT
+CLASS="PARAMETER"
+>dim int</TT
+>, <TT
+CLASS="PARAMETER"
+>reverse boolean</TT
+>)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>setof int</TT
+></TD
+><TD
+>       Generate a series comprising the given array's subscripts. When
+       <TT
+CLASS="PARAMETER"
+>reverse</TT
+> is true, the series is returned in
+       reverse order.
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   <CODE
+CLASS="FUNCTION"
+>generate_subscripts</CODE
+> is a convenience function that generates
+   the set of valid subscripts for the specified dimension of the given
+   array.
+   Zero rows are returned for arrays that do not have the requested dimension,
+   or for NULL arrays (but valid subscripts are returned for NULL array
+   elements).  Some examples follow:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>-- basic usage
+SELECT generate_subscripts('{NULL,1,NULL,2}'::int[], 1) AS s;
+ s 
+---
+ 1
+ 2
+ 3
+ 4
+(4 rows)
+
+-- presenting an array, the subscript and the subscripted
+-- value requires a subquery
+SELECT * FROM arrays;
+         a          
+--------------------
+ {-1,-2}
+ {100,200,300}
+(2 rows)
+
+SELECT a AS array, s AS subscript, a[s] AS value
+FROM (SELECT generate_subscripts(a, 1) AS s, a FROM arrays) foo;
+     array     | subscript | value
+---------------+-----------+-------
+ {-1,-2}       |         1 |    -1
+ {-1,-2}       |         2 |    -2
+ {100,200,300} |         1 |   100
+ {100,200,300} |         2 |   200
+ {100,200,300} |         3 |   300
+(5 rows)
+
+-- unnest a 2D array
+CREATE OR REPLACE FUNCTION unnest2(anyarray)
+RETURNS SETOF anyelement AS $$
+select $1[i][j]
+   from generate_subscripts($1,1) g1(i),
+        generate_subscripts($1,2) g2(j);
+$$ LANGUAGE sql IMMUTABLE;
+CREATE FUNCTION
+SELECT * FROM unnest2(ARRAY[[1,2],[3,4]]);
+ unnest2 
+---------
+       1
+       2
+       3
+       4
+(4 rows)</PRE
+><P>
+  </P
+><P
+>   When a function in the <TT
+CLASS="LITERAL"
+>FROM</TT
+> clause is suffixed
+   by <TT
+CLASS="LITERAL"
+>WITH ORDINALITY</TT
+>, a <TT
+CLASS="TYPE"
+>bigint</TT
+> column is
+   appended to the output which starts from 1 and increments by 1 for each row
+   of the function's output.  This is most useful in the case of set returning
+   functions such as <CODE
+CLASS="FUNCTION"
+>unnest()</CODE
+>.
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>-- set returning function WITH ORDINALITY
+SELECT * FROM pg_ls_dir('.') WITH ORDINALITY AS t(ls,n);
+       ls        | n
+-----------------+----
+ pg_serial       |  1
+ pg_twophase     |  2
+ postmaster.opts |  3
+ pg_notify       |  4
+ postgresql.conf |  5
+ pg_tblspc       |  6
+ logfile         |  7
+ base            |  8
+ postmaster.pid  |  9
+ pg_ident.conf   | 10
+ global          | 11
+ pg_clog         | 12
+ pg_snapshots    | 13
+ pg_multixact    | 14
+ PG_VERSION      | 15
+ pg_xlog         | 16
+ pg_hba.conf     | 17
+ pg_stat_tmp     | 18
+ pg_subtrans     | 19
+(19 rows)</PRE
+><P>
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions-comparisons.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="functions-info.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Row and Array Comparisons</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>System Information Functions</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

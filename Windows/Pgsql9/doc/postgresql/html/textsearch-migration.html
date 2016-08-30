@@ -1,0 +1,275 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Migration from Pre-8.3 Text Search</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Full Text Search"
+HREF="textsearch.html"><LINK
+REL="PREVIOUS"
+TITLE="Limitations"
+HREF="textsearch-limitations.html"><LINK
+REL="NEXT"
+TITLE="Concurrency Control"
+HREF="mvcc.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Limitations"
+HREF="textsearch-limitations.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="textsearch.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 12. Full Text Search</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Concurrency Control"
+HREF="mvcc.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="TEXTSEARCH-MIGRATION"
+>12.12. Migration from Pre-8.3 Text Search</A
+></H1
+><P
+>   Applications that use the <A
+HREF="tsearch2.html"
+>tsearch2</A
+>
+   module for text searching will need some adjustments to work
+   with the
+   built-in features:
+  </P
+><P
+></P
+><UL
+><LI
+><P
+>     Some functions have been renamed or had small adjustments in their
+     argument lists, and all of them are now in the <TT
+CLASS="LITERAL"
+>pg_catalog</TT
+>
+     schema, whereas in a previous installation they would have been in
+     <TT
+CLASS="LITERAL"
+>public</TT
+> or another non-system schema.  There is a new
+     version of <SPAN
+CLASS="APPLICATION"
+>tsearch2</SPAN
+>
+     that provides a compatibility layer to solve most problems in this
+     area.
+    </P
+></LI
+><LI
+><P
+>     The old <SPAN
+CLASS="APPLICATION"
+>tsearch2</SPAN
+> functions and other objects
+     <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>must</I
+></SPAN
+> be suppressed when loading <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>
+     output from a pre-8.3 database.  While many of them won't load anyway,
+     a few will and then cause problems.  One simple way to deal with this
+     is to load the new <SPAN
+CLASS="APPLICATION"
+>tsearch2</SPAN
+> module before restoring
+     the dump; then it will block the old objects from being loaded.
+    </P
+></LI
+><LI
+><P
+>     Text search configuration setup is completely different now.
+     Instead of manually inserting rows into configuration tables,
+     search is configured through the specialized SQL commands shown
+     earlier in this chapter.  There is no automated
+     support for converting an existing custom configuration for 8.3;
+     you're on your own here.
+    </P
+></LI
+><LI
+><P
+>     Most types of dictionaries rely on some outside-the-database
+     configuration files.  These are largely compatible with pre-8.3
+     usage, but note the following differences:
+
+     <P
+></P
+></P><UL
+COMPACT="COMPACT"
+><LI
+STYLE="list-style-type: disc"
+><P
+>        Configuration files now must be placed in a single specified
+        directory (<TT
+CLASS="FILENAME"
+>$SHAREDIR/tsearch_data</TT
+>), and must have
+        a specific extension depending on the type of file, as noted
+        previously in the descriptions of the various dictionary types.
+        This restriction was added to forestall security problems.
+       </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>        Configuration files must be encoded in UTF-8 encoding,
+        regardless of what database encoding is used.
+       </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>        In thesaurus configuration files, stop words must be marked with
+        <TT
+CLASS="LITERAL"
+>?</TT
+>.
+       </P
+></LI
+></UL
+><P>
+    </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="textsearch-limitations.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="mvcc.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Limitations</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="textsearch.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Concurrency Control</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,1346 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Controlling Text Search</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Full Text Search"
+HREF="textsearch.html"><LINK
+REL="PREVIOUS"
+TITLE="Tables and Indexes"
+HREF="textsearch-tables.html"><LINK
+REL="NEXT"
+TITLE="Additional Features"
+HREF="textsearch-features.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Tables and Indexes"
+HREF="textsearch-tables.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="textsearch.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 12. Full Text Search</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Additional Features"
+HREF="textsearch-features.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="TEXTSEARCH-CONTROLS"
+>12.3. Controlling Text Search</A
+></H1
+><P
+>   To implement full text searching there must be a function to create a
+   <TT
+CLASS="TYPE"
+>tsvector</TT
+> from a document and a <TT
+CLASS="TYPE"
+>tsquery</TT
+> from a
+   user query. Also, we need to return results in a useful order, so we need
+   a function that compares documents with respect to their relevance to
+   the query. It's also important to be able to display the results nicely.
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> provides support for all of these
+   functions.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="TEXTSEARCH-PARSING-DOCUMENTS"
+>12.3.1. Parsing Documents</A
+></H2
+><P
+>    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> provides the
+    function <CODE
+CLASS="FUNCTION"
+>to_tsvector</CODE
+> for converting a document to
+    the <TT
+CLASS="TYPE"
+>tsvector</TT
+> data type.
+   </P
+><PRE
+CLASS="SYNOPSIS"
+>to_tsvector([<SPAN
+CLASS="OPTIONAL"
+> <TT
+CLASS="REPLACEABLE"
+><I
+>config</I
+></TT
+> <TT
+CLASS="TYPE"
+>regconfig</TT
+>, </SPAN
+>] <TT
+CLASS="REPLACEABLE"
+><I
+>document</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>) returns <TT
+CLASS="TYPE"
+>tsvector</TT
+></PRE
+><P
+>    <CODE
+CLASS="FUNCTION"
+>to_tsvector</CODE
+> parses a textual document into tokens,
+    reduces the tokens to lexemes, and returns a <TT
+CLASS="TYPE"
+>tsvector</TT
+> which
+    lists the lexemes together with their positions in the document.
+    The document is processed according to the specified or default
+    text search configuration.
+    Here is a simple example:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT to_tsvector('english', 'a fat  cat sat on a mat - it ate a fat rats');
+                  to_tsvector
+-----------------------------------------------------
+ 'ate':9 'cat':3 'fat':2,11 'mat':7 'rat':12 'sat':4</PRE
+><P>
+   </P
+><P
+>    In the example above we see that the resulting <TT
+CLASS="TYPE"
+>tsvector</TT
+> does not
+    contain the words <TT
+CLASS="LITERAL"
+>a</TT
+>, <TT
+CLASS="LITERAL"
+>on</TT
+>, or
+    <TT
+CLASS="LITERAL"
+>it</TT
+>, the word <TT
+CLASS="LITERAL"
+>rats</TT
+> became
+    <TT
+CLASS="LITERAL"
+>rat</TT
+>, and the punctuation sign <TT
+CLASS="LITERAL"
+>-</TT
+> was
+    ignored.
+   </P
+><P
+>    The <CODE
+CLASS="FUNCTION"
+>to_tsvector</CODE
+> function internally calls a parser
+    which breaks the document text into tokens and assigns a type to
+    each token.  For each token, a list of
+    dictionaries (<A
+HREF="textsearch-dictionaries.html"
+>Section 12.6</A
+>) is consulted,
+    where the list can vary depending on the token type.  The first dictionary
+    that <I
+CLASS="FIRSTTERM"
+>recognizes</I
+> the token emits one or more normalized
+    <I
+CLASS="FIRSTTERM"
+>lexemes</I
+> to represent the token.  For example,
+    <TT
+CLASS="LITERAL"
+>rats</TT
+> became <TT
+CLASS="LITERAL"
+>rat</TT
+> because one of the
+    dictionaries recognized that the word <TT
+CLASS="LITERAL"
+>rats</TT
+> is a plural
+    form of <TT
+CLASS="LITERAL"
+>rat</TT
+>.  Some words are recognized as
+    <I
+CLASS="FIRSTTERM"
+>stop words</I
+> (<A
+HREF="textsearch-dictionaries.html#TEXTSEARCH-STOPWORDS"
+>Section 12.6.1</A
+>), which
+    causes them to be ignored since they occur too frequently to be useful in
+    searching.  In our example these are
+    <TT
+CLASS="LITERAL"
+>a</TT
+>, <TT
+CLASS="LITERAL"
+>on</TT
+>, and <TT
+CLASS="LITERAL"
+>it</TT
+>.
+    If no dictionary in the list recognizes the token then it is also ignored.
+    In this example that happened to the punctuation sign <TT
+CLASS="LITERAL"
+>-</TT
+>
+    because there are in fact no dictionaries assigned for its token type
+    (<TT
+CLASS="LITERAL"
+>Space symbols</TT
+>), meaning space tokens will never be
+    indexed. The choices of parser, dictionaries and which types of tokens to
+    index are determined by the selected text search configuration (<A
+HREF="textsearch-configuration.html"
+>Section 12.7</A
+>).  It is possible to have
+    many different configurations in the same database, and predefined
+    configurations are available for various languages. In our example
+    we used the default configuration <TT
+CLASS="LITERAL"
+>english</TT
+> for the
+    English language.
+   </P
+><P
+>    The function <CODE
+CLASS="FUNCTION"
+>setweight</CODE
+> can be used to label the
+    entries of a <TT
+CLASS="TYPE"
+>tsvector</TT
+> with a given <I
+CLASS="FIRSTTERM"
+>weight</I
+>,
+    where a weight is one of the letters <TT
+CLASS="LITERAL"
+>A</TT
+>, <TT
+CLASS="LITERAL"
+>B</TT
+>,
+    <TT
+CLASS="LITERAL"
+>C</TT
+>, or <TT
+CLASS="LITERAL"
+>D</TT
+>.
+    This is typically used to mark entries coming from
+    different parts of a document, such as title versus body.  Later, this
+    information can be used for ranking of search results.
+   </P
+><P
+>    Because <CODE
+CLASS="FUNCTION"
+>to_tsvector</CODE
+>(<TT
+CLASS="LITERAL"
+>NULL</TT
+>) will
+    return <TT
+CLASS="LITERAL"
+>NULL</TT
+>, it is recommended to use
+    <CODE
+CLASS="FUNCTION"
+>coalesce</CODE
+> whenever a field might be null.
+    Here is the recommended method for creating
+    a <TT
+CLASS="TYPE"
+>tsvector</TT
+> from a structured document:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>UPDATE tt SET ti =
+    setweight(to_tsvector(coalesce(title,'')), 'A')    ||
+    setweight(to_tsvector(coalesce(keyword,'')), 'B')  ||
+    setweight(to_tsvector(coalesce(abstract,'')), 'C') ||
+    setweight(to_tsvector(coalesce(body,'')), 'D');</PRE
+><P>
+
+    Here we have used <CODE
+CLASS="FUNCTION"
+>setweight</CODE
+> to label the source
+    of each lexeme in the finished <TT
+CLASS="TYPE"
+>tsvector</TT
+>, and then merged
+    the labeled <TT
+CLASS="TYPE"
+>tsvector</TT
+> values using the <TT
+CLASS="TYPE"
+>tsvector</TT
+>
+    concatenation operator <TT
+CLASS="LITERAL"
+>||</TT
+>.  (<A
+HREF="textsearch-features.html#TEXTSEARCH-MANIPULATE-TSVECTOR"
+>Section 12.4.1</A
+> gives details about these
+    operations.)
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="TEXTSEARCH-PARSING-QUERIES"
+>12.3.2. Parsing Queries</A
+></H2
+><P
+>    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> provides the
+    functions <CODE
+CLASS="FUNCTION"
+>to_tsquery</CODE
+> and
+    <CODE
+CLASS="FUNCTION"
+>plainto_tsquery</CODE
+> for converting a query to
+    the <TT
+CLASS="TYPE"
+>tsquery</TT
+> data type.  <CODE
+CLASS="FUNCTION"
+>to_tsquery</CODE
+>
+    offers access to more features than <CODE
+CLASS="FUNCTION"
+>plainto_tsquery</CODE
+>,
+    but is less forgiving about its input.
+   </P
+><PRE
+CLASS="SYNOPSIS"
+>to_tsquery([<SPAN
+CLASS="OPTIONAL"
+> <TT
+CLASS="REPLACEABLE"
+><I
+>config</I
+></TT
+> <TT
+CLASS="TYPE"
+>regconfig</TT
+>, </SPAN
+>] <TT
+CLASS="REPLACEABLE"
+><I
+>querytext</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>) returns <TT
+CLASS="TYPE"
+>tsquery</TT
+></PRE
+><P
+>    <CODE
+CLASS="FUNCTION"
+>to_tsquery</CODE
+> creates a <TT
+CLASS="TYPE"
+>tsquery</TT
+> value from
+    <TT
+CLASS="REPLACEABLE"
+><I
+>querytext</I
+></TT
+>, which must consist of single tokens
+    separated by the Boolean operators <TT
+CLASS="LITERAL"
+>&amp;</TT
+> (AND),
+    <TT
+CLASS="LITERAL"
+>|</TT
+> (OR) and <TT
+CLASS="LITERAL"
+>!</TT
+> (NOT).  These operators
+    can be grouped using parentheses.  In other words, the input to
+    <CODE
+CLASS="FUNCTION"
+>to_tsquery</CODE
+> must already follow the general rules for
+    <TT
+CLASS="TYPE"
+>tsquery</TT
+> input, as described in <A
+HREF="datatype-textsearch.html"
+>Section 8.11</A
+>.  The difference is that while basic
+    <TT
+CLASS="TYPE"
+>tsquery</TT
+> input takes the tokens at face value,
+    <CODE
+CLASS="FUNCTION"
+>to_tsquery</CODE
+> normalizes each token to a lexeme using
+    the specified or default configuration, and discards any tokens that are
+    stop words according to the configuration.  For example:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT to_tsquery('english', 'The &amp; Fat &amp; Rats');
+  to_tsquery   
+---------------
+ 'fat' &amp; 'rat'</PRE
+><P>
+
+    As in basic <TT
+CLASS="TYPE"
+>tsquery</TT
+> input, weight(s) can be attached to each
+    lexeme to restrict it to match only <TT
+CLASS="TYPE"
+>tsvector</TT
+> lexemes of those
+    weight(s).  For example:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT to_tsquery('english', 'Fat | Rats:AB');
+    to_tsquery    
+------------------
+ 'fat' | 'rat':AB</PRE
+><P>
+
+    Also, <TT
+CLASS="LITERAL"
+>*</TT
+> can be attached to a lexeme to specify prefix matching:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT to_tsquery('supern:*A &amp; star:A*B');
+        to_tsquery        
+--------------------------
+ 'supern':*A &amp; 'star':*AB</PRE
+><P>
+
+    Such a lexeme will match any word in a <TT
+CLASS="TYPE"
+>tsvector</TT
+> that begins
+    with the given string.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>to_tsquery</CODE
+> can also accept single-quoted
+    phrases.  This is primarily useful when the configuration includes a
+    thesaurus dictionary that may trigger on such phrases.
+    In the example below, a thesaurus contains the rule <TT
+CLASS="LITERAL"
+>supernovae
+    stars : sn</TT
+>:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT to_tsquery('''supernovae stars'' &amp; !crab');
+  to_tsquery
+---------------
+ 'sn' &amp; !'crab'</PRE
+><P>
+
+    Without quotes, <CODE
+CLASS="FUNCTION"
+>to_tsquery</CODE
+> will generate a syntax
+    error for tokens that are not separated by an AND or OR operator.
+   </P
+><PRE
+CLASS="SYNOPSIS"
+>plainto_tsquery([<SPAN
+CLASS="OPTIONAL"
+> <TT
+CLASS="REPLACEABLE"
+><I
+>config</I
+></TT
+> <TT
+CLASS="TYPE"
+>regconfig</TT
+>, </SPAN
+>] <TT
+CLASS="REPLACEABLE"
+><I
+>querytext</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>) returns <TT
+CLASS="TYPE"
+>tsquery</TT
+></PRE
+><P
+>    <CODE
+CLASS="FUNCTION"
+>plainto_tsquery</CODE
+> transforms unformatted text
+    <TT
+CLASS="REPLACEABLE"
+><I
+>querytext</I
+></TT
+> to <TT
+CLASS="TYPE"
+>tsquery</TT
+>.
+    The text is parsed and normalized much as for <CODE
+CLASS="FUNCTION"
+>to_tsvector</CODE
+>,
+    then the <TT
+CLASS="LITERAL"
+>&amp;</TT
+> (AND) Boolean operator is inserted
+    between surviving words.
+   </P
+><P
+>    Example:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT plainto_tsquery('english', 'The Fat Rats');
+ plainto_tsquery 
+-----------------
+ 'fat' &amp; 'rat'</PRE
+><P>
+
+    Note that <CODE
+CLASS="FUNCTION"
+>plainto_tsquery</CODE
+> cannot
+    recognize Boolean operators, weight labels, or prefix-match labels
+    in its input:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT plainto_tsquery('english', 'The Fat &amp; Rats:C');
+   plainto_tsquery   
+---------------------
+ 'fat' &amp; 'rat' &amp; 'c'</PRE
+><P>
+
+    Here, all the input punctuation was discarded as being space symbols.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="TEXTSEARCH-RANKING"
+>12.3.3. Ranking Search Results</A
+></H2
+><P
+>    Ranking attempts to measure how relevant documents are to a particular
+    query, so that when there are many matches the most relevant ones can be
+    shown first.  <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> provides two
+    predefined ranking functions, which take into account lexical, proximity,
+    and structural information; that is, they consider how often the query
+    terms appear in the document, how close together the terms are in the
+    document, and how important is the part of the document where they occur.
+    However, the concept of relevancy is vague and very application-specific.
+    Different applications might require additional information for ranking,
+    e.g., document modification time.  The built-in ranking functions are only
+    examples.  You can write your own ranking functions and/or combine their
+    results with additional factors to fit your specific needs.
+   </P
+><P
+>    The two ranking functions currently available are:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>&#13;
+       <TT
+CLASS="LITERAL"
+>ts_rank([<SPAN
+CLASS="OPTIONAL"
+> <TT
+CLASS="REPLACEABLE"
+><I
+>weights</I
+></TT
+> <TT
+CLASS="TYPE"
+>float4[]</TT
+>, </SPAN
+>] <TT
+CLASS="REPLACEABLE"
+><I
+>vector</I
+></TT
+> <TT
+CLASS="TYPE"
+>tsvector</TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>query</I
+></TT
+> <TT
+CLASS="TYPE"
+>tsquery</TT
+> [<SPAN
+CLASS="OPTIONAL"
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>normalization</I
+></TT
+> <TT
+CLASS="TYPE"
+>integer</TT
+> </SPAN
+>]) returns <TT
+CLASS="TYPE"
+>float4</TT
+></TT
+></DT
+><DD
+><P
+>        Ranks vectors based on the frequency of their matching lexemes.
+       </P
+></DD
+><DT
+>&#13;
+       <TT
+CLASS="LITERAL"
+>ts_rank_cd([<SPAN
+CLASS="OPTIONAL"
+> <TT
+CLASS="REPLACEABLE"
+><I
+>weights</I
+></TT
+> <TT
+CLASS="TYPE"
+>float4[]</TT
+>, </SPAN
+>] <TT
+CLASS="REPLACEABLE"
+><I
+>vector</I
+></TT
+> <TT
+CLASS="TYPE"
+>tsvector</TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>query</I
+></TT
+> <TT
+CLASS="TYPE"
+>tsquery</TT
+> [<SPAN
+CLASS="OPTIONAL"
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>normalization</I
+></TT
+> <TT
+CLASS="TYPE"
+>integer</TT
+> </SPAN
+>]) returns <TT
+CLASS="TYPE"
+>float4</TT
+></TT
+></DT
+><DD
+><P
+>        This function computes the <I
+CLASS="FIRSTTERM"
+>cover density</I
+>
+        ranking for the given document vector and query, as described in
+        Clarke, Cormack, and Tudhope's "Relevance Ranking for One to Three
+        Term Queries" in the journal "Information Processing and Management",
+        1999.  Cover density is similar to <CODE
+CLASS="FUNCTION"
+>ts_rank</CODE
+> ranking
+        except that the proximity of matching lexemes to each other is
+        taken into consideration.
+       </P
+><P
+>        This function requires lexeme positional information to perform
+        its calculation.  Therefore, it ignores any <SPAN
+CLASS="QUOTE"
+>"stripped"</SPAN
+>
+        lexemes in the <TT
+CLASS="TYPE"
+>tsvector</TT
+>.  If there are no unstripped
+        lexemes in the input, the result will be zero.  (See <A
+HREF="textsearch-features.html#TEXTSEARCH-MANIPULATE-TSVECTOR"
+>Section 12.4.1</A
+> for more information
+        about the <CODE
+CLASS="FUNCTION"
+>strip</CODE
+> function and positional information
+        in <TT
+CLASS="TYPE"
+>tsvector</TT
+>s.)
+       </P
+></DD
+></DL
+></DIV
+><P>
+
+   </P
+><P
+>    For both these functions,
+    the optional <TT
+CLASS="REPLACEABLE"
+><I
+>weights</I
+></TT
+>
+    argument offers the ability to weigh word instances more or less
+    heavily depending on how they are labeled.  The weight arrays specify
+    how heavily to weigh each category of word, in the order:
+
+</P><PRE
+CLASS="SYNOPSIS"
+>{D-weight, C-weight, B-weight, A-weight}</PRE
+><P>
+
+    If no <TT
+CLASS="REPLACEABLE"
+><I
+>weights</I
+></TT
+> are provided,
+    then these defaults are used:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>{0.1, 0.2, 0.4, 1.0}</PRE
+><P>
+
+    Typically weights are used to mark words from special areas of the
+    document, like the title or an initial abstract, so they can be
+    treated with more or less importance than words in the document body.
+   </P
+><P
+>    Since a longer document has a greater chance of containing a query term
+    it is reasonable to take into account document size, e.g., a hundred-word
+    document with five instances of a search word is probably more relevant
+    than a thousand-word document with five instances.  Both ranking functions
+    take an integer <TT
+CLASS="REPLACEABLE"
+><I
+>normalization</I
+></TT
+> option that
+    specifies whether and how a document's length should impact its rank.
+    The integer option controls several behaviors, so it is a bit mask:
+    you can specify one or more behaviors using
+    <TT
+CLASS="LITERAL"
+>|</TT
+> (for example, <TT
+CLASS="LITERAL"
+>2|4</TT
+>).
+
+    <P
+></P
+></P><UL
+COMPACT="COMPACT"
+><LI
+STYLE="list-style-type: disc"
+><P
+>       0 (the default) ignores the document length
+      </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>       1 divides the rank by 1 + the logarithm of the document length
+      </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>       2 divides the rank by the document length
+      </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>       4 divides the rank by the mean harmonic distance between extents
+       (this is implemented only by <CODE
+CLASS="FUNCTION"
+>ts_rank_cd</CODE
+>)
+      </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>       8 divides the rank by the number of unique words in document
+      </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>       16 divides the rank by 1 + the logarithm of the number
+       of unique words in document
+      </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>       32 divides the rank by itself + 1
+      </P
+></LI
+></UL
+><P>
+
+    If more than one flag bit is specified, the transformations are
+    applied in the order listed.
+   </P
+><P
+>    It is important to note that the ranking functions do not use any global
+    information, so it is impossible to produce a fair normalization to 1% or
+    100% as sometimes desired.  Normalization option 32
+    (<TT
+CLASS="LITERAL"
+>rank/(rank+1)</TT
+>) can be applied to scale all ranks
+    into the range zero to one, but of course this is just a cosmetic change;
+    it will not affect the ordering of the search results.
+   </P
+><P
+>    Here is an example that selects only the ten highest-ranked matches:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT title, ts_rank_cd(textsearch, query) AS rank
+FROM apod, to_tsquery('neutrino|(dark &amp; matter)') query
+WHERE query @@ textsearch
+ORDER BY rank DESC
+LIMIT 10;
+                     title                     |   rank
+-----------------------------------------------+----------
+ Neutrinos in the Sun                          |      3.1
+ The Sudbury Neutrino Detector                 |      2.4
+ A MACHO View of Galactic Dark Matter          |  2.01317
+ Hot Gas and Dark Matter                       |  1.91171
+ The Virgo Cluster: Hot Plasma and Dark Matter |  1.90953
+ Rafting for Solar Neutrinos                   |      1.9
+ NGC 4650A: Strange Galaxy and Dark Matter     |  1.85774
+ Hot Gas and Dark Matter                       |   1.6123
+ Ice Fishing for Cosmic Neutrinos              |      1.6
+ Weak Lensing Distorts the Universe            | 0.818218</PRE
+><P>
+
+    This is the same example using normalized ranking:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT title, ts_rank_cd(textsearch, query, 32 /* rank/(rank+1) */ ) AS rank
+FROM apod, to_tsquery('neutrino|(dark &amp; matter)') query
+WHERE  query @@ textsearch
+ORDER BY rank DESC
+LIMIT 10;
+                     title                     |        rank
+-----------------------------------------------+-------------------
+ Neutrinos in the Sun                          | 0.756097569485493
+ The Sudbury Neutrino Detector                 | 0.705882361190954
+ A MACHO View of Galactic Dark Matter          | 0.668123210574724
+ Hot Gas and Dark Matter                       |  0.65655958650282
+ The Virgo Cluster: Hot Plasma and Dark Matter | 0.656301290640973
+ Rafting for Solar Neutrinos                   | 0.655172410958162
+ NGC 4650A: Strange Galaxy and Dark Matter     | 0.650072921219637
+ Hot Gas and Dark Matter                       | 0.617195790024749
+ Ice Fishing for Cosmic Neutrinos              | 0.615384618911517
+ Weak Lensing Distorts the Universe            | 0.450010798361481</PRE
+><P>
+   </P
+><P
+>    Ranking can be expensive since it requires consulting the
+    <TT
+CLASS="TYPE"
+>tsvector</TT
+> of each matching document, which can be I/O bound and
+    therefore slow. Unfortunately, it is almost impossible to avoid since
+    practical queries often result in large numbers of matches.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="TEXTSEARCH-HEADLINE"
+>12.3.4. Highlighting Results</A
+></H2
+><P
+>    To present search results it is ideal to show a part of each document and
+    how it is related to the query. Usually, search engines show fragments of
+    the document with marked search terms.  <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+    provides a function <CODE
+CLASS="FUNCTION"
+>ts_headline</CODE
+> that
+    implements this functionality.
+   </P
+><PRE
+CLASS="SYNOPSIS"
+>ts_headline([<SPAN
+CLASS="OPTIONAL"
+> <TT
+CLASS="REPLACEABLE"
+><I
+>config</I
+></TT
+> <TT
+CLASS="TYPE"
+>regconfig</TT
+>, </SPAN
+>] <TT
+CLASS="REPLACEABLE"
+><I
+>document</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>query</I
+></TT
+> <TT
+CLASS="TYPE"
+>tsquery</TT
+> [<SPAN
+CLASS="OPTIONAL"
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>options</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+> </SPAN
+>]) returns <TT
+CLASS="TYPE"
+>text</TT
+></PRE
+><P
+>    <CODE
+CLASS="FUNCTION"
+>ts_headline</CODE
+> accepts a document along
+    with a query, and returns an excerpt from
+    the document in which terms from the query are highlighted.  The
+    configuration to be used to parse the document can be specified by
+    <TT
+CLASS="REPLACEABLE"
+><I
+>config</I
+></TT
+>; if <TT
+CLASS="REPLACEABLE"
+><I
+>config</I
+></TT
+>
+    is omitted, the
+    <TT
+CLASS="VARNAME"
+>default_text_search_config</TT
+> configuration is used.
+   </P
+><P
+>    If an <TT
+CLASS="REPLACEABLE"
+><I
+>options</I
+></TT
+> string is specified it must
+    consist of a comma-separated list of one or more
+    <TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+><TT
+CLASS="LITERAL"
+>=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> pairs.
+    The available options are:
+
+    <P
+></P
+></P><UL
+COMPACT="COMPACT"
+><LI
+STYLE="list-style-type: disc"
+><P
+>       <TT
+CLASS="LITERAL"
+>StartSel</TT
+>, <TT
+CLASS="LITERAL"
+>StopSel</TT
+>: the strings with
+       which to delimit query words appearing in the document, to distinguish
+       them from other excerpted words.  You must double-quote these strings
+       if they contain spaces or commas.
+      </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>       <TT
+CLASS="LITERAL"
+>MaxWords</TT
+>, <TT
+CLASS="LITERAL"
+>MinWords</TT
+>: these numbers
+       determine the longest and shortest headlines to output.
+      </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>       <TT
+CLASS="LITERAL"
+>ShortWord</TT
+>: words of this length or less will be
+       dropped at the start and end of a headline. The default
+       value of three eliminates common English articles.
+      </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>       <TT
+CLASS="LITERAL"
+>HighlightAll</TT
+>: Boolean flag;  if
+       <TT
+CLASS="LITERAL"
+>true</TT
+> the whole document will be used as the
+       headline, ignoring the preceding three parameters.
+      </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>       <TT
+CLASS="LITERAL"
+>MaxFragments</TT
+>: maximum number of text excerpts
+       or fragments to display.  The default value of zero selects a
+       non-fragment-oriented headline generation method.  A value greater than
+       zero selects fragment-based headline generation.  This method
+       finds text fragments with as many query words as possible and
+       stretches those fragments around the query words.  As a result
+       query words are close to the middle of each fragment and have words on
+       each side. Each fragment will be of at most <TT
+CLASS="LITERAL"
+>MaxWords</TT
+> and
+       words of length <TT
+CLASS="LITERAL"
+>ShortWord</TT
+> or less are dropped at the start
+       and end of each fragment. If not all query words are found in the
+       document, then a single fragment of the first <TT
+CLASS="LITERAL"
+>MinWords</TT
+>
+       in the document will be displayed.
+      </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>       <TT
+CLASS="LITERAL"
+>FragmentDelimiter</TT
+>: When more than one fragment is
+       displayed, the fragments will be separated by this string.
+      </P
+></LI
+></UL
+><P>
+
+    Any unspecified options receive these defaults:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>StartSel=&lt;b&gt;, StopSel=&lt;/b&gt;,
+MaxWords=35, MinWords=15, ShortWord=3, HighlightAll=FALSE,
+MaxFragments=0, FragmentDelimiter=" ... "</PRE
+><P>
+   </P
+><P
+>    For example:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT ts_headline('english',
+  'The most common type of search
+is to find all documents containing given query terms
+and return them in order of their similarity to the
+query.',
+  to_tsquery('query &amp; similarity'));
+                        ts_headline                         
+------------------------------------------------------------
+ containing given &lt;b&gt;query&lt;/b&gt; terms
+ and return them in order of their &lt;b&gt;similarity&lt;/b&gt; to the
+ &lt;b&gt;query&lt;/b&gt;.
+
+SELECT ts_headline('english',
+  'The most common type of search
+is to find all documents containing given query terms
+and return them in order of their similarity to the
+query.',
+  to_tsquery('query &amp; similarity'),
+  'StartSel = &lt;, StopSel = &gt;');
+                      ts_headline                      
+-------------------------------------------------------
+ containing given &lt;query&gt; terms
+ and return them in order of their &lt;similarity&gt; to the
+ &lt;query&gt;.</PRE
+><P>
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>ts_headline</CODE
+> uses the original document, not a
+    <TT
+CLASS="TYPE"
+>tsvector</TT
+> summary, so it can be slow and should be used with
+    care.  A typical mistake is to call <CODE
+CLASS="FUNCTION"
+>ts_headline</CODE
+> for
+    <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>every</I
+></SPAN
+> matching document when only ten documents are
+    to be shown. <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> subqueries can help; here is an
+    example:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT id, ts_headline(body, q), rank
+FROM (SELECT id, body, q, ts_rank_cd(ti, q) AS rank
+      FROM apod, to_tsquery('stars') q
+      WHERE ti @@ q
+      ORDER BY rank DESC
+      LIMIT 10) AS foo;</PRE
+><P>
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="textsearch-tables.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="textsearch-features.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Tables and Indexes</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="textsearch.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Additional Features</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

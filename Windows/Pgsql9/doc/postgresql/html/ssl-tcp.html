@@ -1,0 +1,664 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Secure TCP/IP Connections with SSL</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Setup and Operation"
+HREF="runtime.html"><LINK
+REL="PREVIOUS"
+TITLE="Encryption Options"
+HREF="encryption-options.html"><LINK
+REL="NEXT"
+TITLE="Secure TCP/IP Connections with SSH Tunnels"
+HREF="ssh-tunnels.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Encryption Options"
+HREF="encryption-options.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 17. Server Setup and Operation</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Secure TCP/IP Connections with SSH Tunnels"
+HREF="ssh-tunnels.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="SSL-TCP"
+>17.9. Secure TCP/IP Connections with SSL</A
+></H1
+><P
+>   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> has native support for using
+   <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> connections to encrypt client/server communications
+   for increased security. This requires that
+   <SPAN
+CLASS="PRODUCTNAME"
+>OpenSSL</SPAN
+> is installed on both client and
+   server systems and that support in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> is
+   enabled at build time (see <A
+HREF="installation.html"
+>Chapter 15</A
+>).
+  </P
+><P
+>   With <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> support compiled in, the
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> server can be started with
+   <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> enabled by setting the parameter
+   <A
+HREF="runtime-config-connection.html#GUC-SSL"
+>ssl</A
+> to <TT
+CLASS="LITERAL"
+>on</TT
+> in
+   <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>.  The server will listen for both normal
+   and <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> connections on the same TCP port, and will negotiate
+   with any connecting client on whether to use <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+>.  By
+   default, this is at the client's option; see <A
+HREF="auth-pg-hba-conf.html"
+>Section 19.1</A
+> about how to set up the server to require
+   use of <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> for some or all connections.
+  </P
+><P
+>   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> reads the system-wide
+   <SPAN
+CLASS="PRODUCTNAME"
+>OpenSSL</SPAN
+> configuration file. By default, this
+   file is named <TT
+CLASS="FILENAME"
+>openssl.cnf</TT
+> and is located in the
+   directory reported by <TT
+CLASS="LITERAL"
+>openssl version -d</TT
+>.
+   This default can be overridden by setting environment variable
+   <TT
+CLASS="ENVAR"
+>OPENSSL_CONF</TT
+> to the name of the desired configuration file.
+  </P
+><P
+>   <SPAN
+CLASS="PRODUCTNAME"
+>OpenSSL</SPAN
+> supports a wide range of ciphers
+   and authentication algorithms, of varying strength.  While a list of
+   ciphers can be specified in the <SPAN
+CLASS="PRODUCTNAME"
+>OpenSSL</SPAN
+>
+   configuration file, you can specify ciphers specifically for use by
+   the database server by modifying <A
+HREF="runtime-config-connection.html#GUC-SSL-CIPHERS"
+>ssl_ciphers</A
+> in
+   <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>.
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    It is possible to have authentication without encryption overhead by
+    using <TT
+CLASS="LITERAL"
+>NULL-SHA</TT
+> or <TT
+CLASS="LITERAL"
+>NULL-MD5</TT
+> ciphers.  However,
+    a man-in-the-middle could read and pass communications between client
+    and server.  Also, encryption overhead is minimal compared to the
+    overhead of authentication.  For these reasons NULL ciphers are not
+    recommended.
+   </P
+></BLOCKQUOTE
+></DIV
+><P
+>   To start in <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> mode, files containing the server certificate
+   and private key must exist.  By default, these files are expected to be
+   named <TT
+CLASS="FILENAME"
+>server.crt</TT
+> and <TT
+CLASS="FILENAME"
+>server.key</TT
+>, respectively, in
+   the server's data directory, but other names and locations can be specified
+   using the configuration parameters <A
+HREF="runtime-config-connection.html#GUC-SSL-CERT-FILE"
+>ssl_cert_file</A
+>
+   and <A
+HREF="runtime-config-connection.html#GUC-SSL-KEY-FILE"
+>ssl_key_file</A
+>.
+   On Unix systems, the permissions on <TT
+CLASS="FILENAME"
+>server.key</TT
+> must
+   disallow any access to world or group; achieve this by the command
+   <TT
+CLASS="COMMAND"
+>chmod 0600 server.key</TT
+>.
+   If the private key is protected with a passphrase, the
+   server will prompt for the passphrase and will not start until it has
+   been entered.
+  </P
+><P
+>   In some cases, the server certificate might be signed by an
+   <SPAN
+CLASS="QUOTE"
+>"intermediate"</SPAN
+> certificate authority, rather than one that is
+   directly trusted by clients.  To use such a certificate, append the
+   certificate of the signing authority to the <TT
+CLASS="FILENAME"
+>server.crt</TT
+> file,
+   then its parent authority's certificate, and so on up to a certificate
+   authority, <SPAN
+CLASS="QUOTE"
+>"root"</SPAN
+> or <SPAN
+CLASS="QUOTE"
+>"intermediate"</SPAN
+>, that is trusted by
+   clients, i.e. signed by a certificate in the clients'
+   <TT
+CLASS="FILENAME"
+>root.crt</TT
+> files.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="SSL-CLIENT-CERTIFICATES"
+>17.9.1. Using Client Certificates</A
+></H2
+><P
+>   To require the client to supply a trusted certificate, place
+   certificates of the certificate authorities (<ACRONYM
+CLASS="ACRONYM"
+>CA</ACRONYM
+>s)
+   you trust in the file <TT
+CLASS="FILENAME"
+>root.crt</TT
+> in the data
+   directory, set the parameter <A
+HREF="runtime-config-connection.html#GUC-SSL-CA-FILE"
+>ssl_ca_file</A
+> in
+   <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> to <TT
+CLASS="LITERAL"
+>root.crt</TT
+>,
+   and set the <TT
+CLASS="LITERAL"
+>clientcert</TT
+> parameter
+   to 1 on the appropriate <TT
+CLASS="LITERAL"
+>hostssl</TT
+> line(s) in
+   <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+>.
+   A certificate will then be requested from the client during
+   SSL connection startup.  (See <A
+HREF="libpq-ssl.html"
+>Section 31.18</A
+> for a
+   description of how to set up certificates on the client.)  The server will
+   verify that the client's certificate is signed by one of the trusted
+   certificate authorities.  If intermediate <ACRONYM
+CLASS="ACRONYM"
+>CA</ACRONYM
+>s appear in
+   <TT
+CLASS="FILENAME"
+>root.crt</TT
+>, the file must also contain certificate
+   chains to their root <ACRONYM
+CLASS="ACRONYM"
+>CA</ACRONYM
+>s.  Certificate Revocation List
+   (CRL) entries
+   are also checked if the parameter <A
+HREF="runtime-config-connection.html#GUC-SSL-CRL-FILE"
+>ssl_crl_file</A
+> is set.
+   
+   (See <A
+HREF="http://h71000.www7.hp.com/doc/83final/ba554_90007/ch04s02.html"
+TARGET="_top"
+>http://h71000.www7.hp.com/doc/83final/ba554_90007/ch04s02.html</A
+>
+   for diagrams showing SSL certificate usage.)
+  </P
+><P
+>   The <TT
+CLASS="LITERAL"
+>clientcert</TT
+> option in <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> is
+   available for all authentication methods, but only for rows specified as
+   <TT
+CLASS="LITERAL"
+>hostssl</TT
+>.  When <TT
+CLASS="LITERAL"
+>clientcert</TT
+> is not specified
+   or is set to 0, the server will still verify presented client
+   certificates against its CA list, if one is configured,
+   &mdash; but it will not insist that a client certificate be presented.
+  </P
+><P
+>   Note that the server's <TT
+CLASS="FILENAME"
+>root.crt</TT
+> lists the top-level
+   CAs that are considered trusted for signing client certificates.
+   In principle it need
+   not list the CA that signed the server's certificate, though in most cases
+   that CA would also be trusted for client certificates.
+  </P
+><P
+>   If you are setting up client certificates, you may wish to use
+   the <TT
+CLASS="LITERAL"
+>cert</TT
+> authentication method, so that the certificates
+   control user authentication as well as providing connection security.
+   See <A
+HREF="auth-methods.html#AUTH-CERT"
+>Section 19.3.9</A
+> for details.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="SSL-SERVER-FILES"
+>17.9.2. SSL Server File Usage</A
+></H2
+><P
+>    <A
+HREF="ssl-tcp.html#SSL-FILE-USAGE"
+>Table 17-2</A
+> summarizes the files that are
+    relevant to the SSL setup on the server.  (The shown file names are default
+    or typical names.  The locally configured names could be different.)
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="SSL-FILE-USAGE"
+></A
+><P
+><B
+>Table 17-2. SSL Server File Usage</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>File</TH
+><TH
+>Contents</TH
+><TH
+>Effect</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><A
+HREF="runtime-config-connection.html#GUC-SSL-CERT-FILE"
+>ssl_cert_file</A
+> (<TT
+CLASS="FILENAME"
+>$PGDATA/server.crt</TT
+>)</TD
+><TD
+>server certificate</TD
+><TD
+>sent to client to indicate server's identity</TD
+></TR
+><TR
+><TD
+><A
+HREF="runtime-config-connection.html#GUC-SSL-KEY-FILE"
+>ssl_key_file</A
+> (<TT
+CLASS="FILENAME"
+>$PGDATA/server.key</TT
+>)</TD
+><TD
+>server private key</TD
+><TD
+>proves server certificate was sent by the owner; does not indicate
+      certificate owner is trustworthy</TD
+></TR
+><TR
+><TD
+><A
+HREF="runtime-config-connection.html#GUC-SSL-CA-FILE"
+>ssl_ca_file</A
+> (<TT
+CLASS="FILENAME"
+>$PGDATA/root.crt</TT
+>)</TD
+><TD
+>trusted certificate authorities</TD
+><TD
+>checks that client certificate is
+      signed by a trusted certificate authority</TD
+></TR
+><TR
+><TD
+><A
+HREF="runtime-config-connection.html#GUC-SSL-CRL-FILE"
+>ssl_crl_file</A
+> (<TT
+CLASS="FILENAME"
+>$PGDATA/root.crl</TT
+>)</TD
+><TD
+>certificates revoked by certificate authorities</TD
+><TD
+>client certificate must not be on this list</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    The files <TT
+CLASS="FILENAME"
+>server.key</TT
+>, <TT
+CLASS="FILENAME"
+>server.crt</TT
+>,
+    <TT
+CLASS="FILENAME"
+>root.crt</TT
+>, and <TT
+CLASS="FILENAME"
+>root.crl</TT
+>
+    (or their configured alternative names)
+    are only examined during server start; so you must restart
+    the server for changes in them to take effect.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="SSL-CERTIFICATE-CREATION"
+>17.9.3. Creating a Self-signed Certificate</A
+></H2
+><P
+>    To create a quick self-signed certificate for the server, use the
+    following <SPAN
+CLASS="PRODUCTNAME"
+>OpenSSL</SPAN
+> command:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>openssl req -new -text -out server.req</PRE
+><P>
+    Fill out the information that <SPAN
+CLASS="APPLICATION"
+>openssl</SPAN
+> asks for. Make sure
+    you enter the local host name as <SPAN
+CLASS="QUOTE"
+>"Common Name"</SPAN
+>; the challenge
+    password can be left blank. The program will generate a key that is
+    passphrase protected; it will not accept a passphrase that is less
+    than four characters long. To remove the passphrase (as you must if
+    you want automatic start-up of the server), run the commands:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>openssl rsa -in privkey.pem -out server.key
+rm privkey.pem</PRE
+><P>
+    Enter the old passphrase to unlock the existing key. Now do:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>openssl req -x509 -in server.req -text -key server.key -out server.crt</PRE
+><P>
+    to turn the certificate into a self-signed certificate and to copy
+    the key and certificate to where the server will look for them.
+    Finally do:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>chmod og-rwx server.key</PRE
+><P>
+    because the server will reject the file if its permissions are more
+    liberal than this.
+    For more details on how to create your server private key and
+    certificate, refer to the <SPAN
+CLASS="PRODUCTNAME"
+>OpenSSL</SPAN
+> documentation.
+   </P
+><P
+>    A self-signed certificate can be used for testing, but a certificate
+    signed by a certificate authority (<ACRONYM
+CLASS="ACRONYM"
+>CA</ACRONYM
+>) (either one of the
+    global <ACRONYM
+CLASS="ACRONYM"
+>CAs</ACRONYM
+> or a local one) should be used in production
+    so that clients can verify the server's identity. If all the clients
+    are local to the organization, using a local <ACRONYM
+CLASS="ACRONYM"
+>CA</ACRONYM
+> is
+    recommended.
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="encryption-options.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="ssh-tunnels.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Encryption Options</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="runtime.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Secure TCP/IP Connections with <SPAN
+CLASS="APPLICATION"
+>SSH</SPAN
+> Tunnels</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

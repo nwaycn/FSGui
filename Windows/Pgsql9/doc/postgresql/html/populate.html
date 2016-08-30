@@ -1,0 +1,844 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Populating a Database</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Performance Tips"
+HREF="performance-tips.html"><LINK
+REL="PREVIOUS"
+TITLE="Controlling the Planner with Explicit JOIN Clauses"
+HREF="explicit-joins.html"><LINK
+REL="NEXT"
+TITLE="Non-Durable Settings"
+HREF="non-durability.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Controlling the Planner with Explicit JOIN Clauses"
+HREF="explicit-joins.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="performance-tips.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 14. Performance Tips</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Non-Durable Settings"
+HREF="non-durability.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="POPULATE"
+>14.4. Populating a Database</A
+></H1
+><P
+>   One might need to insert a large amount of data when first populating
+   a database. This section contains some suggestions on how to make
+   this process as efficient as possible.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="DISABLE-AUTOCOMMIT"
+>14.4.1. Disable Autocommit</A
+></H2
+><P
+>    When using multiple <TT
+CLASS="COMMAND"
+>INSERT</TT
+>s, turn off autocommit and just do
+    one commit at the end.  (In plain
+    SQL, this means issuing <TT
+CLASS="COMMAND"
+>BEGIN</TT
+> at the start and
+    <TT
+CLASS="COMMAND"
+>COMMIT</TT
+> at the end.  Some client libraries might
+    do this behind your back, in which case you need to make sure the
+    library does it when you want it done.)  If you allow each
+    insertion to be committed separately,
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> is doing a lot of work for
+    each row that is added.  An additional benefit of doing all
+    insertions in one transaction is that if the insertion of one row
+    were to fail then the insertion of all rows inserted up to that
+    point would be rolled back, so you won't be stuck with partially
+    loaded data.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="POPULATE-COPY-FROM"
+>14.4.2. Use <TT
+CLASS="COMMAND"
+>COPY</TT
+></A
+></H2
+><P
+>    Use <A
+HREF="sql-copy.html"
+>COPY</A
+> to load
+    all the rows in one command, instead of using a series of
+    <TT
+CLASS="COMMAND"
+>INSERT</TT
+> commands.  The <TT
+CLASS="COMMAND"
+>COPY</TT
+>
+    command is optimized for loading large numbers of rows; it is less
+    flexible than <TT
+CLASS="COMMAND"
+>INSERT</TT
+>, but incurs significantly
+    less overhead for large data loads. Since <TT
+CLASS="COMMAND"
+>COPY</TT
+>
+    is a single command, there is no need to disable autocommit if you
+    use this method to populate a table.
+   </P
+><P
+>    If you cannot use <TT
+CLASS="COMMAND"
+>COPY</TT
+>, it might help to use <A
+HREF="sql-prepare.html"
+>PREPARE</A
+> to create a
+    prepared <TT
+CLASS="COMMAND"
+>INSERT</TT
+> statement, and then use
+    <TT
+CLASS="COMMAND"
+>EXECUTE</TT
+> as many times as required.  This avoids
+    some of the overhead of repeatedly parsing and planning
+    <TT
+CLASS="COMMAND"
+>INSERT</TT
+>. Different interfaces provide this facility
+    in different ways; look for <SPAN
+CLASS="QUOTE"
+>"prepared statements"</SPAN
+> in the interface
+    documentation.
+   </P
+><P
+>    Note that loading a large number of rows using
+    <TT
+CLASS="COMMAND"
+>COPY</TT
+> is almost always faster than using
+    <TT
+CLASS="COMMAND"
+>INSERT</TT
+>, even if <TT
+CLASS="COMMAND"
+>PREPARE</TT
+> is used and
+    multiple insertions are batched into a single transaction.
+   </P
+><P
+>    <TT
+CLASS="COMMAND"
+>COPY</TT
+> is fastest when used within the same
+    transaction as an earlier <TT
+CLASS="COMMAND"
+>CREATE TABLE</TT
+> or
+    <TT
+CLASS="COMMAND"
+>TRUNCATE</TT
+> command. In such cases no WAL
+    needs to be written, because in case of an error, the files
+    containing the newly loaded data will be removed anyway.
+    However, this consideration only applies when
+    <A
+HREF="runtime-config-wal.html#GUC-WAL-LEVEL"
+>wal_level</A
+> is <TT
+CLASS="LITERAL"
+>minimal</TT
+> as all commands
+    must write WAL otherwise.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="POPULATE-RM-INDEXES"
+>14.4.3. Remove Indexes</A
+></H2
+><P
+>    If you are loading a freshly created table, the fastest method is to
+    create the table, bulk load the table's data using
+    <TT
+CLASS="COMMAND"
+>COPY</TT
+>, then create any indexes needed for the
+    table.  Creating an index on pre-existing data is quicker than
+    updating it incrementally as each row is loaded.
+   </P
+><P
+>    If you are adding large amounts of data to an existing table,
+    it might be a win to drop the indexes,
+    load the table, and then recreate the indexes.  Of course, the
+    database performance for other users might suffer
+    during the time the indexes are missing.  One should also think
+    twice before dropping a unique index, since the error checking
+    afforded by the unique constraint will be lost while the index is
+    missing.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="POPULATE-RM-FKEYS"
+>14.4.4. Remove Foreign Key Constraints</A
+></H2
+><P
+>    Just as with indexes, a foreign key constraint can be checked
+    <SPAN
+CLASS="QUOTE"
+>"in bulk"</SPAN
+> more efficiently than row-by-row.  So it might be
+    useful to drop foreign key constraints, load data, and re-create
+    the constraints.  Again, there is a trade-off between data load
+    speed and loss of error checking while the constraint is missing.
+   </P
+><P
+>    What's more, when you load data into a table with existing foreign key
+    constraints, each new row requires an entry in the server's list of
+    pending trigger events (since it is the firing of a trigger that checks
+    the row's foreign key constraint).  Loading many millions of rows can
+    cause the trigger event queue to overflow available memory, leading to
+    intolerable swapping or even outright failure of the command.  Therefore
+    it may be <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>necessary</I
+></SPAN
+>, not just desirable, to drop and re-apply
+    foreign keys when loading large amounts of data.  If temporarily removing
+    the constraint isn't acceptable, the only other recourse may be to split
+    up the load operation into smaller transactions.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="POPULATE-WORK-MEM"
+>14.4.5. Increase <TT
+CLASS="VARNAME"
+>maintenance_work_mem</TT
+></A
+></H2
+><P
+>    Temporarily increasing the <A
+HREF="runtime-config-resource.html#GUC-MAINTENANCE-WORK-MEM"
+>maintenance_work_mem</A
+>
+    configuration variable when loading large amounts of data can
+    lead to improved performance.  This will help to speed up <TT
+CLASS="COMMAND"
+>CREATE
+    INDEX</TT
+> commands and <TT
+CLASS="COMMAND"
+>ALTER TABLE ADD FOREIGN KEY</TT
+> commands.
+    It won't do much for <TT
+CLASS="COMMAND"
+>COPY</TT
+> itself, so this advice is
+    only useful when you are using one or both of the above techniques.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="POPULATE-MAX-WAL-SIZE"
+>14.4.6. Increase <TT
+CLASS="VARNAME"
+>max_wal_size</TT
+></A
+></H2
+><P
+>    Temporarily increasing the <A
+HREF="runtime-config-wal.html#GUC-MAX-WAL-SIZE"
+>max_wal_size</A
+>
+    configuration variable can also
+    make large data loads faster.  This is because loading a large
+    amount of data into <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> will
+    cause checkpoints to occur more often than the normal checkpoint
+    frequency (specified by the <TT
+CLASS="VARNAME"
+>checkpoint_timeout</TT
+>
+    configuration variable). Whenever a checkpoint occurs, all dirty
+    pages must be flushed to disk. By increasing
+    <TT
+CLASS="VARNAME"
+>max_wal_size</TT
+> temporarily during bulk
+    data loads, the number of checkpoints that are required can be
+    reduced.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="POPULATE-PITR"
+>14.4.7. Disable WAL Archival and Streaming Replication</A
+></H2
+><P
+>    When loading large amounts of data into an installation that uses
+    WAL archiving or streaming replication, it might be faster to take a
+    new base backup after the load has completed than to process a large
+    amount of incremental WAL data.  To prevent incremental WAL logging
+    while loading, disable archiving and streaming replication, by setting
+    <A
+HREF="runtime-config-wal.html#GUC-WAL-LEVEL"
+>wal_level</A
+> to <TT
+CLASS="LITERAL"
+>minimal</TT
+>,
+    <A
+HREF="runtime-config-wal.html#GUC-ARCHIVE-MODE"
+>archive_mode</A
+> to <TT
+CLASS="LITERAL"
+>off</TT
+>, and
+    <A
+HREF="runtime-config-replication.html#GUC-MAX-WAL-SENDERS"
+>max_wal_senders</A
+> to zero.
+    But note that changing these settings requires a server restart.
+   </P
+><P
+>    Aside from avoiding the time for the archiver or WAL sender to
+    process the WAL data,
+    doing this will actually make certain commands faster, because they
+    are designed not to write WAL at all if <TT
+CLASS="VARNAME"
+>wal_level</TT
+>
+    is <TT
+CLASS="LITERAL"
+>minimal</TT
+>.  (They can guarantee crash safety more cheaply
+    by doing an <CODE
+CLASS="FUNCTION"
+>fsync</CODE
+> at the end than by writing WAL.)
+    This applies to the following commands:
+    <P
+></P
+></P><UL
+><LI
+><P
+>       <TT
+CLASS="COMMAND"
+>CREATE TABLE AS SELECT</TT
+>
+      </P
+></LI
+><LI
+><P
+>       <TT
+CLASS="COMMAND"
+>CREATE INDEX</TT
+> (and variants such as
+       <TT
+CLASS="COMMAND"
+>ALTER TABLE ADD PRIMARY KEY</TT
+>)
+      </P
+></LI
+><LI
+><P
+>       <TT
+CLASS="COMMAND"
+>ALTER TABLE SET TABLESPACE</TT
+>
+      </P
+></LI
+><LI
+><P
+>       <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+>
+      </P
+></LI
+><LI
+><P
+>       <TT
+CLASS="COMMAND"
+>COPY FROM</TT
+>, when the target table has been
+       created or truncated earlier in the same transaction
+      </P
+></LI
+></UL
+><P>
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="POPULATE-ANALYZE"
+>14.4.8. Run <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> Afterwards</A
+></H2
+><P
+>    Whenever you have significantly altered the distribution of data
+    within a table, running <A
+HREF="sql-analyze.html"
+>ANALYZE</A
+> is strongly recommended. This
+    includes bulk loading large amounts of data into the table.  Running
+    <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> (or <TT
+CLASS="COMMAND"
+>VACUUM ANALYZE</TT
+>)
+    ensures that the planner has up-to-date statistics about the
+    table.  With no statistics or obsolete statistics, the planner might
+    make poor decisions during query planning, leading to poor
+    performance on any tables with inaccurate or nonexistent
+    statistics.  Note that if the autovacuum daemon is enabled, it might
+    run <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> automatically; see
+    <A
+HREF="routine-vacuuming.html#VACUUM-FOR-STATISTICS"
+>Section 23.1.3</A
+>
+    and <A
+HREF="routine-vacuuming.html#AUTOVACUUM"
+>Section 23.1.6</A
+> for more information.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="POPULATE-PG-DUMP"
+>14.4.9. Some Notes About <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+></A
+></H2
+><P
+>    Dump scripts generated by <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> automatically apply
+    several, but not all, of the above guidelines.  To reload a
+    <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> dump as quickly as possible, you need to
+    do a few extra things manually.  (Note that these points apply while
+    <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>restoring</I
+></SPAN
+> a dump, not while <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>creating</I
+></SPAN
+> it.
+    The same points apply whether loading a text dump with
+    <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> or using <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> to load
+    from a <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> archive file.)
+   </P
+><P
+>    By default, <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> uses <TT
+CLASS="COMMAND"
+>COPY</TT
+>, and when
+    it is generating a complete schema-and-data dump, it is careful to
+    load data before creating indexes and foreign keys.  So in this case
+    several guidelines are handled automatically.  What is left
+    for you to do is to:
+    <P
+></P
+></P><UL
+><LI
+><P
+>       Set appropriate (i.e., larger than normal) values for
+       <TT
+CLASS="VARNAME"
+>maintenance_work_mem</TT
+> and
+       <TT
+CLASS="VARNAME"
+>max_wal_size</TT
+>.
+      </P
+></LI
+><LI
+><P
+>       If using WAL archiving or streaming replication, consider disabling
+       them during the restore. To do that, set <TT
+CLASS="VARNAME"
+>archive_mode</TT
+>
+       to <TT
+CLASS="LITERAL"
+>off</TT
+>,
+       <TT
+CLASS="VARNAME"
+>wal_level</TT
+> to <TT
+CLASS="LITERAL"
+>minimal</TT
+>, and
+       <TT
+CLASS="VARNAME"
+>max_wal_senders</TT
+> to zero before loading the dump.
+       Afterwards, set them back to the right values and take a fresh
+       base backup.
+      </P
+></LI
+><LI
+><P
+>       Experiment with the parallel dump and restore modes of both
+       <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> and <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> and find the
+       optimal number of concurrent jobs to use. Dumping and restoring in
+       parallel by means of the <TT
+CLASS="OPTION"
+>-j</TT
+> option should give you a
+       significantly higher performance over the serial mode.
+      </P
+></LI
+><LI
+><P
+>       Consider whether the whole dump should be restored as a single
+       transaction.  To do that, pass the <TT
+CLASS="OPTION"
+>-1</TT
+> or
+       <TT
+CLASS="OPTION"
+>--single-transaction</TT
+> command-line option to
+       <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> or <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+>. When using this
+       mode, even the smallest of errors will rollback the entire restore,
+       possibly discarding many hours of processing.  Depending on how
+       interrelated the data is, that might seem preferable to manual cleanup,
+       or not.  <TT
+CLASS="COMMAND"
+>COPY</TT
+> commands will run fastest if you use a single
+       transaction and have WAL archiving turned off.
+      </P
+></LI
+><LI
+><P
+>       If multiple CPUs are available in the database server, consider using
+       <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+>'s <TT
+CLASS="OPTION"
+>--jobs</TT
+> option.  This
+       allows concurrent data loading and index creation.
+      </P
+></LI
+><LI
+><P
+>       Run <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> afterwards.
+      </P
+></LI
+></UL
+><P>
+   </P
+><P
+>    A data-only dump will still use <TT
+CLASS="COMMAND"
+>COPY</TT
+>, but it does not
+    drop or recreate indexes, and it does not normally touch foreign
+    keys.
+
+     <A
+NAME="AEN27511"
+HREF="#FTN.AEN27511"
+><SPAN
+CLASS="footnote"
+>[1]</SPAN
+></A
+>
+
+    So when loading a data-only dump, it is up to you to drop and recreate
+    indexes and foreign keys if you wish to use those techniques.
+    It's still useful to increase <TT
+CLASS="VARNAME"
+>max_wal_size</TT
+>
+    while loading the data, but don't bother increasing
+    <TT
+CLASS="VARNAME"
+>maintenance_work_mem</TT
+>; rather, you'd do that while
+    manually recreating indexes and foreign keys afterwards.
+    And don't forget to <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> when you're done; see
+    <A
+HREF="routine-vacuuming.html#VACUUM-FOR-STATISTICS"
+>Section 23.1.3</A
+>
+    and <A
+HREF="routine-vacuuming.html#AUTOVACUUM"
+>Section 23.1.6</A
+> for more information.
+   </P
+></DIV
+></DIV
+><H3
+CLASS="FOOTNOTES"
+>Notes</H3
+><TABLE
+BORDER="0"
+CLASS="FOOTNOTES"
+WIDTH="100%"
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+WIDTH="5%"
+><A
+NAME="FTN.AEN27511"
+HREF="populate.html#AEN27511"
+><SPAN
+CLASS="footnote"
+>[1]</SPAN
+></A
+></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+WIDTH="95%"
+><P
+>       You can get the effect of disabling foreign keys by using
+       the <TT
+CLASS="OPTION"
+>--disable-triggers</TT
+> option &mdash; but realize that
+       that eliminates, rather than just postpones, foreign key
+       validation, and so it is possible to insert bad data if you use it.
+      </P
+></TD
+></TR
+></TABLE
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="explicit-joins.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="non-durability.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Controlling the Planner with Explicit <TT
+CLASS="LITERAL"
+>JOIN</TT
+> Clauses</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="performance-tips.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Non-Durable Settings</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

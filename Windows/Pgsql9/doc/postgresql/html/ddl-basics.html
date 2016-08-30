@@ -1,0 +1,346 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Table Basics</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Data Definition"
+HREF="ddl.html"><LINK
+REL="PREVIOUS"
+TITLE="Data Definition"
+HREF="ddl.html"><LINK
+REL="NEXT"
+TITLE="Default Values"
+HREF="ddl-default.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Data Definition"
+HREF="ddl.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ddl.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 5. Data Definition</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Default Values"
+HREF="ddl-default.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="DDL-BASICS"
+>5.1. Table Basics</A
+></H1
+><P
+>   A table in a relational database is much like a table on paper: It
+   consists of rows and columns.  The number and order of the columns
+   is fixed, and each column has a name.  The number of rows is
+   variable &mdash; it reflects how much data is stored at a given moment.
+   SQL does not make any guarantees about the order of the rows in a
+   table.  When a table is read, the rows will appear in an unspecified order,
+   unless sorting is explicitly requested.  This is covered in <A
+HREF="queries.html"
+>Chapter 7</A
+>.  Furthermore, SQL does not assign unique
+   identifiers to rows, so it is possible to have several completely
+   identical rows in a table.  This is a consequence of the
+   mathematical model that underlies SQL but is usually not desirable.
+   Later in this chapter we will see how to deal with this issue.
+  </P
+><P
+>   Each column has a data type.  The data type constrains the set of
+   possible values that can be assigned to a column and assigns
+   semantics to the data stored in the column so that it can be used
+   for computations.  For instance, a column declared to be of a
+   numerical type will not accept arbitrary text strings, and the data
+   stored in such a column can be used for mathematical computations.
+   By contrast, a column declared to be of a character string type
+   will accept almost any kind of data but it does not lend itself to
+   mathematical calculations, although other operations such as string
+   concatenation are available.
+  </P
+><P
+>   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> includes a sizable set of
+   built-in data types that fit many applications.  Users can also
+   define their own data types.  Most built-in data types have obvious
+   names and semantics, so we defer a detailed explanation to <A
+HREF="datatype.html"
+>Chapter 8</A
+>.  Some of the frequently used data types are
+   <TT
+CLASS="TYPE"
+>integer</TT
+> for whole numbers, <TT
+CLASS="TYPE"
+>numeric</TT
+> for
+   possibly fractional numbers, <TT
+CLASS="TYPE"
+>text</TT
+> for character
+   strings, <TT
+CLASS="TYPE"
+>date</TT
+> for dates, <TT
+CLASS="TYPE"
+>time</TT
+> for
+   time-of-day values, and <TT
+CLASS="TYPE"
+>timestamp</TT
+> for values
+   containing both date and time.
+  </P
+><P
+>   To create a table, you use the aptly named <A
+HREF="sql-createtable.html"
+>CREATE TABLE</A
+> command.
+   In this command you specify at least a name for the new table, the
+   names of the columns and the data type of each column.  For
+   example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE my_first_table (
+    first_column text,
+    second_column integer
+);</PRE
+><P>
+   This creates a table named <TT
+CLASS="LITERAL"
+>my_first_table</TT
+> with
+   two columns.  The first column is named
+   <TT
+CLASS="LITERAL"
+>first_column</TT
+> and has a data type of
+   <TT
+CLASS="TYPE"
+>text</TT
+>; the second column has the name
+   <TT
+CLASS="LITERAL"
+>second_column</TT
+> and the type <TT
+CLASS="TYPE"
+>integer</TT
+>.
+   The table and column names follow the identifier syntax explained
+   in <A
+HREF="sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS"
+>Section 4.1.1</A
+>.  The type names are
+   usually also identifiers, but there are some exceptions.  Note that the
+   column list is comma-separated and surrounded by parentheses.
+  </P
+><P
+>   Of course, the previous example was heavily contrived.  Normally,
+   you would give names to your tables and columns that convey what
+   kind of data they store.  So let's look at a more realistic
+   example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE products (
+    product_no integer,
+    name text,
+    price numeric
+);</PRE
+><P>
+   (The <TT
+CLASS="TYPE"
+>numeric</TT
+> type can store fractional components, as
+   would be typical of monetary amounts.)
+  </P
+><DIV
+CLASS="TIP"
+><BLOCKQUOTE
+CLASS="TIP"
+><P
+><B
+>Tip: </B
+>    When you create many interrelated tables it is wise to choose a
+    consistent naming pattern for the tables and columns.  For
+    instance, there is a choice of using singular or plural nouns for
+    table names, both of which are favored by some theorist or other.
+   </P
+></BLOCKQUOTE
+></DIV
+><P
+>   There is a limit on how many columns a table can contain.
+   Depending on the column types, it is between 250 and 1600.
+   However, defining a table with anywhere near this many columns is
+   highly unusual and often a questionable design.
+  </P
+><P
+>   If you no longer need a table, you can remove it using the <A
+HREF="sql-droptable.html"
+>DROP TABLE</A
+> command.
+   For example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>DROP TABLE my_first_table;
+DROP TABLE products;</PRE
+><P>
+   Attempting to drop a table that does not exist is an error.
+   Nevertheless, it is common in SQL script files to unconditionally
+   try to drop each table before creating it, ignoring any error
+   messages, so that the script works whether or not the table exists.
+   (If you like, you can use the <TT
+CLASS="LITERAL"
+>DROP TABLE IF EXISTS</TT
+> variant
+   to avoid the error messages, but this is not standard SQL.)
+  </P
+><P
+>   If you need to modify a table that already exists, see <A
+HREF="ddl-alter.html"
+>Section 5.5</A
+> later in this chapter.
+  </P
+><P
+>   With the tools discussed so far you can create fully functional
+   tables.  The remainder of this chapter is concerned with adding
+   features to the table definition to ensure data integrity,
+   security, or convenience.  If you are eager to fill your tables with
+   data now you can skip ahead to <A
+HREF="dml.html"
+>Chapter 6</A
+> and read the
+   rest of this chapter later.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ddl.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="ddl-default.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Data Definition</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="ddl.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Default Values</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,780 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>CREATE TABLE AS</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="CREATE TABLE"
+HREF="sql-createtable.html"><LINK
+REL="NEXT"
+TITLE="CREATE TABLESPACE"
+HREF="sql-createtablespace.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="CREATE TABLE"
+HREF="sql-createtable.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="CREATE TABLESPACE"
+HREF="sql-createtablespace.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-CREATETABLEAS"
+></A
+>CREATE TABLE AS</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN79350"
+></A
+><H2
+>Name</H2
+>CREATE TABLE AS&nbsp;--&nbsp;define a new table from the results of a query</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN79353"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>CREATE [ [ GLOBAL | LOCAL ] { TEMPORARY | TEMP } | UNLOGGED ] TABLE [ IF NOT EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+>
+    [ (<TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> [, ...] ) ]
+    [ WITH ( <TT
+CLASS="REPLACEABLE"
+><I
+>storage_parameter</I
+></TT
+> [= <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>] [, ... ] ) | WITH OIDS | WITHOUT OIDS ]
+    [ ON COMMIT { PRESERVE ROWS | DELETE ROWS | DROP } ]
+    [ TABLESPACE <TT
+CLASS="REPLACEABLE"
+><I
+>tablespace_name</I
+></TT
+> ]
+    AS <TT
+CLASS="REPLACEABLE"
+><I
+>query</I
+></TT
+>
+    [ WITH [ NO ] DATA ]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN79361"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>CREATE TABLE AS</TT
+> creates a table and fills it
+   with data computed by a <TT
+CLASS="COMMAND"
+>SELECT</TT
+> command.
+   The table columns have the
+   names and data types associated with the output columns of the
+   <TT
+CLASS="COMMAND"
+>SELECT</TT
+> (except that you can override the column
+   names by giving an explicit list of new column names).
+  </P
+><P
+>   <TT
+CLASS="COMMAND"
+>CREATE TABLE AS</TT
+> bears some resemblance to
+   creating a view, but it is really quite different: it creates a new
+   table and evaluates the query just once to fill the new table
+   initially.  The new table will not track subsequent changes to the
+   source tables of the query.  In contrast, a view re-evaluates its
+   defining <TT
+CLASS="COMMAND"
+>SELECT</TT
+> statement whenever it is
+   queried.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN79370"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>GLOBAL</TT
+> or <TT
+CLASS="LITERAL"
+>LOCAL</TT
+></DT
+><DD
+><P
+>      Ignored for compatibility.  Use of these keywords is deprecated;
+      refer to <A
+HREF="sql-createtable.html"
+>CREATE TABLE</A
+> for details.
+     </P
+></DD
+></DL
+></DIV
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>TEMPORARY</TT
+> or <TT
+CLASS="LITERAL"
+>TEMP</TT
+></DT
+><DD
+><P
+>      If specified, the table is created as a temporary table.
+      Refer to <A
+HREF="sql-createtable.html"
+>CREATE TABLE</A
+> for details.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>UNLOGGED</TT
+></DT
+><DD
+><P
+>      If specified, the table is created as an unlogged table.
+      Refer to <A
+HREF="sql-createtable.html"
+>CREATE TABLE</A
+> for details.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>IF NOT EXISTS</TT
+></DT
+><DD
+><P
+>      Do not throw an error if a relation with the same name already exists.
+      A notice is issued in this case. Refer to <A
+HREF="sql-createtable.html"
+>CREATE TABLE</A
+>
+      for details.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+></DT
+><DD
+><P
+>      The name (optionally schema-qualified) of the table to be created.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+></DT
+><DD
+><P
+>      The name of a column in the new table.  If column names are not
+      provided, they are taken from the output column names of the query.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>WITH ( <TT
+CLASS="REPLACEABLE"
+><I
+>storage_parameter</I
+></TT
+> [= <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>] [, ... ] )</TT
+></DT
+><DD
+><P
+>      This clause specifies optional storage parameters for the new table;
+      see <A
+HREF="sql-createtable.html#SQL-CREATETABLE-STORAGE-PARAMETERS"
+><I
+>Storage Parameters</I
+></A
+> for more
+      information.  The <TT
+CLASS="LITERAL"
+>WITH</TT
+> clause
+      can also include <TT
+CLASS="LITERAL"
+>OIDS=TRUE</TT
+> (or just <TT
+CLASS="LITERAL"
+>OIDS</TT
+>)
+      to specify that rows of the new table
+      should have OIDs (object identifiers) assigned to them, or
+      <TT
+CLASS="LITERAL"
+>OIDS=FALSE</TT
+> to specify that the rows should not have OIDs.
+      See <A
+HREF="sql-createtable.html"
+>CREATE TABLE</A
+> for more information.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>WITH OIDS</TT
+><BR><TT
+CLASS="LITERAL"
+>WITHOUT OIDS</TT
+></DT
+><DD
+><P
+>      These are obsolescent syntaxes equivalent to <TT
+CLASS="LITERAL"
+>WITH (OIDS)</TT
+>
+      and <TT
+CLASS="LITERAL"
+>WITH (OIDS=FALSE)</TT
+>, respectively.  If you wish to give
+      both an <TT
+CLASS="LITERAL"
+>OIDS</TT
+> setting and storage parameters, you must use
+      the <TT
+CLASS="LITERAL"
+>WITH ( ... )</TT
+> syntax; see above.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>ON COMMIT</TT
+></DT
+><DD
+><P
+>      The behavior of temporary tables at the end of a transaction
+      block can be controlled using <TT
+CLASS="LITERAL"
+>ON COMMIT</TT
+>.
+      The three options are:
+
+      <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>PRESERVE ROWS</TT
+></DT
+><DD
+><P
+>          No special action is taken at the ends of transactions.
+          This is the default behavior.
+         </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>DELETE ROWS</TT
+></DT
+><DD
+><P
+>          All rows in the temporary table will be deleted at the end
+          of each transaction block.  Essentially, an automatic <A
+HREF="sql-truncate.html"
+>TRUNCATE</A
+> is done
+          at each commit.
+         </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>DROP</TT
+></DT
+><DD
+><P
+>          The temporary table will be dropped at the end of the current
+          transaction block.
+         </P
+></DD
+></DL
+></DIV
+><P></P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>TABLESPACE <TT
+CLASS="REPLACEABLE"
+><I
+>tablespace_name</I
+></TT
+></TT
+></DT
+><DD
+><P
+>      The <TT
+CLASS="REPLACEABLE"
+><I
+>tablespace_name</I
+></TT
+> is the name
+      of the tablespace in which the new table is to be created.
+      If not specified,
+      <A
+HREF="runtime-config-client.html#GUC-DEFAULT-TABLESPACE"
+>default_tablespace</A
+> is consulted, or
+      <A
+HREF="runtime-config-client.html#GUC-TEMP-TABLESPACES"
+>temp_tablespaces</A
+> if the table is temporary.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>query</I
+></TT
+></DT
+><DD
+><P
+>      A <A
+HREF="sql-select.html"
+>SELECT</A
+>, <A
+HREF="sql-select.html#SQL-TABLE"
+>TABLE</A
+>, or <A
+HREF="sql-values.html"
+>VALUES</A
+>
+      command, or an <A
+HREF="sql-execute.html"
+>EXECUTE</A
+> command that runs a
+      prepared <TT
+CLASS="COMMAND"
+>SELECT</TT
+>, <TT
+CLASS="COMMAND"
+>TABLE</TT
+>, or
+      <TT
+CLASS="COMMAND"
+>VALUES</TT
+> query.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>WITH [ NO ] DATA</TT
+></DT
+><DD
+><P
+>      This clause specifies whether or not the data produced by the query
+      should be copied into the new table.  If not, only the table structure
+      is copied.  The default is to copy the data.
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN79483"
+></A
+><H2
+>Notes</H2
+><P
+>   This command is functionally similar to <A
+HREF="sql-selectinto.html"
+>SELECT INTO</A
+>, but it is
+   preferred since it is less likely to be confused with other uses of
+   the <TT
+CLASS="COMMAND"
+>SELECT INTO</TT
+> syntax. Furthermore, <TT
+CLASS="COMMAND"
+>CREATE
+   TABLE AS</TT
+> offers a superset of the functionality offered
+   by <TT
+CLASS="COMMAND"
+>SELECT INTO</TT
+>.
+  </P
+><P
+>   The <TT
+CLASS="COMMAND"
+>CREATE TABLE AS</TT
+> command allows the user to
+   explicitly specify whether OIDs should be included. If the
+   presence of OIDs is not explicitly specified,
+   the <A
+HREF="runtime-config-compatible.html#GUC-DEFAULT-WITH-OIDS"
+>default_with_oids</A
+> configuration variable is
+   used.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN79493"
+></A
+><H2
+>Examples</H2
+><P
+>   Create a new table <TT
+CLASS="LITERAL"
+>films_recent</TT
+> consisting of only
+   recent entries from the table <TT
+CLASS="LITERAL"
+>films</TT
+>:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE films_recent AS
+  SELECT * FROM films WHERE date_prod &gt;= '2002-01-01';</PRE
+><P>
+  </P
+><P
+>   To copy a table completely, the short form using
+   the <TT
+CLASS="LITERAL"
+>TABLE</TT
+> command can also be used:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE films2 AS
+  TABLE films;</PRE
+><P>
+  </P
+><P
+>   Create a new temporary table <TT
+CLASS="LITERAL"
+>films_recent</TT
+>, consisting of
+   only recent entries from the table <TT
+CLASS="LITERAL"
+>films</TT
+>, using a
+   prepared statement.  The new table has OIDs and will be dropped at commit:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>PREPARE recentfilms(date) AS
+  SELECT * FROM films WHERE date_prod &gt; $1;
+CREATE TEMP TABLE films_recent WITH (OIDS) ON COMMIT DROP AS
+  EXECUTE recentfilms('2002-01-01');</PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN79506"
+></A
+><H2
+>Compatibility</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>CREATE TABLE AS</TT
+> conforms to the <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+>
+   standard.  The following are nonstandard extensions:
+
+   <P
+></P
+></P><UL
+COMPACT="COMPACT"
+><LI
+><P
+>      The standard requires parentheses around the subquery clause; in
+      <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>, these parentheses are
+      optional.
+     </P
+></LI
+><LI
+><P
+>      In the standard, the <TT
+CLASS="LITERAL"
+>WITH [ NO ] DATA</TT
+> clause
+      is required; in PostgreSQL it is optional.
+     </P
+></LI
+><LI
+><P
+><SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> handles temporary tables in a way
+      rather different from the standard; see
+      <A
+HREF="sql-createtable.html"
+>CREATE TABLE</A
+>
+      for details.
+     </P
+></LI
+><LI
+><P
+>      The <TT
+CLASS="LITERAL"
+>WITH</TT
+> clause is a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+      extension; neither storage parameters nor OIDs are in the standard.
+     </P
+></LI
+><LI
+><P
+>      The <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> concept of tablespaces is not
+      part of the standard.  Hence, the clause <TT
+CLASS="LITERAL"
+>TABLESPACE</TT
+>
+      is an extension.
+     </P
+></LI
+></UL
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN79530"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-creatematerializedview.html"
+>CREATE MATERIALIZED VIEW</A
+>, <A
+HREF="sql-createtable.html"
+>CREATE TABLE</A
+>, <A
+HREF="sql-execute.html"
+>EXECUTE</A
+>, <A
+HREF="sql-select.html"
+>SELECT</A
+>, <A
+HREF="sql-selectinto.html"
+>SELECT INTO</A
+>, <A
+HREF="sql-values.html"
+>VALUES</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-createtable.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-createtablespace.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>CREATE TABLE</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>CREATE TABLESPACE</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

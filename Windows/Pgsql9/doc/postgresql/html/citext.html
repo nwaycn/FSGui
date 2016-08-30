@@ -1,0 +1,641 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>citext</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="chkpass"
+HREF="chkpass.html"><LINK
+REL="NEXT"
+TITLE="cube"
+HREF="cube.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="chkpass"
+HREF="chkpass.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="cube"
+HREF="cube.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="CITEXT"
+>F.7. citext</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>citext</TT
+> module provides a case-insensitive
+  character string type, <TT
+CLASS="TYPE"
+>citext</TT
+>. Essentially, it internally calls
+  <CODE
+CLASS="FUNCTION"
+>lower</CODE
+> when comparing values. Otherwise, it behaves almost
+  exactly like <TT
+CLASS="TYPE"
+>text</TT
+>.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN169192"
+>F.7.1. Rationale</A
+></H2
+><P
+>   The standard approach to doing case-insensitive matches
+   in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> has been to use the <CODE
+CLASS="FUNCTION"
+>lower</CODE
+>
+   function when comparing values, for example
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT * FROM tab WHERE lower(col) = LOWER(?);</PRE
+><P>
+  </P
+><P
+>   This works reasonably well, but has a number of drawbacks:
+  </P
+><P
+></P
+><UL
+><LI
+><P
+>      It makes your SQL statements verbose, and you always have to remember to
+      use <CODE
+CLASS="FUNCTION"
+>lower</CODE
+> on both the column and the query value.
+     </P
+></LI
+><LI
+><P
+>      It won't use an index, unless you create a functional index using
+      <CODE
+CLASS="FUNCTION"
+>lower</CODE
+>.
+     </P
+></LI
+><LI
+><P
+>      If you declare a column as <TT
+CLASS="LITERAL"
+>UNIQUE</TT
+> or <TT
+CLASS="LITERAL"
+>PRIMARY
+      KEY</TT
+>, the implicitly generated index is case-sensitive.  So it's
+      useless for case-insensitive searches, and it won't enforce
+      uniqueness case-insensitively.
+     </P
+></LI
+></UL
+><P
+>    The <TT
+CLASS="TYPE"
+>citext</TT
+> data type allows you to eliminate calls
+    to <CODE
+CLASS="FUNCTION"
+>lower</CODE
+> in SQL queries, and allows a primary key to
+    be case-insensitive. <TT
+CLASS="TYPE"
+>citext</TT
+> is locale-aware, just
+    like <TT
+CLASS="TYPE"
+>text</TT
+>, which means that the matching of upper case and
+    lower case characters is dependent on the rules of
+    the database's <TT
+CLASS="LITERAL"
+>LC_CTYPE</TT
+> setting. Again, this behavior is
+    identical to the use of <CODE
+CLASS="FUNCTION"
+>lower</CODE
+> in queries. But because it's
+    done transparently by the data type, you don't have to remember to do
+    anything special in your queries.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN169217"
+>F.7.2. How to Use It</A
+></H2
+><P
+>   Here's a simple example of usage:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE users (
+    nick CITEXT PRIMARY KEY,
+    pass TEXT   NOT NULL
+);
+
+INSERT INTO users VALUES ( 'larry',  md5(random()::text) );
+INSERT INTO users VALUES ( 'Tom',    md5(random()::text) );
+INSERT INTO users VALUES ( 'Damian', md5(random()::text) );
+INSERT INTO users VALUES ( 'NEAL',   md5(random()::text) );
+INSERT INTO users VALUES ( 'Bj&oslash;rn',  md5(random()::text) );
+
+SELECT * FROM users WHERE nick = 'Larry';</PRE
+><P>
+
+   The <TT
+CLASS="COMMAND"
+>SELECT</TT
+> statement will return one tuple, even though
+   the <TT
+CLASS="STRUCTFIELD"
+>nick</TT
+> column was set to <TT
+CLASS="LITERAL"
+>larry</TT
+> and the query
+   was for <TT
+CLASS="LITERAL"
+>Larry</TT
+>.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN169225"
+>F.7.3. String Comparison Behavior</A
+></H2
+><P
+>   <TT
+CLASS="TYPE"
+>citext</TT
+> performs comparisons by converting each string to lower
+   case (as though <CODE
+CLASS="FUNCTION"
+>lower</CODE
+> were called) and then comparing the
+   results normally.  Thus, for example, two strings are considered equal
+   if <CODE
+CLASS="FUNCTION"
+>lower</CODE
+> would produce identical results for them.
+  </P
+><P
+>   In order to emulate a case-insensitive collation as closely as possible,
+   there are <TT
+CLASS="TYPE"
+>citext</TT
+>-specific versions of a number of string-processing
+   operators and functions.  So, for example, the regular expression
+   operators <TT
+CLASS="LITERAL"
+>~</TT
+> and <TT
+CLASS="LITERAL"
+>~*</TT
+> exhibit the same behavior when
+   applied to <TT
+CLASS="TYPE"
+>citext</TT
+>: they both match case-insensitively.
+   The same is true
+   for <TT
+CLASS="LITERAL"
+>!~</TT
+> and <TT
+CLASS="LITERAL"
+>!~*</TT
+>, as well as for the
+   <TT
+CLASS="LITERAL"
+>LIKE</TT
+> operators <TT
+CLASS="LITERAL"
+>~~</TT
+> and <TT
+CLASS="LITERAL"
+>~~*</TT
+>, and
+   <TT
+CLASS="LITERAL"
+>!~~</TT
+> and <TT
+CLASS="LITERAL"
+>!~~*</TT
+>. If you'd like to match
+   case-sensitively, you can cast the operator's arguments to <TT
+CLASS="TYPE"
+>text</TT
+>.
+  </P
+><P
+>   Similarly, all of the following functions perform matching
+   case-insensitively if their arguments are <TT
+CLASS="TYPE"
+>citext</TT
+>:
+  </P
+><P
+></P
+><UL
+><LI
+><P
+>      <CODE
+CLASS="FUNCTION"
+>regexp_matches()</CODE
+>
+    </P
+></LI
+><LI
+><P
+>      <CODE
+CLASS="FUNCTION"
+>regexp_replace()</CODE
+>
+    </P
+></LI
+><LI
+><P
+>      <CODE
+CLASS="FUNCTION"
+>regexp_split_to_array()</CODE
+>
+    </P
+></LI
+><LI
+><P
+>      <CODE
+CLASS="FUNCTION"
+>regexp_split_to_table()</CODE
+>
+    </P
+></LI
+><LI
+><P
+>      <CODE
+CLASS="FUNCTION"
+>replace()</CODE
+>
+    </P
+></LI
+><LI
+><P
+>      <CODE
+CLASS="FUNCTION"
+>split_part()</CODE
+>
+    </P
+></LI
+><LI
+><P
+>      <CODE
+CLASS="FUNCTION"
+>strpos()</CODE
+>
+    </P
+></LI
+><LI
+><P
+>      <CODE
+CLASS="FUNCTION"
+>translate()</CODE
+>
+    </P
+></LI
+></UL
+><P
+>   For the regexp functions, if you want to match case-sensitively, you can
+   specify the <SPAN
+CLASS="QUOTE"
+>"c"</SPAN
+> flag to force a case-sensitive match.  Otherwise,
+   you must cast to <TT
+CLASS="TYPE"
+>text</TT
+> before using one of these functions if
+   you want case-sensitive behavior.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN169274"
+>F.7.4. Limitations</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      <TT
+CLASS="TYPE"
+>citext</TT
+>'s case-folding behavior depends on
+      the <TT
+CLASS="LITERAL"
+>LC_CTYPE</TT
+> setting of your database. How it compares
+      values is therefore determined when the database is created.
+      It is not truly
+      case-insensitive in the terms defined by the Unicode standard.
+      Effectively, what this means is that, as long as you're happy with your
+      collation, you should be happy with <TT
+CLASS="TYPE"
+>citext</TT
+>'s comparisons. But
+      if you have data in different languages stored in your database, users
+      of one language may find their query results are not as expected if the
+      collation is for another language.
+     </P
+></LI
+><LI
+><P
+>      As of <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 9.1, you can attach a
+      <TT
+CLASS="LITERAL"
+>COLLATE</TT
+> specification to <TT
+CLASS="TYPE"
+>citext</TT
+> columns or data
+      values.  Currently, <TT
+CLASS="TYPE"
+>citext</TT
+> operators will honor a non-default
+      <TT
+CLASS="LITERAL"
+>COLLATE</TT
+> specification while comparing case-folded strings,
+      but the initial folding to lower case is always done according to the
+      database's <TT
+CLASS="LITERAL"
+>LC_CTYPE</TT
+> setting (that is, as though
+      <TT
+CLASS="LITERAL"
+>COLLATE "default"</TT
+> were given).  This may be changed in a
+      future release so that both steps follow the input <TT
+CLASS="LITERAL"
+>COLLATE</TT
+>
+      specification.
+     </P
+></LI
+><LI
+><P
+>       <TT
+CLASS="TYPE"
+>citext</TT
+> is not as efficient as <TT
+CLASS="TYPE"
+>text</TT
+> because the
+       operator functions and the B-tree comparison functions must make copies
+       of the data and convert it to lower case for comparisons. It is,
+       however, slightly more efficient than using <CODE
+CLASS="FUNCTION"
+>lower</CODE
+> to get
+       case-insensitive matching.
+     </P
+></LI
+><LI
+><P
+>      <TT
+CLASS="TYPE"
+>citext</TT
+> doesn't help much if you need data to compare
+      case-sensitively in some contexts and case-insensitively in other
+      contexts.  The standard answer is to use the <TT
+CLASS="TYPE"
+>text</TT
+> type and
+      manually use the <CODE
+CLASS="FUNCTION"
+>lower</CODE
+> function when you need to compare
+      case-insensitively; this works all right if case-insensitive comparison
+      is needed only infrequently.  If you need case-insensitive behavior most
+      of the time and case-sensitive infrequently, consider storing the data
+      as <TT
+CLASS="TYPE"
+>citext</TT
+> and explicitly casting the column to <TT
+CLASS="TYPE"
+>text</TT
+>
+      when you want case-sensitive comparison.  In either situation, you will
+      need two indexes if you want both types of searches to be fast.
+    </P
+></LI
+><LI
+><P
+>      The schema containing the <TT
+CLASS="TYPE"
+>citext</TT
+> operators must be
+      in the current <TT
+CLASS="VARNAME"
+>search_path</TT
+> (typically <TT
+CLASS="LITERAL"
+>public</TT
+>);
+      if it is not, the normal case-sensitive <TT
+CLASS="TYPE"
+>text</TT
+> operators
+      will be invoked instead.
+    </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN169310"
+>F.7.5. Author</A
+></H2
+><P
+>   David E. Wheeler <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:david@kineticode.com"
+>david@kineticode.com</A
+>&#62;</CODE
+>
+  </P
+><P
+>    Inspired by the original <TT
+CLASS="TYPE"
+>citext</TT
+> module by Donald Fraser.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="chkpass.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="cube.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>chkpass</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>cube</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,469 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Tables and Indexes</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Full Text Search"
+HREF="textsearch.html"><LINK
+REL="PREVIOUS"
+TITLE="Introduction"
+HREF="textsearch-intro.html"><LINK
+REL="NEXT"
+TITLE="Controlling Text Search"
+HREF="textsearch-controls.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Introduction"
+HREF="textsearch-intro.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="textsearch.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 12. Full Text Search</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Controlling Text Search"
+HREF="textsearch-controls.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="TEXTSEARCH-TABLES"
+>12.2. Tables and Indexes</A
+></H1
+><P
+>   The examples in the previous section illustrated full text matching using
+   simple constant strings.  This section shows how to search table data,
+   optionally using indexes.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="TEXTSEARCH-TABLES-SEARCH"
+>12.2.1. Searching a Table</A
+></H2
+><P
+>    It is possible to do a full text search without an index.  A simple query
+    to print the <TT
+CLASS="STRUCTNAME"
+>title</TT
+> of each row that contains the word
+    <TT
+CLASS="LITERAL"
+>friend</TT
+> in its <TT
+CLASS="STRUCTFIELD"
+>body</TT
+> field is:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT title
+FROM pgweb
+WHERE to_tsvector('english', body) @@ to_tsquery('english', 'friend');</PRE
+><P>
+
+    This will also find related words such as <TT
+CLASS="LITERAL"
+>friends</TT
+>
+    and <TT
+CLASS="LITERAL"
+>friendly</TT
+>, since all these are reduced to the same
+    normalized lexeme.
+   </P
+><P
+>    The query above specifies that the <TT
+CLASS="LITERAL"
+>english</TT
+> configuration
+    is to be used to parse and normalize the strings.  Alternatively we
+    could omit the configuration parameters:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT title
+FROM pgweb
+WHERE to_tsvector(body) @@ to_tsquery('friend');</PRE
+><P>
+
+    This query will use the configuration set by <A
+HREF="runtime-config-client.html#GUC-DEFAULT-TEXT-SEARCH-CONFIG"
+>default_text_search_config</A
+>.
+   </P
+><P
+>    A more complex example is to
+    select the ten most recent documents that contain <TT
+CLASS="LITERAL"
+>create</TT
+> and
+    <TT
+CLASS="LITERAL"
+>table</TT
+> in the <TT
+CLASS="STRUCTNAME"
+>title</TT
+> or <TT
+CLASS="STRUCTNAME"
+>body</TT
+>:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT title
+FROM pgweb
+WHERE to_tsvector(title || ' ' || body) @@ to_tsquery('create &amp; table')
+ORDER BY last_mod_date DESC
+LIMIT 10;</PRE
+><P>
+
+    For clarity we omitted the <CODE
+CLASS="FUNCTION"
+>coalesce</CODE
+> function calls
+    which would be needed to find rows that contain <TT
+CLASS="LITERAL"
+>NULL</TT
+>
+    in one of the two fields.
+   </P
+><P
+>    Although these queries will work without an index, most applications
+    will find this approach too slow, except perhaps for occasional ad-hoc
+    searches.  Practical use of text searching usually requires creating
+    an index.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="TEXTSEARCH-TABLES-INDEX"
+>12.2.2. Creating Indexes</A
+></H2
+><P
+>    We can create a <ACRONYM
+CLASS="ACRONYM"
+>GIN</ACRONYM
+> index (<A
+HREF="textsearch-indexes.html"
+>Section 12.9</A
+>) to speed up text searches:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE INDEX pgweb_idx ON pgweb USING GIN (to_tsvector('english', body));</PRE
+><P>
+
+    Notice that the 2-argument version of <CODE
+CLASS="FUNCTION"
+>to_tsvector</CODE
+> is
+    used.  Only text search functions that specify a configuration name can
+    be used in expression indexes (<A
+HREF="indexes-expressional.html"
+>Section 11.7</A
+>).
+    This is because the index contents must be unaffected by <A
+HREF="runtime-config-client.html#GUC-DEFAULT-TEXT-SEARCH-CONFIG"
+>default_text_search_config</A
+>.  If they were affected, the
+    index contents might be inconsistent because different entries could
+    contain <TT
+CLASS="TYPE"
+>tsvector</TT
+>s that were created with different text search
+    configurations, and there would be no way to guess which was which.  It
+    would be impossible to dump and restore such an index correctly.
+   </P
+><P
+>    Because the two-argument version of <CODE
+CLASS="FUNCTION"
+>to_tsvector</CODE
+> was
+    used in the index above, only a query reference that uses the 2-argument
+    version of <CODE
+CLASS="FUNCTION"
+>to_tsvector</CODE
+> with the same configuration
+    name will use that index.  That is, <TT
+CLASS="LITERAL"
+>WHERE
+    to_tsvector('english', body) @@ 'a &amp; b'</TT
+> can use the index,
+    but <TT
+CLASS="LITERAL"
+>WHERE to_tsvector(body) @@ 'a &amp; b'</TT
+> cannot.
+    This ensures that an index will be used only with the same configuration
+    used to create the index entries.
+   </P
+><P
+>    It is possible to set up more complex expression indexes wherein the
+    configuration name is specified by another column, e.g.:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE INDEX pgweb_idx ON pgweb USING GIN (to_tsvector(config_name, body));</PRE
+><P>
+
+    where <TT
+CLASS="LITERAL"
+>config_name</TT
+> is a column in the <TT
+CLASS="LITERAL"
+>pgweb</TT
+>
+    table.  This allows mixed configurations in the same index while
+    recording which configuration was used for each index entry.  This
+    would be useful, for example, if the document collection contained
+    documents in different languages.  Again,
+    queries that are meant to use the index must be phrased to match, e.g.,
+    <TT
+CLASS="LITERAL"
+>WHERE to_tsvector(config_name, body) @@ 'a &amp; b'</TT
+>.
+   </P
+><P
+>    Indexes can even concatenate columns:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE INDEX pgweb_idx ON pgweb USING GIN (to_tsvector('english', title || ' ' || body));</PRE
+><P>
+   </P
+><P
+>    Another approach is to create a separate <TT
+CLASS="TYPE"
+>tsvector</TT
+> column
+    to hold the output of <CODE
+CLASS="FUNCTION"
+>to_tsvector</CODE
+>.  This example is a
+    concatenation of <TT
+CLASS="LITERAL"
+>title</TT
+> and <TT
+CLASS="LITERAL"
+>body</TT
+>,
+    using <CODE
+CLASS="FUNCTION"
+>coalesce</CODE
+> to ensure that one field will still be
+    indexed when the other is <TT
+CLASS="LITERAL"
+>NULL</TT
+>:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE pgweb ADD COLUMN textsearchable_index_col tsvector;
+UPDATE pgweb SET textsearchable_index_col =
+     to_tsvector('english', coalesce(title,'') || ' ' || coalesce(body,''));</PRE
+><P>
+
+    Then we create a <ACRONYM
+CLASS="ACRONYM"
+>GIN</ACRONYM
+> index to speed up the search:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE INDEX textsearch_idx ON pgweb USING GIN (textsearchable_index_col);</PRE
+><P>
+
+    Now we are ready to perform a fast full text search:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT title
+FROM pgweb
+WHERE textsearchable_index_col @@ to_tsquery('create &amp; table')
+ORDER BY last_mod_date DESC
+LIMIT 10;</PRE
+><P>
+   </P
+><P
+>    When using a separate column to store the <TT
+CLASS="TYPE"
+>tsvector</TT
+>
+    representation,
+    it is necessary to create a trigger to keep the <TT
+CLASS="TYPE"
+>tsvector</TT
+>
+    column current anytime <TT
+CLASS="LITERAL"
+>title</TT
+> or <TT
+CLASS="LITERAL"
+>body</TT
+> changes.
+    <A
+HREF="textsearch-features.html#TEXTSEARCH-UPDATE-TRIGGERS"
+>Section 12.4.3</A
+> explains how to do that.
+   </P
+><P
+>    One advantage of the separate-column approach over an expression index
+    is that it is not necessary to explicitly specify the text search
+    configuration in queries in order to make use of the index.  As shown
+    in the example above, the query can depend on
+    <TT
+CLASS="VARNAME"
+>default_text_search_config</TT
+>.  Another advantage is that
+    searches will be faster, since it will not be necessary to redo the
+    <CODE
+CLASS="FUNCTION"
+>to_tsvector</CODE
+> calls to verify index matches.  (This is more
+    important when using a GiST index than a GIN index; see <A
+HREF="textsearch-indexes.html"
+>Section 12.9</A
+>.)  The expression-index approach is
+    simpler to set up, however, and it requires less disk space since the
+    <TT
+CLASS="TYPE"
+>tsvector</TT
+> representation is not stored explicitly.
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="textsearch-intro.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="textsearch-controls.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Introduction</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="textsearch.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Controlling Text Search</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

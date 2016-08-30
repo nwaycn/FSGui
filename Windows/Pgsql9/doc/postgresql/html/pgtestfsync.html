@@ -1,0 +1,356 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_test_fsync</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="PostgreSQL Server Applications"
+HREF="reference-server.html"><LINK
+REL="PREVIOUS"
+TITLE="pg_rewind"
+HREF="app-pgrewind.html"><LINK
+REL="NEXT"
+TITLE="pg_test_timing"
+HREF="pgtesttiming.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pg_rewind"
+HREF="app-pgrewind.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="reference-server.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pg_test_timing"
+HREF="pgtesttiming.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="PGTESTFSYNC"
+></A
+><SPAN
+CLASS="APPLICATION"
+>pg_test_fsync</SPAN
+></H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN98666"
+></A
+><H2
+>Name</H2
+>pg_test_fsync&nbsp;--&nbsp;determine fastest <TT
+CLASS="VARNAME"
+>wal_sync_method</TT
+> for <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+></DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN98671"
+></A
+><H2
+>Synopsis</H2
+><P
+><TT
+CLASS="COMMAND"
+>pg_test_fsync</TT
+> [<TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+>...]</P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN98676"
+></A
+><H2
+>Description</H2
+><P
+>  <SPAN
+CLASS="APPLICATION"
+>pg_test_fsync</SPAN
+> is intended to give you a reasonable
+  idea of what the fastest <A
+HREF="runtime-config-wal.html#GUC-WAL-SYNC-METHOD"
+>wal_sync_method</A
+> is on your
+  specific system,
+  as well as supplying diagnostic information in the event of an identified I/O
+  problem.  However, differences shown by
+  <SPAN
+CLASS="APPLICATION"
+>pg_test_fsync</SPAN
+> might not make any significant
+  difference in real database throughput, especially since many database servers
+  are not speed-limited by their transaction logs.
+  <SPAN
+CLASS="APPLICATION"
+>pg_test_fsync</SPAN
+> reports average file sync operation
+  time in microseconds for each <TT
+CLASS="LITERAL"
+>wal_sync_method</TT
+>, which can also be used to
+  inform efforts to optimize the value of <A
+HREF="runtime-config-wal.html#GUC-COMMIT-DELAY"
+>commit_delay</A
+>.
+ </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN98685"
+></A
+><H2
+>Options</H2
+><P
+>    <SPAN
+CLASS="APPLICATION"
+>pg_test_fsync</SPAN
+> accepts the following
+    command-line options:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-f</TT
+><BR><TT
+CLASS="OPTION"
+>--filename</TT
+></DT
+><DD
+><P
+>        Specifies the file name to write test data in.
+        This file should be in the same file system that the
+        <TT
+CLASS="FILENAME"
+>pg_xlog</TT
+> directory is or will be placed in.
+        (<TT
+CLASS="FILENAME"
+>pg_xlog</TT
+> contains the <ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+> files.)
+        The default is <TT
+CLASS="FILENAME"
+>pg_test_fsync.out</TT
+> in the current
+        directory.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-s</TT
+><BR><TT
+CLASS="OPTION"
+>--secs-per-test</TT
+></DT
+><DD
+><P
+>        Specifies the number of seconds for each test.  The more time
+        per test, the greater the test's accuracy, but the longer it takes
+        to run.  The default is 5 seconds, which allows the program to
+        complete in under 2 minutes.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-V</TT
+><BR><TT
+CLASS="OPTION"
+>--version</TT
+></DT
+><DD
+><P
+>        Print the <SPAN
+CLASS="APPLICATION"
+>pg_test_fsync</SPAN
+> version and exit.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-?</TT
+><BR><TT
+CLASS="OPTION"
+>--help</TT
+></DT
+><DD
+><P
+>        Show help about <SPAN
+CLASS="APPLICATION"
+>pg_test_fsync</SPAN
+> command line
+        arguments, and exit.
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN98724"
+></A
+><H2
+>See Also</H2
+><A
+HREF="app-postgres.html"
+><SPAN
+CLASS="APPLICATION"
+>postgres</SPAN
+></A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="app-pgrewind.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="pgtesttiming.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><SPAN
+CLASS="APPLICATION"
+>pg_rewind</SPAN
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="reference-server.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><SPAN
+CLASS="APPLICATION"
+>pg_test_timing</SPAN
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,377 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>REFRESH MATERIALIZED VIEW</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="REASSIGN OWNED"
+HREF="sql-reassign-owned.html"><LINK
+REL="NEXT"
+TITLE="REINDEX"
+HREF="sql-reindex.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="REASSIGN OWNED"
+HREF="sql-reassign-owned.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="REINDEX"
+HREF="sql-reindex.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-REFRESHMATERIALIZEDVIEW"
+></A
+>REFRESH MATERIALIZED VIEW</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN85789"
+></A
+><H2
+>Name</H2
+>REFRESH MATERIALIZED VIEW&nbsp;--&nbsp;replace the contents of a materialized view</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN85792"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>REFRESH MATERIALIZED VIEW [ CONCURRENTLY ] <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>
+    [ WITH [ NO ] DATA ]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN85795"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>REFRESH MATERIALIZED VIEW</TT
+> completely replaces the
+   contents of a materialized view.  The old contents are discarded.  If
+   <TT
+CLASS="LITERAL"
+>WITH DATA</TT
+> is specified (or defaults) the backing query
+   is executed to provide the new data, and the materialized view is left in a
+   scannable state.  If <TT
+CLASS="LITERAL"
+>WITH NO DATA</TT
+> is specified no new
+   data is generated and the materialized view is left in an unscannable
+   state.
+  </P
+><P
+>   <TT
+CLASS="LITERAL"
+>CONCURRENTLY</TT
+> and <TT
+CLASS="LITERAL"
+>WITH NO DATA</TT
+> may not
+   be specified together.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN85804"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>CONCURRENTLY</TT
+></DT
+><DD
+><P
+>      Refresh the materialized view without locking out concurrent selects on
+      the materialized view.  Without this option a refresh which affects a
+      lot of rows will tend to use fewer resources and complete more quickly,
+      but could block other connections which are trying to read from the
+      materialized view.  This option may be faster in cases where a small
+      number of rows are affected.
+     </P
+><P
+>      This option is only allowed if there is at least one
+      <TT
+CLASS="LITERAL"
+>UNIQUE</TT
+> index on the materialized view which uses only
+      column names and includes all rows; that is, it must not index on any
+      expressions nor include a <TT
+CLASS="LITERAL"
+>WHERE</TT
+> clause.
+     </P
+><P
+>      This option may not be used when the materialized view is not already
+      populated.
+     </P
+><P
+>      Even with this option only one <TT
+CLASS="LITERAL"
+>REFRESH</TT
+> at a time may
+      run against any one materialized view.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></DT
+><DD
+><P
+>      The name (optionally schema-qualified) of the materialized view to
+      refresh.
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN85823"
+></A
+><H2
+>Notes</H2
+><P
+>   While the default index for future
+   <A
+HREF="sql-cluster.html"
+>CLUSTER</A
+>
+   operations is retained, <TT
+CLASS="COMMAND"
+>REFRESH MATERIALIZED VIEW</TT
+> does not
+   order the generated rows based on this property. If you want the data
+   to be ordered upon generation, you must use an <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+>
+   clause in the backing query.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN85829"
+></A
+><H2
+>Examples</H2
+><P
+>   This command will replace the contents of the materialized view called
+   <TT
+CLASS="LITERAL"
+>order_summary</TT
+> using the query from the materialized
+   view's definition, and leave it in a scannable state:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>REFRESH MATERIALIZED VIEW order_summary;</PRE
+><P>
+  </P
+><P
+>   This command will free storage associated with the materialized view
+   <TT
+CLASS="LITERAL"
+>annual_statistics_basis</TT
+> and leave it in an unscannable
+   state:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>REFRESH MATERIALIZED VIEW annual_statistics_basis WITH NO DATA;</PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN85837"
+></A
+><H2
+>Compatibility</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>REFRESH MATERIALIZED VIEW</TT
+> is a
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> extension.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN85842"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-creatematerializedview.html"
+>CREATE MATERIALIZED VIEW</A
+>, <A
+HREF="sql-altermaterializedview.html"
+>ALTER MATERIALIZED VIEW</A
+>, <A
+HREF="sql-dropmaterializedview.html"
+>DROP MATERIALIZED VIEW</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-reassign-owned.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-reindex.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>REASSIGN OWNED</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>REINDEX</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

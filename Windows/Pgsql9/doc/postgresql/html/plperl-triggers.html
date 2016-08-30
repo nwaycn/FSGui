@@ -1,0 +1,436 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>PL/Perl Triggers</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="PL/Perl - Perl Procedural Language"
+HREF="plperl.html"><LINK
+REL="PREVIOUS"
+TITLE="Trusted and Untrusted PL/Perl"
+HREF="plperl-trusted.html"><LINK
+REL="NEXT"
+TITLE="PL/Perl Event Triggers"
+HREF="plperl-event-triggers.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Trusted and Untrusted PL/Perl"
+HREF="plperl-trusted.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plperl.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 42. PL/Perl - Perl Procedural Language</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="PL/Perl Event Triggers"
+HREF="plperl-event-triggers.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PLPERL-TRIGGERS"
+>42.6. PL/Perl Triggers</A
+></H1
+><P
+>   PL/Perl can be used to write trigger functions.  In a trigger function,
+   the hash reference <TT
+CLASS="VARNAME"
+>$_TD</TT
+> contains information about the
+   current trigger event. <TT
+CLASS="VARNAME"
+>$_TD</TT
+> is a global variable,
+   which gets a separate local value for each invocation of the trigger.
+   The fields of the <TT
+CLASS="VARNAME"
+>$_TD</TT
+> hash reference are:
+
+   <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>$_TD-&gt;{new}{foo}</TT
+></DT
+><DD
+><P
+>       <TT
+CLASS="LITERAL"
+>NEW</TT
+> value of column <TT
+CLASS="LITERAL"
+>foo</TT
+>
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>$_TD-&gt;{old}{foo}</TT
+></DT
+><DD
+><P
+>       <TT
+CLASS="LITERAL"
+>OLD</TT
+> value of column <TT
+CLASS="LITERAL"
+>foo</TT
+>
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>$_TD-&gt;{name}</TT
+></DT
+><DD
+><P
+>       Name of the trigger being called
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>$_TD-&gt;{event}</TT
+></DT
+><DD
+><P
+>       Trigger event: <TT
+CLASS="LITERAL"
+>INSERT</TT
+>, <TT
+CLASS="LITERAL"
+>UPDATE</TT
+>,
+       <TT
+CLASS="LITERAL"
+>DELETE</TT
+>, <TT
+CLASS="LITERAL"
+>TRUNCATE</TT
+>, or <TT
+CLASS="LITERAL"
+>UNKNOWN</TT
+>
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>$_TD-&gt;{when}</TT
+></DT
+><DD
+><P
+>       When the trigger was called: <TT
+CLASS="LITERAL"
+>BEFORE</TT
+>,
+       <TT
+CLASS="LITERAL"
+>AFTER</TT
+>, <TT
+CLASS="LITERAL"
+>INSTEAD OF</TT
+>, or
+       <TT
+CLASS="LITERAL"
+>UNKNOWN</TT
+>
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>$_TD-&gt;{level}</TT
+></DT
+><DD
+><P
+>       The trigger level: <TT
+CLASS="LITERAL"
+>ROW</TT
+>, <TT
+CLASS="LITERAL"
+>STATEMENT</TT
+>, or <TT
+CLASS="LITERAL"
+>UNKNOWN</TT
+>
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>$_TD-&gt;{relid}</TT
+></DT
+><DD
+><P
+>       OID of the table on which the trigger fired
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>$_TD-&gt;{table_name}</TT
+></DT
+><DD
+><P
+>       Name of the table on which the trigger fired
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>$_TD-&gt;{relname}</TT
+></DT
+><DD
+><P
+>       Name of the table on which the trigger fired. This has been deprecated,
+       and could be removed in a future release.
+       Please use $_TD-&gt;{table_name} instead.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>$_TD-&gt;{table_schema}</TT
+></DT
+><DD
+><P
+>       Name of the schema in which the table on which the trigger fired, is
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>$_TD-&gt;{argc}</TT
+></DT
+><DD
+><P
+>       Number of arguments of the trigger function
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>@{$_TD-&gt;{args}}</TT
+></DT
+><DD
+><P
+>       Arguments of the trigger function.  Does not exist if <TT
+CLASS="LITERAL"
+>$_TD-&gt;{argc}</TT
+> is 0.
+      </P
+></DD
+></DL
+></DIV
+><P>
+  </P
+><P
+>   Row-level triggers can return one of the following:
+
+   <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>return;</TT
+></DT
+><DD
+><P
+>       Execute the operation
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>"SKIP"</TT
+></DT
+><DD
+><P
+>       Don't execute the operation
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>"MODIFY"</TT
+></DT
+><DD
+><P
+>       Indicates that the <TT
+CLASS="LITERAL"
+>NEW</TT
+> row was modified by
+       the trigger function
+      </P
+></DD
+></DL
+></DIV
+><P>
+  </P
+><P
+>   Here is an example of a trigger function, illustrating some of the
+   above:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE test (
+    i int,
+    v varchar
+);
+
+CREATE OR REPLACE FUNCTION valid_id() RETURNS trigger AS $$
+    if (($_TD-&gt;{new}{i} &gt;= 100) || ($_TD-&gt;{new}{i} &lt;= 0)) {
+        return "SKIP";    # skip INSERT/UPDATE command
+    } elsif ($_TD-&gt;{new}{v} ne "immortal") {
+        $_TD-&gt;{new}{v} .= "(modified by trigger)";
+        return "MODIFY";  # modify row and execute INSERT/UPDATE command
+    } else {
+        return;           # execute INSERT/UPDATE command
+    }
+$$ LANGUAGE plperl;
+
+CREATE TRIGGER test_valid_id_trig
+    BEFORE INSERT OR UPDATE ON test
+    FOR EACH ROW EXECUTE PROCEDURE valid_id();</PRE
+><P>
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plperl-trusted.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="plperl-event-triggers.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Trusted and Untrusted PL/Perl</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="plperl.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>PL/Perl Event Triggers</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,515 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>spi</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="sepgsql"
+HREF="sepgsql.html"><LINK
+REL="NEXT"
+TITLE="sslinfo"
+HREF="sslinfo.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="sepgsql"
+HREF="sepgsql.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="sslinfo"
+HREF="sslinfo.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="CONTRIB-SPI"
+>F.34. spi</A
+></H1
+><P
+>  The <SPAN
+CLASS="APPLICATION"
+>spi</SPAN
+> module provides several workable examples
+  of using SPI and triggers.  While these functions are of some value in
+  their own right, they are even more useful as examples to modify for
+  your own purposes.  The functions are general enough to be used
+  with any table, but you have to specify table and field names (as described
+  below) while creating a trigger.
+ </P
+><P
+>  Each of the groups of functions described below is provided as a
+  separately-installable extension.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN175491"
+>F.34.1. refint &mdash; Functions for Implementing Referential Integrity</A
+></H2
+><P
+>   <CODE
+CLASS="FUNCTION"
+>check_primary_key()</CODE
+> and
+   <CODE
+CLASS="FUNCTION"
+>check_foreign_key()</CODE
+> are used to check foreign key constraints.
+   (This functionality is long since superseded by the built-in foreign
+   key mechanism, of course, but the module is still useful as an example.)
+  </P
+><P
+>   <CODE
+CLASS="FUNCTION"
+>check_primary_key()</CODE
+> checks the referencing table.
+   To use, create a <TT
+CLASS="LITERAL"
+>BEFORE INSERT OR UPDATE</TT
+> trigger using this
+   function on a table referencing another table. Specify as the trigger
+   arguments: the referencing table's column name(s) which form the foreign
+   key, the referenced table name, and the column names in the referenced table
+   which form the primary/unique key.  To handle multiple foreign
+   keys, create a trigger for each reference.
+  </P
+><P
+>   <CODE
+CLASS="FUNCTION"
+>check_foreign_key()</CODE
+> checks the referenced table.
+   To use, create a <TT
+CLASS="LITERAL"
+>BEFORE DELETE OR UPDATE</TT
+> trigger using this
+   function on a table referenced by other table(s).  Specify as the trigger
+   arguments: the number of referencing tables for which the function has to
+   perform checking, the action if a referencing key is found
+   (<TT
+CLASS="LITERAL"
+>cascade</TT
+> &mdash; to delete the referencing row,
+   <TT
+CLASS="LITERAL"
+>restrict</TT
+> &mdash; to abort transaction if referencing keys
+   exist, <TT
+CLASS="LITERAL"
+>setnull</TT
+> &mdash; to set referencing key fields to null),
+   the triggered table's column names which form the primary/unique key, then
+   the referencing table name and column names (repeated for as many
+   referencing tables as were specified by first argument).  Note that the
+   primary/unique key columns should be marked NOT NULL and should have a
+   unique index.
+  </P
+><P
+>   There are examples in <TT
+CLASS="FILENAME"
+>refint.example</TT
+>.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN175507"
+>F.34.2. timetravel &mdash; Functions for Implementing Time Travel</A
+></H2
+><P
+>   Long ago, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> had a built-in time travel feature
+   that kept the insert and delete times for each tuple.  This can be
+   emulated using these functions.  To use these functions,
+   you must add to a table two columns of <TT
+CLASS="TYPE"
+>abstime</TT
+> type to store
+   the date when a tuple was inserted (start_date) and changed/deleted
+   (stop_date):
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE mytab (
+        ...             ...
+        start_date      abstime,
+        stop_date       abstime
+        ...             ...
+);</PRE
+><P>
+
+   The columns can be named whatever you like, but in this discussion
+   we'll call them start_date and stop_date.
+  </P
+><P
+>   When a new row is inserted, start_date should normally be set to
+   current time, and stop_date to <TT
+CLASS="LITERAL"
+>infinity</TT
+>.  The trigger
+   will automatically substitute these values if the inserted data
+   contains nulls in these columns.  Generally, inserting explicit
+   non-null data in these columns should only be done when re-loading
+   dumped data.
+  </P
+><P
+>   Tuples with stop_date equal to <TT
+CLASS="LITERAL"
+>infinity</TT
+> are <SPAN
+CLASS="QUOTE"
+>"valid
+   now"</SPAN
+>, and can be modified.  Tuples with a finite stop_date cannot
+   be modified anymore &mdash; the trigger will prevent it.  (If you need
+   to do that, you can turn off time travel as shown below.)
+  </P
+><P
+>   For a modifiable row, on update only the stop_date in the tuple being
+   updated will be changed (to current time) and a new tuple with the modified
+   data will be inserted.  Start_date in this new tuple will be set to current
+   time and stop_date to <TT
+CLASS="LITERAL"
+>infinity</TT
+>.
+  </P
+><P
+>   A delete does not actually remove the tuple but only sets its stop_date
+   to current time.
+  </P
+><P
+>   To query for tuples <SPAN
+CLASS="QUOTE"
+>"valid now"</SPAN
+>, include
+   <TT
+CLASS="LITERAL"
+>stop_date = 'infinity'</TT
+> in the query's WHERE condition.
+   (You might wish to incorporate that in a view.)  Similarly, you can
+   query for tuples valid at any past time with suitable conditions on
+   start_date and stop_date.
+  </P
+><P
+>   <CODE
+CLASS="FUNCTION"
+>timetravel()</CODE
+> is the general trigger function that supports
+   this behavior.  Create a <TT
+CLASS="LITERAL"
+>BEFORE INSERT OR UPDATE OR DELETE</TT
+>
+   trigger using this function on each time-traveled table. Specify two
+   trigger arguments: the actual
+   names of the start_date and stop_date columns.
+   Optionally, you can specify one to three more arguments, which must refer
+   to columns of type <TT
+CLASS="TYPE"
+>text</TT
+>.  The trigger will store the name of
+   the current user into the first of these columns during INSERT, the
+   second column during UPDATE, and the third during DELETE.
+  </P
+><P
+>   <CODE
+CLASS="FUNCTION"
+>set_timetravel()</CODE
+> allows you to turn time-travel on or off for
+   a table.
+   <TT
+CLASS="LITERAL"
+>set_timetravel('mytab', 1)</TT
+> will turn TT ON for table <TT
+CLASS="LITERAL"
+>mytab</TT
+>.
+   <TT
+CLASS="LITERAL"
+>set_timetravel('mytab', 0)</TT
+> will turn TT OFF for table <TT
+CLASS="LITERAL"
+>mytab</TT
+>.
+   In both cases the old status is reported.  While TT is off, you can modify
+   the start_date and stop_date columns freely.  Note that the on/off status
+   is local to the current database session &mdash; fresh sessions will
+   always start out with TT ON for all tables.
+  </P
+><P
+>   <CODE
+CLASS="FUNCTION"
+>get_timetravel()</CODE
+> returns the TT state for a table without
+   changing it.
+  </P
+><P
+>   There is an example in <TT
+CLASS="FILENAME"
+>timetravel.example</TT
+>.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN175538"
+>F.34.3. autoinc &mdash; Functions for Autoincrementing Fields</A
+></H2
+><P
+>   <CODE
+CLASS="FUNCTION"
+>autoinc()</CODE
+> is a trigger that stores the next value of
+   a sequence into an integer field.  This has some overlap with the
+   built-in <SPAN
+CLASS="QUOTE"
+>"serial column"</SPAN
+> feature, but it is not the same:
+   <CODE
+CLASS="FUNCTION"
+>autoinc()</CODE
+> will override attempts to substitute a
+   different field value during inserts, and optionally it can be
+   used to increment the field during updates, too.
+  </P
+><P
+>   To use, create a <TT
+CLASS="LITERAL"
+>BEFORE INSERT</TT
+> (or optionally <TT
+CLASS="LITERAL"
+>BEFORE
+   INSERT OR UPDATE</TT
+>) trigger using this function.  Specify two
+   trigger arguments: the name of the integer column to be modified,
+   and the name of the sequence object that will supply values.
+   (Actually, you can specify any number of pairs of such names, if
+   you'd like to update more than one autoincrementing column.)
+  </P
+><P
+>   There is an example in <TT
+CLASS="FILENAME"
+>autoinc.example</TT
+>.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN175549"
+>F.34.4. insert_username &mdash; Functions for Tracking Who Changed a Table</A
+></H2
+><P
+>   <CODE
+CLASS="FUNCTION"
+>insert_username()</CODE
+> is a trigger that stores the current
+   user's name into a text field.  This can be useful for tracking
+   who last modified a particular row within a table.
+  </P
+><P
+>   To use, create a <TT
+CLASS="LITERAL"
+>BEFORE INSERT</TT
+> and/or <TT
+CLASS="LITERAL"
+>UPDATE</TT
+>
+   trigger using this function.  Specify a single trigger
+   argument: the name of the text column to be modified.
+  </P
+><P
+>   There is an example in <TT
+CLASS="FILENAME"
+>insert_username.example</TT
+>.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN175558"
+>F.34.5. moddatetime &mdash; Functions for Tracking Last Modification Time</A
+></H2
+><P
+>   <CODE
+CLASS="FUNCTION"
+>moddatetime()</CODE
+> is a trigger that stores the current
+   time into a <TT
+CLASS="TYPE"
+>timestamp</TT
+> field.  This can be useful for tracking
+   the last modification time of a particular row within a table.
+  </P
+><P
+>   To use, create a <TT
+CLASS="LITERAL"
+>BEFORE UPDATE</TT
+>
+   trigger using this function.  Specify a single trigger
+   argument: the name of the column to be modified.
+   The column must be of type <TT
+CLASS="TYPE"
+>timestamp</TT
+> or <TT
+CLASS="TYPE"
+>timestamp with
+   time zone</TT
+>.
+  </P
+><P
+>   There is an example in <TT
+CLASS="FILENAME"
+>moddatetime.example</TT
+>.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sepgsql.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sslinfo.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>sepgsql</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>sslinfo</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

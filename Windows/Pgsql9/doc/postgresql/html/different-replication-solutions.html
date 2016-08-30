@@ -1,0 +1,718 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Comparison of Different Solutions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="High Availability, Load Balancing, and Replication"
+HREF="high-availability.html"><LINK
+REL="PREVIOUS"
+TITLE="High Availability, Load Balancing, and Replication"
+HREF="high-availability.html"><LINK
+REL="NEXT"
+TITLE="Log-Shipping Standby Servers"
+HREF="warm-standby.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="High Availability, Load Balancing, and Replication"
+HREF="high-availability.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="high-availability.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 25. High Availability, Load Balancing, and Replication</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Log-Shipping Standby Servers"
+HREF="warm-standby.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="DIFFERENT-REPLICATION-SOLUTIONS"
+>25.1. Comparison of Different Solutions</A
+></H1
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>Shared Disk Failover</DT
+><DD
+><P
+>     Shared disk failover avoids synchronization overhead by having only one
+     copy of the database.  It uses a single disk array that is shared by
+     multiple servers.  If the main database server fails, the standby server
+     is able to mount and start the database as though it were recovering from
+     a database crash.  This allows rapid failover with no data loss.
+    </P
+><P
+>     Shared hardware functionality is common in network storage devices.
+     Using a network file system is also possible, though care must be
+     taken that the file system has full <ACRONYM
+CLASS="ACRONYM"
+>POSIX</ACRONYM
+> behavior (see <A
+HREF="creating-cluster.html#CREATING-CLUSTER-NFS"
+>Section 17.2.2</A
+>).  One significant limitation of this
+     method is that if the shared disk array fails or becomes corrupt, the
+     primary and standby servers are both nonfunctional.  Another issue is
+     that the standby server should never access the shared storage while
+     the primary server is running.
+    </P
+></DD
+><DT
+>File System (Block-Device) Replication</DT
+><DD
+><P
+>     A modified version of shared hardware functionality is file system
+     replication, where all changes to a file system are mirrored to a file
+     system residing on another computer.  The only restriction is that
+     the mirroring must be done in a way that ensures the standby server
+     has a consistent copy of the file system &mdash; specifically, writes
+     to the standby must be done in the same order as those on the master.
+     <SPAN
+CLASS="PRODUCTNAME"
+>DRBD</SPAN
+> is a popular file system replication solution
+     for Linux.
+    </P
+></DD
+><DT
+>Transaction Log Shipping</DT
+><DD
+><P
+>     Warm and hot standby servers can be kept current by reading a
+     stream of write-ahead log (<ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+>)
+     records.  If the main server fails, the standby contains
+     almost all of the data of the main server, and can be quickly
+     made the new master database server.  This can be synchronous or
+     asynchronous and can only be done for the entire database server.
+    </P
+><P
+>     A standby server can be implemented using file-based log shipping
+     (<A
+HREF="warm-standby.html"
+>Section 25.2</A
+>) or streaming replication (see
+     <A
+HREF="warm-standby.html#STREAMING-REPLICATION"
+>Section 25.2.5</A
+>), or a combination of both. For
+     information on hot standby, see <A
+HREF="hot-standby.html"
+>Section 25.5</A
+>.
+    </P
+></DD
+><DT
+>Trigger-Based Master-Standby Replication</DT
+><DD
+><P
+>     A master-standby replication setup sends all data modification
+     queries to the master server.  The master server asynchronously
+     sends data changes to the standby server.  The standby can answer
+     read-only queries while the master server is running.  The
+     standby server is ideal for data warehouse queries.
+    </P
+><P
+>     <SPAN
+CLASS="PRODUCTNAME"
+>Slony-I</SPAN
+> is an example of this type of replication, with per-table
+     granularity, and support for multiple standby servers.  Because it
+     updates the standby server asynchronously (in batches), there is
+     possible data loss during fail over.
+    </P
+></DD
+><DT
+>Statement-Based Replication Middleware</DT
+><DD
+><P
+>     With statement-based replication middleware, a program intercepts
+     every SQL query and sends it to one or all servers.  Each server
+     operates independently.  Read-write queries must be sent to all servers,
+     so that every server receives any changes.  But read-only queries can be
+     sent to just one server, allowing the read workload to be distributed
+     among them.
+    </P
+><P
+>     If queries are simply broadcast unmodified, functions like
+     <CODE
+CLASS="FUNCTION"
+>random()</CODE
+>, <CODE
+CLASS="FUNCTION"
+>CURRENT_TIMESTAMP</CODE
+>, and
+     sequences can have different values on different servers.
+     This is because each server operates independently, and because
+     SQL queries are broadcast (and not actual modified rows).  If
+     this is unacceptable, either the middleware or the application
+     must query such values from a single server and then use those
+     values in write queries.  Another option is to use this replication
+     option with a traditional master-standby setup, i.e. data modification
+     queries are sent only to the master and are propagated to the
+     standby servers via master-standby replication, not by the replication
+     middleware.  Care must also be taken that all
+     transactions either commit or abort on all servers, perhaps
+     using two-phase commit (<A
+HREF="sql-prepare-transaction.html"
+>PREPARE TRANSACTION</A
+>
+     and <A
+HREF="sql-commit-prepared.html"
+>COMMIT PREPARED</A
+>.
+     <SPAN
+CLASS="PRODUCTNAME"
+>Pgpool-II</SPAN
+> and <SPAN
+CLASS="PRODUCTNAME"
+>Continuent Tungsten</SPAN
+>
+     are examples of this type of replication.
+    </P
+></DD
+><DT
+>Asynchronous Multimaster Replication</DT
+><DD
+><P
+>     For servers that are not regularly connected, like laptops or
+     remote servers, keeping data consistent among servers is a
+     challenge.  Using asynchronous multimaster replication, each
+     server works independently, and periodically communicates with
+     the other servers to identify conflicting transactions.  The
+     conflicts can be resolved by users or conflict resolution rules.
+     Bucardo is an example of this type of replication.
+    </P
+></DD
+><DT
+>Synchronous Multimaster Replication</DT
+><DD
+><P
+>     In synchronous multimaster replication, each server can accept
+     write requests, and modified data is transmitted from the
+     original server to every other server before each transaction
+     commits.  Heavy write activity can cause excessive locking,
+     leading to poor performance.  In fact, write performance is
+     often worse than that of a single server.  Read requests can
+     be sent to any server.  Some implementations use shared disk
+     to reduce the communication overhead.  Synchronous multimaster
+     replication is best for mostly read workloads, though its big
+     advantage is that any server can accept write requests &mdash;
+     there is no need to partition workloads between master and
+     standby servers, and because the data changes are sent from one
+     server to another, there is no problem with non-deterministic
+     functions like <CODE
+CLASS="FUNCTION"
+>random()</CODE
+>.
+    </P
+><P
+>     <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> does not offer this type of replication,
+     though <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> two-phase commit (<A
+HREF="sql-prepare-transaction.html"
+>PREPARE TRANSACTION</A
+> and <A
+HREF="sql-commit-prepared.html"
+>COMMIT PREPARED</A
+>)
+     can be used to implement this in application code or middleware.
+    </P
+></DD
+><DT
+>Commercial Solutions</DT
+><DD
+><P
+>     Because <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> is open source and easily
+     extended, a number of companies have taken <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+     and created commercial closed-source solutions with unique
+     failover, replication, and load balancing capabilities.
+    </P
+></DD
+></DL
+></DIV
+><P
+>  <A
+HREF="different-replication-solutions.html#HIGH-AVAILABILITY-MATRIX"
+>Table 25-1</A
+> summarizes
+  the capabilities of the various solutions listed above.
+ </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="HIGH-AVAILABILITY-MATRIX"
+></A
+><P
+><B
+>Table 25-1. High Availability, Load Balancing, and Replication Feature Matrix</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Feature</TH
+><TH
+>Shared Disk Failover</TH
+><TH
+>File System Replication</TH
+><TH
+>Transaction Log Shipping</TH
+><TH
+>Trigger-Based Master-Standby Replication</TH
+><TH
+>Statement-Based Replication Middleware</TH
+><TH
+>Asynchronous Multimaster Replication</TH
+><TH
+>Synchronous Multimaster Replication</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>Most Common Implementation</TD
+><TD
+ALIGN="CENTER"
+>NAS</TD
+><TD
+ALIGN="CENTER"
+>DRBD</TD
+><TD
+ALIGN="CENTER"
+>Streaming Repl.</TD
+><TD
+ALIGN="CENTER"
+>Slony</TD
+><TD
+ALIGN="CENTER"
+>pgpool-II</TD
+><TD
+ALIGN="CENTER"
+>Bucardo</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+></TR
+><TR
+><TD
+>Communication Method</TD
+><TD
+ALIGN="CENTER"
+>shared disk</TD
+><TD
+ALIGN="CENTER"
+>disk blocks</TD
+><TD
+ALIGN="CENTER"
+>WAL</TD
+><TD
+ALIGN="CENTER"
+>table rows</TD
+><TD
+ALIGN="CENTER"
+>SQL</TD
+><TD
+ALIGN="CENTER"
+>table rows</TD
+><TD
+ALIGN="CENTER"
+>table rows and row locks</TD
+></TR
+><TR
+><TD
+>No special hardware required</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+></TR
+><TR
+><TD
+>Allows multiple master servers</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+></TR
+><TR
+><TD
+>No master server overhead</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+></TR
+><TR
+><TD
+>No waiting for multiple servers</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>with sync off</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+></TR
+><TR
+><TD
+>Master failure will never lose data</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>with sync on</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+></TR
+><TR
+><TD
+>Standby accept read-only queries</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>with hot</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+></TR
+><TR
+><TD
+>Per-table granularity</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+></TR
+><TR
+><TD
+>No conflict resolution necessary</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>&nbsp;</TD
+><TD
+ALIGN="CENTER"
+>&bull;</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>  There are a few solutions that do not fit into the above categories:
+ </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>Data Partitioning</DT
+><DD
+><P
+>     Data partitioning splits tables into data sets.  Each set can
+     be modified by only one server.  For example, data can be
+     partitioned by offices, e.g., London and Paris, with a server
+     in each office.  If queries combining London and Paris data
+     are necessary, an application can query both servers, or
+     master/standby replication can be used to keep a read-only copy
+     of the other office's data on each server.
+    </P
+></DD
+><DT
+>Multiple-Server Parallel Query Execution</DT
+><DD
+><P
+>     Many of the above solutions allow multiple servers to handle multiple
+     queries, but none allow a single query to use multiple servers to
+     complete faster.  This solution allows multiple servers to work
+     concurrently on a single query.  It is usually accomplished by
+     splitting the data among servers and having each server execute its
+     part of the query and return results to a central server where they
+     are combined and returned to the user.  <SPAN
+CLASS="PRODUCTNAME"
+>Pgpool-II</SPAN
+>
+     has this capability.  Also, this can be implemented using the
+     <SPAN
+CLASS="PRODUCTNAME"
+>PL/Proxy</SPAN
+> tool set.
+    </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="high-availability.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="warm-standby.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>High Availability, Load Balancing, and Replication</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="high-availability.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Log-Shipping Standby Servers</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,689 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>User-defined Types</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Extending SQL"
+HREF="extend.html"><LINK
+REL="PREVIOUS"
+TITLE="User-defined Aggregates"
+HREF="xaggr.html"><LINK
+REL="NEXT"
+TITLE="User-defined Operators"
+HREF="xoper.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="User-defined Aggregates"
+HREF="xaggr.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="extend.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 35. Extending <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="User-defined Operators"
+HREF="xoper.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="XTYPES"
+>35.11. User-defined Types</A
+></H1
+><P
+>   As described in <A
+HREF="extend-type-system.html"
+>Section 35.2</A
+>,
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> can be extended to support new
+   data types.  This section describes how to define new base types,
+   which are data types defined below the level of the <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+>
+   language.  Creating a new base type requires implementing functions
+   to operate on the type in a low-level language, usually C.
+  </P
+><P
+>   The examples in this section can be found in
+   <TT
+CLASS="FILENAME"
+>complex.sql</TT
+> and <TT
+CLASS="FILENAME"
+>complex.c</TT
+>
+   in the <TT
+CLASS="FILENAME"
+>src/tutorial</TT
+> directory of the source distribution.
+   See the <TT
+CLASS="FILENAME"
+>README</TT
+> file in that directory for instructions
+   about running the examples.
+  </P
+><P
+>  
+  
+  A user-defined type must always have input and output functions.
+  These functions determine how the type appears in strings (for input
+  by the user and output to the user) and how the type is organized in
+  memory.  The input function takes a null-terminated character string
+  as its argument and returns the internal (in memory) representation
+  of the type.  The output function takes the internal representation
+  of the type as argument and returns a null-terminated character
+  string.  If we want to do anything more with the type than merely
+  store it, we must provide additional functions to implement whatever
+  operations we'd like to have for the type.
+ </P
+><P
+>  Suppose we want to define a type <TT
+CLASS="TYPE"
+>complex</TT
+> that represents
+  complex numbers. A natural way to represent a complex number in
+  memory would be the following C structure:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>typedef struct Complex {
+    double      x;
+    double      y;
+} Complex;</PRE
+><P>
+
+  We will need to make this a pass-by-reference type, since it's too
+  large to fit into a single <TT
+CLASS="TYPE"
+>Datum</TT
+> value.
+ </P
+><P
+>  As the external string representation of the type, we choose a
+  string of the form <TT
+CLASS="LITERAL"
+>(x,y)</TT
+>.
+ </P
+><P
+>  The input and output functions are usually not hard to write,
+  especially the output function.  But when defining the external
+  string representation of the type, remember that you must eventually
+  write a complete and robust parser for that representation as your
+  input function.  For instance:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>PG_FUNCTION_INFO_V1(complex_in);
+
+Datum
+complex_in(PG_FUNCTION_ARGS)
+{
+    char       *str = PG_GETARG_CSTRING(0);
+    double      x,
+                y;
+    Complex    *result;
+
+    if (sscanf(str, " ( %lf , %lf )", &#38;x, &#38;y) != 2)
+        ereport(ERROR,
+                (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+                 errmsg("invalid input syntax for complex: \"%s\"",
+                        str)));
+
+    result = (Complex *) palloc(sizeof(Complex));
+    result-&#62;x = x;
+    result-&#62;y = y;
+    PG_RETURN_POINTER(result);
+}</PRE
+><P>
+
+  The output function can simply be:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>PG_FUNCTION_INFO_V1(complex_out);
+
+Datum
+complex_out(PG_FUNCTION_ARGS)
+{
+    Complex    *complex = (Complex *) PG_GETARG_POINTER(0);
+    char       *result;
+
+    result = psprintf("(%g,%g)", complex-&#62;x, complex-&#62;y);
+    PG_RETURN_CSTRING(result);
+}</PRE
+><P>
+ </P
+><P
+>  You should be careful to make the input and output functions inverses of
+  each other.  If you do not, you will have severe problems when you
+  need to dump your data into a file and then read it back in.  This
+  is a particularly common problem when floating-point numbers are
+  involved.
+ </P
+><P
+>  Optionally, a user-defined type can provide binary input and output
+  routines.  Binary I/O is normally faster but less portable than textual
+  I/O.  As with textual I/O, it is up to you to define exactly what the
+  external binary representation is.  Most of the built-in data types
+  try to provide a machine-independent binary representation.  For
+  <TT
+CLASS="TYPE"
+>complex</TT
+>, we will piggy-back on the binary I/O converters
+  for type <TT
+CLASS="TYPE"
+>float8</TT
+>:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>PG_FUNCTION_INFO_V1(complex_recv);
+
+Datum
+complex_recv(PG_FUNCTION_ARGS)
+{
+    StringInfo  buf = (StringInfo) PG_GETARG_POINTER(0);
+    Complex    *result;
+
+    result = (Complex *) palloc(sizeof(Complex));
+    result-&#62;x = pq_getmsgfloat8(buf);
+    result-&#62;y = pq_getmsgfloat8(buf);
+    PG_RETURN_POINTER(result);
+}
+
+PG_FUNCTION_INFO_V1(complex_send);
+
+Datum
+complex_send(PG_FUNCTION_ARGS)
+{
+    Complex    *complex = (Complex *) PG_GETARG_POINTER(0);
+    StringInfoData buf;
+
+    pq_begintypsend(&#38;buf);
+    pq_sendfloat8(&#38;buf, complex-&#62;x);
+    pq_sendfloat8(&#38;buf, complex-&#62;y);
+    PG_RETURN_BYTEA_P(pq_endtypsend(&#38;buf));
+}</PRE
+><P>
+ </P
+><P
+>  Once we have written the I/O functions and compiled them into a shared
+  library, we can define the <TT
+CLASS="TYPE"
+>complex</TT
+> type in SQL.
+  First we declare it as a shell type:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TYPE complex;</PRE
+><P>
+
+  This serves as a placeholder that allows us to reference the type while
+  defining its I/O functions.  Now we can define the I/O functions:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION complex_in(cstring)
+    RETURNS complex
+    AS '<TT
+CLASS="REPLACEABLE"
+><I
+>filename</I
+></TT
+>'
+    LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION complex_out(complex)
+    RETURNS cstring
+    AS '<TT
+CLASS="REPLACEABLE"
+><I
+>filename</I
+></TT
+>'
+    LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION complex_recv(internal)
+   RETURNS complex
+   AS '<TT
+CLASS="REPLACEABLE"
+><I
+>filename</I
+></TT
+>'
+   LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION complex_send(complex)
+   RETURNS bytea
+   AS '<TT
+CLASS="REPLACEABLE"
+><I
+>filename</I
+></TT
+>'
+   LANGUAGE C IMMUTABLE STRICT;</PRE
+><P>
+ </P
+><P
+>  Finally, we can provide the full definition of the data type:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TYPE complex (
+   internallength = 16,
+   input = complex_in,
+   output = complex_out,
+   receive = complex_recv,
+   send = complex_send,
+   alignment = double
+);</PRE
+><P>
+ </P
+><P
+>  
+  When you define a new base type,
+  <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> automatically provides support
+  for arrays of that type.  The array type typically
+  has the same name as the base type with the underscore character
+  (<TT
+CLASS="LITERAL"
+>_</TT
+>) prepended.
+ </P
+><P
+>  Once the data type exists, we can declare additional functions to
+  provide useful operations on the data type.  Operators can then be
+  defined atop the functions, and if needed, operator classes can be
+  created to support indexing of the data type.  These additional
+  layers are discussed in following sections.
+ </P
+><P
+>  If the internal representation of the data type is variable-length, the
+  internal representation must follow the standard layout for variable-length
+  data: the first four bytes must be a <TT
+CLASS="TYPE"
+>char[4]</TT
+> field which is
+  never accessed directly (customarily named <TT
+CLASS="STRUCTFIELD"
+>vl_len_</TT
+>). You
+  must use the <CODE
+CLASS="FUNCTION"
+>SET_VARSIZE()</CODE
+> macro to store the total
+  size of the datum (including the length field itself) in this field
+  and <CODE
+CLASS="FUNCTION"
+>VARSIZE()</CODE
+> to retrieve it.  (These macros exist
+  because the length field may be encoded depending on platform.)
+ </P
+><P
+>  For further details see the description of the
+  <A
+HREF="sql-createtype.html"
+>CREATE TYPE</A
+> command.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="XTYPES-TOAST"
+>35.11.1. TOAST Considerations</A
+></H2
+><P
+>  If the values of your data type vary in size (in internal form), it's
+  usually desirable to make the data type <ACRONYM
+CLASS="ACRONYM"
+>TOAST</ACRONYM
+>-able (see <A
+HREF="storage-toast.html"
+>Section 63.2</A
+>). You should do this even if the values are always
+  too small to be compressed or stored externally, because
+  <ACRONYM
+CLASS="ACRONYM"
+>TOAST</ACRONYM
+> can save space on small data too, by reducing header
+  overhead.
+ </P
+><P
+>  To support <ACRONYM
+CLASS="ACRONYM"
+>TOAST</ACRONYM
+> storage, the C functions operating on the data
+  type must always be careful to unpack any toasted values they are handed
+  by using <CODE
+CLASS="FUNCTION"
+>PG_DETOAST_DATUM</CODE
+>.  (This detail is customarily hidden
+  by defining type-specific <CODE
+CLASS="FUNCTION"
+>GETARG_DATATYPE_P</CODE
+> macros.)
+  Then, when running the <TT
+CLASS="COMMAND"
+>CREATE TYPE</TT
+> command, specify the
+  internal length as <TT
+CLASS="LITERAL"
+>variable</TT
+> and select some appropriate storage
+  option other than <TT
+CLASS="LITERAL"
+>plain</TT
+>.
+ </P
+><P
+>  If data alignment is unimportant (either just for a specific function or
+  because the data type specifies byte alignment anyway) then it's possible
+  to avoid some of the overhead of <CODE
+CLASS="FUNCTION"
+>PG_DETOAST_DATUM</CODE
+>. You can use
+  <CODE
+CLASS="FUNCTION"
+>PG_DETOAST_DATUM_PACKED</CODE
+> instead (customarily hidden by
+  defining a <CODE
+CLASS="FUNCTION"
+>GETARG_DATATYPE_PP</CODE
+> macro) and using the macros
+  <CODE
+CLASS="FUNCTION"
+>VARSIZE_ANY_EXHDR</CODE
+> and <CODE
+CLASS="FUNCTION"
+>VARDATA_ANY</CODE
+> to access
+  a potentially-packed datum.
+  Again, the data returned by these macros is not aligned even if the data
+  type definition specifies an alignment. If the alignment is important you
+  must go through the regular <CODE
+CLASS="FUNCTION"
+>PG_DETOAST_DATUM</CODE
+> interface.
+ </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>   Older code frequently declares <TT
+CLASS="STRUCTFIELD"
+>vl_len_</TT
+> as an
+   <TT
+CLASS="TYPE"
+>int32</TT
+> field instead of <TT
+CLASS="TYPE"
+>char[4]</TT
+>.  This is OK as long as
+   the struct definition has other fields that have at least <TT
+CLASS="TYPE"
+>int32</TT
+>
+   alignment.  But it is dangerous to use such a struct definition when
+   working with a potentially unaligned datum; the compiler may take it as
+   license to assume the datum actually is aligned, leading to core dumps on
+   architectures that are strict about alignment.
+  </P
+></BLOCKQUOTE
+></DIV
+><P
+>  Another feature that's enabled by <ACRONYM
+CLASS="ACRONYM"
+>TOAST</ACRONYM
+> support is the
+  possibility of having an <I
+CLASS="FIRSTTERM"
+>expanded</I
+> in-memory data
+  representation that is more convenient to work with than the format that
+  is stored on disk.  The regular or <SPAN
+CLASS="QUOTE"
+>"flat"</SPAN
+> varlena storage format
+  is ultimately just a blob of bytes; it cannot for example contain
+  pointers, since it may get copied to other locations in memory.
+  For complex data types, the flat format may be quite expensive to work
+  with, so <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> provides a way to <SPAN
+CLASS="QUOTE"
+>"expand"</SPAN
+>
+  the flat format into a representation that is more suited to computation,
+  and then pass that format in-memory between functions of the data type.
+ </P
+><P
+>  To use expanded storage, a data type must define an expanded format that
+  follows the rules given in <TT
+CLASS="FILENAME"
+>src/include/utils/expandeddatum.h</TT
+>,
+  and provide functions to <SPAN
+CLASS="QUOTE"
+>"expand"</SPAN
+> a flat varlena value into
+  expanded format and <SPAN
+CLASS="QUOTE"
+>"flatten"</SPAN
+> the expanded format back to the
+  regular varlena representation.  Then ensure that all C functions for
+  the data type can accept either representation, possibly by converting
+  one into the other immediately upon receipt.  This does not require fixing
+  all existing functions for the data type at once, because the standard
+  <CODE
+CLASS="FUNCTION"
+>PG_DETOAST_DATUM</CODE
+> macro is defined to convert expanded inputs
+  into regular flat format.  Therefore, existing functions that work with
+  the flat varlena format will continue to work, though slightly
+  inefficiently, with expanded inputs; they need not be converted until and
+  unless better performance is important.
+ </P
+><P
+>  C functions that know how to work with an expanded representation
+  typically fall into two categories: those that can only handle expanded
+  format, and those that can handle either expanded or flat varlena inputs.
+  The former are easier to write but may be less efficient overall, because
+  converting a flat input to expanded form for use by a single function may
+  cost more than is saved by operating on the expanded format.
+  When only expanded format need be handled, conversion of flat inputs to
+  expanded form can be hidden inside an argument-fetching macro, so that
+  the function appears no more complex than one working with traditional
+  varlena input.
+  To handle both types of input, write an argument-fetching function that
+  will detoast external, short-header, and compressed varlena inputs, but
+  not expanded inputs.  Such a function can be defined as returning a
+  pointer to a union of the flat varlena format and the expanded format.
+  Callers can use the <CODE
+CLASS="FUNCTION"
+>VARATT_IS_EXPANDED_HEADER()</CODE
+> macro to
+  determine which format they received.
+ </P
+><P
+>  The <ACRONYM
+CLASS="ACRONYM"
+>TOAST</ACRONYM
+> infrastructure not only allows regular varlena
+  values to be distinguished from expanded values, but also
+  distinguishes <SPAN
+CLASS="QUOTE"
+>"read-write"</SPAN
+> and <SPAN
+CLASS="QUOTE"
+>"read-only"</SPAN
+> pointers to
+  expanded values.  C functions that only need to examine an expanded
+  value, or will only change it in safe and non-semantically-visible ways,
+  need not care which type of pointer they receive.  C functions that
+  produce a modified version of an input value are allowed to modify an
+  expanded input value in-place if they receive a read-write pointer, but
+  must not modify the input if they receive a read-only pointer; in that
+  case they have to copy the value first, producing a new value to modify.
+  A C function that has constructed a new expanded value should always
+  return a read-write pointer to it.  Also, a C function that is modifying
+  a read-write expanded value in-place should take care to leave the value
+  in a sane state if it fails partway through.
+ </P
+><P
+>  For examples of working with expanded values, see the standard array
+  infrastructure, particularly
+  <TT
+CLASS="FILENAME"
+>src/backend/utils/adt/array_expanded.c</TT
+>.
+ </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="xaggr.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="xoper.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>User-defined Aggregates</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="extend.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>User-defined Operators</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,1217 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Resource Consumption</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Configuration"
+HREF="runtime-config.html"><LINK
+REL="PREVIOUS"
+TITLE="Connections and Authentication"
+HREF="runtime-config-connection.html"><LINK
+REL="NEXT"
+TITLE="Write Ahead Log"
+HREF="runtime-config-wal.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Connections and Authentication"
+HREF="runtime-config-connection.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 18. Server Configuration</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Write Ahead Log"
+HREF="runtime-config-wal.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RUNTIME-CONFIG-RESOURCE"
+>18.4. Resource Consumption</A
+></H1
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-RESOURCE-MEMORY"
+>18.4.1. Memory</A
+></H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-SHARED-BUFFERS"
+></A
+><TT
+CLASS="VARNAME"
+>shared_buffers</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the amount of memory the database server uses for shared
+        memory buffers.  The default is typically 128 megabytes
+        (<TT
+CLASS="LITERAL"
+>128MB</TT
+>), but might be less if your kernel settings will
+        not support it (as determined during <SPAN
+CLASS="APPLICATION"
+>initdb</SPAN
+>).
+        This setting must be at least 128 kilobytes.  (Non-default
+        values of <TT
+CLASS="SYMBOL"
+>BLCKSZ</TT
+> change the minimum.)  However,
+        settings significantly higher than the minimum are usually needed
+        for good performance.  This parameter can only be set at server start.
+       </P
+><P
+>        If you have a dedicated database server with 1GB or more of RAM, a
+        reasonable starting value for <TT
+CLASS="VARNAME"
+>shared_buffers</TT
+> is 25%
+        of the memory in your system.  There are some workloads where even
+        large settings for <TT
+CLASS="VARNAME"
+>shared_buffers</TT
+> are effective, but
+        because <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> also relies on the
+        operating system cache, it is unlikely that an allocation of more than
+        40% of RAM to <TT
+CLASS="VARNAME"
+>shared_buffers</TT
+> will work better than a
+        smaller amount.  Larger settings for <TT
+CLASS="VARNAME"
+>shared_buffers</TT
+>
+        usually require a corresponding increase in
+        <TT
+CLASS="VARNAME"
+>max_wal_size</TT
+>, in order to spread out the
+        process of writing large quantities of new or changed data over a
+        longer period of time.
+       </P
+><P
+>        On systems with less than 1GB of RAM, a smaller percentage of RAM is
+        appropriate, so as to leave adequate space for the operating system.
+        Also, on Windows, large values for <TT
+CLASS="VARNAME"
+>shared_buffers</TT
+>
+        aren't as effective.  You may find better results keeping the setting
+        relatively low and using the operating system cache more instead.  The
+        useful range for <TT
+CLASS="VARNAME"
+>shared_buffers</TT
+> on Windows systems
+        is generally from 64MB to 512MB.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-HUGE-PAGES"
+></A
+><TT
+CLASS="VARNAME"
+>huge_pages</TT
+> (<TT
+CLASS="TYPE"
+>enum</TT
+>)
+      </DT
+><DD
+><P
+>        Enables/disables the use of huge memory pages. Valid values are
+        <TT
+CLASS="LITERAL"
+>try</TT
+> (the default), <TT
+CLASS="LITERAL"
+>on</TT
+>,
+        and <TT
+CLASS="LITERAL"
+>off</TT
+>.
+       </P
+><P
+>        At present, this feature is supported only on Linux. The setting is
+        ignored on other systems when set to <TT
+CLASS="LITERAL"
+>try</TT
+>.
+       </P
+><P
+>        The use of huge pages results in smaller page tables and less CPU time
+        spent on memory management, increasing performance. For more details,
+        see <A
+HREF="kernel-resources.html#LINUX-HUGE-PAGES"
+>Section 17.4.4</A
+>.
+       </P
+><P
+>        With <TT
+CLASS="VARNAME"
+>huge_pages</TT
+> set to <TT
+CLASS="LITERAL"
+>try</TT
+>,
+        the server will try to use huge pages, but fall back to using
+        normal allocation if that fails. With <TT
+CLASS="LITERAL"
+>on</TT
+>, failure
+        to use huge pages will prevent the server from starting up. With
+        <TT
+CLASS="LITERAL"
+>off</TT
+>, huge pages will not be used.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-TEMP-BUFFERS"
+></A
+><TT
+CLASS="VARNAME"
+>temp_buffers</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the maximum number of temporary buffers used by each database
+        session.  These are session-local buffers used only for access to
+        temporary tables.  The default is eight megabytes
+        (<TT
+CLASS="LITERAL"
+>8MB</TT
+>).  The setting can be changed within individual
+        sessions, but only before the first use of temporary tables
+        within the session; subsequent attempts to change the value will
+        have no effect on that session.
+       </P
+><P
+>        A session will allocate temporary buffers as needed up to the limit
+        given by <TT
+CLASS="VARNAME"
+>temp_buffers</TT
+>.  The cost of setting a large
+        value in sessions that do not actually need many temporary
+        buffers is only a buffer descriptor, or about 64 bytes, per
+        increment in <TT
+CLASS="VARNAME"
+>temp_buffers</TT
+>.  However if a buffer is
+        actually used an additional 8192 bytes will be consumed for it
+        (or in general, <TT
+CLASS="SYMBOL"
+>BLCKSZ</TT
+> bytes).
+       </P
+></DD
+><DT
+><A
+NAME="GUC-MAX-PREPARED-TRANSACTIONS"
+></A
+><TT
+CLASS="VARNAME"
+>max_prepared_transactions</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the maximum number of transactions that can be in the
+        <SPAN
+CLASS="QUOTE"
+>"prepared"</SPAN
+> state simultaneously (see <A
+HREF="sql-prepare-transaction.html"
+>PREPARE TRANSACTION</A
+>).
+        Setting this parameter to zero (which is the default)
+        disables the prepared-transaction feature.
+        This parameter can only be set at server start.
+       </P
+><P
+>        If you are not planning to use prepared transactions, this parameter
+        should be set to zero to prevent accidental creation of prepared
+        transactions.  If you are using prepared transactions, you will
+        probably want <TT
+CLASS="VARNAME"
+>max_prepared_transactions</TT
+> to be at
+        least as large as <A
+HREF="runtime-config-connection.html#GUC-MAX-CONNECTIONS"
+>max_connections</A
+>, so that every
+        session can have a prepared transaction pending.
+       </P
+><P
+>        When running a standby server, you must set this parameter to the
+        same or higher value than on the master server. Otherwise, queries
+        will not be allowed in the standby server.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-WORK-MEM"
+></A
+><TT
+CLASS="VARNAME"
+>work_mem</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the amount of memory to be used by internal sort operations
+        and hash tables before writing to temporary disk files. The value
+        defaults to four megabytes (<TT
+CLASS="LITERAL"
+>4MB</TT
+>).
+        Note that for a complex query, several sort or hash operations might be
+        running in parallel; each operation will be allowed to use as much memory
+        as this value specifies before it starts to write data into temporary
+        files. Also, several running sessions could be doing such operations
+        concurrently.  Therefore, the total memory used could be many
+        times the value of <TT
+CLASS="VARNAME"
+>work_mem</TT
+>; it is necessary to
+        keep this fact in mind when choosing the value. Sort operations are
+        used for <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+>, <TT
+CLASS="LITERAL"
+>DISTINCT</TT
+>, and
+        merge joins.
+        Hash tables are used in hash joins, hash-based aggregation, and
+        hash-based processing of <TT
+CLASS="LITERAL"
+>IN</TT
+> subqueries.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-MAINTENANCE-WORK-MEM"
+></A
+><TT
+CLASS="VARNAME"
+>maintenance_work_mem</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the maximum amount of memory to be used by maintenance
+        operations, such as <TT
+CLASS="COMMAND"
+>VACUUM</TT
+>, <TT
+CLASS="COMMAND"
+>CREATE
+        INDEX</TT
+>, and <TT
+CLASS="COMMAND"
+>ALTER TABLE ADD FOREIGN KEY</TT
+>.  It defaults
+        to 64 megabytes (<TT
+CLASS="LITERAL"
+>64MB</TT
+>).  Since only one of these
+        operations can be executed at a time by a database session, and
+        an installation normally doesn't have many of them running
+        concurrently, it's safe to set this value significantly larger
+        than <TT
+CLASS="VARNAME"
+>work_mem</TT
+>.  Larger settings might improve
+        performance for vacuuming and for restoring database dumps.
+       </P
+><P
+>        Note that when autovacuum runs, up to
+        <A
+HREF="runtime-config-autovacuum.html#GUC-AUTOVACUUM-MAX-WORKERS"
+>autovacuum_max_workers</A
+> times this memory
+        may be allocated, so be careful not to set the default value
+        too high.  It may be useful to control for this by separately
+        setting <A
+HREF="runtime-config-resource.html#GUC-AUTOVACUUM-WORK-MEM"
+>autovacuum_work_mem</A
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-AUTOVACUUM-WORK-MEM"
+></A
+><TT
+CLASS="VARNAME"
+>autovacuum_work_mem</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the maximum amount of memory to be used by each
+        autovacuum worker process.  It defaults to -1, indicating that
+        the value of <A
+HREF="runtime-config-resource.html#GUC-MAINTENANCE-WORK-MEM"
+>maintenance_work_mem</A
+> should
+        be used instead.  The setting has no effect on the behavior of
+        <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> when run in other contexts.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-MAX-STACK-DEPTH"
+></A
+><TT
+CLASS="VARNAME"
+>max_stack_depth</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the maximum safe depth of the server's execution stack.
+        The ideal setting for this parameter is the actual stack size limit
+        enforced by the kernel (as set by <TT
+CLASS="LITERAL"
+>ulimit -s</TT
+> or local
+        equivalent), less a safety margin of a megabyte or so.  The safety
+        margin is needed because the stack depth is not checked in every
+        routine in the server, but only in key potentially-recursive routines
+        such as expression evaluation.  The default setting is two
+        megabytes (<TT
+CLASS="LITERAL"
+>2MB</TT
+>), which is conservatively small and
+        unlikely to risk crashes.  However, it might be too small to allow
+        execution of complex functions.  Only superusers can change this
+        setting.
+       </P
+><P
+>        Setting <TT
+CLASS="VARNAME"
+>max_stack_depth</TT
+> higher than
+        the actual kernel limit will mean that a runaway recursive function
+        can crash an individual backend process.  On platforms where
+        <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> can determine the kernel limit,
+        the server will not allow this variable to be set to an unsafe
+        value.  However, not all platforms provide the information,
+        so caution is recommended in selecting a value.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-DYNAMIC-SHARED-MEMORY-TYPE"
+></A
+><TT
+CLASS="VARNAME"
+>dynamic_shared_memory_type</TT
+> (<TT
+CLASS="TYPE"
+>enum</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the dynamic shared memory implementation that the server
+        should use.  Possible values are <TT
+CLASS="LITERAL"
+>posix</TT
+> (for POSIX shared
+        memory allocated using <TT
+CLASS="LITERAL"
+>shm_open</TT
+>), <TT
+CLASS="LITERAL"
+>sysv</TT
+>
+        (for System V shared memory allocated via <TT
+CLASS="LITERAL"
+>shmget</TT
+>),
+        <TT
+CLASS="LITERAL"
+>windows</TT
+> (for Windows shared memory), <TT
+CLASS="LITERAL"
+>mmap</TT
+>
+        (to simulate shared memory using memory-mapped files stored in the
+        data directory), and <TT
+CLASS="LITERAL"
+>none</TT
+> (to disable this feature).
+        Not all values are supported on all platforms; the first supported
+        option is the default for that platform.  The use of the
+        <TT
+CLASS="LITERAL"
+>mmap</TT
+> option, which is not the default on any platform,
+        is generally discouraged because the operating system may write
+        modified pages back to disk repeatedly, increasing system I/O load;
+        however, it may be useful for debugging, when the
+        <TT
+CLASS="LITERAL"
+>pg_dynshmem</TT
+> directory is stored on a RAM disk, or when
+        other shared memory facilities are not available.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-RESOURCE-DISK"
+>18.4.2. Disk</A
+></H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-TEMP-FILE-LIMIT"
+></A
+><TT
+CLASS="VARNAME"
+>temp_file_limit</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the maximum amount of disk space that a session can use
+        for temporary files, such as sort and hash temporary files, or the
+        storage file for a held cursor.  A transaction attempting to exceed
+        this limit will be canceled.
+        The value is specified in kilobytes, and <TT
+CLASS="LITERAL"
+>-1</TT
+> (the
+        default) means no limit.
+        Only superusers can change this setting.
+       </P
+><P
+>        This setting constrains the total space used at any instant by all
+        temporary files used by a given <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> session.
+        It should be noted that disk space used for explicit temporary
+        tables, as opposed to temporary files used behind-the-scenes in query
+        execution, does <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+> count against this limit.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-RESOURCE-KERNEL"
+>18.4.3. Kernel Resource Usage</A
+></H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-MAX-FILES-PER-PROCESS"
+></A
+><TT
+CLASS="VARNAME"
+>max_files_per_process</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the maximum number of simultaneously open files allowed to each
+        server subprocess. The default is one thousand files. If the kernel is enforcing
+        a safe per-process limit, you don't need to worry about this setting.
+        But on some platforms (notably, most BSD systems), the kernel will
+        allow individual processes to open many more files than the system
+        can actually support if many processes all try to open
+        that many files. If you find yourself seeing <SPAN
+CLASS="QUOTE"
+>"Too many open
+        files"</SPAN
+> failures, try reducing this setting.
+        This parameter can only be set at server start.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-RESOURCE-VACUUM-COST"
+>18.4.4. Cost-based Vacuum Delay</A
+></H2
+><P
+>      During the execution of <A
+HREF="sql-vacuum.html"
+>VACUUM</A
+>
+      and <A
+HREF="sql-analyze.html"
+>ANALYZE</A
+>
+      commands, the system maintains an
+      internal counter that keeps track of the estimated cost of the
+      various I/O operations that are performed.  When the accumulated
+      cost reaches a limit (specified by
+      <TT
+CLASS="VARNAME"
+>vacuum_cost_limit</TT
+>), the process performing
+      the operation will sleep for a short period of time, as specified by
+      <TT
+CLASS="VARNAME"
+>vacuum_cost_delay</TT
+>. Then it will reset the
+      counter and continue execution.
+     </P
+><P
+>      The intent of this feature is to allow administrators to reduce
+      the I/O impact of these commands on concurrent database
+      activity. There are many situations where it is not
+      important that maintenance commands like
+      <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> and <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> finish
+      quickly; however, it is usually very important that these
+      commands do not significantly interfere with the ability of the
+      system to perform other database operations. Cost-based vacuum
+      delay provides a way for administrators to achieve this.
+     </P
+><P
+>      This feature is disabled by default for manually issued
+      <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> commands. To enable it, set the
+      <TT
+CLASS="VARNAME"
+>vacuum_cost_delay</TT
+> variable to a nonzero
+      value.
+     </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-VACUUM-COST-DELAY"
+></A
+><TT
+CLASS="VARNAME"
+>vacuum_cost_delay</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+       </DT
+><DD
+><P
+>         The length of time, in milliseconds, that the process will sleep
+         when the cost limit has been exceeded.
+         The default value is zero, which disables the cost-based vacuum
+         delay feature.  Positive values enable cost-based vacuuming.
+         Note that on many systems, the effective resolution
+         of sleep delays is 10 milliseconds; setting
+         <TT
+CLASS="VARNAME"
+>vacuum_cost_delay</TT
+> to a value that is
+         not a multiple of 10 might have the same results as setting it
+         to the next higher multiple of 10.
+        </P
+><P
+>         When using cost-based vacuuming, appropriate values for
+         <TT
+CLASS="VARNAME"
+>vacuum_cost_delay</TT
+> are usually quite small, perhaps
+         10 or 20 milliseconds.  Adjusting vacuum's resource consumption
+         is best done by changing the other vacuum cost parameters.
+        </P
+></DD
+><DT
+><A
+NAME="GUC-VACUUM-COST-PAGE-HIT"
+></A
+><TT
+CLASS="VARNAME"
+>vacuum_cost_page_hit</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+       </DT
+><DD
+><P
+>         The estimated cost for vacuuming a buffer found in the shared buffer
+         cache. It represents the cost to lock the buffer pool, lookup
+         the shared hash table and scan the content of the page. The
+         default value is one.
+        </P
+></DD
+><DT
+><A
+NAME="GUC-VACUUM-COST-PAGE-MISS"
+></A
+><TT
+CLASS="VARNAME"
+>vacuum_cost_page_miss</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+       </DT
+><DD
+><P
+>         The estimated cost for vacuuming a buffer that has to be read from
+         disk.  This represents the effort to lock the buffer pool,
+         lookup the shared hash table, read the desired block in from
+         the disk and scan its content. The default value is 10.
+        </P
+></DD
+><DT
+><A
+NAME="GUC-VACUUM-COST-PAGE-DIRTY"
+></A
+><TT
+CLASS="VARNAME"
+>vacuum_cost_page_dirty</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+       </DT
+><DD
+><P
+>         The estimated cost charged when vacuum modifies a block that was
+         previously clean. It represents the extra I/O required to
+         flush the dirty block out to disk again. The default value is
+         20.
+        </P
+></DD
+><DT
+><A
+NAME="GUC-VACUUM-COST-LIMIT"
+></A
+><TT
+CLASS="VARNAME"
+>vacuum_cost_limit</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+       </DT
+><DD
+><P
+>         The accumulated cost that will cause the vacuuming process to sleep.
+         The default value is 200.
+        </P
+></DD
+></DL
+></DIV
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>       There are certain operations that hold critical locks and should
+       therefore complete as quickly as possible.  Cost-based vacuum
+       delays do not occur during such operations.  Therefore it is
+       possible that the cost accumulates far higher than the specified
+       limit.  To avoid uselessly long delays in such cases, the actual
+       delay is calculated as <TT
+CLASS="VARNAME"
+>vacuum_cost_delay</TT
+> *
+       <TT
+CLASS="VARNAME"
+>accumulated_balance</TT
+> /
+       <TT
+CLASS="VARNAME"
+>vacuum_cost_limit</TT
+> with a maximum of
+       <TT
+CLASS="VARNAME"
+>vacuum_cost_delay</TT
+> * 4.
+      </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-RESOURCE-BACKGROUND-WRITER"
+>18.4.5. Background Writer</A
+></H2
+><P
+>      There is a separate server
+      process called the <I
+CLASS="FIRSTTERM"
+>background writer</I
+>, whose function
+      is to issue writes of <SPAN
+CLASS="QUOTE"
+>"dirty"</SPAN
+> (new or modified) shared
+      buffers.  It writes shared buffers so server processes handling
+      user queries seldom or never need to wait for a write to occur.
+      However, the background writer does cause a net overall
+      increase in I/O load, because while a repeatedly-dirtied page might
+      otherwise be written only once per checkpoint interval, the
+      background writer might write it several times as it is dirtied
+      in the same interval.  The parameters discussed in this subsection
+      can be used to tune the behavior for local needs.
+     </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-BGWRITER-DELAY"
+></A
+><TT
+CLASS="VARNAME"
+>bgwriter_delay</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+       </DT
+><DD
+><P
+>         Specifies the delay between activity rounds for the
+         background writer.  In each round the writer issues writes
+         for some number of dirty buffers (controllable by the
+         following parameters).  It then sleeps for <TT
+CLASS="VARNAME"
+>bgwriter_delay</TT
+>
+         milliseconds, and repeats.  When there are no dirty buffers in the
+         buffer pool, though, it goes into a longer sleep regardless of
+         <TT
+CLASS="VARNAME"
+>bgwriter_delay</TT
+>.  The default value is 200
+         milliseconds (<TT
+CLASS="LITERAL"
+>200ms</TT
+>). Note that on many systems, the
+         effective resolution of sleep delays is 10 milliseconds; setting
+         <TT
+CLASS="VARNAME"
+>bgwriter_delay</TT
+> to a value that is not a multiple of 10
+         might have the same results as setting it to the next higher multiple
+         of 10.  This parameter can only be set in the
+         <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> file or on the server command line.
+        </P
+></DD
+><DT
+><A
+NAME="GUC-BGWRITER-LRU-MAXPAGES"
+></A
+><TT
+CLASS="VARNAME"
+>bgwriter_lru_maxpages</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+       </DT
+><DD
+><P
+>         In each round, no more than this many buffers will be written
+         by the background writer.  Setting this to zero disables
+         background writing.  (Note that checkpoints, which are managed by
+         a separate, dedicated auxiliary process, are unaffected.)
+         The default value is 100 buffers.
+         This parameter can only be set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+         file or on the server command line.
+        </P
+></DD
+><DT
+><A
+NAME="GUC-BGWRITER-LRU-MULTIPLIER"
+></A
+><TT
+CLASS="VARNAME"
+>bgwriter_lru_multiplier</TT
+> (<TT
+CLASS="TYPE"
+>floating point</TT
+>)
+       </DT
+><DD
+><P
+>         The number of dirty buffers written in each round is based on the
+         number of new buffers that have been needed by server processes
+         during recent rounds.  The average recent need is multiplied by
+         <TT
+CLASS="VARNAME"
+>bgwriter_lru_multiplier</TT
+> to arrive at an estimate of the
+         number of buffers that will be needed during the next round.  Dirty
+         buffers are written until there are that many clean, reusable buffers
+         available.  (However, no more than <TT
+CLASS="VARNAME"
+>bgwriter_lru_maxpages</TT
+>
+         buffers will be written per round.)
+         Thus, a setting of 1.0 represents a <SPAN
+CLASS="QUOTE"
+>"just in time"</SPAN
+> policy
+         of writing exactly the number of buffers predicted to be needed.
+         Larger values provide some cushion against spikes in demand,
+         while smaller values intentionally leave writes to be done by
+         server processes.
+         The default is 2.0.
+         This parameter can only be set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+         file or on the server command line.
+        </P
+></DD
+></DL
+></DIV
+><P
+>      Smaller values of <TT
+CLASS="VARNAME"
+>bgwriter_lru_maxpages</TT
+> and
+      <TT
+CLASS="VARNAME"
+>bgwriter_lru_multiplier</TT
+> reduce the extra I/O load
+      caused by the background writer, but make it more likely that server
+      processes will have to issue writes for themselves, delaying interactive
+      queries.
+     </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-RESOURCE-ASYNC-BEHAVIOR"
+>18.4.6. Asynchronous Behavior</A
+></H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-EFFECTIVE-IO-CONCURRENCY"
+></A
+><TT
+CLASS="VARNAME"
+>effective_io_concurrency</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+       </DT
+><DD
+><P
+>         Sets the number of concurrent disk I/O operations that
+         <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> expects can be executed
+         simultaneously.  Raising this value will increase the number of I/O
+         operations that any individual <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> session
+         attempts to initiate in parallel.  The allowed range is 1 to 1000,
+         or zero to disable issuance of asynchronous I/O requests. Currently,
+         this setting only affects bitmap heap scans.
+        </P
+><P
+>         A good starting point for this setting is the number of separate
+         drives comprising a RAID 0 stripe or RAID 1 mirror being used for the
+         database.  (For RAID 5 the parity drive should not be counted.)
+         However, if the database is often busy with multiple queries issued in
+         concurrent sessions, lower values may be sufficient to keep the disk
+         array busy.  A value higher than needed to keep the disks busy will
+         only result in extra CPU overhead.
+        </P
+><P
+>         For more exotic systems, such as memory-based storage or a RAID array
+         that is limited by bus bandwidth, the correct value might be the
+         number of I/O paths available.  Some experimentation may be needed
+         to find the best value.
+        </P
+><P
+>         Asynchronous I/O depends on an effective <CODE
+CLASS="FUNCTION"
+>posix_fadvise</CODE
+>
+         function, which some operating systems lack.  If the function is not
+         present then setting this parameter to anything but zero will result
+         in an error.  On some operating systems (e.g., Solaris), the function
+         is present but does not actually do anything.
+        </P
+><P
+>         The default is 1 on supported systems, otherwise 0.
+        </P
+></DD
+><DT
+><A
+NAME="GUC-MAX-WORKER-PROCESSES"
+></A
+><TT
+CLASS="VARNAME"
+>max_worker_processes</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+       </DT
+><DD
+><P
+>         Sets the maximum number of background processes that the system
+         can support.  This parameter can only be set at server start.
+        </P
+><P
+>         When running a standby server, you must set this parameter to the
+         same or higher value than on the master server. Otherwise, queries
+         will not be allowed in the standby server.
+        </P
+></DD
+></DL
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime-config-connection.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="runtime-config-wal.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Connections and Authentication</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="runtime-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Write Ahead Log</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

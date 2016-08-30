@@ -1,0 +1,313 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Encryption Options</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Setup and Operation"
+HREF="runtime.html"><LINK
+REL="PREVIOUS"
+TITLE="Preventing Server Spoofing"
+HREF="preventing-server-spoofing.html"><LINK
+REL="NEXT"
+TITLE="Secure TCP/IP Connections with SSL"
+HREF="ssl-tcp.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Preventing Server Spoofing"
+HREF="preventing-server-spoofing.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 17. Server Setup and Operation</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Secure TCP/IP Connections with SSL"
+HREF="ssl-tcp.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="ENCRYPTION-OPTIONS"
+>17.8. Encryption Options</A
+></H1
+><P
+>   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> offers encryption at several
+   levels, and provides flexibility in protecting data from disclosure
+   due to database server theft, unscrupulous administrators, and
+   insecure networks. Encryption might also be required to secure
+   sensitive data such as medical records or financial transactions.
+  </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>Password Storage Encryption</DT
+><DD
+><P
+>     By default, database user passwords are stored as MD5 hashes, so
+     the administrator cannot determine the actual password assigned
+     to the user. If MD5 encryption is used for client authentication,
+     the unencrypted password is never even temporarily present on the
+     server because the client MD5-encrypts it before being sent
+     across the network.
+    </P
+></DD
+><DT
+>Encryption For Specific Columns</DT
+><DD
+><P
+>     The <A
+HREF="pgcrypto.html"
+>pgcrypto</A
+> module allows certain fields to be
+     stored encrypted.
+     This is useful if only some of the data is sensitive.
+     The client supplies the decryption key and the data is decrypted
+     on the server and then sent to the client.
+    </P
+><P
+>     The decrypted data and the decryption key are present on the
+     server for a brief time while it is being decrypted and
+     communicated between the client and server. This presents a brief
+     moment where the data and keys can be intercepted by someone with
+     complete access to the database server, such as the system
+     administrator.
+    </P
+></DD
+><DT
+>Data Partition Encryption</DT
+><DD
+><P
+>     Storage encryption can be performed at the file system level or the
+     block level.  Linux file system encryption options include eCryptfs
+     and EncFS, while FreeBSD uses PEFS.  Block level or full disk
+     encryption options include dm-crypt + LUKS on Linux and GEOM
+     modules geli and gbde on FreeBSD.  Many other operating systems
+     support this functionality, including Windows.
+    </P
+><P
+>     This mechanism prevents unencrypted data from being read from the
+     drives if the drives or the entire computer is stolen. This does
+     not protect against attacks while the file system is mounted,
+     because when mounted, the operating system provides an unencrypted
+     view of the data. However, to mount the file system, you need some
+     way for the encryption key to be passed to the operating system,
+     and sometimes the key is stored somewhere on the host that mounts
+     the disk.
+    </P
+></DD
+><DT
+>Encrypting Passwords Across A Network</DT
+><DD
+><P
+>      The <TT
+CLASS="LITERAL"
+>MD5</TT
+> authentication method double-encrypts the
+      password on the client before sending it to the server. It first
+      MD5-encrypts it based on the user name, and then encrypts it
+      based on a random salt sent by the server when the database
+      connection was made. It is this double-encrypted value that is
+      sent over the network to the server. Double-encryption not only
+      prevents the password from being discovered, it also prevents
+      another connection from using the same encrypted password to
+      connect to the database server at a later time.
+     </P
+></DD
+><DT
+>Encrypting Data Across A Network</DT
+><DD
+><P
+>      SSL connections encrypt all data sent across the network: the
+      password, the queries, and the data returned. The
+      <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> file allows administrators to specify
+      which hosts can use non-encrypted connections (<TT
+CLASS="LITERAL"
+>host</TT
+>)
+      and which require SSL-encrypted connections
+      (<TT
+CLASS="LITERAL"
+>hostssl</TT
+>). Also, clients can specify that they
+      connect to servers only via SSL. <SPAN
+CLASS="APPLICATION"
+>Stunnel</SPAN
+> or
+      <SPAN
+CLASS="APPLICATION"
+>SSH</SPAN
+> can also be used to encrypt transmissions.
+     </P
+></DD
+><DT
+>SSL Host Authentication</DT
+><DD
+><P
+>     It is possible for both the client and server to provide SSL
+     certificates to each other. It takes some extra configuration
+     on each side, but this provides stronger verification of identity
+     than the mere use of passwords. It prevents a computer from
+     pretending to be the server just long enough to read the password
+     sent by the client. It also helps prevent <SPAN
+CLASS="QUOTE"
+>"man in the middle"</SPAN
+>
+     attacks where a computer between the client and server pretends to
+     be the server and reads and passes all data between the client and
+     server.
+    </P
+></DD
+><DT
+>Client-Side Encryption</DT
+><DD
+><P
+>     If the system administrator for the server's machine cannot be trusted,
+     it is necessary
+     for the client to encrypt the data; this way, unencrypted data
+     never appears on the database server. Data is encrypted on the
+     client before being sent to the server, and database results have
+     to be decrypted on the client before being used.
+    </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="preventing-server-spoofing.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="ssl-tcp.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Preventing Server Spoofing</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="runtime.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Secure TCP/IP Connections with SSL</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

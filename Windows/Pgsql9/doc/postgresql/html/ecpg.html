@@ -1,0 +1,623 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>ECPG - Embedded SQL in C</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Client Interfaces"
+HREF="client-interfaces.html"><LINK
+REL="PREVIOUS"
+TITLE="Example Program"
+HREF="lo-examplesect.html"><LINK
+REL="NEXT"
+TITLE="The Concept"
+HREF="ecpg-concept.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="CHAPTER"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Example Program"
+HREF="lo-examplesect.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="client-interfaces.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="The Concept"
+HREF="ecpg-concept.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="ECPG"
+></A
+>Chapter 33. <SPAN
+CLASS="APPLICATION"
+>ECPG</SPAN
+> - Embedded <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> in C</H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+>33.1. <A
+HREF="ecpg-concept.html"
+>The Concept</A
+></DT
+><DT
+>33.2. <A
+HREF="ecpg-connect.html"
+>Managing Database Connections</A
+></DT
+><DD
+><DL
+><DT
+>33.2.1. <A
+HREF="ecpg-connect.html#ECPG-CONNECTING"
+>Connecting to the Database Server</A
+></DT
+><DT
+>33.2.2. <A
+HREF="ecpg-connect.html#ECPG-SET-CONNECTION"
+>Choosing a Connection</A
+></DT
+><DT
+>33.2.3. <A
+HREF="ecpg-connect.html#ECPG-DISCONNECT"
+>Closing a Connection</A
+></DT
+></DL
+></DD
+><DT
+>33.3. <A
+HREF="ecpg-commands.html"
+>Running SQL Commands</A
+></DT
+><DD
+><DL
+><DT
+>33.3.1. <A
+HREF="ecpg-commands.html#ECPG-EXECUTING"
+>Executing SQL Statements</A
+></DT
+><DT
+>33.3.2. <A
+HREF="ecpg-commands.html#ECPG-CURSORS"
+>Using Cursors</A
+></DT
+><DT
+>33.3.3. <A
+HREF="ecpg-commands.html#ECPG-TRANSACTIONS"
+>Managing Transactions</A
+></DT
+><DT
+>33.3.4. <A
+HREF="ecpg-commands.html#ECPG-PREPARED"
+>Prepared Statements</A
+></DT
+></DL
+></DD
+><DT
+>33.4. <A
+HREF="ecpg-variables.html"
+>Using Host Variables</A
+></DT
+><DD
+><DL
+><DT
+>33.4.1. <A
+HREF="ecpg-variables.html#ECPG-VARIABLES-OVERVIEW"
+>Overview</A
+></DT
+><DT
+>33.4.2. <A
+HREF="ecpg-variables.html#ECPG-DECLARE-SECTIONS"
+>Declare Sections</A
+></DT
+><DT
+>33.4.3. <A
+HREF="ecpg-variables.html#ECPG-RETRIEVING"
+>Retrieving Query Results</A
+></DT
+><DT
+>33.4.4. <A
+HREF="ecpg-variables.html#ECPG-VARIABLES-TYPE-MAPPING"
+>Type Mapping</A
+></DT
+><DT
+>33.4.5. <A
+HREF="ecpg-variables.html#ECPG-VARIABLES-NONPRIMITIVE-SQL"
+>Handling Nonprimitive SQL Data Types</A
+></DT
+><DT
+>33.4.6. <A
+HREF="ecpg-variables.html#ECPG-INDICATORS"
+>Indicators</A
+></DT
+></DL
+></DD
+><DT
+>33.5. <A
+HREF="ecpg-dynamic.html"
+>Dynamic SQL</A
+></DT
+><DD
+><DL
+><DT
+>33.5.1. <A
+HREF="ecpg-dynamic.html#ECPG-DYNAMIC-WITHOUT-RESULT"
+>Executing Statements without a Result Set</A
+></DT
+><DT
+>33.5.2. <A
+HREF="ecpg-dynamic.html#ECPG-DYNAMIC-INPUT"
+>Executing a Statement with Input Parameters</A
+></DT
+><DT
+>33.5.3. <A
+HREF="ecpg-dynamic.html#ECPG-DYNAMIC-WITH-RESULT"
+>Executing a Statement with a Result Set</A
+></DT
+></DL
+></DD
+><DT
+>33.6. <A
+HREF="ecpg-pgtypes.html"
+>pgtypes Library</A
+></DT
+><DD
+><DL
+><DT
+>33.6.1. <A
+HREF="ecpg-pgtypes.html#ECPG-PGTYPES-NUMERIC"
+>The numeric Type</A
+></DT
+><DT
+>33.6.2. <A
+HREF="ecpg-pgtypes.html#ECPG-PGTYPES-DATE"
+>The date Type</A
+></DT
+><DT
+>33.6.3. <A
+HREF="ecpg-pgtypes.html#ECPG-PGTYPES-TIMESTAMP"
+>The timestamp Type</A
+></DT
+><DT
+>33.6.4. <A
+HREF="ecpg-pgtypes.html#ECPG-PGTYPES-INTERVAL"
+>The interval Type</A
+></DT
+><DT
+>33.6.5. <A
+HREF="ecpg-pgtypes.html#ECPG-PGTYPES-DECIMAL"
+>The decimal Type</A
+></DT
+><DT
+>33.6.6. <A
+HREF="ecpg-pgtypes.html#ECPG-PGTYPES-ERRNO"
+>errno Values of pgtypeslib</A
+></DT
+><DT
+>33.6.7. <A
+HREF="ecpg-pgtypes.html#ECPG-PGTYPES-CONSTANTS"
+>Special Constants of pgtypeslib</A
+></DT
+></DL
+></DD
+><DT
+>33.7. <A
+HREF="ecpg-descriptors.html"
+>Using Descriptor Areas</A
+></DT
+><DD
+><DL
+><DT
+>33.7.1. <A
+HREF="ecpg-descriptors.html#ECPG-NAMED-DESCRIPTORS"
+>Named SQL Descriptor Areas</A
+></DT
+><DT
+>33.7.2. <A
+HREF="ecpg-descriptors.html#ECPG-SQLDA-DESCRIPTORS"
+>SQLDA Descriptor Areas</A
+></DT
+></DL
+></DD
+><DT
+>33.8. <A
+HREF="ecpg-errors.html"
+>Error Handling</A
+></DT
+><DD
+><DL
+><DT
+>33.8.1. <A
+HREF="ecpg-errors.html#ECPG-WHENEVER"
+>Setting Callbacks</A
+></DT
+><DT
+>33.8.2. <A
+HREF="ecpg-errors.html#ECPG-SQLCA"
+>sqlca</A
+></DT
+><DT
+>33.8.3. <A
+HREF="ecpg-errors.html#ECPG-SQLSTATE-SQLCODE"
+><TT
+CLASS="LITERAL"
+>SQLSTATE</TT
+> vs. <TT
+CLASS="LITERAL"
+>SQLCODE</TT
+></A
+></DT
+></DL
+></DD
+><DT
+>33.9. <A
+HREF="ecpg-preproc.html"
+>Preprocessor Directives</A
+></DT
+><DD
+><DL
+><DT
+>33.9.1. <A
+HREF="ecpg-preproc.html#ECPG-INCLUDE"
+>Including Files</A
+></DT
+><DT
+>33.9.2. <A
+HREF="ecpg-preproc.html#ECPG-DEFINE"
+>The define and undef Directives</A
+></DT
+><DT
+>33.9.3. <A
+HREF="ecpg-preproc.html#ECPG-IFDEF"
+>ifdef, ifndef, else, elif, and endif Directives</A
+></DT
+></DL
+></DD
+><DT
+>33.10. <A
+HREF="ecpg-process.html"
+>Processing Embedded SQL Programs</A
+></DT
+><DT
+>33.11. <A
+HREF="ecpg-library.html"
+>Library Functions</A
+></DT
+><DT
+>33.12. <A
+HREF="ecpg-lo.html"
+>Large Objects</A
+></DT
+><DT
+>33.13. <A
+HREF="ecpg-cpp.html"
+><ACRONYM
+CLASS="ACRONYM"
+>C++</ACRONYM
+> Applications</A
+></DT
+><DD
+><DL
+><DT
+>33.13.1. <A
+HREF="ecpg-cpp.html#ECPG-CPP-SCOPE"
+>Scope for Host Variables</A
+></DT
+><DT
+>33.13.2. <A
+HREF="ecpg-cpp.html#ECPG-CPP-AND-C"
+>C++ Application Development with External C Module</A
+></DT
+></DL
+></DD
+><DT
+>33.14. <A
+HREF="ecpg-sql-commands.html"
+>Embedded SQL Commands</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="ecpg-sql-allocate-descriptor.html"
+>ALLOCATE DESCRIPTOR</A
+>&nbsp;--&nbsp;allocate an SQL descriptor area</DT
+><DT
+><A
+HREF="ecpg-sql-connect.html"
+>CONNECT</A
+>&nbsp;--&nbsp;establish a database connection</DT
+><DT
+><A
+HREF="ecpg-sql-deallocate-descriptor.html"
+>DEALLOCATE DESCRIPTOR</A
+>&nbsp;--&nbsp;deallocate an SQL descriptor area</DT
+><DT
+><A
+HREF="ecpg-sql-declare.html"
+>DECLARE</A
+>&nbsp;--&nbsp;define a cursor</DT
+><DT
+><A
+HREF="ecpg-sql-describe.html"
+>DESCRIBE</A
+>&nbsp;--&nbsp;obtain information about a prepared statement or result set</DT
+><DT
+><A
+HREF="ecpg-sql-disconnect.html"
+>DISCONNECT</A
+>&nbsp;--&nbsp;terminate a database connection</DT
+><DT
+><A
+HREF="ecpg-sql-execute-immediate.html"
+>EXECUTE IMMEDIATE</A
+>&nbsp;--&nbsp;dynamically prepare and execute a statement</DT
+><DT
+><A
+HREF="ecpg-sql-get-descriptor.html"
+>GET DESCRIPTOR</A
+>&nbsp;--&nbsp;get information from an SQL descriptor area</DT
+><DT
+><A
+HREF="ecpg-sql-open.html"
+>OPEN</A
+>&nbsp;--&nbsp;open a dynamic cursor</DT
+><DT
+><A
+HREF="ecpg-sql-prepare.html"
+>PREPARE</A
+>&nbsp;--&nbsp;prepare a statement for execution</DT
+><DT
+><A
+HREF="ecpg-sql-set-autocommit.html"
+>SET AUTOCOMMIT</A
+>&nbsp;--&nbsp;set the autocommit behavior of the current session</DT
+><DT
+><A
+HREF="ecpg-sql-set-connection.html"
+>SET CONNECTION</A
+>&nbsp;--&nbsp;select a database connection</DT
+><DT
+><A
+HREF="ecpg-sql-set-descriptor.html"
+>SET DESCRIPTOR</A
+>&nbsp;--&nbsp;set information in an SQL descriptor area</DT
+><DT
+><A
+HREF="ecpg-sql-type.html"
+>TYPE</A
+>&nbsp;--&nbsp;define a new data type</DT
+><DT
+><A
+HREF="ecpg-sql-var.html"
+>VAR</A
+>&nbsp;--&nbsp;define a variable</DT
+><DT
+><A
+HREF="ecpg-sql-whenever.html"
+>WHENEVER</A
+>&nbsp;--&nbsp;specify the action to be taken when an SQL statement causes a specific class condition to be raised</DT
+></DL
+></DD
+><DT
+>33.15. <A
+HREF="ecpg-informix-compat.html"
+><SPAN
+CLASS="PRODUCTNAME"
+>Informix</SPAN
+> Compatibility Mode</A
+></DT
+><DD
+><DL
+><DT
+>33.15.1. <A
+HREF="ecpg-informix-compat.html#ECPG-INFORMIX-TYPES"
+>Additional Types</A
+></DT
+><DT
+>33.15.2. <A
+HREF="ecpg-informix-compat.html#ECPG-INFORMIX-STATEMENTS"
+>Additional/Missing Embedded SQL Statements</A
+></DT
+><DT
+>33.15.3. <A
+HREF="ecpg-informix-compat.html#ECPG-INFORMIX-SQLDA"
+>Informix-compatible SQLDA Descriptor Areas</A
+></DT
+><DT
+>33.15.4. <A
+HREF="ecpg-informix-compat.html#ECPG-INFORMIX-FUNCTIONS"
+>Additional Functions</A
+></DT
+><DT
+>33.15.5. <A
+HREF="ecpg-informix-compat.html#ECPG-INFORMIX-CONSTANTS"
+>Additional Constants</A
+></DT
+></DL
+></DD
+><DT
+>33.16. <A
+HREF="ecpg-develop.html"
+>Internals</A
+></DT
+></DL
+></DIV
+><P
+>  This chapter describes the embedded <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> package
+  for <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>. It was written by
+  Linus Tolke (<CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:linus@epact.se"
+>linus@epact.se</A
+>&#62;</CODE
+>) and Michael Meskes
+  (<CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:meskes@postgresql.org"
+>meskes@postgresql.org</A
+>&#62;</CODE
+>). Originally it was written to work with
+  <ACRONYM
+CLASS="ACRONYM"
+>C</ACRONYM
+>. It also works with <ACRONYM
+CLASS="ACRONYM"
+>C++</ACRONYM
+>, but
+  it does not recognize all <ACRONYM
+CLASS="ACRONYM"
+>C++</ACRONYM
+> constructs yet.
+ </P
+><P
+>  This documentation is quite incomplete.  But since this
+  interface is standardized, additional information can be found in
+  many resources about SQL.
+ </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="lo-examplesect.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="ecpg-concept.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Example Program</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="client-interfaces.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>The Concept</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

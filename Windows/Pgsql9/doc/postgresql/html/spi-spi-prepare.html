@@ -1,0 +1,469 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>SPI_prepare</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Interface Functions"
+HREF="spi-interface.html"><LINK
+REL="PREVIOUS"
+TITLE="SPI_execute_with_args"
+HREF="spi-spi-execute-with-args.html"><LINK
+REL="NEXT"
+TITLE="SPI_prepare_cursor"
+HREF="spi-spi-prepare-cursor.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="SPI_execute_with_args"
+HREF="spi-spi-execute-with-args.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="spi-interface.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="SPI_prepare_cursor"
+HREF="spi-spi-prepare-cursor.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SPI-SPI-PREPARE"
+></A
+>SPI_prepare</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN66511"
+></A
+><H2
+>Name</H2
+>SPI_prepare&nbsp;--&nbsp;prepare a statement, without executing it yet</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN66514"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>SPIPlanPtr SPI_prepare(const char * <TT
+CLASS="PARAMETER"
+>command</TT
+>, int <TT
+CLASS="PARAMETER"
+>nargs</TT
+>, Oid * <TT
+CLASS="PARAMETER"
+>argtypes</TT
+>)</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN66519"
+></A
+><H2
+>Description</H2
+><P
+>   <CODE
+CLASS="FUNCTION"
+>SPI_prepare</CODE
+> creates and returns a prepared
+   statement for the specified command, but doesn't execute the command.
+   The prepared statement can later be executed repeatedly using
+   <CODE
+CLASS="FUNCTION"
+>SPI_execute_plan</CODE
+>.
+  </P
+><P
+>   When the same or a similar command is to be executed repeatedly, it
+   is generally advantageous to perform parse analysis only once, and
+   might furthermore be advantageous to re-use an execution plan for the
+   command.
+   <CODE
+CLASS="FUNCTION"
+>SPI_prepare</CODE
+> converts a command string into a
+   prepared statement that encapsulates the results of parse analysis.
+   The prepared statement also provides a place for caching an execution plan
+   if it is found that generating a custom plan for each execution is not
+   helpful.
+  </P
+><P
+>   A prepared command can be generalized by writing parameters
+   (<TT
+CLASS="LITERAL"
+>$1</TT
+>, <TT
+CLASS="LITERAL"
+>$2</TT
+>, etc.) in place of what would be
+   constants in a normal command.  The actual values of the parameters
+   are then specified when <CODE
+CLASS="FUNCTION"
+>SPI_execute_plan</CODE
+> is called.
+   This allows the prepared command to be used over a wider range of
+   situations than would be possible without parameters.
+  </P
+><P
+>   The statement returned by <CODE
+CLASS="FUNCTION"
+>SPI_prepare</CODE
+> can be used
+   only in the current invocation of the procedure, since
+   <CODE
+CLASS="FUNCTION"
+>SPI_finish</CODE
+> frees memory allocated for such a
+   statement.  But the statement can be saved for longer using the functions
+   <CODE
+CLASS="FUNCTION"
+>SPI_keepplan</CODE
+> or <CODE
+CLASS="FUNCTION"
+>SPI_saveplan</CODE
+>.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN66535"
+></A
+><H2
+>Arguments</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>const char * <TT
+CLASS="PARAMETER"
+>command</TT
+></TT
+></DT
+><DD
+><P
+>      command string
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>int <TT
+CLASS="PARAMETER"
+>nargs</TT
+></TT
+></DT
+><DD
+><P
+>      number of input parameters (<TT
+CLASS="LITERAL"
+>$1</TT
+>, <TT
+CLASS="LITERAL"
+>$2</TT
+>, etc.)
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>Oid * <TT
+CLASS="PARAMETER"
+>argtypes</TT
+></TT
+></DT
+><DD
+><P
+>      pointer to an array containing the <ACRONYM
+CLASS="ACRONYM"
+>OID</ACRONYM
+>s of
+      the data types of the parameters
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN66559"
+></A
+><H2
+>Return Value</H2
+><P
+>   <CODE
+CLASS="FUNCTION"
+>SPI_prepare</CODE
+> returns a non-null pointer to an
+   <TT
+CLASS="TYPE"
+>SPIPlan</TT
+>, which is an opaque struct representing a prepared
+   statement.  On error, <TT
+CLASS="SYMBOL"
+>NULL</TT
+> will be returned,
+   and <TT
+CLASS="VARNAME"
+>SPI_result</TT
+> will be set to one of the same
+   error codes used by <CODE
+CLASS="FUNCTION"
+>SPI_execute</CODE
+>, except that
+   it is set to <TT
+CLASS="SYMBOL"
+>SPI_ERROR_ARGUMENT</TT
+> if
+   <TT
+CLASS="PARAMETER"
+>command</TT
+> is <TT
+CLASS="SYMBOL"
+>NULL</TT
+>, or if
+   <TT
+CLASS="PARAMETER"
+>nargs</TT
+> is less than 0, or if <TT
+CLASS="PARAMETER"
+>nargs</TT
+> is
+   greater than 0 and <TT
+CLASS="PARAMETER"
+>argtypes</TT
+> is <TT
+CLASS="SYMBOL"
+>NULL</TT
+>.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN66574"
+></A
+><H2
+>Notes</H2
+><P
+>   If no parameters are defined, a generic plan will be created at the
+   first use of <CODE
+CLASS="FUNCTION"
+>SPI_execute_plan</CODE
+>, and used for all
+   subsequent executions as well.  If there are parameters, the first few uses
+   of <CODE
+CLASS="FUNCTION"
+>SPI_execute_plan</CODE
+> will generate custom plans
+   that are specific to the supplied parameter values.  After enough uses
+   of the same prepared statement, <CODE
+CLASS="FUNCTION"
+>SPI_execute_plan</CODE
+> will
+   build a generic plan, and if that is not too much more expensive than the
+   custom plans, it will start using the generic plan instead of re-planning
+   each time.  If this default behavior is unsuitable, you can alter it by
+   passing the <TT
+CLASS="LITERAL"
+>CURSOR_OPT_GENERIC_PLAN</TT
+> or
+   <TT
+CLASS="LITERAL"
+>CURSOR_OPT_CUSTOM_PLAN</TT
+> flag to
+   <CODE
+CLASS="FUNCTION"
+>SPI_prepare_cursor</CODE
+>, to force use of generic or custom
+   plans respectively.
+  </P
+><P
+>   Although the main point of a prepared statement is to avoid repeated parse
+   analysis and planning of the statement, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> will
+   force re-analysis and re-planning of the statement before using it
+   whenever database objects used in the statement have undergone
+   definitional (DDL) changes since the previous use of the prepared
+   statement.  Also, if the value of <A
+HREF="runtime-config-client.html#GUC-SEARCH-PATH"
+>search_path</A
+> changes
+   from one use to the next, the statement will be re-parsed using the new
+   <TT
+CLASS="VARNAME"
+>search_path</TT
+>.  (This latter behavior is new as of
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 9.3.)  See <A
+HREF="sql-prepare.html"
+>PREPARE</A
+> for more information about the behavior of prepared
+   statements.
+  </P
+><P
+>   This function should only be called from a connected procedure.
+  </P
+><P
+>   <TT
+CLASS="TYPE"
+>SPIPlanPtr</TT
+> is declared as a pointer to an opaque struct type in
+   <TT
+CLASS="FILENAME"
+>spi.h</TT
+>.  It is unwise to try to access its contents
+   directly, as that makes your code much more likely to break in
+   future revisions of <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>.
+  </P
+><P
+>   The name <TT
+CLASS="TYPE"
+>SPIPlanPtr</TT
+> is somewhat historical, since the data
+   structure no longer necessarily contains an execution plan.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="spi-spi-execute-with-args.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="spi-spi-prepare-cursor.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>SPI_execute_with_args</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="spi-interface.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>SPI_prepare_cursor</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

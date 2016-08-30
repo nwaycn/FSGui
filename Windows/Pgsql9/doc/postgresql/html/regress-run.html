@@ -1,0 +1,650 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Running the Tests</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Regression Tests"
+HREF="regress.html"><LINK
+REL="PREVIOUS"
+TITLE="Regression Tests"
+HREF="regress.html"><LINK
+REL="NEXT"
+TITLE="Test Evaluation"
+HREF="regress-evaluation.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Regression Tests"
+HREF="regress.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="regress.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 30. Regression Tests</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Test Evaluation"
+HREF="regress-evaluation.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="REGRESS-RUN"
+>30.1. Running the Tests</A
+></H1
+><P
+>   The regression tests can be run against an already installed and
+   running server, or using a temporary installation within the build
+   tree.  Furthermore, there is a <SPAN
+CLASS="QUOTE"
+>"parallel"</SPAN
+> and a
+   <SPAN
+CLASS="QUOTE"
+>"sequential"</SPAN
+> mode for running the tests.  The
+   sequential method runs each test script alone, while the
+   parallel method starts up multiple server processes to run groups
+   of tests in parallel.  Parallel testing adds confidence that
+   interprocess communication and locking are working correctly.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN41843"
+>30.1.1. Running the Tests Against a Temporary Installation</A
+></H2
+><P
+>   To run the parallel regression tests after building but before installation,
+   type:
+</P><PRE
+CLASS="SCREEN"
+>make check</PRE
+><P>
+   in the top-level directory.  (Or you can change to
+   <TT
+CLASS="FILENAME"
+>src/test/regress</TT
+> and run the command there.)
+   At the end you should see something like:
+</P><PRE
+CLASS="SCREEN"
+><SAMP
+CLASS="COMPUTEROUTPUT"
+>=======================
+ All 115 tests passed.
+=======================</SAMP
+></PRE
+><P>
+   or otherwise a note about which tests failed.  See <A
+HREF="regress-evaluation.html"
+>Section 30.2</A
+> below before assuming that a
+   <SPAN
+CLASS="QUOTE"
+>"failure"</SPAN
+> represents a serious problem.
+  </P
+><P
+>    Because this test method runs a temporary server, it will not work
+    if you did the build as the root user, since the server will not start as
+    root.  Recommended procedure is not to do the build as root, or else to
+    perform testing after completing the installation.
+   </P
+><P
+>    If you have configured <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> to install
+    into a location where an older <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+    installation already exists, and you perform <TT
+CLASS="LITERAL"
+>make check</TT
+>
+    before installing the new version, you might find that the tests fail
+    because the new programs try to use the already-installed shared
+    libraries.  (Typical symptoms are complaints about undefined symbols.)
+    If you wish to run the tests before overwriting the old installation,
+    you'll need to build with <TT
+CLASS="LITERAL"
+>configure --disable-rpath</TT
+>.
+    It is not recommended that you use this option for the final installation,
+    however.
+   </P
+><P
+>    The parallel regression test starts quite a few processes under your
+    user ID.  Presently, the maximum concurrency is twenty parallel test
+    scripts, which means forty processes: there's a server process and a
+    <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> process for each test script.
+    So if your system enforces a per-user limit on the number of processes,
+    make sure this limit is at least fifty or so, else you might get
+    random-seeming failures in the parallel test.  If you are not in
+    a position to raise the limit, you can cut down the degree of parallelism
+    by setting the <TT
+CLASS="LITERAL"
+>MAX_CONNECTIONS</TT
+> parameter.  For example:
+</P><PRE
+CLASS="SCREEN"
+>make MAX_CONNECTIONS=10 check</PRE
+><P>
+    runs no more than ten tests concurrently.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN41862"
+>30.1.2. Running the Tests Against an Existing Installation</A
+></H2
+><P
+>   To run the tests after installation (see <A
+HREF="installation.html"
+>Chapter 15</A
+>),
+   initialize a data area and start the
+   server as explained in <A
+HREF="runtime.html"
+>Chapter 17</A
+>, then type:
+</P><PRE
+CLASS="SCREEN"
+>make installcheck</PRE
+><P>
+or for a parallel test:
+</P><PRE
+CLASS="SCREEN"
+>make installcheck-parallel</PRE
+><P>
+   The tests will expect to contact the server at the local host and the
+   default port number, unless directed otherwise by <TT
+CLASS="ENVAR"
+>PGHOST</TT
+> and
+   <TT
+CLASS="ENVAR"
+>PGPORT</TT
+> environment variables.  The tests will be run in a
+   database named <TT
+CLASS="LITERAL"
+>regression</TT
+>; any existing database by this name
+   will be dropped.
+   The tests will also transiently create some cluster-wide objects, such as
+   user identities named <TT
+CLASS="LITERAL"
+>regressuser<TT
+CLASS="REPLACEABLE"
+><I
+>N</I
+></TT
+></TT
+>.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN41874"
+>30.1.3. Additional Test Suites</A
+></H2
+><P
+>   The <TT
+CLASS="LITERAL"
+>make check</TT
+> and <TT
+CLASS="LITERAL"
+>make installcheck</TT
+> commands
+   run only the <SPAN
+CLASS="QUOTE"
+>"core"</SPAN
+> regression tests, which test built-in
+   functionality of the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> server.  The source
+   distribution also contains additional test suites, most of them having
+   to do with add-on functionality such as optional procedural languages.
+  </P
+><P
+>   To run all test suites applicable to the modules that have been selected
+   to be built, including the core tests, type one of these commands at the
+   top of the build tree:
+</P><PRE
+CLASS="SCREEN"
+>make check-world
+make installcheck-world</PRE
+><P>
+   These commands run the tests using temporary servers or an
+   already-installed server, respectively, just as previously explained
+   for <TT
+CLASS="LITERAL"
+>make check</TT
+> and <TT
+CLASS="LITERAL"
+>make installcheck</TT
+>.  Other
+   considerations are the same as previously explained for each method.
+   Note that <TT
+CLASS="LITERAL"
+>make check-world</TT
+> builds a separate temporary
+   installation tree for each tested module, so it requires a great deal
+   more time and disk space than <TT
+CLASS="LITERAL"
+>make installcheck-world</TT
+>.
+  </P
+><P
+>   Alternatively, you can run individual test suites by typing
+   <TT
+CLASS="LITERAL"
+>make check</TT
+> or <TT
+CLASS="LITERAL"
+>make installcheck</TT
+> in the appropriate
+   subdirectory of the build tree.  Keep in mind that <TT
+CLASS="LITERAL"
+>make
+   installcheck</TT
+> assumes you've installed the relevant module(s), not
+   only the core server.
+  </P
+><P
+>   The additional tests that can be invoked this way include:
+  </P
+><P
+></P
+><UL
+><LI
+><P
+>     Regression tests for optional procedural languages (other than
+     <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+>, which is tested by the core tests).
+     These are located under <TT
+CLASS="FILENAME"
+>src/pl</TT
+>.
+    </P
+></LI
+><LI
+><P
+>     Regression tests for <TT
+CLASS="FILENAME"
+>contrib</TT
+> modules,
+     located under <TT
+CLASS="FILENAME"
+>contrib</TT
+>.
+     Not all <TT
+CLASS="FILENAME"
+>contrib</TT
+> modules have tests.
+    </P
+></LI
+><LI
+><P
+>     Regression tests for the ECPG interface library,
+     located in <TT
+CLASS="FILENAME"
+>src/interfaces/ecpg/test</TT
+>.
+    </P
+></LI
+><LI
+><P
+>     Tests stressing behavior of concurrent sessions,
+     located in <TT
+CLASS="FILENAME"
+>src/test/isolation</TT
+>.
+    </P
+></LI
+><LI
+><P
+>     Tests of client programs under <TT
+CLASS="FILENAME"
+>src/bin</TT
+>.  See
+     also <A
+HREF="regress-tap.html"
+>Section 30.4</A
+>.
+    </P
+></LI
+></UL
+><P
+>   When using <TT
+CLASS="LITERAL"
+>installcheck</TT
+> mode, these tests will destroy any
+   existing databases named <TT
+CLASS="LITERAL"
+>pl_regression</TT
+>,
+   <TT
+CLASS="LITERAL"
+>contrib_regression</TT
+>, <TT
+CLASS="LITERAL"
+>isolationtest</TT
+>,
+   <TT
+CLASS="LITERAL"
+>regress1</TT
+>, or <TT
+CLASS="LITERAL"
+>connectdb</TT
+>, as well as
+   <TT
+CLASS="LITERAL"
+>regression</TT
+>.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN41920"
+>30.1.4. Locale and Encoding</A
+></H2
+><P
+>    By default, tests using a temporary installation use the
+    locale defined in the current environment and the corresponding
+    database encoding as determined by <TT
+CLASS="COMMAND"
+>initdb</TT
+>.  It
+    can be useful to test different locales by setting the appropriate
+    environment variables, for example:
+</P><PRE
+CLASS="SCREEN"
+>make check LANG=C
+make check LC_COLLATE=en_US.utf8 LC_CTYPE=fr_CA.utf8</PRE
+><P>
+    For implementation reasons, setting <TT
+CLASS="ENVAR"
+>LC_ALL</TT
+> does not
+    work for this purpose; all the other locale-related environment
+    variables do work.
+   </P
+><P
+>    When testing against an existing installation, the locale is
+    determined by the existing database cluster and cannot be set
+    separately for the test run.
+   </P
+><P
+>    You can also choose the database encoding explicitly by setting
+    the variable <TT
+CLASS="ENVAR"
+>ENCODING</TT
+>, for example:
+</P><PRE
+CLASS="SCREEN"
+>make check LANG=C ENCODING=EUC_JP</PRE
+><P>
+    Setting the database encoding this way typically only makes sense
+    if the locale is C; otherwise the encoding is chosen automatically
+    from the locale, and specifying an encoding that does not match
+    the locale will result in an error.
+   </P
+><P
+>    The database encoding can be set for tests against either a temporary or
+    an existing installation, though in the latter case it must be
+    compatible with the installation's locale.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN41931"
+>30.1.5. Extra Tests</A
+></H2
+><P
+>    The core regression test suite contains a few test files that are not
+    run by default, because they might be platform-dependent or take a
+    very long time to run.  You can run these or other extra test
+    files by setting the variable <TT
+CLASS="ENVAR"
+>EXTRA_TESTS</TT
+>.  For
+    example, to run the <TT
+CLASS="LITERAL"
+>numeric_big</TT
+> test:
+</P><PRE
+CLASS="SCREEN"
+>make check EXTRA_TESTS=numeric_big</PRE
+><P>
+    To run the collation tests:
+</P><PRE
+CLASS="SCREEN"
+>make check EXTRA_TESTS=collate.linux.utf8 LANG=en_US.utf8</PRE
+><P>
+    The <TT
+CLASS="LITERAL"
+>collate.linux.utf8</TT
+> test works only on Linux/glibc
+    platforms, and only when run in a database that uses UTF-8 encoding.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN41939"
+>30.1.6. Testing Hot Standby</A
+></H2
+><P
+>   The source distribution also contains regression tests for the static
+   behavior of Hot Standby. These tests require a running primary server
+   and a running standby server that is accepting new WAL changes from the
+   primary (using either file-based log shipping or streaming replication).
+   Those servers are not automatically created for you, nor is replication
+   setup documented here. Please check the various sections of the
+   documentation devoted to the required commands and related issues.
+  </P
+><P
+>   To run the Hot Standby tests, first create a database
+   called <TT
+CLASS="LITERAL"
+>regression</TT
+> on the primary:
+</P><PRE
+CLASS="SCREEN"
+>psql -h primary -c "CREATE DATABASE regression"</PRE
+><P>
+   Next, run the preparatory script
+   <TT
+CLASS="FILENAME"
+>src/test/regress/sql/hs_primary_setup.sql</TT
+>
+   on the primary in the regression database, for example:
+</P><PRE
+CLASS="SCREEN"
+>psql -h primary -f src/test/regress/sql/hs_primary_setup.sql regression</PRE
+><P>
+   Allow these changes to propagate to the standby.
+  </P
+><P
+>   Now arrange for the default database connection to be to the standby
+   server under test (for example, by setting the <TT
+CLASS="ENVAR"
+>PGHOST</TT
+> and
+   <TT
+CLASS="ENVAR"
+>PGPORT</TT
+> environment variables).
+   Finally, run <TT
+CLASS="LITERAL"
+>make standbycheck</TT
+> in the regression directory:
+</P><PRE
+CLASS="SCREEN"
+>cd src/test/regress
+make standbycheck</PRE
+><P>
+  </P
+><P
+>   Some extreme behaviors can also be generated on the primary using the
+   script <TT
+CLASS="FILENAME"
+>src/test/regress/sql/hs_primary_extremes.sql</TT
+>
+   to allow the behavior of the standby to be tested.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="regress.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="regress-evaluation.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Regression Tests</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="regress.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Test Evaluation</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

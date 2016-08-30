@@ -1,0 +1,266 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Index Access Method Interface Definition</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Internals"
+HREF="internals.html"><LINK
+REL="PREVIOUS"
+TITLE="Further Reading"
+HREF="geqo-biblio.html"><LINK
+REL="NEXT"
+TITLE="Catalog Entries for Indexes"
+HREF="index-catalog.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="CHAPTER"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Further Reading"
+HREF="geqo-biblio.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="internals.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Catalog Entries for Indexes"
+HREF="index-catalog.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="INDEXAM"
+></A
+>Chapter 58. Index Access Method Interface Definition</H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+>58.1. <A
+HREF="index-catalog.html"
+>Catalog Entries for Indexes</A
+></DT
+><DT
+>58.2. <A
+HREF="index-functions.html"
+>Index Access Method Functions</A
+></DT
+><DT
+>58.3. <A
+HREF="index-scanning.html"
+>Index Scanning</A
+></DT
+><DT
+>58.4. <A
+HREF="index-locking.html"
+>Index Locking Considerations</A
+></DT
+><DT
+>58.5. <A
+HREF="index-unique-checks.html"
+>Index Uniqueness Checks</A
+></DT
+><DT
+>58.6. <A
+HREF="index-cost-estimation.html"
+>Index Cost Estimation Functions</A
+></DT
+></DL
+></DIV
+><P
+>   This chapter defines the interface between the core
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> system and <I
+CLASS="FIRSTTERM"
+>index access
+   methods</I
+>, which manage individual index types.  The core system
+   knows nothing about indexes beyond what is specified here, so it is
+   possible to develop entirely new index types by writing add-on code.
+  </P
+><P
+>   All indexes in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> are what are known
+   technically as <I
+CLASS="FIRSTTERM"
+>secondary indexes</I
+>; that is, the index is
+   physically separate from the table file that it describes.  Each index
+   is stored as its own physical <I
+CLASS="FIRSTTERM"
+>relation</I
+> and so is described
+   by an entry in the <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+> catalog.  The contents of an
+   index are entirely under the control of its index access method.  In
+   practice, all index access methods divide indexes into standard-size
+   pages so that they can use the regular storage manager and buffer manager
+   to access the index contents.  (All the existing index access methods
+   furthermore use the standard page layout described in <A
+HREF="storage-page-layout.html"
+>Section 63.6</A
+>, and they all use the same format for index
+   tuple headers; but these decisions are not forced on an access method.)
+  </P
+><P
+>   An index is effectively a mapping from some data key values to
+   <I
+CLASS="FIRSTTERM"
+>tuple identifiers</I
+>, or <ACRONYM
+CLASS="ACRONYM"
+>TIDs</ACRONYM
+>, of row versions
+   (tuples) in the index's parent table.  A TID consists of a
+   block number and an item number within that block (see <A
+HREF="storage-page-layout.html"
+>Section 63.6</A
+>).  This is sufficient
+   information to fetch a particular row version from the table.
+   Indexes are not directly aware that under MVCC, there might be multiple
+   extant versions of the same logical row; to an index, each tuple is
+   an independent object that needs its own index entry.  Thus, an
+   update of a row always creates all-new index entries for the row, even if
+   the key values did not change.  (HOT tuples are an exception to this
+   statement; but indexes do not deal with those, either.)  Index entries for
+   dead tuples are reclaimed (by vacuuming) when the dead tuples themselves
+   are reclaimed.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="geqo-biblio.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="index-catalog.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Further Reading</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="internals.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Catalog Entries for Indexes</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

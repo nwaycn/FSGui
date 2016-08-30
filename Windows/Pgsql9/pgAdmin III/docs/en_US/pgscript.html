@@ -1,0 +1,668 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=cp1252" />
+    
+    <title>pgScript Scripting Language Reference</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="top" title="pgAdmin III 1.22.1 documentation" href="index.html" />
+    <link rel="up" title="Query tool" href="query.html" />
+    <link rel="next" title="pgAdmin Debugger" href="debugger.html" />
+    <link rel="prev" title="Query Tool Macros" href="macros.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="debugger.html" title="pgAdmin Debugger"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="macros.html" title="Query Tool Macros"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pgAdmin III 1.22.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="using.html" >Using pgAdmin III</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="query.html" accesskey="U">Query tool</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="pgscript-scripting-language-reference">
+<span id="pgscript"></span><h1><span class="target" id="index-0"></span>pgScript Scripting Language Reference</h1>
+<div class="section" id="overview">
+<span id="pgscript-overview"></span><h2>Overview</h2>
+<p>pgScript is composed of pgScript commands:</p>
+<div class="highlight-python"><div class="highlight"><pre>pgScript command
+    : Regular PostgreSQL SQL Command (SELECT INSERT CREATE ...)
+    | Variable declaration or assignment (DECLARE SET)
+    | Control-of-flow structure (IF WHILE)
+    | Procedure (ASSERT PRINT LOG RMLINE)
+</pre></div>
+</div>
+<p>Command names (<strong>SELECT</strong>, <strong>IF</strong>, <strong>SET</strong>, ...) are case-insensitive
+and must be ended with a semi-column <code class="docutils literal"><span class="pre">;</span></code>. Identifiers are case-sensitive.</p>
+</div>
+<div class="section" id="examples">
+<span id="id1"></span><h2>Examples</h2>
+<div class="section" id="batch-table-creations">
+<span id="example1"></span><h3>Batch table creations</h3>
+<div class="highlight-python"><div class="highlight"><pre>DECLARE @I, @T; -- Variable names begin with a @
+SET @I = 0; -- @I is an integer
+WHILE @I &amp;lt; 20
+BEGIN
+   SET @T = &#39;table&#39; + CAST (@I AS STRING); -- Casts @I
+   CREATE TABLE @T (id integer primary key, data text);
+
+   SET @I = @I + 1;
+END
+</pre></div>
+</div>
+</div>
+<div class="section" id="insert-random-data">
+<span id="example2"></span><h3>Insert random data</h3>
+<div class="highlight-python"><div class="highlight"><pre>DECLARE @I, @J, @T, @G;
+SET @I = 0;
+SET @G1 = INTEGER(10, 29, 1); /* Random integer generator
+                             Unique numbers between 10 and 29 */
+SET @G2 = STRING(10, 20, 3); /* Random string generator
+                             3 words between 10 and 20 characters */
+WHILE @I &amp;lt; 20
+BEGIN
+    SET @T = &#39;table&#39; + CAST (@I AS STRING);
+
+SET @J = 0;
+    WHILE @J &amp;lt; 20
+    BEGIN
+        INSERT INTO @T VALUES (@G1, &#39;@G2&#39;);
+        SET @J = @J + 1;
+    END
+
+SET @I = @I + 1;
+END
+</pre></div>
+</div>
+</div>
+<div class="section" id="batch-table-deletions">
+<span id="example3"></span><h3>Batch table deletions</h3>
+<div class="highlight-python"><div class="highlight"><pre>DECLARE @I, @T; -- Declaring is optional
+SET @I = 0;
+WHILE 1 -- Always true
+BEGIN
+    IF @I &amp;gt;= 20
+      BREAK; -- Exit the loop if @I &amp;gt; 20
+
+ SET @T = &#39;table&#39; + CAST (@I AS STRING);
+    DROP TABLE @T;
+
+ SET @I = @I + 1;
+END
+</pre></div>
+</div>
+</div>
+<div class="section" id="print-information-on-screen">
+<span id="example4"></span><h3>Print information on screen</h3>
+<div class="highlight-python"><div class="highlight"><pre>SET @PROGR@M#TITLE = &#39;pgScript&#39;;
+PRINT &#39;&#39;;
+PRINT @PROGR@M#TITLE + &#39; features:&#39;;
+PRINT &#39;&#39;;
+PRINT &#39;  * Regular PostgreSQL commands&#39;;
+PRINT &#39;  * Control-of-flow language&#39;;
+PRINT &#39;  * Local variables&#39;;
+PRINT &#39;  * Random data generators&#39;;&lt;/pre&gt;
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="sql-commands">
+<span id="commands"></span><h2>SQL Commands</h2>
+<p>You can run ANY PostgreSQL query from a pgScript EXCEPT those ones:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">BEGIN</span><span class="p">;</span>
+<span class="n">END</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>This is because <strong>BEGIN</strong> and <strong>END</strong> are used for delimiting blocks.
+Instead use:</p>
+<div class="highlight-python"><div class="highlight"><pre>BEGIN TRANSACTION;
+END TRANSACTION;
+</pre></div>
+</div>
+<p>For a list of PostgreSQL commands: <a class="reference external" href="http://www.postgresql.org/docs/8.3/interactive/sql-commands.html">http://www.postgresql.org/docs/8.3/interactive/sql-commands.html</a></p>
+</div>
+<div class="section" id="variables">
+<span id="id2"></span><h2>Variables</h2>
+<p>There are two main types of variables : simple variables and records
+(result sets composed of lines and columns).</p>
+<p>Variable names begin with a <code class="docutils literal"><span class="pre">&#64;</span></code> and can be composed of
+letters, digits, <code class="docutils literal"><span class="pre">_</span></code>, <code class="docutils literal"><span class="pre">#</span></code>, <code class="docutils literal"><span class="pre">&#64;</span></code>.</p>
+<p>Variable type is guessed automatically according to the kind of value it
+contains. This can be one of: number (real or integer), string, record.</p>
+<div class="section" id="simple-variables">
+<span id="variable1"></span><h3>Simple variables</h3>
+<div class="section" id="simple-variable-declaration">
+<h4>Simple variable declaration</h4>
+<p>Declaring simple variable is optional:</p>
+<div class="highlight-python"><div class="highlight"><pre>DECLARE @A, @B;
+DECLARE @VAR1;
+</pre></div>
+</div>
+</div>
+<div class="section" id="simple-variable-affectation">
+<h4>Simple variable affectation</h4>
+<p>This is done with the <strong>SET</strong> command. The variable type depends on the
+value assigned to this variable:</p>
+<div class="highlight-python"><div class="highlight"><pre>SET @A = 1000, @B = 2000;   -- @A and @B are &lt;strong&gt;integer numbers**
+SET @C = 10e1, @D = 1.5;    -- @C and @D are &lt;strong&gt;real numbers**
+SET @E = &#39;ab&#39;, @F = &#39;a&#39;&#39;b&#39;; -- @E and @F are &lt;strong&gt;strings**
+SET @G = &quot;ab&quot;, @H = &quot;a\&quot;b&quot;; -- @G and @H are &lt;strong&gt;strings**
+</pre></div>
+</div>
+<p>An uninitialized variable defaults to an empty string. It is possible to
+override variables as many times as wanted:</p>
+<div class="highlight-python"><div class="highlight"><pre>PRINT @A;      -- Prints an empty string
+SET @A = 1000; -- @A is initialized an integer
+PRINT @A;      -- Prints 1000
+SET @A = &#39;ab&#39;; -- @A becomes a string
+PRINT @A;      -- Prints ab
+</pre></div>
+</div>
+</div>
+<div class="section" id="data-generators">
+<h4>Data generators</h4>
+<p>Data generators allows users to generate random values. There are
+various types of generators, each one producing different type of data.
+A variable initialized with a data generator behaves like a regular
+simple variable except that it has a different value each time it is
+used:</p>
+<div class="highlight-python"><div class="highlight"><pre>SET @A = INTEGER(100, 200);
+PRINT @A; -- Prints an integer between 100 and 200
+PRINT @A; -- Prints another integer between 100 and 200
+</pre></div>
+</div>
+<p>A variable can contain a generator but its type is one of: number (real
+or integer), string. For a list of available generators and their
+associated type, see <a class="reference internal" href="#generators">generators</a>.</p>
+</div>
+</div>
+<div class="section" id="records">
+<span id="variable2"></span><h3>Records</h3>
+<div class="section" id="record-declaration">
+<h4>Record declaration</h4>
+<p>Declaring a record is <strong>required</strong>. A name for each column must be
+specified even if they will not be used anymore afterwards:</p>
+<div class="highlight-python"><div class="highlight"><pre>DECLARE @R1 { @A, @B }, @R2 { @A, @C }; -- Two records with two  columns
+DECLARE @R3 { @A, @B, @C, @D };         -- One record  with four columns
+</pre></div>
+</div>
+<p>The number of lines is dynamic: see the next section.</p>
+</div>
+<div class="section" id="record-affectation">
+<h4>Record affectation</h4>
+<p>To access a specific location in a record, one must use the line number
+(starts at 0) and can use either the column name (between quotes) or the
+column number (starts at 0). This specific location behaves like a
+simple variable. Note that a record cannot contain a record:</p>
+<div class="highlight-python"><div class="highlight"><pre>SET @R1[0][&#39;@A&#39;] = 1; -- First line &amp;amp; first column
+SET @R1[0][0] = 1;    -- Same location
+SET @R1[4][&#39;@B&#39;] = 1; -- Fifth line &amp;amp; second column
+SET @R1[0][1] = 1;    -- Same location
+</pre></div>
+</div>
+<p>In the above example, three empty lines are automatically inserted
+between the first and the fifth. Using an invalid column number or name
+results in an exception.</p>
+<p>Specific location can be used as right values as well. A specific line
+can also be used as right value:</p>
+<div class="highlight-python"><div class="highlight"><pre>SET @R1[0][0] = @R3[0][1], @A = @R2[0][0]; -- Behaves like simple variables
+SET @A = @R1[1]; -- @A becomes a record which is the first line of @R1
+</pre></div>
+</div>
+<p>Remember that <code class="docutils literal"><span class="pre">SET</span> <span class="pre">&#64;R1[0][0]</span> <span class="pre">=</span> <span class="pre">&#64;R2</span></code> is impossible because a record
+cannot contain a record.</p>
+<p>It is possible to assign a record to a variable, in this case the
+variable does not need to be declared:</p>
+<div class="highlight-python"><div class="highlight"><pre>SET @A = @R3; -- @A becomes a record because it is assigned a record
+</pre></div>
+</div>
+</div>
+<div class="section" id="sql-queries">
+<h4>SQL queries</h4>
+<p>Any SQL query executed returns a record. If the query is a <code class="docutils literal"><span class="pre">SELECT</span></code>
+query then it returns the results of the query. If it is something else
+then it returns a one-line record (<code class="docutils literal"><span class="pre">true</span></code>) if this is a success
+otherwise a zero-line record (<code class="docutils literal"><span class="pre">false</span></code>):</p>
+<div class="highlight-python"><div class="highlight"><pre>SET @A = SELECT * FROM table;   -- @A is a record with the results of the query
+SET @B = INSERT INTO table ...; -- @B is a one-line record if the query succeeds
+</pre></div>
+</div>
+</div>
+<div class="section" id="record-functions">
+<h4>Record functions</h4>
+<p>See <a class="reference internal" href="#function2">function2</a>.</p>
+</div>
+</div>
+<div class="section" id="cast">
+<span id="variable3"></span><h3>Cast</h3>
+<p>It is possible to convert a variable from one type to another with the
+cast function:</p>
+<div class="highlight-python"><div class="highlight"><pre>SET @A = CAST (@B AS STRING);
+SET @A = CAST (@B AS REAL);
+SET @A = CAST (@B AS INTEGER);
+SET @A = CAST (@B AS RECORD);
+</pre></div>
+</div>
+<p>When a record is converted to a string, it is converted to its flat
+representation. When converted to a number, the record is first converted
+to a string and then to a number (see string conversion for more
+details).</p>
+<p>When a number is converted to a string, it is converted to its string
+representation. When converted to a record, it is converted to a
+one-line-one-column record whose value is the number.</p>
+<p>When a string is converted to a number, if the string represents a
+number then this number is returned else an exception is thrown. When
+converted to a record, either the program can find a <strong>record pattern</strong>
+in the string or it converts it to a one-line-one-column record whose
+value is the string. A record pattern is:</p>
+<div class="highlight-python"><div class="highlight"><pre>SET @B = &#39;(1, &quot;abc&quot;, &quot;ab\\&quot;&quot;)(1, &quot;abc&quot;, &quot;ab\\&quot;&quot;)&#39;; -- @B is a string
+SET @B = CAST (@B AS RECORD); @B becomes a two-line-three-column record
+</pre></div>
+</div>
+<p>Remember a string is surrounded by simple quotes. Strings composing a
+record must be surrounded by double quotes which are escaped with <code class="docutils literal"><span class="pre">\\</span></code>
+(we double the slash because it is already a special character for the
+enclosing simple quotes).</p>
+</div>
+<div class="section" id="operations">
+<span id="variable4"></span><h3>Operations</h3>
+<p>Operations can only be performed between operands of the same type. Cast
+values in order to conform to this criterion.</p>
+<p>Comparisons result in a number which is 0 or 1.</p>
+<div class="section" id="strings">
+<h4>Strings</h4>
+<p>Comparisons: <code class="docutils literal"><span class="pre">=</span> <span class="pre">&lt;&gt;</span> <span class="pre">&gt;</span> <span class="pre">&lt;</span> <span class="pre">&lt;=</span> <span class="pre">&gt;=</span> <span class="pre">AND</span> <span class="pre">OR</span></code></p>
+<p>Concatenation: <code class="docutils literal"><span class="pre">+</span></code></p>
+<div class="highlight-python"><div class="highlight"><pre>SET @B = @A + &#39;abcdef&#39;; -- @A must be a string and @B will be a string
+</pre></div>
+</div>
+<p>Boolean value: non-empty string is <code class="docutils literal"><span class="pre">true</span></code>, empty string is <code class="docutils literal"><span class="pre">false</span></code></p>
+<p>Inverse boolean value: <code class="docutils literal"><span class="pre">NOT</span></code></p>
+<p>Case-insensitive comparison: <code class="docutils literal"><span class="pre">~=</span></code></p>
+</div>
+<div class="section" id="numbers">
+<h4>Numbers</h4>
+<p>Comparisons: <code class="docutils literal"><span class="pre">=</span> <span class="pre">&lt;&gt;</span> <span class="pre">&gt;</span> <span class="pre">&lt;</span> <span class="pre">&lt;=</span> <span class="pre">&gt;=</span> <span class="pre">AND</span> <span class="pre">OR</span></code></p>
+<p>Arithmetic: <code class="docutils literal"><span class="pre">+</span> <span class="pre">-</span> <span class="pre">*</span> <span class="pre">/</span> <span class="pre">%</span></code></p>
+<div class="highlight-python"><div class="highlight"><pre>SET @A = CAST (&#39;10&#39; AS INTEGER) + 5; -- &#39;10&#39; string is converted to a number
+</pre></div>
+</div>
+<p>Boolean value: 0 is <code class="docutils literal"><span class="pre">false</span></code>, anything else is <code class="docutils literal"><span class="pre">true</span></code></p>
+<p>Inverse boolean value: <code class="docutils literal"><span class="pre">NOT</span></code> (note that <code class="docutils literal"><span class="pre">NOT</span> <span class="pre">NOT</span> <span class="pre">10</span> <span class="pre">=</span> <span class="pre">1</span></code>)</p>
+<p>An arithmetic operation involving at least one real number gives a real
+number as a result:</p>
+<div class="highlight-python"><div class="highlight"><pre>SET @A = 10 / 4.; -- 4. is a real so real division: @A = 2.5
+SET @A = 10 / 4;  -- 4 is an integer so integer division: @A = 2
+</pre></div>
+</div>
+</div>
+<div class="section" id="id3">
+<h4>Records</h4>
+<p>Comparisons: <code class="docutils literal"><span class="pre">=</span> <span class="pre">&lt;&gt;</span> <span class="pre">&gt;</span> <span class="pre">&lt;</span> <span class="pre">&lt;=</span> <span class="pre">&gt;=</span> <span class="pre">AND</span> <span class="pre">OR</span></code></p>
+<p>Boolean value: zero-line record is <code class="docutils literal"><span class="pre">false</span></code>, anything else is <code class="docutils literal"><span class="pre">true</span></code></p>
+<p>Inverse boolean value: <code class="docutils literal"><span class="pre">NOT</span></code></p>
+<p>Comparisons for records are about inclusion and exclusion. Order of
+lines does not matter. <code class="docutils literal"><span class="pre">&lt;=</span></code> means that each row in the left operand
+has a match in the right operand. <code class="docutils literal"><span class="pre">&gt;=</span></code> means the opposite. <code class="docutils literal"><span class="pre">=</span></code> means
+that <code class="docutils literal"><span class="pre">&lt;=</span></code> and <code class="docutils literal"><span class="pre">&gt;=</span></code> are both true at the same time...</p>
+<p>Comparisons are performed on strings: even if a record contains numbers
+like <code class="docutils literal"><span class="pre">10</span></code> and <code class="docutils literal"><span class="pre">1e1</span></code> we will have <code class="docutils literal"><span class="pre">'10'</span> <span class="pre">&lt;&gt;</span> <span class="pre">'1e1'</span></code>.</p>
+</div>
+</div>
+</div>
+<div class="section" id="control-of-flow-structures">
+<span id="control"></span><h2>Control-of-flow structures</h2>
+<div class="section" id="conditional-structure">
+<span id="control1"></span><h3>Conditional structure</h3>
+<div class="highlight-python"><div class="highlight"><pre>IF condition
+BEGIN
+    pgScript commands
+END
+ELSE
+BEGIN
+    pgScript commands
+END
+</pre></div>
+</div>
+<p>pgScript commands are optional. <strong>BEGIN</strong> and <strong>END</strong> keywords are
+optional if there is only one pgScript command.</p>
+</div>
+<div class="section" id="loop-structure">
+<span id="control2"></span><h3>Loop structure</h3>
+<div class="highlight-python"><div class="highlight"><pre>WHILE condition
+BEGIN
+    pgScript commands
+END
+</pre></div>
+</div>
+<p>pgScript commands are optional. <strong>BEGIN</strong> and <strong>END</strong> keywords are
+optional if there is only one pgScript command.</p>
+<p><strong>BREAK</strong> ends the enclosing <strong>WHILE</strong> loop, while <strong>CONTINUE</strong> causes
+the next iteration of the loop to execute. <strong>RETURN</strong> behaves like
+<strong>BREAK</strong>:</p>
+<div class="highlight-python"><div class="highlight"><pre>WHILE condition1
+BEGIN
+    IF condition2
+    BEGIN
+        BREAK;
+    END
+END
+</pre></div>
+</div>
+</div>
+<div class="section" id="conditions">
+<span id="control3"></span><h3>Conditions</h3>
+<p>Conditions are in fact results of operations. For example the string
+comparison <code class="docutils literal"><span class="pre">'ab'</span> <span class="pre">=</span> <span class="pre">'ac'</span></code> will result in a number which is <code class="docutils literal"><span class="pre">false</span></code>
+(the equality is not true):</p>
+<div class="highlight-python"><div class="highlight"><pre>IF &#39;ab&#39; ~= &#39;AB&#39; -- Case-insensitive comparison which result in 1 (true) which is true
+BEGIN
+    -- This happens
+END
+
+IF 0 -- false
+BEGIN
+    -- This does **not** happen
+END
+ELSE
+BEGIN
+    -- This happens
+END
+
+WHILE 1
+BEGIN
+    -- Infinite loop: use BREAK for exiting
+END
+</pre></div>
+</div>
+<p>It is possible to the result of a SQL SELECT query directly as a
+condition. The query needs to be surrounded by parenthesis:</p>
+<div class="highlight-python"><div class="highlight"><pre>IF (SELECT 1 FROM table)
+BEGIN
+    -- This means that table exists otherwise the condition would be false
+END
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="additional-functions-and-procedures">
+<span id="functions"></span><h2>Additional functions and procedures</h2>
+<div class="section" id="procedures">
+<span id="function1"></span><h3>Procedures</h3>
+<p>Procedures do not return a result. They must be used alone on a line and
+cannot be assigned to a variable.</p>
+<div class="section" id="print">
+<h4>Print</h4>
+<p>Prints an expression on the screen:</p>
+<div class="highlight-python"><div class="highlight"><pre>PRINT &#39;The value of @A is&#39; + CAST (@A AS STRING);
+</pre></div>
+</div>
+</div>
+<div class="section" id="assert">
+<h4>Assert</h4>
+<p>Throws an exception if the expression evaluated is false:</p>
+<div class="highlight-python"><div class="highlight"><pre>ASSERT 5 &amp;gt; 3 AND &#39;a&#39; = &#39;a&#39;;
+</pre></div>
+</div>
+</div>
+<div class="section" id="remove-line">
+<h4>Remove line</h4>
+<p>Removes the specified line of a record:</p>
+<div class="highlight-python"><div class="highlight"><pre>RMLINE(@R[1]); -- Removes @R second line
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="function2">
+<span id="id4"></span><h3>Functions</h3>
+<p>Functions do return a result. Their return value can be assigned to a
+variable, like the <code class="docutils literal"><span class="pre">CAST</span></code> operation.</p>
+<div class="section" id="trim">
+<h4>Trim</h4>
+<p>Removes extra spaces surrounding a string:</p>
+<div class="highlight-python"><div class="highlight"><pre>SET @A = TRIM(&#39; a &#39;); -- @A = &#39;a&#39;&lt;/pre&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="lines">
+<h4>Lines</h4>
+<p>Gives the number of lines in a record:</p>
+<div class="highlight-python"><div class="highlight"><pre>IF LINES(@R) &amp;gt; 0
+BEGIN
+    -- Process
+END
+</pre></div>
+</div>
+</div>
+<div class="section" id="columns">
+<h4>Columns</h4>
+<p>Gives the number of columns in a record:</p>
+<div class="highlight-python"><div class="highlight"><pre>IF COLUMNS(@R) &amp;gt; 0
+BEGIN
+    -- Process
+END
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="random-data-generators">
+<span id="generators"></span><h2>Random data generators</h2>
+<div class="section" id="overview-of-the-generators">
+<span id="generator1"></span><h3>Overview of the generators</h3>
+<p>One can assign a variable (<strong>SET</strong>) with a random data generators. This
+means each time the variable will be used it will have a different
+value.</p>
+<p>However the variable is still used as usual:</p>
+<div class="highlight-python"><div class="highlight"><pre>SET @G = STRING(10, 20, 2);
+SET @A = @G; -- @A will hold a random string
+SET @B = @G; -- @B will hold another random string
+PRINT @G,    -- This will print another third random string
+</pre></div>
+</div>
+</div>
+<div class="section" id="sequence-and-seeding">
+<span id="generator2"></span><h3>Sequence and seeding</h3>
+<p>Common parameters for data generators are <em>sequence</em> and <em>seed</em>.</p>
+<p><em>sequence</em> means that a sequence of values is generated in a random
+order, in other words each value appears only once before the sequence
+starts again: this is useful for columns with a <code class="docutils literal"><span class="pre">UNIQUE</span></code> constraint.
+For example, this generator:</p>
+<div class="highlight-python"><div class="highlight"><pre>SET @G = INTEGER(10, 15, 1); -- 1 means generate a sequence
+</pre></div>
+</div>
+<p>It can generate such values:</p>
+<div class="highlight-python"><div class="highlight"><pre>14 12 10 13 11 15 14 12 10 13 11
+</pre></div>
+</div>
+<p>Where each number appears once before the sequence starts repeating.</p>
+<p><em>sequence</em> parameter must be an integer: if it is 0 then no sequence is
+generated (default) and if something other than 0 then generate a
+sequence.</p>
+<p><em>seed</em> is an integer value for initializing a generator: two generators
+with the same parameters and the same seed will generate <strong>exactly</strong> the
+same values.</p>
+<p><em>seed</em> must be an integer: it is used directly to initialize the random
+data generator.</p>
+</div>
+<div class="section" id="generator3">
+<span id="id5"></span><h3>Data generators</h3>
+<p>Optional parameters are put into brackets:</p>
+<div class="highlight-python"><div class="highlight"><pre>Generator
+ : INTEGER ( min, max, [sequence], [seed] );
+ | REAL ( min, max, precision, [sequence], [seed] );
+ | DATE ( min, max, [sequence], [seed] );
+ | TIME ( min, max, [sequence], [seed] );
+ | DATETIME ( min, max, [sequence], [seed] );
+ | STRING ( min, max, [nb], [seed] );
+ | REGEX ( regex, [seed] );
+ | FILE ( path, [sequence], [seed], [encoding] );
+ | REFERENCE ( table, column, [sequence], [seed] );
+</pre></div>
+</div>
+<div class="section" id="integer-numbers">
+<h4>Integer numbers</h4>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">INTEGER</span> <span class="p">(</span> <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">,</span> <span class="p">[</span><span class="n">sequence</span><span class="p">],</span> <span class="p">[</span><span class="n">seed</span><span class="p">]</span> <span class="p">);</span>
+<span class="n">INTEGER</span> <span class="p">(</span> <span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">123456</span> <span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">min</span></code> is an integer, <code class="docutils literal"><span class="pre">max</span></code> is an integer, <code class="docutils literal"><span class="pre">sequence</span></code> is an integer
+and <code class="docutils literal"><span class="pre">seed</span></code> is an integer.</p>
+</div>
+<div class="section" id="real-numbers">
+<h4>Real numbers</h4>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">REAL</span> <span class="p">(</span> <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">,</span> <span class="n">precision</span><span class="p">,</span> <span class="p">[</span><span class="n">sequence</span><span class="p">],</span> <span class="p">[</span><span class="n">seed</span><span class="p">]</span> <span class="p">);</span>
+<span class="n">REAL</span> <span class="p">(</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.8</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span> <span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">min</span></code> is a number, <code class="docutils literal"><span class="pre">max</span></code> is a number, <code class="docutils literal"><span class="pre">precision</span></code> is an integer
+that indicates the number of decimals (should be less than 30),
+<code class="docutils literal"><span class="pre">sequence</span></code> is an integer and <code class="docutils literal"><span class="pre">seed</span></code> is an integer.</p>
+</div>
+<div class="section" id="dates">
+<h4>Dates</h4>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">DATE</span> <span class="p">(</span> <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">,</span> <span class="p">[</span><span class="n">sequence</span><span class="p">],</span> <span class="p">[</span><span class="n">seed</span><span class="p">]</span> <span class="p">);</span>
+<span class="n">DATE</span> <span class="p">(</span> <span class="s">&#39;2008-05-01&#39;</span><span class="p">,</span> <span class="s">&#39;2008-05-05&#39;</span><span class="p">,</span> <span class="mi">0</span> <span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">min</span></code> is a string representing a date, <code class="docutils literal"><span class="pre">max</span></code> is a string representing
+a date, <code class="docutils literal"><span class="pre">sequence</span></code> is an integer and <code class="docutils literal"><span class="pre">seed</span></code> is an integer.</p>
+</div>
+<div class="section" id="times">
+<h4>Times</h4>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">TIME</span> <span class="p">(</span> <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">,</span> <span class="p">[</span><span class="n">sequence</span><span class="p">],</span> <span class="p">[</span><span class="n">seed</span><span class="p">]</span> <span class="p">);</span>
+<span class="n">TIME</span> <span class="p">(</span> <span class="s">&#39;00:30:00&#39;</span><span class="p">,</span> <span class="s">&#39;00:30:15&#39;</span><span class="p">,</span> <span class="mi">0</span> <span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">min</span></code> is a string representing a time, <code class="docutils literal"><span class="pre">max</span></code> is a string representing
+a time, <code class="docutils literal"><span class="pre">sequence</span></code> is an integer and <code class="docutils literal"><span class="pre">seed</span></code> is an integer.</p>
+</div>
+<div class="section" id="timestamps-date-times">
+<h4>Timestamps (date/times)</h4>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">DATETIME</span> <span class="p">(</span> <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">,</span> <span class="p">[</span><span class="n">sequence</span><span class="p">],</span> <span class="p">[</span><span class="n">seed</span><span class="p">]</span> <span class="p">);</span>
+<span class="n">DATETIME</span> <span class="p">(</span> <span class="s">&#39;2008-05-01 14:00:00&#39;</span><span class="p">,</span> <span class="s">&#39;2008-05-05 15:00:00&#39;</span><span class="p">,</span> <span class="mi">1</span> <span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">min</span></code> is a string representing a timestamp, <code class="docutils literal"><span class="pre">max</span></code> is a string
+representing a timestamp, <code class="docutils literal"><span class="pre">sequence</span></code> is an integer and <code class="docutils literal"><span class="pre">seed</span></code> is an
+integer.</p>
+</div>
+<div class="section" id="id6">
+<h4>Strings</h4>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">STRING</span> <span class="p">(</span> <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">,</span> <span class="p">[</span><span class="n">nb</span><span class="p">],</span> <span class="p">[</span><span class="n">seed</span><span class="p">]</span> <span class="p">);</span>
+<span class="n">STRING</span> <span class="p">(</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">5</span> <span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">min</span></code> is an integer representing the minimum length of a word, <code class="docutils literal"><span class="pre">max</span></code>
+is an integer representing the maximum length of a word, <code class="docutils literal"><span class="pre">nb</span></code> is an
+integer representing the number of words (default: <code class="docutils literal"><span class="pre">1</span></code>) and <code class="docutils literal"><span class="pre">seed</span></code>
+is an integer.</p>
+<p>In the above example we generate 5 words (separated with a space) whose
+size is between 10 and 20 characters.</p>
+</div>
+<div class="section" id="strings-from-regular-expressions">
+<h4>Strings from regular expressions</h4>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">REGEX</span> <span class="p">(</span> <span class="n">regex</span><span class="p">,</span> <span class="p">[</span><span class="n">seed</span><span class="p">]</span> <span class="p">);</span>
+<span class="n">REGEX</span> <span class="p">(</span> <span class="s">&#39;[a-z]{1,3}@[0-9]{3}&#39;</span> <span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">regex</span></code> is a string representing a simplified regular expressions and
+<code class="docutils literal"><span class="pre">seed</span></code> is an integer.</p>
+<p>Simplified regular expressions are composed of:</p>
+<ul class="simple">
+<li>Sets of possible characters like <code class="docutils literal"><span class="pre">[a-z_.]</span></code> for characters between
+<code class="docutils literal"><span class="pre">a</span></code> and <code class="docutils literal"><span class="pre">z</span></code> + <code class="docutils literal"><span class="pre">_</span></code> and <code class="docutils literal"><span class="pre">.</span></code></li>
+<li>Single characters</li>
+</ul>
+<p>It is possible to specify the minimum and maximum length of the
+preceding set or single character:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">{min,</span> <span class="pre">max}</span></code> like <code class="docutils literal"><span class="pre">{1,3}</span></code> which stands for length between <code class="docutils literal"><span class="pre">1</span></code>
+and <code class="docutils literal"><span class="pre">3</span></code></li>
+<li><code class="docutils literal"><span class="pre">{min}</span></code> like <code class="docutils literal"><span class="pre">{3}</span></code> which stands for length of <code class="docutils literal"><span class="pre">3</span></code></li>
+<li>Default (when nothing is specified) is length of <code class="docutils literal"><span class="pre">1</span></code></li>
+</ul>
+<p>Note: be careful with spaces because <code class="docutils literal"><span class="pre">'a</span> <span class="pre">{3}'</span></code> means one <code class="docutils literal"><span class="pre">a</span></code> followed
+by three spaces because the <code class="docutils literal"><span class="pre">3</span></code> is about the last character or set of
+characters which is a space in this example.</p>
+<p>If you need to use <code class="docutils literal"><span class="pre">[</span></code> <code class="docutils literal"><span class="pre">]</span></code> <code class="docutils literal"><span class="pre">\</span></code> <code class="docutils literal"><span class="pre">{</span></code> or <code class="docutils literal"><span class="pre">}</span></code>, they must be escaped
+because they are special characters. Remember to use <strong>double
+backslash</strong>: <code class="docutils literal"><span class="pre">'\\[{3}'</span></code> for three <code class="docutils literal"><span class="pre">[</span></code>.</p>
+</div>
+<div class="section" id="strings-from-dictionary-files">
+<h4>Strings from dictionary files</h4>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">FILE</span> <span class="p">(</span> <span class="n">path</span><span class="p">,</span> <span class="p">[</span><span class="n">sequence</span><span class="p">],</span> <span class="p">[</span><span class="n">seed</span><span class="p">],</span> <span class="p">[</span><span class="n">encoding</span><span class="p">]</span> <span class="p">);</span>
+<span class="n">FILE</span> <span class="p">(</span> <span class="s">&#39;file.txt&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">54321</span><span class="p">,</span> <span class="s">&#39;utf-8&#39;</span> <span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">path</span></code> is a string representing the path to a text file, <code class="docutils literal"><span class="pre">sequence</span></code>
+is an integer, <code class="docutils literal"><span class="pre">seed</span></code> is an integer and <code class="docutils literal"><span class="pre">encoding</span></code> is a string
+representing the file character set (default is system encoding).</p>
+<p>This generates a random integer between 1 and the number of lines in the
+file and then returns that line. If the file does not exist then an
+exception is thrown.</p>
+<p><code class="docutils literal"><span class="pre">encoding</span></code> supports the most known encoding like utf-8, utf-16le,
+utf-16be, iso-8859-1, ...</p>
+</div>
+<div class="section" id="reference-to-another-field">
+<h4>Reference to another field</h4>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">REFERENCE</span> <span class="p">(</span> <span class="n">table</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="p">[</span><span class="n">sequence</span><span class="p">],</span> <span class="p">[</span><span class="n">seed</span><span class="p">]</span> <span class="p">);</span>
+<span class="n">REFERENCE</span> <span class="p">(</span> <span class="s">&#39;tab&#39;</span><span class="p">,</span> <span class="s">&#39;col&#39;</span><span class="p">,</span> <span class="mi">1</span> <span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">table</span></code> is a string representing a table, <code class="docutils literal"><span class="pre">column</span></code> is a string
+representing a column of the table, <code class="docutils literal"><span class="pre">sequence</span></code> is an integer and
+<code class="docutils literal"><span class="pre">seed</span></code> is an integer.</p>
+<p>This is useful for generating data to put into foreign-key-constrained
+columns.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="debugger.html" title="pgAdmin Debugger"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="macros.html" title="Query Tool Macros"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pgAdmin III 1.22.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="using.html" >Using pgAdmin III</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="query.html" >Query tool</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2002 - 2016, The pgAdmin Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

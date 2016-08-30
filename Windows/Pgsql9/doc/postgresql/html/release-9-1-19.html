@@ -1,0 +1,907 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.1.19</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.1.20"
+HREF="release-9-1-20.html"><LINK
+REL="NEXT"
+TITLE="Release 9.1.18"
+HREF="release-9-1-18.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.1.20"
+HREF="release-9-1-20.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.1.18"
+HREF="release-9-1-18.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-1-19"
+>E.54. Release 9.1.19</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2015-10-08</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 9.1.18.
+   For information about new features in the 9.1 major release, see
+   <A
+HREF="release-9-1.html"
+>Section E.73</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN138760"
+>E.54.1. Migration to Version 9.1.19</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.1.X.
+   </P
+><P
+>    However, if you are upgrading from a version earlier than 9.1.16,
+    see <A
+HREF="release-9-1-16.html"
+>Section E.57</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN138765"
+>E.54.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix <TT
+CLASS="FILENAME"
+>contrib/pgcrypto</TT
+> to detect and report
+      too-short <CODE
+CLASS="FUNCTION"
+>crypt()</CODE
+> salts (Josh Kupershmidt)
+     </P
+><P
+>      Certain invalid salt arguments crashed the server or disclosed a few
+      bytes of server memory.  We have not ruled out the viability of
+      attacks that arrange for presence of confidential information in the
+      disclosed bytes, but they seem unlikely.  (CVE-2015-5288)
+     </P
+></LI
+><LI
+><P
+>      Fix subtransaction cleanup after a portal (cursor) belonging to an
+      outer subtransaction fails (Tom Lane, Michael Paquier)
+     </P
+><P
+>      A function executed in an outer-subtransaction cursor could cause an
+      assertion failure or crash by referencing a relation created within an
+      inner subtransaction.
+     </P
+></LI
+><LI
+><P
+>      Fix insertion of relations into the relation cache <SPAN
+CLASS="QUOTE"
+>"init file"</SPAN
+>
+      (Tom Lane)
+     </P
+><P
+>      An oversight in a patch in the most recent minor releases
+      caused <TT
+CLASS="STRUCTNAME"
+>pg_trigger_tgrelid_tgname_index</TT
+> to be omitted
+      from the init file.  Subsequent sessions detected this, then deemed the
+      init file to be broken and silently ignored it, resulting in a
+      significant degradation in session startup time.  In addition to fixing
+      the bug, install some guards so that any similar future mistake will be
+      more obvious.
+     </P
+></LI
+><LI
+><P
+>      Avoid O(N^2) behavior when inserting many tuples into a SPI query
+      result (Neil Conway)
+     </P
+></LI
+><LI
+><P
+>      Improve <TT
+CLASS="COMMAND"
+>LISTEN</TT
+> startup time when there are many unread
+      notifications (Matt Newell)
+     </P
+></LI
+><LI
+><P
+>      Back-patch 9.3-era addition of per-resource-owner lock caches
+      (Jeff Janes)
+     </P
+><P
+>      This substantially improves performance when <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>
+      tries to dump a large number of tables.
+     </P
+></LI
+><LI
+><P
+>      Disable SSL renegotiation by default (Michael Paquier, Andres Freund)
+     </P
+><P
+>      While use of SSL renegotiation is a good idea in theory, we have seen
+      too many bugs in practice, both in the underlying OpenSSL library and
+      in our usage of it.  Renegotiation will be removed entirely in 9.5 and
+      later.  In the older branches, just change the default value
+      of <TT
+CLASS="VARNAME"
+>ssl_renegotiation_limit</TT
+> to zero (disabled).
+     </P
+></LI
+><LI
+><P
+>      Lower the minimum values of the <TT
+CLASS="LITERAL"
+>*_freeze_max_age</TT
+> parameters
+      (Andres Freund)
+     </P
+><P
+>      This is mainly to make tests of related behavior less time-consuming,
+      but it may also be of value for installations with limited disk space.
+     </P
+></LI
+><LI
+><P
+>      Limit the maximum value of <TT
+CLASS="VARNAME"
+>wal_buffers</TT
+> to 2GB to avoid
+      server crashes (Josh Berkus)
+     </P
+></LI
+><LI
+><P
+>      Fix rare internal overflow in multiplication of <TT
+CLASS="TYPE"
+>numeric</TT
+> values
+      (Dean Rasheed)
+     </P
+></LI
+><LI
+><P
+>      Guard against hard-to-reach stack overflows involving record types,
+      range types, <TT
+CLASS="TYPE"
+>json</TT
+>, <TT
+CLASS="TYPE"
+>jsonb</TT
+>, <TT
+CLASS="TYPE"
+>tsquery</TT
+>,
+      <TT
+CLASS="TYPE"
+>ltxtquery</TT
+> and <TT
+CLASS="TYPE"
+>query_int</TT
+> (Noah Misch)
+     </P
+></LI
+><LI
+><P
+>      Fix handling of <TT
+CLASS="LITERAL"
+>DOW</TT
+> and <TT
+CLASS="LITERAL"
+>DOY</TT
+> in datetime input
+      (Greg Stark)
+     </P
+><P
+>      These tokens aren't meant to be used in datetime values, but previously
+      they resulted in opaque internal error messages rather
+      than <SPAN
+CLASS="QUOTE"
+>"invalid input syntax"</SPAN
+>.
+     </P
+></LI
+><LI
+><P
+>      Add more query-cancel checks to regular expression matching (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Add recursion depth protections to regular expression, <TT
+CLASS="LITERAL"
+>SIMILAR
+      TO</TT
+>, and <TT
+CLASS="LITERAL"
+>LIKE</TT
+> matching (Tom Lane)
+     </P
+><P
+>      Suitable search patterns and a low stack depth limit could lead to
+      stack-overrun crashes.
+     </P
+></LI
+><LI
+><P
+>      Fix potential infinite loop in regular expression execution (Tom Lane)
+     </P
+><P
+>      A search pattern that can apparently match a zero-length string, but
+      actually doesn't match because of a back reference, could lead to an
+      infinite loop.
+     </P
+></LI
+><LI
+><P
+>      Fix low-memory failures in regular expression compilation
+      (Andreas Seltenreich)
+     </P
+></LI
+><LI
+><P
+>      Fix low-probability memory leak during regular expression execution
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix rare low-memory failure in lock cleanup during transaction abort
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="QUOTE"
+>"unexpected out-of-memory situation during sort"</SPAN
+> errors
+      when using tuplestores with small <TT
+CLASS="VARNAME"
+>work_mem</TT
+> settings (Tom
+      Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix very-low-probability stack overrun in <CODE
+CLASS="FUNCTION"
+>qsort</CODE
+> (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="QUOTE"
+>"invalid memory alloc request size"</SPAN
+> failure in hash joins
+      with large <TT
+CLASS="VARNAME"
+>work_mem</TT
+> settings (Tomas Vondra, Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix assorted planner bugs (Tom Lane)
+     </P
+><P
+>      These mistakes could lead to incorrect query plans that would give wrong
+      answers, or to assertion failures in assert-enabled builds, or to odd
+      planner errors such as <SPAN
+CLASS="QUOTE"
+>"could not devise a query plan for the
+      given query"</SPAN
+>, <SPAN
+CLASS="QUOTE"
+>"could not find pathkey item to
+      sort"</SPAN
+>, <SPAN
+CLASS="QUOTE"
+>"plan should not reference subplan's variable"</SPAN
+>,
+      or <SPAN
+CLASS="QUOTE"
+>"failed to assign all NestLoopParams to plan nodes"</SPAN
+>.
+      Thanks are due to Andreas Seltenreich and Piotr Stefaniak for fuzz
+      testing that exposed these problems.
+     </P
+></LI
+><LI
+><P
+>      Use fuzzy path cost tiebreaking rule in all supported branches (Tom Lane)
+     </P
+><P
+>      This change is meant to avoid platform-specific behavior when
+      alternative plan choices have effectively-identical estimated costs.
+     </P
+></LI
+><LI
+><P
+>      Ensure standby promotion trigger files are removed at postmaster
+      startup (Michael Paquier, Fujii Masao)
+     </P
+><P
+>      This prevents unwanted promotion from occurring if these files appear
+      in a database backup that is used to initialize a new standby server.
+     </P
+></LI
+><LI
+><P
+>      During postmaster shutdown, ensure that per-socket lock files are
+      removed and listen sockets are closed before we remove
+      the <TT
+CLASS="FILENAME"
+>postmaster.pid</TT
+> file (Tom Lane)
+     </P
+><P
+>      This avoids race-condition failures if an external script attempts to
+      start a new postmaster as soon as <TT
+CLASS="LITERAL"
+>pg_ctl stop</TT
+> returns.
+     </P
+></LI
+><LI
+><P
+>      Fix postmaster's handling of a startup-process crash during crash
+      recovery (Tom Lane)
+     </P
+><P
+>      If, during a crash recovery cycle, the startup process crashes without
+      having restored database consistency, we'd try to launch a new startup
+      process, which typically would just crash again, leading to an infinite
+      loop.
+     </P
+></LI
+><LI
+><P
+>      Do not print a <TT
+CLASS="LITERAL"
+>WARNING</TT
+> when an autovacuum worker is already
+      gone when we attempt to signal it, and reduce log verbosity for such
+      signals (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Prevent autovacuum launcher from sleeping unduly long if the server
+      clock is moved backwards a large amount (&Aacute;lvaro Herrera)
+     </P
+></LI
+><LI
+><P
+>      Ensure that cleanup of a GIN index's pending-insertions list is
+      interruptable by cancel requests (Jeff Janes)
+     </P
+></LI
+><LI
+><P
+>      Allow all-zeroes pages in GIN indexes to be reused (Heikki Linnakangas)
+     </P
+><P
+>      Such a page might be left behind after a crash.
+     </P
+></LI
+><LI
+><P
+>      Fix off-by-one error that led to otherwise-harmless warnings
+      about <SPAN
+CLASS="QUOTE"
+>"apparent wraparound"</SPAN
+> in subtrans/multixact truncation
+      (Thomas Munro)
+     </P
+></LI
+><LI
+><P
+>      Fix misreporting of <TT
+CLASS="COMMAND"
+>CONTINUE</TT
+> and <TT
+CLASS="COMMAND"
+>MOVE</TT
+> statement
+      types in <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+>'s error context messages
+      (Pavel Stehule, Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>PL/Perl</SPAN
+> to handle non-<ACRONYM
+CLASS="ACRONYM"
+>ASCII</ACRONYM
+> error
+      message texts correctly (Alex Hunsaker)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>PL/Python</SPAN
+> crash when returning the string
+      representation of a <TT
+CLASS="TYPE"
+>record</TT
+> result (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix some places in <SPAN
+CLASS="APPLICATION"
+>PL/Tcl</SPAN
+> that neglected to check for
+      failure of <CODE
+CLASS="FUNCTION"
+>malloc()</CODE
+> calls (Michael Paquier, &Aacute;lvaro
+      Herrera)
+     </P
+></LI
+><LI
+><P
+>      In <TT
+CLASS="FILENAME"
+>contrib/isn</TT
+>, fix output of ISBN-13 numbers that begin
+      with 979 (Fabien Coelho)
+     </P
+><P
+>      EANs beginning with 979 (but not 9790) are considered ISBNs, but they
+      must be printed in the new 13-digit format, not the 10-digit format.
+     </P
+></LI
+><LI
+><P
+>      Improve <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>'s handling of out-of-memory conditions
+      (Michael Paquier, Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Fix memory leaks and missing out-of-memory checks
+      in <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+> (Michael Paquier)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s code for locale-aware formatting of numeric
+      output (Tom Lane)
+     </P
+><P
+>      The formatting code invoked by <TT
+CLASS="LITERAL"
+>\pset numericlocale on</TT
+>
+      did the wrong thing for some uncommon cases such as numbers with an
+      exponent but no decimal point.  It could also mangle already-localized
+      output from the <TT
+CLASS="TYPE"
+>money</TT
+> data type.
+     </P
+></LI
+><LI
+><P
+>      Prevent crash in <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s <TT
+CLASS="COMMAND"
+>\c</TT
+> command when
+      there is no current connection (Noah Misch)
+     </P
+></LI
+><LI
+><P
+>      Fix selection of default <SPAN
+CLASS="APPLICATION"
+>zlib</SPAN
+> compression level
+      in <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>'s directory output format (Andrew Dunstan)
+     </P
+></LI
+><LI
+><P
+>      Ensure that temporary files created during a <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>
+      run with <ACRONYM
+CLASS="ACRONYM"
+>tar</ACRONYM
+>-format output are not world-readable (Michael
+      Paquier)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> and <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> to support
+      cases where the <TT
+CLASS="LITERAL"
+>postgres</TT
+> or <TT
+CLASS="LITERAL"
+>template1</TT
+> database
+      is in a non-default tablespace (Marti Raudsepp, Bruce Momjian)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> to handle object privileges sanely when
+      dumping from a server too old to have a particular privilege type
+      (Tom Lane)
+     </P
+><P
+>      When dumping functions or procedural languages from pre-7.3
+      servers, <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> would
+      produce <TT
+CLASS="COMMAND"
+>GRANT</TT
+>/<TT
+CLASS="COMMAND"
+>REVOKE</TT
+> commands that revoked the
+      owner's grantable privileges and instead granted all privileges
+      to <TT
+CLASS="LITERAL"
+>PUBLIC</TT
+>.  Since the privileges involved are
+      just <TT
+CLASS="LITERAL"
+>USAGE</TT
+> and <TT
+CLASS="LITERAL"
+>EXECUTE</TT
+>, this isn't a security
+      problem, but it's certainly a surprising representation of the older
+      systems' behavior.  Fix it to leave the default privilege state alone
+      in these cases.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> to dump shell types (Tom Lane)
+     </P
+><P
+>      Shell types (that is, not-yet-fully-defined types) aren't useful for
+      much, but nonetheless <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> should dump them.
+     </P
+></LI
+><LI
+><P
+>      Fix assorted minor memory leaks in <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> and other
+      client-side programs (Michael Paquier)
+     </P
+></LI
+><LI
+><P
+>      Fix spinlock assembly code for PPC hardware to be compatible
+      with <ACRONYM
+CLASS="ACRONYM"
+>AIX</ACRONYM
+>'s native assembler (Tom Lane)
+     </P
+><P
+>      Building with <SPAN
+CLASS="APPLICATION"
+>gcc</SPAN
+> didn't work if <SPAN
+CLASS="APPLICATION"
+>gcc</SPAN
+>
+      had been configured to use the native assembler, which is becoming more
+      common.
+     </P
+></LI
+><LI
+><P
+>      On <ACRONYM
+CLASS="ACRONYM"
+>AIX</ACRONYM
+>, test the <TT
+CLASS="LITERAL"
+>-qlonglong</TT
+> compiler option
+      rather than just assuming it's safe to use (Noah Misch)
+     </P
+></LI
+><LI
+><P
+>      On <ACRONYM
+CLASS="ACRONYM"
+>AIX</ACRONYM
+>, use <TT
+CLASS="LITERAL"
+>-Wl,-brtllib</TT
+> link option to allow
+      symbols to be resolved at runtime (Noah Misch)
+     </P
+><P
+>      Perl relies on this ability in 5.8.0 and later.
+     </P
+></LI
+><LI
+><P
+>      Avoid use of inline functions when compiling with
+      32-bit <SPAN
+CLASS="APPLICATION"
+>xlc</SPAN
+>, due to compiler bugs (Noah Misch)
+     </P
+></LI
+><LI
+><P
+>      Use <TT
+CLASS="FILENAME"
+>librt</TT
+> for <CODE
+CLASS="FUNCTION"
+>sched_yield()</CODE
+> when necessary,
+      which it is on some Solaris versions (Oskari Saarenmaa)
+     </P
+></LI
+><LI
+><P
+>      Fix Windows <TT
+CLASS="FILENAME"
+>install.bat</TT
+> script to handle target directory
+      names that contain spaces (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Make the numeric form of the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> version number
+      (e.g., <TT
+CLASS="LITERAL"
+>90405</TT
+>) readily available to extension Makefiles,
+      as a variable named <TT
+CLASS="VARNAME"
+>VERSION_NUM</TT
+> (Michael Paquier)
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2015g for
+      DST law changes in Cayman Islands, Fiji, Moldova, Morocco, Norfolk
+      Island, North Korea, Turkey, and Uruguay.  There is a new zone name
+      <TT
+CLASS="LITERAL"
+>America/Fort_Nelson</TT
+> for the Canadian Northern Rockies.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-1-20.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-1-18.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.1.20</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.1.18</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

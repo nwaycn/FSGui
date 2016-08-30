@@ -1,0 +1,329 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Dependency Tracking</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Data Definition"
+HREF="ddl.html"><LINK
+REL="PREVIOUS"
+TITLE="Other Database Objects"
+HREF="ddl-others.html"><LINK
+REL="NEXT"
+TITLE="Data Manipulation"
+HREF="dml.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Other Database Objects"
+HREF="ddl-others.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ddl.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 5. Data Definition</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Data Manipulation"
+HREF="dml.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="DDL-DEPEND"
+>5.13. Dependency Tracking</A
+></H1
+><P
+>   When you create complex database structures involving many tables
+   with foreign key constraints, views, triggers, functions, etc. you
+   implicitly create a net of dependencies between the objects.
+   For instance, a table with a foreign key constraint depends on the
+   table it references.
+  </P
+><P
+>   To ensure the integrity of the entire database structure,
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> makes sure that you cannot
+   drop objects that other objects still depend on.  For example,
+   attempting to drop the products table we considered in <A
+HREF="ddl-constraints.html#DDL-CONSTRAINTS-FK"
+>Section 5.3.5</A
+>, with the orders table depending on
+   it, would result in an error message like this:
+</P><PRE
+CLASS="SCREEN"
+>DROP TABLE products;
+
+ERROR:  cannot drop table products because other objects depend on it
+DETAIL:  constraint orders_product_no_fkey on table orders depends on table products
+HINT:  Use DROP ... CASCADE to drop the dependent objects too.</PRE
+><P>
+   The error message contains a useful hint: if you do not want to
+   bother deleting all the dependent objects individually, you can run:
+</P><PRE
+CLASS="SCREEN"
+>DROP TABLE products CASCADE;</PRE
+><P>
+   and all the dependent objects will be removed.  In this case, it
+   doesn't remove the orders table, it only removes the foreign key
+   constraint.  (If you want to check what <TT
+CLASS="COMMAND"
+>DROP ... CASCADE</TT
+> will do,
+   run <TT
+CLASS="COMMAND"
+>DROP</TT
+> without <TT
+CLASS="LITERAL"
+>CASCADE</TT
+> and read the
+   <TT
+CLASS="LITERAL"
+>DETAIL</TT
+> output.)
+  </P
+><P
+>   All <TT
+CLASS="COMMAND"
+>DROP</TT
+> commands in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> support
+   specifying <TT
+CLASS="LITERAL"
+>CASCADE</TT
+>.  Of course, the nature of
+   the possible dependencies varies with the type of the object.  You
+   can also write <TT
+CLASS="LITERAL"
+>RESTRICT</TT
+> instead of
+   <TT
+CLASS="LITERAL"
+>CASCADE</TT
+> to get the default behavior, which is to
+   prevent the dropping of objects that other objects depend on.
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    According to the SQL standard, specifying either
+    <TT
+CLASS="LITERAL"
+>RESTRICT</TT
+> or <TT
+CLASS="LITERAL"
+>CASCADE</TT
+> is
+    required in a <TT
+CLASS="COMMAND"
+>DROP</TT
+> command.  No database system actually
+    enforces that rule, but whether the default behavior
+    is <TT
+CLASS="LITERAL"
+>RESTRICT</TT
+> or <TT
+CLASS="LITERAL"
+>CASCADE</TT
+> varies
+    across systems.
+   </P
+></BLOCKQUOTE
+></DIV
+><P
+>   For user-defined functions, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> tracks
+   dependencies associated with a function's externally-visible properties,
+   such as its argument and result types, but <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+> dependencies
+   that could only be known by examining the function body.  As an example,
+   consider this situation:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TYPE rainbow AS ENUM ('red', 'orange', 'yellow',
+                             'green', 'blue', 'purple');
+
+CREATE TABLE my_colors (color rainbow, note text);
+
+CREATE FUNCTION get_color_note (rainbow) RETURNS text AS
+  'SELECT note FROM my_colors WHERE color = $1'
+  LANGUAGE SQL;</PRE
+><P>
+
+   (See <A
+HREF="xfunc-sql.html"
+>Section 35.4</A
+> for an explanation of SQL-language
+   functions.)  <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> will be aware that
+   the <CODE
+CLASS="FUNCTION"
+>get_color_note</CODE
+> function depends on the <TT
+CLASS="TYPE"
+>rainbow</TT
+>
+   type: dropping the type would force dropping the function, because its
+   argument type would no longer be defined.  But <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+   will not consider <CODE
+CLASS="FUNCTION"
+>get_color_note</CODE
+> to depend on
+   the <TT
+CLASS="STRUCTNAME"
+>my_colors</TT
+> table, and so will not drop the function if
+   the table is dropped.  While there are disadvantages to this approach,
+   there are also benefits.  The function is still valid in some sense if the
+   table is missing, though executing it would cause an error; creating a new
+   table of the same name would allow the function to work again.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ddl-others.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="dml.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Other Database Objects</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="ddl.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Data Manipulation</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

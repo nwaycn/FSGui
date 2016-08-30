@@ -1,0 +1,354 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Explicit Subtransactions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="PL/Python - Python Procedural Language"
+HREF="plpython.html"><LINK
+REL="PREVIOUS"
+TITLE="Database Access"
+HREF="plpython-database.html"><LINK
+REL="NEXT"
+TITLE="Utility Functions"
+HREF="plpython-util.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Database Access"
+HREF="plpython-database.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plpython.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 43. PL/Python - Python Procedural Language</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Utility Functions"
+HREF="plpython-util.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PLPYTHON-SUBTRANSACTION"
+>43.8. Explicit Subtransactions</A
+></H1
+><P
+>   Recovering from errors caused by database access as described in
+   <A
+HREF="plpython-database.html#PLPYTHON-TRAPPING"
+>Section 43.7.2</A
+> can lead to an undesirable
+   situation where some operations succeed before one of them fails,
+   and after recovering from that error the data is left in an
+   inconsistent state.  PL/Python offers a solution to this problem in
+   the form of explicit subtransactions.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN65903"
+>43.8.1. Subtransaction Context Managers</A
+></H2
+><P
+>    Consider a function that implements a transfer between two
+    accounts:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION transfer_funds() RETURNS void AS $$
+try:
+    plpy.execute("UPDATE accounts SET balance = balance - 100 WHERE account_name = 'joe'")
+    plpy.execute("UPDATE accounts SET balance = balance + 100 WHERE account_name = 'mary'")
+except plpy.SPIError, e:
+    result = "error transferring funds: %s" % e.args
+else:
+    result = "funds transferred correctly"
+plan = plpy.prepare("INSERT INTO operations (result) VALUES ($1)", ["text"])
+plpy.execute(plan, [result])
+$$ LANGUAGE plpythonu;</PRE
+><P>
+    If the second <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> statement results in an
+    exception being raised, this function will report the error, but
+    the result of the first <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> will
+    nevertheless be committed.  In other words, the funds will be
+    withdrawn from Joe's account, but will not be transferred to
+    Mary's account.
+   </P
+><P
+>    To avoid such issues, you can wrap your
+    <TT
+CLASS="LITERAL"
+>plpy.execute</TT
+> calls in an explicit
+    subtransaction.  The <TT
+CLASS="LITERAL"
+>plpy</TT
+> module provides a
+    helper object to manage explicit subtransactions that gets created
+    with the <TT
+CLASS="LITERAL"
+>plpy.subtransaction()</TT
+> function.
+    Objects created by this function implement the
+    <A
+HREF="http://docs.python.org/library/stdtypes.html#context-manager-types"
+TARGET="_top"
+>    context manager interface</A
+>.  Using explicit subtransactions
+    we can rewrite our function as:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION transfer_funds2() RETURNS void AS $$
+try:
+    with plpy.subtransaction():
+        plpy.execute("UPDATE accounts SET balance = balance - 100 WHERE account_name = 'joe'")
+        plpy.execute("UPDATE accounts SET balance = balance + 100 WHERE account_name = 'mary'")
+except plpy.SPIError, e:
+    result = "error transferring funds: %s" % e.args
+else:
+    result = "funds transferred correctly"
+plan = plpy.prepare("INSERT INTO operations (result) VALUES ($1)", ["text"])
+plpy.execute(plan, [result])
+$$ LANGUAGE plpythonu;</PRE
+><P>
+    Note that the use of <TT
+CLASS="LITERAL"
+>try/catch</TT
+> is still
+    required.  Otherwise the exception would propagate to the top of
+    the Python stack and would cause the whole function to abort with
+    a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> error, so that the
+    <TT
+CLASS="LITERAL"
+>operations</TT
+> table would not have any row
+    inserted into it.  The subtransaction context manager does not
+    trap errors, it only assures that all database operations executed
+    inside its scope will be atomically committed or rolled back.  A
+    rollback of the subtransaction block occurs on any kind of
+    exception exit, not only ones caused by errors originating from
+    database access.  A regular Python exception raised inside an
+    explicit subtransaction block would also cause the subtransaction
+    to be rolled back.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN65918"
+>43.8.2. Older Python Versions</A
+></H2
+><P
+>    Context managers syntax using the <TT
+CLASS="LITERAL"
+>with</TT
+> keyword
+    is available by default in Python 2.6.  If using PL/Python with an
+    older Python version, it is still possible to use explicit
+    subtransactions, although not as transparently.  You can call the
+    subtransaction manager's <TT
+CLASS="LITERAL"
+>__enter__</TT
+> and
+    <TT
+CLASS="LITERAL"
+>__exit__</TT
+> functions using the
+    <TT
+CLASS="LITERAL"
+>enter</TT
+> and <TT
+CLASS="LITERAL"
+>exit</TT
+> convenience
+    aliases.  The example function that transfers funds could be
+    written as:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION transfer_funds_old() RETURNS void AS $$
+try:
+    subxact = plpy.subtransaction()
+    subxact.enter()
+    try:
+        plpy.execute("UPDATE accounts SET balance = balance - 100 WHERE account_name = 'joe'")
+        plpy.execute("UPDATE accounts SET balance = balance + 100 WHERE account_name = 'mary'")
+    except:
+        import sys
+        subxact.exit(*sys.exc_info())
+        raise
+    else:
+        subxact.exit(None, None, None)
+except plpy.SPIError, e:
+    result = "error transferring funds: %s" % e.args
+else:
+    result = "funds transferred correctly"
+
+plan = plpy.prepare("INSERT INTO operations (result) VALUES ($1)", ["text"])
+plpy.execute(plan, [result])
+$$ LANGUAGE plpythonu;</PRE
+><P>
+   </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>     Although context managers were implemented in Python 2.5, to use
+     the <TT
+CLASS="LITERAL"
+>with</TT
+> syntax in that version you need to
+     use a <A
+HREF="http://docs.python.org/release/2.5/ref/future.html"
+TARGET="_top"
+>future
+     statement</A
+>.  Because of implementation details, however,
+     you cannot use future statements in PL/Python functions.
+    </P
+></BLOCKQUOTE
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plpython-database.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="plpython-util.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Database Access</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="plpython.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Utility Functions</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

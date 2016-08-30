@@ -1,0 +1,572 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.3.10</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.3.11"
+HREF="release-8-3-11.html"><LINK
+REL="NEXT"
+TITLE="Release 8.3.9"
+HREF="release-8-3-9.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.3.11"
+HREF="release-8-3-11.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.3.9"
+HREF="release-8-3-9.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-3-10"
+>E.134. Release 8.3.10</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2010-03-15</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.3.9.
+   For information about new features in the 8.3 major release, see
+   <A
+HREF="release-8-3.html"
+>Section E.144</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN152735"
+>E.134.1. Migration to Version 8.3.10</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.3.X.
+    However, if you are upgrading from a version earlier than 8.3.8,
+    see <A
+HREF="release-8-3-8.html"
+>Section E.136</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN152739"
+>E.134.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Add new configuration parameter <TT
+CLASS="VARNAME"
+>ssl_renegotiation_limit</TT
+> to
+      control how often we do session key renegotiation for an SSL connection
+      (Magnus)
+     </P
+><P
+>      This can be set to zero to disable renegotiation completely, which may
+      be required if a broken SSL library is used.  In particular, some
+      vendors are shipping stopgap patches for CVE-2009-3555 that cause
+      renegotiation attempts to fail.
+     </P
+></LI
+><LI
+><P
+>      Fix possible deadlock during backend startup (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix possible crashes due to not handling errors during relcache reload
+      cleanly (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix possible crash due to use of dangling pointer to a cached plan
+      (Tatsuo)
+     </P
+></LI
+><LI
+><P
+>      Fix possible crashes when trying to recover from a failure in
+      subtransaction start (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix server memory leak associated with use of savepoints and a client
+      encoding different from server's encoding (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect WAL data emitted during end-of-recovery cleanup of a GIST
+      index page split (Yoichi Hirai)
+     </P
+><P
+>      This would result in index corruption, or even more likely an error
+      during WAL replay, if we were unlucky enough to crash during
+      end-of-recovery cleanup after having completed an incomplete GIST
+      insertion.
+     </P
+></LI
+><LI
+><P
+>      Make <CODE
+CLASS="FUNCTION"
+>substring()</CODE
+> for <TT
+CLASS="TYPE"
+>bit</TT
+> types treat any negative
+      length as meaning <SPAN
+CLASS="QUOTE"
+>"all the rest of the string"</SPAN
+> (Tom)
+     </P
+><P
+>      The previous coding treated only -1 that way, and would produce an
+      invalid result value for other negative values, possibly leading to
+      a crash (CVE-2010-0442).
+     </P
+></LI
+><LI
+><P
+>      Fix integer-to-bit-string conversions to handle the first fractional
+      byte correctly when the output bit width is wider than the given
+      integer by something other than a multiple of 8 bits (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix some cases of pathologically slow regular expression matching (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix assorted crashes in <TT
+CLASS="TYPE"
+>xml</TT
+> processing caused by sloppy
+      memory management (Tom)
+     </P
+><P
+>      This is a back-patch of changes first applied in 8.4.  The 8.3 code
+      was known buggy, but the new code was sufficiently different to not
+      want to back-patch it until it had gotten some field testing.
+     </P
+></LI
+><LI
+><P
+>      Fix bug with trying to update a field of an element of a
+      composite-type array column (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix the <TT
+CLASS="LITERAL"
+>STOP WAL LOCATION</TT
+> entry in backup history files to
+      report the next WAL segment's name when the end location is exactly at a
+      segment boundary (Itagaki Takahiro)
+     </P
+></LI
+><LI
+><P
+>      Fix some more cases of temporary-file leakage (Heikki)
+     </P
+><P
+>      This corrects a problem introduced in the previous minor release.
+      One case that failed is when a plpgsql function returning set is
+      called within another function's exception handler.
+     </P
+></LI
+><LI
+><P
+>      Improve constraint exclusion processing of boolean-variable cases,
+      in particular make it possible to exclude a partition that has a
+      <SPAN
+CLASS="QUOTE"
+>"bool_column = false"</SPAN
+> constraint (Tom)
+     </P
+></LI
+><LI
+><P
+>      When reading <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> and related files, do not treat
+      <TT
+CLASS="LITERAL"
+>@something</TT
+> as a file inclusion request if the <TT
+CLASS="LITERAL"
+>@</TT
+>
+      appears inside quote marks; also, never treat <TT
+CLASS="LITERAL"
+>@</TT
+> by itself
+      as a file inclusion request (Tom)
+     </P
+><P
+>      This prevents erratic behavior if a role or database name starts with
+      <TT
+CLASS="LITERAL"
+>@</TT
+>.  If you need to include a file whose path name
+      contains spaces, you can still do so, but you must write
+      <TT
+CLASS="LITERAL"
+>@"/path to/file"</TT
+> rather than putting the quotes around
+      the whole construct.
+     </P
+></LI
+><LI
+><P
+>      Prevent infinite loop on some platforms if a directory is named as
+      an inclusion target in <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> and related files
+      (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix possible infinite loop if <CODE
+CLASS="FUNCTION"
+>SSL_read</CODE
+> or
+      <CODE
+CLASS="FUNCTION"
+>SSL_write</CODE
+> fails without setting <TT
+CLASS="VARNAME"
+>errno</TT
+> (Tom)
+     </P
+><P
+>      This is reportedly possible with some Windows versions of
+      <SPAN
+CLASS="APPLICATION"
+>openssl</SPAN
+>.
+     </P
+></LI
+><LI
+><P
+>      Disallow <ACRONYM
+CLASS="ACRONYM"
+>GSSAPI</ACRONYM
+> authentication on local connections,
+      since it requires a hostname to function correctly (Magnus)
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+> report the proper SQLSTATE if the connection
+      disappears (Michael)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s <TT
+CLASS="LITERAL"
+>numericlocale</TT
+> option to not
+      format strings it shouldn't in latex and troff output formats (Heikki)
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> return the correct exit status (3) when
+      <TT
+CLASS="LITERAL"
+>ON_ERROR_STOP</TT
+> and <TT
+CLASS="LITERAL"
+>--single-transaction</TT
+> are
+      both specified and an error occurs during the implied <TT
+CLASS="COMMAND"
+>COMMIT</TT
+>
+      (Bruce)
+     </P
+></LI
+><LI
+><P
+>      Fix plpgsql failure in one case where a composite column is set to NULL
+      (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix possible failure when calling PL/Perl functions from PL/PerlU
+      or vice versa (Tim Bunce)
+     </P
+></LI
+><LI
+><P
+>      Add <TT
+CLASS="LITERAL"
+>volatile</TT
+> markings in PL/Python to avoid possible
+      compiler-specific misbehavior (Zdenek Kotala)
+     </P
+></LI
+><LI
+><P
+>      Ensure PL/Tcl initializes the Tcl interpreter fully (Tom)
+     </P
+><P
+>      The only known symptom of this oversight is that the Tcl
+      <TT
+CLASS="LITERAL"
+>clock</TT
+> command misbehaves if using Tcl 8.5 or later.
+     </P
+></LI
+><LI
+><P
+>      Prevent crash in <TT
+CLASS="FILENAME"
+>contrib/dblink</TT
+> when too many key
+      columns are specified to a <CODE
+CLASS="FUNCTION"
+>dblink_build_sql_*</CODE
+> function
+      (Rushabh Lathia, Joe Conway)
+     </P
+></LI
+><LI
+><P
+>      Allow zero-dimensional arrays in <TT
+CLASS="FILENAME"
+>contrib/ltree</TT
+> operations
+      (Tom)
+     </P
+><P
+>      This case was formerly rejected as an error, but it's more convenient to
+      treat it the same as a zero-element array.  In particular this avoids
+      unnecessary failures when an <TT
+CLASS="TYPE"
+>ltree</TT
+> operation is applied to the
+      result of <TT
+CLASS="LITERAL"
+>ARRAY(SELECT ...)</TT
+> and the sub-select returns no
+      rows.
+     </P
+></LI
+><LI
+><P
+>      Fix assorted crashes in <TT
+CLASS="FILENAME"
+>contrib/xml2</TT
+> caused by sloppy
+      memory management (Tom)
+     </P
+></LI
+><LI
+><P
+>      Make building of <TT
+CLASS="FILENAME"
+>contrib/xml2</TT
+> more robust on Windows
+      (Andrew)
+     </P
+></LI
+><LI
+><P
+>      Fix race condition in Windows signal handling (Radu Ilie)
+     </P
+><P
+>      One known symptom of this bug is that rows in <TT
+CLASS="STRUCTNAME"
+>pg_listener</TT
+>
+      could be dropped under heavy load.
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2010e
+      for DST law changes in Bangladesh, Chile, Fiji, Mexico, Paraguay, Samoa.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-3-11.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-3-9.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.3.11</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.3.9</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

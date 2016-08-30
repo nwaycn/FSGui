@@ -1,0 +1,510 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.2.7</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.2.8"
+HREF="release-8-2-8.html"><LINK
+REL="NEXT"
+TITLE="Release 8.2.6"
+HREF="release-8-2-6.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.2.8"
+HREF="release-8-2-8.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.2.6"
+HREF="release-8-2-6.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-2-7"
+>E.161. Release 8.2.7</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2008-03-17</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.2.6.
+   For information about new features in the 8.2 major release, see
+   <A
+HREF="release-8-2.html"
+>Section E.168</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN156260"
+>E.161.1. Migration to Version 8.2.7</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.2.X.
+    However, you might need to <TT
+CLASS="COMMAND"
+>REINDEX</TT
+> indexes on textual
+    columns after updating, if you are affected by the Windows locale
+    issue described below.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN156264"
+>E.161.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix character string comparison for Windows locales that consider
+      different character combinations as equal (Tom)
+     </P
+><P
+>      This fix applies only on Windows and only when using UTF-8
+      database encoding.  The same fix was made for all other cases
+      over two years ago, but Windows with UTF-8 uses a separate code
+      path that was not updated.  If you are using a locale that
+      considers some non-identical strings as equal, you may need to
+      <TT
+CLASS="COMMAND"
+>REINDEX</TT
+> to fix existing indexes on textual columns.
+     </P
+></LI
+><LI
+><P
+>      Repair potential deadlock between concurrent <TT
+CLASS="COMMAND"
+>VACUUM FULL</TT
+>
+      operations on different system catalogs (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix longstanding <TT
+CLASS="COMMAND"
+>LISTEN</TT
+>/<TT
+CLASS="COMMAND"
+>NOTIFY</TT
+>
+      race condition (Tom)
+     </P
+><P
+>      In rare cases a session that had just executed a
+      <TT
+CLASS="COMMAND"
+>LISTEN</TT
+> might not get a notification, even though
+      one would be expected because the concurrent transaction executing
+      <TT
+CLASS="COMMAND"
+>NOTIFY</TT
+> was observed to commit later.
+     </P
+><P
+>      A side effect of the fix is that a transaction that has executed
+      a not-yet-committed <TT
+CLASS="COMMAND"
+>LISTEN</TT
+> command will not see any
+      row in <TT
+CLASS="STRUCTNAME"
+>pg_listener</TT
+> for the <TT
+CLASS="COMMAND"
+>LISTEN</TT
+>,
+      should it choose to look; formerly it would have.  This behavior
+      was never documented one way or the other, but it is possible that
+      some applications depend on the old behavior.
+     </P
+></LI
+><LI
+><P
+>      Disallow <TT
+CLASS="COMMAND"
+>LISTEN</TT
+> and <TT
+CLASS="COMMAND"
+>UNLISTEN</TT
+> within a
+      prepared transaction (Tom)
+     </P
+><P
+>      This was formerly allowed but trying to do it had various unpleasant
+      consequences, notably that the originating backend could not exit
+      as long as an <TT
+CLASS="COMMAND"
+>UNLISTEN</TT
+> remained uncommitted.
+     </P
+></LI
+><LI
+><P
+>      Disallow dropping a temporary table within a
+      prepared transaction (Heikki)
+     </P
+><P
+>      This was correctly disallowed by 8.1, but the check was inadvertently
+      broken in 8.2.
+     </P
+></LI
+><LI
+><P
+>      Fix rare crash when an error occurs during a query using a hash index
+      (Heikki)
+     </P
+></LI
+><LI
+><P
+>      Fix memory leaks in certain usages of set-returning functions (Neil)
+     </P
+></LI
+><LI
+><P
+>      Fix input of datetime values for February 29 in years BC (Tom)
+     </P
+><P
+>      The former coding was mistaken about which years were leap years.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="QUOTE"
+>"unrecognized node type"</SPAN
+> error in some variants of
+      <TT
+CLASS="COMMAND"
+>ALTER OWNER</TT
+> (Tom)
+     </P
+></LI
+><LI
+><P
+>      Ensure <TT
+CLASS="STRUCTNAME"
+>pg_stat_activity</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>waiting</TT
+> flag
+      is cleared when a lock wait is aborted (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix handling of process permissions on Windows Vista (Dave, Magnus)
+     </P
+><P
+>      In particular, this fix allows starting the server as the Administrator
+      user.
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2008a
+      (in particular, recent Chile changes); adjust timezone abbreviation
+      <TT
+CLASS="LITERAL"
+>VET</TT
+> (Venezuela) to mean UTC-4:30, not UTC-4:00 (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> to correctly extract the postmaster's port
+      number from command-line options (Itagaki Takahiro, Tom)
+     </P
+><P
+>      Previously, <TT
+CLASS="LITERAL"
+>pg_ctl start -w</TT
+> could try to contact the
+      postmaster on the wrong port, leading to bogus reports of startup
+      failure.
+     </P
+></LI
+><LI
+><P
+>      Use <TT
+CLASS="OPTION"
+>-fwrapv</TT
+> to defend against possible misoptimization
+      in recent <SPAN
+CLASS="APPLICATION"
+>gcc</SPAN
+> versions (Tom)
+     </P
+><P
+>      This is known to be necessary when building <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+      with <SPAN
+CLASS="APPLICATION"
+>gcc</SPAN
+> 4.3 or later.
+     </P
+></LI
+><LI
+><P
+>      Correctly enforce <TT
+CLASS="VARNAME"
+>statement_timeout</TT
+> values longer
+      than <TT
+CLASS="LITERAL"
+>INT_MAX</TT
+> microseconds (about 35 minutes) (Tom)
+     </P
+><P
+>      This bug affects only builds with <TT
+CLASS="OPTION"
+>--enable-integer-datetimes</TT
+>.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="QUOTE"
+>"unexpected PARAM_SUBLINK ID"</SPAN
+> planner error when
+      constant-folding simplifies a sub-select (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix logical errors in constraint-exclusion handling of <TT
+CLASS="LITERAL"
+>IS
+      NULL</TT
+> and <TT
+CLASS="LITERAL"
+>NOT</TT
+> expressions (Tom)
+     </P
+><P
+>      The planner would sometimes exclude partitions that should not
+      have been excluded because of the possibility of NULL results.
+     </P
+></LI
+><LI
+><P
+>      Fix another cause of <SPAN
+CLASS="QUOTE"
+>"failed to build any N-way joins"</SPAN
+>
+      planner errors (Tom)
+     </P
+><P
+>      This could happen in cases where a clauseless join needed to be
+      forced before a join clause could be exploited.
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect constant propagation in outer-join planning (Tom)
+     </P
+><P
+>      The planner could sometimes incorrectly conclude that a variable
+      could be constrained to be equal to a constant, leading
+      to wrong query results.
+     </P
+></LI
+><LI
+><P
+>      Fix display of constant expressions in <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+>
+      and <TT
+CLASS="LITERAL"
+>GROUP BY</TT
+> (Tom)
+     </P
+><P
+>      An explicitly casted constant would be shown incorrectly.  This could
+      for example lead to corruption of a view definition during
+      dump and reload.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> to handle NOTICE messages correctly
+      during COPY OUT (Tom)
+     </P
+><P
+>      This failure has only been observed to occur when a user-defined
+      datatype's output routine issues a NOTICE, but there is no
+      guarantee it couldn't happen due to other causes.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-2-8.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-2-6.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.2.8</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.2.6</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

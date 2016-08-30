@@ -1,0 +1,213 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Writing A Custom Scan Provider</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Internals"
+HREF="internals.html"><LINK
+REL="PREVIOUS"
+TITLE="Sampling Method Support Functions"
+HREF="tablesample-support-functions.html"><LINK
+REL="NEXT"
+TITLE="Creating Custom Scan Paths"
+HREF="custom-scan-path.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="CHAPTER"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Sampling Method Support Functions"
+HREF="tablesample-support-functions.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="internals.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Creating Custom Scan Paths"
+HREF="custom-scan-path.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="CUSTOM-SCAN"
+></A
+>Chapter 56. Writing A Custom Scan Provider</H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+>56.1. <A
+HREF="custom-scan-path.html"
+>Creating Custom Scan Paths</A
+></DT
+><DT
+>56.2. <A
+HREF="custom-scan-plan.html"
+>Creating Custom Scan Plans</A
+></DT
+><DT
+>56.3. <A
+HREF="custom-scan-execution.html"
+>Executing Custom Scans</A
+></DT
+></DL
+></DIV
+><P
+>  <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> supports a set of experimental facilities which
+  are intended to allow extension modules to add new scan types to the system.
+  Unlike a <A
+HREF="fdwhandler.html"
+>foreign data wrapper</A
+>, which is only
+  responsible for knowing how to scan its own foreign tables, a custom scan
+  provider can provide an alternative method of scanning any relation in the
+  system.  Typically, the motivation for writing a custom scan provider will
+  be to allow the use of some optimization not supported by the core
+  system, such as caching or some form of hardware acceleration.  This chapter
+  outlines how to write a new custom scan provider.
+ </P
+><P
+>  Implementing a new type of custom scan is a three-step process.  First,
+  during planning, it is necessary to generate access paths representing a
+  scan using the proposed strategy.  Second, if one of those access paths
+  is selected by the planner as the optimal strategy for scanning a
+  particular relation, the access path must be converted to a plan.
+  Finally, it must be possible to execute the plan and generate the same
+  results that would have been generated for any other access path targeting
+  the same relation.
+ </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="tablesample-support-functions.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="custom-scan-path.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Sampling Method Support Functions</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="internals.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Creating Custom Scan Paths</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

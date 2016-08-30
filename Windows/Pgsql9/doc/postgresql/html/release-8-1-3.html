@@ -1,0 +1,441 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.1.3</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.1.4"
+HREF="release-8-1-4.html"><LINK
+REL="NEXT"
+TITLE="Release 8.1.2"
+HREF="release-8-1-2.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.1.4"
+HREF="release-8-1-4.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.1.2"
+HREF="release-8-1-2.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-1-3"
+>E.189. Release 8.1.3</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2006-02-14</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.1.2,
+   including one very serious security issue.
+   For information about new features in the 8.1 major release, see
+   <A
+HREF="release-8-1.html"
+>Section E.192</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN159242"
+>E.189.1. Migration to Version 8.1.3</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.1.X.
+    However, if you are upgrading from a version earlier than 8.1.2,
+    see <A
+HREF="release-8-1-2.html"
+>Section E.190</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN159246"
+>E.189.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>Fix bug that allowed any logged-in user to <TT
+CLASS="COMMAND"
+>SET
+ROLE</TT
+> to any other database user id (CVE-2006-0553)</P
+><P
+>Due to inadequate validity checking, a user could exploit the special
+case that <TT
+CLASS="COMMAND"
+>SET ROLE</TT
+> normally uses to restore the previous role
+setting after an error.  This allowed ordinary users to acquire superuser
+status, for example.
+The escalation-of-privilege risk exists only in 8.1.0-8.1.2.
+However, in all releases back to 7.3 there is a related bug in <TT
+CLASS="COMMAND"
+>SET
+SESSION AUTHORIZATION</TT
+> that allows unprivileged users to crash the server,
+if it has been compiled with Asserts enabled (which is not the default).
+Thanks to Akio Ishida for reporting this problem.</P
+></LI
+><LI
+><P
+>Fix bug with row visibility logic in self-inserted
+rows (Tom)</P
+><P
+>Under rare circumstances a row inserted by the current command
+could be seen as already valid, when it should not be.  Repairs bug
+created in 8.0.4, 7.4.9, and 7.3.11 releases.</P
+></LI
+><LI
+><P
+>Fix race condition that could lead to <SPAN
+CLASS="QUOTE"
+>"file already
+exists"</SPAN
+> errors during pg_clog and pg_subtrans file creation
+(Tom)</P
+></LI
+><LI
+><P
+>Fix cases that could lead to crashes if a cache-invalidation
+message arrives at just the wrong time (Tom)</P
+></LI
+><LI
+><P
+>Properly check <TT
+CLASS="LITERAL"
+>DOMAIN</TT
+> constraints for
+<TT
+CLASS="LITERAL"
+>UNKNOWN</TT
+> parameters in prepared statements
+(Neil)</P
+></LI
+><LI
+><P
+>Ensure <TT
+CLASS="COMMAND"
+>ALTER COLUMN TYPE</TT
+> will process
+<TT
+CLASS="LITERAL"
+>FOREIGN KEY</TT
+>, <TT
+CLASS="LITERAL"
+>UNIQUE</TT
+>, and <TT
+CLASS="LITERAL"
+>PRIMARY KEY</TT
+>
+constraints in the proper order (Nakano Yoshihisa)</P
+></LI
+><LI
+><P
+>Fixes to allow restoring dumps that have cross-schema
+references to custom operators or operator classes (Tom)</P
+></LI
+><LI
+><P
+>Allow <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> to continue properly after a
+<TT
+CLASS="COMMAND"
+>COPY</TT
+> failure; formerly it tried to treat the remaining
+<TT
+CLASS="COMMAND"
+>COPY</TT
+> data as SQL commands (Stephen Frost)</P
+></LI
+><LI
+><P
+>Fix <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> <TT
+CLASS="LITERAL"
+>unregister</TT
+> crash
+when the  data directory is not specified (Magnus)</P
+></LI
+><LI
+><P
+>Fix <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> <CODE
+CLASS="FUNCTION"
+>PQprint</CODE
+> HTML tags
+(Christoph Zwerschke)</P
+></LI
+><LI
+><P
+>Fix <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+> crash on AMD64 and PPC
+(Neil)</P
+></LI
+><LI
+><P
+>Allow <TT
+CLASS="LITERAL"
+>SETOF</TT
+> and <TT
+CLASS="LITERAL"
+>%TYPE</TT
+> to be used
+together in function result type declarations</P
+></LI
+><LI
+><P
+>Recover properly if error occurs during argument passing
+in <SPAN
+CLASS="APPLICATION"
+>PL/python</SPAN
+> (Neil)</P
+></LI
+><LI
+><P
+>Fix memory leak in <CODE
+CLASS="FUNCTION"
+>plperl_return_next</CODE
+>
+(Neil)</P
+></LI
+><LI
+><P
+>Fix <SPAN
+CLASS="APPLICATION"
+>PL/perl</SPAN
+>'s handling of locales on
+Win32 to match the backend (Andrew)</P
+></LI
+><LI
+><P
+>Various optimizer fixes (Tom)</P
+></LI
+><LI
+><P
+>Fix crash when <TT
+CLASS="LITERAL"
+>log_min_messages</TT
+> is set to
+<TT
+CLASS="LITERAL"
+>DEBUG3</TT
+> or above in <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> on Win32
+(Bruce)</P
+></LI
+><LI
+><P
+>Fix <SPAN
+CLASS="APPLICATION"
+>pgxs</SPAN
+> <TT
+CLASS="LITERAL"
+>-L</TT
+> library path
+specification for Win32, Cygwin, OS X, AIX (Bruce)</P
+></LI
+><LI
+><P
+>Check that SID is enabled while checking for Win32 admin
+privileges (Magnus)</P
+></LI
+><LI
+><P
+>Properly reject out-of-range date inputs (Kris
+Jurka)</P
+></LI
+><LI
+><P
+>Portability fix for testing presence of <CODE
+CLASS="FUNCTION"
+>finite</CODE
+>
+and <CODE
+CLASS="FUNCTION"
+>isinf</CODE
+> during configure (Tom)</P
+></LI
+><LI
+><P
+>Improve speed of <TT
+CLASS="COMMAND"
+>COPY IN</TT
+> via libpq, by
+avoiding a kernel call per data line (Alon Goldshuv)</P
+></LI
+><LI
+><P
+>Improve speed of <TT
+CLASS="FILENAME"
+>/contrib/tsearch2</TT
+> index
+creation (Tom)</P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-1-4.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-1-2.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.1.4</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.1.2</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

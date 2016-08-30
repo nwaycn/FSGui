@@ -1,0 +1,4105 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>System Administration Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Functions and Operators"
+HREF="functions.html"><LINK
+REL="PREVIOUS"
+TITLE="System Information Functions"
+HREF="functions-info.html"><LINK
+REL="NEXT"
+TITLE="Trigger Functions"
+HREF="functions-trigger.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="System Information Functions"
+HREF="functions-info.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 9. Functions and Operators</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Trigger Functions"
+HREF="functions-trigger.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="FUNCTIONS-ADMIN"
+>9.26. System Administration Functions</A
+></H1
+><P
+>    The functions described in this section are used to control and
+    monitor a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> installation.
+   </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="FUNCTIONS-ADMIN-SET"
+>9.26.1. Configuration Settings Functions</A
+></H2
+><P
+>    <A
+HREF="functions-admin.html#FUNCTIONS-ADMIN-SET-TABLE"
+>Table 9-66</A
+> shows the functions
+    available to query and alter run-time configuration parameters.
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-ADMIN-SET-TABLE"
+></A
+><P
+><B
+>Table 9-66. Configuration Settings Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>current_setting(<TT
+CLASS="PARAMETER"
+>setting_name</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>get current value of setting</TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>set_config(<TT
+CLASS="PARAMETER"
+>setting_name</TT
+>,
+                             <TT
+CLASS="PARAMETER"
+>new_value</TT
+>,
+                             <TT
+CLASS="PARAMETER"
+>is_local</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>set parameter and return new value</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    The function <CODE
+CLASS="FUNCTION"
+>current_setting</CODE
+> yields the
+    current value of the setting <TT
+CLASS="PARAMETER"
+>setting_name</TT
+>.
+    It corresponds to the <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> command
+    <TT
+CLASS="COMMAND"
+>SHOW</TT
+>.  An example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT current_setting('datestyle');
+
+ current_setting
+-----------------
+ ISO, MDY
+(1 row)</PRE
+><P>
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>set_config</CODE
+> sets the parameter
+    <TT
+CLASS="PARAMETER"
+>setting_name</TT
+> to
+    <TT
+CLASS="PARAMETER"
+>new_value</TT
+>.  If
+    <TT
+CLASS="PARAMETER"
+>is_local</TT
+> is <TT
+CLASS="LITERAL"
+>true</TT
+>, the
+    new value will only apply to the current transaction. If you want
+    the new value to apply for the current session, use
+    <TT
+CLASS="LITERAL"
+>false</TT
+> instead. The function corresponds to the
+    SQL command <TT
+CLASS="COMMAND"
+>SET</TT
+>. An example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT set_config('log_statement_stats', 'off', false);
+
+ set_config
+------------
+ off
+(1 row)</PRE
+><P>
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="FUNCTIONS-ADMIN-SIGNAL"
+>9.26.2. Server Signaling Functions</A
+></H2
+><P
+>    The functions shown in <A
+HREF="functions-admin.html#FUNCTIONS-ADMIN-SIGNAL-TABLE"
+>Table 9-67</A
+> send control signals to
+    other server processes.  Use of these functions is usually restricted
+    to superusers, with noted exceptions.
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-ADMIN-SIGNAL-TABLE"
+></A
+><P
+><B
+>Table 9-67. Server Signaling Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_cancel_backend(<TT
+CLASS="PARAMETER"
+>pid</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>Cancel a backend's current query.  This is also allowed if the
+        calling role is a member of the role whose backend is being canceled,
+        however only superusers can cancel superuser backends.
+        </TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_reload_conf()</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>Cause server processes to reload their configuration files</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_rotate_logfile()</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>Rotate server's log file</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_terminate_backend(<TT
+CLASS="PARAMETER"
+>pid</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>Terminate a backend.  This is also allowed if the calling role
+        is a member of the role whose backend is being terminated, however only
+        superusers can terminate superuser backends.
+       </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    Each of these functions returns <TT
+CLASS="LITERAL"
+>true</TT
+> if
+    successful and <TT
+CLASS="LITERAL"
+>false</TT
+> otherwise.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_cancel_backend</CODE
+> and <CODE
+CLASS="FUNCTION"
+>pg_terminate_backend</CODE
+>
+    send signals (<SPAN
+CLASS="SYSTEMITEM"
+>SIGINT</SPAN
+> or <SPAN
+CLASS="SYSTEMITEM"
+>SIGTERM</SPAN
+>
+    respectively) to backend processes identified by process ID.
+    The process ID of an active backend can be found from
+    the <TT
+CLASS="STRUCTFIELD"
+>pid</TT
+> column of the
+    <TT
+CLASS="STRUCTNAME"
+>pg_stat_activity</TT
+> view, or by listing the
+    <TT
+CLASS="COMMAND"
+>postgres</TT
+> processes on the server (using
+    <SPAN
+CLASS="APPLICATION"
+>ps</SPAN
+> on Unix or the <SPAN
+CLASS="APPLICATION"
+>Task
+    Manager</SPAN
+> on <SPAN
+CLASS="PRODUCTNAME"
+>Windows</SPAN
+>).
+    The role of an active backend can be found from the
+    <TT
+CLASS="STRUCTFIELD"
+>usename</TT
+> column of the
+    <TT
+CLASS="STRUCTNAME"
+>pg_stat_activity</TT
+> view.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_reload_conf</CODE
+> sends a <SPAN
+CLASS="SYSTEMITEM"
+>SIGHUP</SPAN
+> signal
+    to the server, causing configuration files
+    to be reloaded by all server processes.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_rotate_logfile</CODE
+> signals the log-file manager to switch
+    to a new output file immediately.  This works only when the built-in
+    log collector is running, since otherwise there is no log-file manager
+    subprocess.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="FUNCTIONS-ADMIN-BACKUP"
+>9.26.3. Backup Control Functions</A
+></H2
+><P
+>    The functions shown in <A
+HREF="functions-admin.html#FUNCTIONS-ADMIN-BACKUP-TABLE"
+>Table 9-68</A
+> assist in making on-line backups.
+    These functions cannot be executed during recovery (except
+    <CODE
+CLASS="FUNCTION"
+>pg_is_in_backup</CODE
+>, <CODE
+CLASS="FUNCTION"
+>pg_backup_start_time</CODE
+>
+    and <CODE
+CLASS="FUNCTION"
+>pg_xlog_location_diff</CODE
+>).
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-ADMIN-BACKUP-TABLE"
+></A
+><P
+><B
+>Table 9-68. Backup Control Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_create_restore_point(<TT
+CLASS="PARAMETER"
+>name</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>pg_lsn</TT
+></TD
+><TD
+>Create a named point for performing restore (restricted to superusers)</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_current_xlog_insert_location()</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>pg_lsn</TT
+></TD
+><TD
+>Get current transaction log insert location</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_current_xlog_location()</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>pg_lsn</TT
+></TD
+><TD
+>Get current transaction log write location</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_start_backup(<TT
+CLASS="PARAMETER"
+>label</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+> [<SPAN
+CLASS="OPTIONAL"
+>, <TT
+CLASS="PARAMETER"
+>fast</TT
+> <TT
+CLASS="TYPE"
+>boolean</TT
+> </SPAN
+>])</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>pg_lsn</TT
+></TD
+><TD
+>Prepare for performing on-line backup (restricted to superusers or replication roles)</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stop_backup()</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>pg_lsn</TT
+></TD
+><TD
+>Finish performing on-line backup (restricted to superusers or replication roles)</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_is_in_backup()</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>bool</TT
+></TD
+><TD
+>True if an on-line exclusive backup is still in progress.</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_backup_start_time()</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>Get start time of an on-line exclusive backup in progress.</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_switch_xlog()</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>pg_lsn</TT
+></TD
+><TD
+>Force switch to a new transaction log file (restricted to superusers)</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_xlogfile_name(<TT
+CLASS="PARAMETER"
+>location</TT
+> <TT
+CLASS="TYPE"
+>pg_lsn</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Convert transaction log location string to file name</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_xlogfile_name_offset(<TT
+CLASS="PARAMETER"
+>location</TT
+> <TT
+CLASS="TYPE"
+>pg_lsn</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+>, <TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>Convert transaction log location string to file name and decimal byte offset within file</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_xlog_location_diff(<TT
+CLASS="PARAMETER"
+>location</TT
+> <TT
+CLASS="TYPE"
+>pg_lsn</TT
+>, <TT
+CLASS="PARAMETER"
+>location</TT
+> <TT
+CLASS="TYPE"
+>pg_lsn</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>numeric</TT
+></TD
+><TD
+>Calculate the difference between two transaction log locations</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_start_backup</CODE
+> accepts an
+    arbitrary user-defined label for the backup.  (Typically this would be
+    the name under which the backup dump file will be stored.)  The function
+    writes a backup label file (<TT
+CLASS="FILENAME"
+>backup_label</TT
+>) and, if there
+    are any links in the <TT
+CLASS="FILENAME"
+>pg_tblspc/</TT
+> directory, a tablespace map
+    file (<TT
+CLASS="FILENAME"
+>tablespace_map</TT
+>) into the database cluster's data
+    directory, performs a checkpoint, and then returns the backup's starting
+    transaction log location as text.  The user can ignore this result value,
+    but it is provided in case it is useful.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>postgres=# select pg_start_backup('label_goes_here');
+ pg_start_backup
+-----------------
+ 0/D4445B8
+(1 row)</PRE
+><P>
+    There is an optional second parameter of type <TT
+CLASS="TYPE"
+>boolean</TT
+>.  If <TT
+CLASS="LITERAL"
+>true</TT
+>,
+    it specifies executing <CODE
+CLASS="FUNCTION"
+>pg_start_backup</CODE
+> as quickly as
+    possible.  This forces an immediate checkpoint which will cause a
+    spike in I/O operations, slowing any concurrently executing queries.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_stop_backup</CODE
+> removes the label file and, if it exists,
+    the <TT
+CLASS="FILENAME"
+>tablespace_map</TT
+> file created by
+    <CODE
+CLASS="FUNCTION"
+>pg_start_backup</CODE
+>, and creates a backup history file in
+    the transaction log archive area.  The history file includes the label given to
+    <CODE
+CLASS="FUNCTION"
+>pg_start_backup</CODE
+>, the starting and ending transaction log locations for
+    the backup, and the starting and ending times of the backup.  The return
+    value is the backup's ending transaction log location (which again
+    can be ignored).  After recording the ending location, the current
+    transaction log insertion
+    point is automatically advanced to the next transaction log file, so that the
+    ending transaction log file can be archived immediately to complete the backup.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_switch_xlog</CODE
+> moves to the next transaction log file, allowing the
+    current file to be archived (assuming you are using continuous archiving).
+    The return value is the ending transaction log location + 1 within the just-completed transaction log file.
+    If there has been no transaction log activity since the last transaction log switch,
+    <CODE
+CLASS="FUNCTION"
+>pg_switch_xlog</CODE
+> does nothing and returns the start location
+    of the transaction log file currently in use.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_create_restore_point</CODE
+> creates a named transaction log
+    record that can be used as recovery target, and returns the corresponding
+    transaction log location.  The given name can then be used with
+    <A
+HREF="recovery-target-settings.html#RECOVERY-TARGET-NAME"
+>recovery_target_name</A
+> to specify the point up to which
+    recovery will proceed.  Avoid creating multiple restore points with the
+    same name, since recovery will stop at the first one whose name matches
+    the recovery target.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_current_xlog_location</CODE
+> displays the current transaction log write
+    location in the same format used by the above functions.  Similarly,
+    <CODE
+CLASS="FUNCTION"
+>pg_current_xlog_insert_location</CODE
+> displays the current transaction log
+    insertion point.  The insertion point is the <SPAN
+CLASS="QUOTE"
+>"logical"</SPAN
+> end
+    of the transaction log
+    at any instant, while the write location is the end of what has actually
+    been written out from the server's internal buffers.  The write location
+    is the end of what can be examined from outside the server, and is usually
+    what you want if you are interested in archiving partially-complete transaction log
+    files.  The insertion point is made available primarily for server
+    debugging purposes.  These are both read-only operations and do not
+    require superuser permissions.
+   </P
+><P
+>    You can use <CODE
+CLASS="FUNCTION"
+>pg_xlogfile_name_offset</CODE
+> to extract the
+    corresponding transaction log file name and byte offset from the results of any of the
+    above functions.  For example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>postgres=# SELECT * FROM pg_xlogfile_name_offset(pg_stop_backup());
+        file_name         | file_offset 
+--------------------------+-------------
+ 00000001000000000000000D |     4039624
+(1 row)</PRE
+><P>
+    Similarly, <CODE
+CLASS="FUNCTION"
+>pg_xlogfile_name</CODE
+> extracts just the transaction log file name.
+    When the given transaction log location is exactly at a transaction log file boundary, both
+    these functions return the name of the preceding transaction log file.
+    This is usually the desired behavior for managing transaction log archiving
+    behavior, since the preceding file is the last one that currently
+    needs to be archived.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_xlog_location_diff</CODE
+> calculates the difference in bytes
+    between two transaction log locations. It can be used with
+    <TT
+CLASS="STRUCTNAME"
+>pg_stat_replication</TT
+> or some functions shown in
+    <A
+HREF="functions-admin.html#FUNCTIONS-ADMIN-BACKUP-TABLE"
+>Table 9-68</A
+> to get the replication lag.
+   </P
+><P
+>    For details about proper usage of these functions, see
+    <A
+HREF="continuous-archiving.html"
+>Section 24.3</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="FUNCTIONS-RECOVERY-CONTROL"
+>9.26.4. Recovery Control Functions</A
+></H2
+><P
+>    The functions shown in <A
+HREF="functions-admin.html#FUNCTIONS-RECOVERY-INFO-TABLE"
+>Table 9-69</A
+> provide information
+    about the current status of the standby.
+    These functions may be executed both during recovery and in normal running.
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-RECOVERY-INFO-TABLE"
+></A
+><P
+><B
+>Table 9-69. Recovery Information Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_is_in_recovery()</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>bool</TT
+></TD
+><TD
+>True if recovery is still in progress.
+       </TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_last_xlog_receive_location()</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>pg_lsn</TT
+></TD
+><TD
+>Get last transaction log location received and synced to disk by
+        streaming replication. While streaming replication is in progress
+        this will increase monotonically. If recovery has completed this will
+        remain static at
+        the value of the last WAL record received and synced to disk during
+        recovery. If streaming replication is disabled, or if it has not yet
+        started, the function returns NULL.
+       </TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_last_xlog_replay_location()</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>pg_lsn</TT
+></TD
+><TD
+>Get last transaction log location replayed during recovery.
+        If recovery is still in progress this will increase monotonically.
+        If recovery has completed then this value will remain static at
+        the value of the last WAL record applied during that recovery.
+        When the server has been started normally without recovery
+        the function returns NULL.
+       </TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_last_xact_replay_timestamp()</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>Get time stamp of last transaction replayed during recovery.
+        This is the time at which the commit or abort WAL record for that
+        transaction was generated on the primary.
+        If no transactions have been replayed during recovery, this function
+        returns NULL.  Otherwise, if recovery is still in progress this will
+        increase monotonically.  If recovery has completed then this value will
+        remain static at the value of the last transaction applied during that
+        recovery.  When the server has been started normally without recovery
+        the function returns NULL.
+       </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    The functions shown in <A
+HREF="functions-admin.html#FUNCTIONS-RECOVERY-CONTROL-TABLE"
+>Table 9-70</A
+> control the progress of recovery.
+    These functions may be executed only during recovery.
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-RECOVERY-CONTROL-TABLE"
+></A
+><P
+><B
+>Table 9-70. Recovery Control Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_is_xlog_replay_paused()</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>bool</TT
+></TD
+><TD
+>True if recovery is paused.
+       </TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_xlog_replay_pause()</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>void</TT
+></TD
+><TD
+>Pauses recovery immediately (restricted to superusers).
+       </TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_xlog_replay_resume()</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>void</TT
+></TD
+><TD
+>Restarts recovery if it was paused (restricted to superusers).
+       </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    While recovery is paused no further database changes are applied.
+    If in hot standby, all new queries will see the same consistent snapshot
+    of the database, and no further query conflicts will be generated until
+    recovery is resumed.
+   </P
+><P
+>    If streaming replication is disabled, the paused state may continue
+    indefinitely without problem. While streaming replication is in
+    progress WAL records will continue to be received, which will
+    eventually fill available disk space, depending upon the duration of
+    the pause, the rate of WAL generation and available disk space.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="FUNCTIONS-SNAPSHOT-SYNCHRONIZATION"
+>9.26.5. Snapshot Synchronization Functions</A
+></H2
+><P
+>    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> allows database sessions to synchronize their
+    snapshots. A <I
+CLASS="FIRSTTERM"
+>snapshot</I
+> determines which data is visible to the
+    transaction that is using the snapshot. Synchronized snapshots are
+    necessary when two or more sessions need to see identical content in the
+    database. If two sessions just start their transactions independently,
+    there is always a possibility that some third transaction commits
+    between the executions of the two <TT
+CLASS="COMMAND"
+>START TRANSACTION</TT
+> commands,
+    so that one session sees the effects of that transaction and the other
+    does not.
+   </P
+><P
+>    To solve this problem, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> allows a transaction to
+    <I
+CLASS="FIRSTTERM"
+>export</I
+> the snapshot it is using.  As long as the exporting
+    transaction remains open, other transactions can <I
+CLASS="FIRSTTERM"
+>import</I
+> its
+    snapshot, and thereby be guaranteed that they see exactly the same view
+    of the database that the first transaction sees.  But note that any
+    database changes made by any one of these transactions remain invisible
+    to the other transactions, as is usual for changes made by uncommitted
+    transactions.  So the transactions are synchronized with respect to
+    pre-existing data, but act normally for changes they make themselves.
+   </P
+><P
+>    Snapshots are exported with the <CODE
+CLASS="FUNCTION"
+>pg_export_snapshot</CODE
+> function,
+    shown in <A
+HREF="functions-admin.html#FUNCTIONS-SNAPSHOT-SYNCHRONIZATION-TABLE"
+>Table 9-71</A
+>, and
+    imported with the <A
+HREF="sql-set-transaction.html"
+>SET TRANSACTION</A
+> command.
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-SNAPSHOT-SYNCHRONIZATION-TABLE"
+></A
+><P
+><B
+>Table 9-71. Snapshot Synchronization Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_export_snapshot()</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Save the current snapshot and return its identifier</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    The function <CODE
+CLASS="FUNCTION"
+>pg_export_snapshot</CODE
+> saves the current snapshot
+    and returns a <TT
+CLASS="TYPE"
+>text</TT
+> string identifying the snapshot.  This string
+    must be passed (outside the database) to clients that want to import the
+    snapshot.  The snapshot is available for import only until the end of the
+    transaction that exported it.  A transaction can export more than one
+    snapshot, if needed.  Note that doing so is only useful in <TT
+CLASS="LITERAL"
+>READ
+    COMMITTED</TT
+> transactions, since in <TT
+CLASS="LITERAL"
+>REPEATABLE READ</TT
+> and
+    higher isolation levels, transactions use the same snapshot throughout
+    their lifetime.  Once a transaction has exported any snapshots, it cannot
+    be prepared with <A
+HREF="sql-prepare-transaction.html"
+>PREPARE TRANSACTION</A
+>.
+   </P
+><P
+>    See  <A
+HREF="sql-set-transaction.html"
+>SET TRANSACTION</A
+> for details of how to use an
+    exported snapshot.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="FUNCTIONS-REPLICATION"
+>9.26.6. Replication Functions</A
+></H2
+><P
+>    The functions shown
+    in <A
+HREF="functions-admin.html#FUNCTIONS-REPLICATION-TABLE"
+>Table 9-72</A
+> are for
+    controlling and interacting with replication features.
+    See <A
+HREF="warm-standby.html#STREAMING-REPLICATION"
+>Section 25.2.5</A
+>,
+    <A
+HREF="warm-standby.html#STREAMING-REPLICATION-SLOTS"
+>Section 25.2.6</A
+>, and
+    <A
+HREF="replication-origins.html"
+>Chapter 47</A
+>
+    for information about the underlying features.  Use of these
+    functions is restricted to superusers.
+   </P
+><P
+>    Many of these functions have equivalent commands in the replication
+    protocol; see <A
+HREF="protocol-replication.html"
+>Section 50.3</A
+>.
+   </P
+><P
+>    The functions described in
+    <A
+HREF="functions-admin.html#FUNCTIONS-ADMIN-BACKUP"
+>Section 9.26.3</A
+>,
+    <A
+HREF="functions-admin.html#FUNCTIONS-RECOVERY-CONTROL"
+>Section 9.26.4</A
+>, and
+    <A
+HREF="functions-admin.html#FUNCTIONS-SNAPSHOT-SYNCHRONIZATION"
+>Section 9.26.5</A
+>
+    are also relevant for replication.
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-REPLICATION-TABLE"
+></A
+><P
+><B
+>Table 9-72. Replication <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_create_physical_replication_slot(<TT
+CLASS="PARAMETER"
+>slot_name</TT
+> <TT
+CLASS="TYPE"
+>name</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+>        (<TT
+CLASS="PARAMETER"
+>slot_name</TT
+> <TT
+CLASS="TYPE"
+>name</TT
+>, <TT
+CLASS="PARAMETER"
+>xlog_position</TT
+> <TT
+CLASS="TYPE"
+>pg_lsn</TT
+>)
+       </TD
+><TD
+>        Creates a new physical replication slot named
+        <TT
+CLASS="PARAMETER"
+>slot_name</TT
+>. Streaming changes from a physical slot
+        is only possible with the streaming-replication protocol - see <A
+HREF="protocol-replication.html"
+>Section 50.3</A
+>. Corresponds to the replication protocol
+        command <TT
+CLASS="LITERAL"
+>CREATE_REPLICATION_SLOT ... PHYSICAL</TT
+>.
+       </TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_drop_replication_slot(<TT
+CLASS="PARAMETER"
+>slot_name</TT
+> <TT
+CLASS="TYPE"
+>name</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+>        <TT
+CLASS="TYPE"
+>void</TT
+>
+       </TD
+><TD
+>        Drops the physical or logical replication slot
+        named <TT
+CLASS="PARAMETER"
+>slot_name</TT
+>. Same as replication protocol
+        command <TT
+CLASS="LITERAL"
+>DROP_REPLICATION_SLOT</TT
+>.
+       </TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_create_logical_replication_slot(<TT
+CLASS="PARAMETER"
+>slot_name</TT
+> <TT
+CLASS="TYPE"
+>name</TT
+>, <TT
+CLASS="PARAMETER"
+>plugin</TT
+> <TT
+CLASS="TYPE"
+>name</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+>        (<TT
+CLASS="PARAMETER"
+>slot_name</TT
+> <TT
+CLASS="TYPE"
+>name</TT
+>, <TT
+CLASS="PARAMETER"
+>xlog_position</TT
+> <TT
+CLASS="TYPE"
+>pg_lsn</TT
+>)
+       </TD
+><TD
+>        Creates a new logical (decoding) replication slot named
+        <TT
+CLASS="PARAMETER"
+>slot_name</TT
+> using the output plugin
+        <TT
+CLASS="PARAMETER"
+>plugin</TT
+>.  A call to this function has the same
+        effect as the replication protocol command
+        <TT
+CLASS="LITERAL"
+>CREATE_REPLICATION_SLOT ... LOGICAL</TT
+>.
+       </TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_logical_slot_get_changes(<TT
+CLASS="PARAMETER"
+>slot_name</TT
+> <TT
+CLASS="TYPE"
+>name</TT
+>, <TT
+CLASS="PARAMETER"
+>upto_lsn</TT
+> <TT
+CLASS="TYPE"
+>pg_lsn</TT
+>, <TT
+CLASS="PARAMETER"
+>upto_nchanges</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>, VARIADIC <TT
+CLASS="PARAMETER"
+>options</TT
+> <TT
+CLASS="TYPE"
+>text[]</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+>        (<TT
+CLASS="PARAMETER"
+>location</TT
+> <TT
+CLASS="TYPE"
+>pg_lsn</TT
+>, <TT
+CLASS="PARAMETER"
+>xid</TT
+> <TT
+CLASS="TYPE"
+>xid</TT
+>, <TT
+CLASS="PARAMETER"
+>data</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)
+       </TD
+><TD
+>        Returns changes in the slot <TT
+CLASS="PARAMETER"
+>slot_name</TT
+>, starting
+        from the point at which since changes have been consumed last.  If
+        <TT
+CLASS="PARAMETER"
+>upto_lsn</TT
+> and <TT
+CLASS="PARAMETER"
+>upto_nchanges</TT
+> are NULL,
+        logical decoding will continue until end of WAL.  If
+        <TT
+CLASS="PARAMETER"
+>upto_lsn</TT
+> is non-NULL, decoding will include only
+        those transactions which commit prior to the specified LSN.  If
+        <TT
+CLASS="PARAMETER"
+>upto_nchanges</TT
+> is non-NULL, decoding will
+        stop when the number of rows produced by decoding exceeds
+        the specified value.  Note, however, that the actual number of
+        rows returned may be larger, since this limit is only checked after
+        adding the rows produced when decoding each new transaction commit.
+       </TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_logical_slot_peek_changes(<TT
+CLASS="PARAMETER"
+>slot_name</TT
+> <TT
+CLASS="TYPE"
+>name</TT
+>, <TT
+CLASS="PARAMETER"
+>upto_lsn</TT
+> <TT
+CLASS="TYPE"
+>pg_lsn</TT
+>, <TT
+CLASS="PARAMETER"
+>upto_nchanges</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>, VARIADIC <TT
+CLASS="PARAMETER"
+>options</TT
+> <TT
+CLASS="TYPE"
+>text[]</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+>        (<TT
+CLASS="PARAMETER"
+>location</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, <TT
+CLASS="PARAMETER"
+>xid</TT
+> <TT
+CLASS="TYPE"
+>xid</TT
+>, <TT
+CLASS="PARAMETER"
+>data</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)
+       </TD
+><TD
+>        Behaves just like
+        the <CODE
+CLASS="FUNCTION"
+>pg_logical_slot_get_changes()</CODE
+> function,
+        except that changes are not consumed; that is, they will be returned
+        again on future calls.
+       </TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_logical_slot_get_binary_changes(<TT
+CLASS="PARAMETER"
+>slot_name</TT
+> <TT
+CLASS="TYPE"
+>name</TT
+>, <TT
+CLASS="PARAMETER"
+>upto_lsn</TT
+> <TT
+CLASS="TYPE"
+>pg_lsn</TT
+>, <TT
+CLASS="PARAMETER"
+>upto_nchanges</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>, VARIADIC <TT
+CLASS="PARAMETER"
+>options</TT
+> <TT
+CLASS="TYPE"
+>text[]</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+>        (<TT
+CLASS="PARAMETER"
+>location</TT
+> <TT
+CLASS="TYPE"
+>pg_lsn</TT
+>, <TT
+CLASS="PARAMETER"
+>xid</TT
+> <TT
+CLASS="TYPE"
+>xid</TT
+>, <TT
+CLASS="PARAMETER"
+>data</TT
+> <TT
+CLASS="TYPE"
+>bytea</TT
+>)
+       </TD
+><TD
+>        Behaves just like
+        the <CODE
+CLASS="FUNCTION"
+>pg_logical_slot_get_changes()</CODE
+> function,
+        except that changes are returned as <TT
+CLASS="TYPE"
+>bytea</TT
+>.
+       </TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_logical_slot_peek_binary_changes(<TT
+CLASS="PARAMETER"
+>slot_name</TT
+> <TT
+CLASS="TYPE"
+>name</TT
+>, <TT
+CLASS="PARAMETER"
+>upto_lsn</TT
+> <TT
+CLASS="TYPE"
+>pg_lsn</TT
+>, <TT
+CLASS="PARAMETER"
+>upto_nchanges</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>, VARIADIC <TT
+CLASS="PARAMETER"
+>options</TT
+> <TT
+CLASS="TYPE"
+>text[]</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+>        (<TT
+CLASS="PARAMETER"
+>location</TT
+> <TT
+CLASS="TYPE"
+>pg_lsn</TT
+>, <TT
+CLASS="PARAMETER"
+>xid</TT
+> <TT
+CLASS="TYPE"
+>xid</TT
+>, <TT
+CLASS="PARAMETER"
+>data</TT
+> <TT
+CLASS="TYPE"
+>bytea</TT
+>)
+       </TD
+><TD
+>        Behaves just like
+        the <CODE
+CLASS="FUNCTION"
+>pg_logical_slot_get_changes()</CODE
+> function,
+        except that changes are returned as <TT
+CLASS="TYPE"
+>bytea</TT
+> and that
+        changes are not consumed; that is, they will be returned again
+        on future calls.
+       </TD
+></TR
+><TR
+><A
+NAME="PG-REPLICATION-ORIGIN-CREATE"
+></A
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_replication_origin_create(<TT
+CLASS="PARAMETER"
+>node_name</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+>        <TT
+CLASS="TYPE"
+>oid</TT
+>
+       </TD
+><TD
+>        Create a replication origin with the given external
+        name, and return the internal id assigned to it.
+       </TD
+></TR
+><TR
+><A
+NAME="PG-REPLICATION-ORIGIN-DROP"
+></A
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_replication_origin_drop(<TT
+CLASS="PARAMETER"
+>node_name</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+>        void
+       </TD
+><TD
+>        Delete a previously created replication origin, including any
+        associated replay progress.
+       </TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_replication_origin_oid(<TT
+CLASS="PARAMETER"
+>node_name</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+>        <TT
+CLASS="TYPE"
+>oid</TT
+>
+       </TD
+><TD
+>        Lookup a replication origin by name and return the internal id. If no
+        corresponding replication origin is found an error is thrown.
+       </TD
+></TR
+><TR
+><A
+NAME="PG-REPLICATION-ORIGIN-SESSION-SETUP"
+></A
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_replication_origin_session_setup(<TT
+CLASS="PARAMETER"
+>node_name</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+>        void
+       </TD
+><TD
+>        Mark the current session as replaying from the given
+        origin, allowing replay progress to be tracked.  Use
+        <CODE
+CLASS="FUNCTION"
+>pg_replication_origin_session_reset</CODE
+> to revert.
+        Can only be used if no previous origin is configured.
+       </TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_replication_origin_session_reset()</CODE
+></TT
+>
+       </TD
+><TD
+>        void
+       </TD
+><TD
+>        Cancel the effects
+        of <CODE
+CLASS="FUNCTION"
+>pg_replication_origin_session_setup()</CODE
+>.
+       </TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_replication_origin_session_is_setup()</CODE
+></TT
+>
+       </TD
+><TD
+>        <TT
+CLASS="TYPE"
+>bool</TT
+>
+       </TD
+><TD
+>        Has a replication origin been configured in the current session?
+       </TD
+></TR
+><TR
+><A
+NAME="PG-REPLICATION-ORIGIN-SESSION-PROGRESS"
+></A
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_replication_origin_session_progress(<TT
+CLASS="PARAMETER"
+>flush</TT
+> <TT
+CLASS="TYPE"
+>bool</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+>        <TT
+CLASS="TYPE"
+>pg_lsn</TT
+>
+       </TD
+><TD
+>        Return the replay position for the replication origin configured in
+        the current session. The parameter <TT
+CLASS="PARAMETER"
+>flush</TT
+>
+        determines whether the corresponding local transaction will be
+        guaranteed to have been flushed to disk or not.
+       </TD
+></TR
+><TR
+><A
+NAME="PG-REPLICATION-ORIGIN-XACT-SETUP"
+></A
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_replication_origin_xact_setup(<TT
+CLASS="PARAMETER"
+>origin_lsn</TT
+> <TT
+CLASS="TYPE"
+>pg_lsn</TT
+>, <TT
+CLASS="PARAMETER"
+>origin_timestamp</TT
+> <TT
+CLASS="TYPE"
+>timestamptz</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+>        void
+       </TD
+><TD
+>        Mark the current transaction as replaying a transaction that has
+        committed at the given <ACRONYM
+CLASS="ACRONYM"
+>LSN</ACRONYM
+> and timestamp. Can
+        only be called when a replication origin has previously been
+        configured using
+        <CODE
+CLASS="FUNCTION"
+>pg_replication_origin_session_setup()</CODE
+>.
+       </TD
+></TR
+><TR
+><A
+NAME="PG-REPLICATION-ORIGIN-XACT-RESET"
+></A
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_replication_origin_xact_reset(<TT
+CLASS="PARAMETER"
+>origin_lsn</TT
+> <TT
+CLASS="TYPE"
+>pg_lsn</TT
+>, <TT
+CLASS="PARAMETER"
+>origin_timestamp</TT
+> <TT
+CLASS="TYPE"
+>timestamptz</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+>        void
+       </TD
+><TD
+>        Cancel the effects of
+        <CODE
+CLASS="FUNCTION"
+>pg_replication_origin_xact_setup()</CODE
+>.
+        Note that two arguments were introduced <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>by mistake</I
+></SPAN
+>
+        during the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 9.5 development cycle while
+        <CODE
+CLASS="FUNCTION"
+>pg_replication_origin_xact_reset()</CODE
+> actually
+        doesn't use them at all. Therefore, any dummy values except
+        <TT
+CLASS="LITERAL"
+>NULL</TT
+> can be safely specified as the arguments.
+        This mistake will be fixed in a future release.
+       </TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+>pg_replication_origin_advance<CODE
+CLASS="FUNCTION"
+>(<TT
+CLASS="PARAMETER"
+>node_name</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, <TT
+CLASS="PARAMETER"
+>pos</TT
+> <TT
+CLASS="TYPE"
+>pg_lsn</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+>        void
+       </TD
+><TD
+>        Set replication progress for the given node to the given
+        position. This primarily is useful for setting up the initial position
+        or a new position after configuration changes and similar. Be aware
+        that careless use of this function can lead to inconsistently
+        replicated data.
+       </TD
+></TR
+><TR
+><A
+NAME="PG-REPLICATION-ORIGIN-PROGRESS"
+></A
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_replication_origin_progress(<TT
+CLASS="PARAMETER"
+>node_name</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, <TT
+CLASS="PARAMETER"
+>flush</TT
+> <TT
+CLASS="TYPE"
+>bool</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+>        <TT
+CLASS="TYPE"
+>pg_lsn</TT
+>
+       </TD
+><TD
+>        Return the replay position for the given replication origin. The
+        parameter <TT
+CLASS="PARAMETER"
+>flush</TT
+> determines whether the
+        corresponding local transaction will be guaranteed to have been
+        flushed to disk or not.
+       </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="FUNCTIONS-ADMIN-DBOBJECT"
+>9.26.7. Database Object Management Functions</A
+></H2
+><P
+>    The functions shown in <A
+HREF="functions-admin.html#FUNCTIONS-ADMIN-DBSIZE"
+>Table 9-73</A
+> calculate
+    the disk space usage of database objects.
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-ADMIN-DBSIZE"
+></A
+><P
+><B
+>Table 9-73. Database Object Size Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_column_size(<TT
+CLASS="TYPE"
+>any</TT
+>)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+><TD
+>Number of bytes used to store a particular value (possibly compressed)</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_database_size(<TT
+CLASS="TYPE"
+>oid</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Disk space used by the database with the specified OID</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_database_size(<TT
+CLASS="TYPE"
+>name</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Disk space used by the database with the specified name</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_indexes_size(<TT
+CLASS="TYPE"
+>regclass</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>        Total disk space used by indexes attached to the specified table
+       </TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_relation_size(<TT
+CLASS="PARAMETER"
+>relation</TT
+> <TT
+CLASS="TYPE"
+>regclass</TT
+>, <TT
+CLASS="PARAMETER"
+>fork</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>        Disk space used by the specified fork (<TT
+CLASS="LITERAL"
+>'main'</TT
+>,
+        <TT
+CLASS="LITERAL"
+>'fsm'</TT
+>, <TT
+CLASS="LITERAL"
+>'vm'</TT
+>, or <TT
+CLASS="LITERAL"
+>'init'</TT
+>)
+        of the specified table or index
+       </TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_relation_size(<TT
+CLASS="PARAMETER"
+>relation</TT
+> <TT
+CLASS="TYPE"
+>regclass</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>        Shorthand for <TT
+CLASS="LITERAL"
+>pg_relation_size(..., 'main')</TT
+>
+       </TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_size_pretty(<TT
+CLASS="TYPE"
+>bigint</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>         Converts a size in bytes expressed as a 64-bit integer into a
+         human-readable format with size units
+       </TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_size_pretty(<TT
+CLASS="TYPE"
+>numeric</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>         Converts a size in bytes expressed as a numeric value into a
+         human-readable format with size units
+       </TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_table_size(<TT
+CLASS="TYPE"
+>regclass</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>        Disk space used by the specified table, excluding indexes
+        (but including TOAST, free space map, and visibility map)
+       </TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_tablespace_size(<TT
+CLASS="TYPE"
+>oid</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Disk space used by the tablespace with the specified OID</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_tablespace_size(<TT
+CLASS="TYPE"
+>name</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Disk space used by the tablespace with the specified name</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_total_relation_size(<TT
+CLASS="TYPE"
+>regclass</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>        Total disk space used by the specified table,
+        including all indexes and <ACRONYM
+CLASS="ACRONYM"
+>TOAST</ACRONYM
+> data
+       </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_column_size</CODE
+> shows the space used to store any individual
+    data value.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_total_relation_size</CODE
+> accepts the OID or name of a
+    table or toast table, and returns the total on-disk space used for
+    that table, including all associated indexes.  This function is
+    equivalent to <CODE
+CLASS="FUNCTION"
+>pg_table_size</CODE
+>
+    <TT
+CLASS="LITERAL"
+>+</TT
+> <CODE
+CLASS="FUNCTION"
+>pg_indexes_size</CODE
+>.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_table_size</CODE
+> accepts the OID or name of a table and
+    returns the disk space needed for that table, exclusive of indexes.
+    (TOAST space, free space map, and visibility map are included.)
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_indexes_size</CODE
+> accepts the OID or name of a table and
+    returns the total disk space used by all the indexes attached to that
+    table.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_database_size</CODE
+> and <CODE
+CLASS="FUNCTION"
+>pg_tablespace_size</CODE
+>
+    accept the OID or name of a database or tablespace, and return the total
+    disk space used therein.  To use <CODE
+CLASS="FUNCTION"
+>pg_database_size</CODE
+>,
+    you must have <TT
+CLASS="LITERAL"
+>CONNECT</TT
+> permission on the specified database
+    (which is granted by default).  To use <CODE
+CLASS="FUNCTION"
+>pg_tablespace_size</CODE
+>,
+    you must have <TT
+CLASS="LITERAL"
+>CREATE</TT
+> permission on the specified tablespace,
+    unless it is the default tablespace for the current database.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_relation_size</CODE
+> accepts the OID or name of a table, index
+    or toast table, and returns the on-disk size in bytes of one fork of
+    that relation.  (Note that for most purposes it is more convenient to
+    use the higher-level functions <CODE
+CLASS="FUNCTION"
+>pg_total_relation_size</CODE
+>
+    or <CODE
+CLASS="FUNCTION"
+>pg_table_size</CODE
+>, which sum the sizes of all forks.)
+    With one argument, it returns the size of the main data fork of the
+    relation.  The second argument can be provided to specify which fork
+    to examine:
+    <P
+></P
+></P><UL
+COMPACT="COMPACT"
+><LI
+><P
+>       <TT
+CLASS="LITERAL"
+>'main'</TT
+> returns the size of the main
+       data fork of the relation.
+      </P
+></LI
+><LI
+><P
+>       <TT
+CLASS="LITERAL"
+>'fsm'</TT
+> returns the size of the Free Space Map
+       (see <A
+HREF="storage-fsm.html"
+>Section 63.3</A
+>) associated with the relation.
+      </P
+></LI
+><LI
+><P
+>       <TT
+CLASS="LITERAL"
+>'vm'</TT
+> returns the size of the Visibility Map
+       (see <A
+HREF="storage-vm.html"
+>Section 63.4</A
+>) associated with the relation.
+      </P
+></LI
+><LI
+><P
+>       <TT
+CLASS="LITERAL"
+>'init'</TT
+> returns the size of the initialization
+       fork, if any, associated with the relation.
+      </P
+></LI
+></UL
+><P>
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_size_pretty</CODE
+> can be used to format the result of one of
+    the other functions in a human-readable way, using kB, MB, GB or TB as
+    appropriate.
+   </P
+><P
+>    The functions above that operate on tables or indexes accept a
+    <TT
+CLASS="TYPE"
+>regclass</TT
+> argument, which is simply the OID of the table or index
+    in the <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+> system catalog.  You do not have to look up
+    the OID by hand, however, since the <TT
+CLASS="TYPE"
+>regclass</TT
+> data type's input
+    converter will do the work for you.  Just write the table name enclosed in
+    single quotes so that it looks like a literal constant.  For compatibility
+    with the handling of ordinary <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> names, the string
+    will be converted to lower case unless it contains double quotes around
+    the table name.
+   </P
+><P
+>    If an OID that does not represent an existing object is passed as
+    argument to one of the above functions, NULL is returned.
+   </P
+><P
+>    The functions shown in <A
+HREF="functions-admin.html#FUNCTIONS-ADMIN-DBLOCATION"
+>Table 9-74</A
+> assist
+    in identifying the specific disk files associated with database objects.
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-ADMIN-DBLOCATION"
+></A
+><P
+><B
+>Table 9-74. Database Object Location Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_relation_filenode(<TT
+CLASS="PARAMETER"
+>relation</TT
+> <TT
+CLASS="TYPE"
+>regclass</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>        Filenode number of the specified relation
+       </TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_relation_filepath(<TT
+CLASS="PARAMETER"
+>relation</TT
+> <TT
+CLASS="TYPE"
+>regclass</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        File path name of the specified relation
+       </TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_filenode_relation(<TT
+CLASS="PARAMETER"
+>tablespace</TT
+> <TT
+CLASS="TYPE"
+>oid</TT
+>, <TT
+CLASS="PARAMETER"
+>filenode</TT
+> <TT
+CLASS="TYPE"
+>oid</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>regclass</TT
+></TD
+><TD
+>        Find the relation associated with a given tablespace and filenode
+       </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_relation_filenode</CODE
+> accepts the OID or name of a table,
+    index, sequence, or toast table, and returns the <SPAN
+CLASS="QUOTE"
+>"filenode"</SPAN
+> number
+    currently assigned to it.  The filenode is the base component of the file
+    name(s) used for the relation (see <A
+HREF="storage-file-layout.html"
+>Section 63.1</A
+>
+    for more information).  For most tables the result is the same as
+    <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>relfilenode</TT
+>, but for certain
+    system catalogs <TT
+CLASS="STRUCTFIELD"
+>relfilenode</TT
+> is zero and this function must
+    be used to get the correct value.  The function returns NULL if passed
+    a relation that does not have storage, such as a view.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_relation_filepath</CODE
+> is similar to
+    <CODE
+CLASS="FUNCTION"
+>pg_relation_filenode</CODE
+>, but it returns the entire file path name
+    (relative to the database cluster's data directory <TT
+CLASS="VARNAME"
+>PGDATA</TT
+>) of
+    the relation.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_filenode_relation</CODE
+> is the reverse of
+    <CODE
+CLASS="FUNCTION"
+>pg_relation_filenode</CODE
+>. Given a <SPAN
+CLASS="QUOTE"
+>"tablespace"</SPAN
+> OID and
+    a <SPAN
+CLASS="QUOTE"
+>"filenode"</SPAN
+>, it returns the associated relation's OID. For a table
+    in the database's default tablespace, the tablespace can be specified as 0.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="FUNCTIONS-ADMIN-INDEX"
+>9.26.8. Index Maintenance Functions</A
+></H2
+><P
+>    <A
+HREF="functions-admin.html#FUNCTIONS-ADMIN-INDEX-TABLE"
+>Table 9-75</A
+> shows the functions
+    available for index maintenance tasks.
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-ADMIN-INDEX-TABLE"
+></A
+><P
+><B
+>Table 9-75. Index Maintenance Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>brin_summarize_new_values(<TT
+CLASS="PARAMETER"
+>index_oid</TT
+> <TT
+CLASS="TYPE"
+>regclass</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>summarize page ranges not already summarized</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    <CODE
+CLASS="FUNCTION"
+>brin_summarize_new_values</CODE
+> receives a BRIN index OID as
+    argument and inspects the index to find page ranges in the base table
+    that are not currently summarized by the index; for any such range
+    it creates a new summary index tuple by scanning the table pages.
+    It returns the number of new page range summaries that were inserted
+    into the index.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="FUNCTIONS-ADMIN-GENFILE"
+>9.26.9. Generic File Access Functions</A
+></H2
+><P
+>    The functions shown in <A
+HREF="functions-admin.html#FUNCTIONS-ADMIN-GENFILE-TABLE"
+>Table 9-76</A
+> provide native access to
+    files on the machine hosting the server. Only files within the
+    database cluster directory and the <TT
+CLASS="VARNAME"
+>log_directory</TT
+> can be
+    accessed.  Use a relative path for files in the cluster directory,
+    and a path matching the <TT
+CLASS="VARNAME"
+>log_directory</TT
+> configuration setting
+    for log files.  Use of these functions is restricted to superusers.
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-ADMIN-GENFILE-TABLE"
+></A
+><P
+><B
+>Table 9-76. Generic File Access Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_ls_dir(<TT
+CLASS="PARAMETER"
+>dirname</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+> [, <TT
+CLASS="PARAMETER"
+>missing_ok</TT
+> <TT
+CLASS="TYPE"
+>boolean</TT
+>, <TT
+CLASS="PARAMETER"
+>include_dot_dirs</TT
+> <TT
+CLASS="TYPE"
+>boolean</TT
+>])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>setof text</TT
+></TD
+><TD
+>        List the contents of a directory.
+       </TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_read_file(<TT
+CLASS="PARAMETER"
+>filename</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+> [, <TT
+CLASS="PARAMETER"
+>offset</TT
+> <TT
+CLASS="TYPE"
+>bigint</TT
+>, <TT
+CLASS="PARAMETER"
+>length</TT
+> <TT
+CLASS="TYPE"
+>bigint</TT
+> [, <TT
+CLASS="PARAMETER"
+>missing_ok</TT
+> <TT
+CLASS="TYPE"
+>boolean</TT
+>] ])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Return the contents of a text file.
+       </TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_read_binary_file(<TT
+CLASS="PARAMETER"
+>filename</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+> [, <TT
+CLASS="PARAMETER"
+>offset</TT
+> <TT
+CLASS="TYPE"
+>bigint</TT
+>, <TT
+CLASS="PARAMETER"
+>length</TT
+> <TT
+CLASS="TYPE"
+>bigint</TT
+> [, <TT
+CLASS="PARAMETER"
+>missing_ok</TT
+> <TT
+CLASS="TYPE"
+>boolean</TT
+>] ])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>bytea</TT
+></TD
+><TD
+>        Return the contents of a file.
+       </TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stat_file(<TT
+CLASS="PARAMETER"
+>filename</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>[, <TT
+CLASS="PARAMETER"
+>missing_ok</TT
+> <TT
+CLASS="TYPE"
+>boolean</TT
+>])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>record</TT
+></TD
+><TD
+>        Return information about a file.
+       </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    All of these functions take an optional <TT
+CLASS="PARAMETER"
+>missing_ok</TT
+> parameter,
+    which specifies the behavior when the file or directory does not exist.
+    If <TT
+CLASS="LITERAL"
+>true</TT
+>, the function returns NULL (except
+    <CODE
+CLASS="FUNCTION"
+>pg_ls_dir</CODE
+>, which returns an empty result set). If
+    <TT
+CLASS="LITERAL"
+>false</TT
+>, an error is raised. The default is <TT
+CLASS="LITERAL"
+>false</TT
+>.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_ls_dir</CODE
+> returns the names of all files (and directories
+    and other special files) in the specified directory. The <TT
+CLASS="PARAMETER"
+>    include_dot_dirs</TT
+> indicates whether <SPAN
+CLASS="QUOTE"
+>"."</SPAN
+> and <SPAN
+CLASS="QUOTE"
+>".."</SPAN
+> are
+    included in the result set. The default is to exclude them
+    (<TT
+CLASS="LITERAL"
+>false</TT
+>), but including them can be useful when
+    <TT
+CLASS="PARAMETER"
+>missing_ok</TT
+> is <TT
+CLASS="LITERAL"
+>true</TT
+>, to distinguish an
+    empty directory from an non-existent directory.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_read_file</CODE
+> returns part of a text file, starting
+    at the given <TT
+CLASS="PARAMETER"
+>offset</TT
+>, returning at most <TT
+CLASS="PARAMETER"
+>length</TT
+>
+    bytes (less if the end of file is reached first).  If <TT
+CLASS="PARAMETER"
+>offset</TT
+>
+    is negative, it is relative to the end of the file.
+    If <TT
+CLASS="PARAMETER"
+>offset</TT
+> and <TT
+CLASS="PARAMETER"
+>length</TT
+> are omitted, the entire
+    file is returned.  The bytes read from the file are interpreted as a string
+    in the server encoding; an error is thrown if they are not valid in that
+    encoding.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_read_binary_file</CODE
+> is similar to
+    <CODE
+CLASS="FUNCTION"
+>pg_read_file</CODE
+>, except that the result is a <TT
+CLASS="TYPE"
+>bytea</TT
+> value;
+    accordingly, no encoding checks are performed.
+    In combination with the <CODE
+CLASS="FUNCTION"
+>convert_from</CODE
+> function, this function
+    can be used to read a file in a specified encoding:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT convert_from(pg_read_binary_file('file_in_utf8.txt'), 'UTF8');</PRE
+><P>
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_stat_file</CODE
+> returns a record containing the file
+    size, last accessed time stamp, last modified time stamp,
+    last file status change time stamp (Unix platforms only),
+    file creation time stamp (Windows only), and a <TT
+CLASS="TYPE"
+>boolean</TT
+>
+    indicating if it is a directory.  Typical usages include:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT * FROM pg_stat_file('filename');
+SELECT (pg_stat_file('filename')).modification;</PRE
+><P>
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="FUNCTIONS-ADVISORY-LOCKS"
+>9.26.10. Advisory Lock Functions</A
+></H2
+><P
+>    The functions shown in <A
+HREF="functions-admin.html#FUNCTIONS-ADVISORY-LOCKS-TABLE"
+>Table 9-77</A
+>
+    manage advisory locks.  For details about proper use of these functions,
+    see <A
+HREF="explicit-locking.html#ADVISORY-LOCKS"
+>Section 13.3.5</A
+>.
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-ADVISORY-LOCKS-TABLE"
+></A
+><P
+><B
+>Table 9-77. Advisory Lock Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_advisory_lock(<TT
+CLASS="PARAMETER"
+>key</TT
+> <TT
+CLASS="TYPE"
+>bigint</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>void</TT
+></TD
+><TD
+>Obtain exclusive session level advisory lock</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_advisory_lock(<TT
+CLASS="PARAMETER"
+>key1</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>, <TT
+CLASS="PARAMETER"
+>key2</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>void</TT
+></TD
+><TD
+>Obtain exclusive session level advisory lock</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_advisory_lock_shared(<TT
+CLASS="PARAMETER"
+>key</TT
+> <TT
+CLASS="TYPE"
+>bigint</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>void</TT
+></TD
+><TD
+>Obtain shared session level advisory lock</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_advisory_lock_shared(<TT
+CLASS="PARAMETER"
+>key1</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>, <TT
+CLASS="PARAMETER"
+>key2</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>void</TT
+></TD
+><TD
+>Obtain shared session level advisory lock</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_advisory_unlock(<TT
+CLASS="PARAMETER"
+>key</TT
+> <TT
+CLASS="TYPE"
+>bigint</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>Release an exclusive session level advisory lock</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_advisory_unlock(<TT
+CLASS="PARAMETER"
+>key1</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>, <TT
+CLASS="PARAMETER"
+>key2</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>Release an exclusive session level advisory lock</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_advisory_unlock_all()</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>void</TT
+></TD
+><TD
+>Release all session level advisory locks held by the current session</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_advisory_unlock_shared(<TT
+CLASS="PARAMETER"
+>key</TT
+> <TT
+CLASS="TYPE"
+>bigint</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>Release a shared session level advisory lock</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_advisory_unlock_shared(<TT
+CLASS="PARAMETER"
+>key1</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>, <TT
+CLASS="PARAMETER"
+>key2</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>Release a shared session level advisory lock</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_advisory_xact_lock(<TT
+CLASS="PARAMETER"
+>key</TT
+> <TT
+CLASS="TYPE"
+>bigint</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>void</TT
+></TD
+><TD
+>Obtain exclusive transaction level advisory lock</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_advisory_xact_lock(<TT
+CLASS="PARAMETER"
+>key1</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>, <TT
+CLASS="PARAMETER"
+>key2</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>void</TT
+></TD
+><TD
+>Obtain exclusive transaction level advisory lock</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_advisory_xact_lock_shared(<TT
+CLASS="PARAMETER"
+>key</TT
+> <TT
+CLASS="TYPE"
+>bigint</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>void</TT
+></TD
+><TD
+>Obtain shared transaction level advisory lock</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_advisory_xact_lock_shared(<TT
+CLASS="PARAMETER"
+>key1</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>, <TT
+CLASS="PARAMETER"
+>key2</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>void</TT
+></TD
+><TD
+>Obtain shared transaction level advisory lock</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_try_advisory_lock(<TT
+CLASS="PARAMETER"
+>key</TT
+> <TT
+CLASS="TYPE"
+>bigint</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>Obtain exclusive session level advisory lock if available</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_try_advisory_lock(<TT
+CLASS="PARAMETER"
+>key1</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>, <TT
+CLASS="PARAMETER"
+>key2</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>Obtain exclusive session level advisory lock if available</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_try_advisory_lock_shared(<TT
+CLASS="PARAMETER"
+>key</TT
+> <TT
+CLASS="TYPE"
+>bigint</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>Obtain shared session level advisory lock if available</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_try_advisory_lock_shared(<TT
+CLASS="PARAMETER"
+>key1</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>, <TT
+CLASS="PARAMETER"
+>key2</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>Obtain shared session level advisory lock if available</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_try_advisory_xact_lock(<TT
+CLASS="PARAMETER"
+>key</TT
+> <TT
+CLASS="TYPE"
+>bigint</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>Obtain exclusive transaction level advisory lock if available</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_try_advisory_xact_lock(<TT
+CLASS="PARAMETER"
+>key1</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>, <TT
+CLASS="PARAMETER"
+>key2</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>Obtain exclusive transaction level advisory lock if available</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_try_advisory_xact_lock_shared(<TT
+CLASS="PARAMETER"
+>key</TT
+> <TT
+CLASS="TYPE"
+>bigint</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>Obtain shared transaction level advisory lock if available</TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_try_advisory_xact_lock_shared(<TT
+CLASS="PARAMETER"
+>key1</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>, <TT
+CLASS="PARAMETER"
+>key2</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>Obtain shared transaction level advisory lock if available</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_advisory_lock</CODE
+> locks an application-defined resource,
+    which can be identified either by a single 64-bit key value or two
+    32-bit key values (note that these two key spaces do not overlap).
+    If another session already holds a lock on the same resource identifier,
+    this function will wait until the resource becomes available.  The lock
+    is exclusive.  Multiple lock requests stack, so that if the same resource
+    is locked three times it must then be unlocked three times to be
+    released for other sessions' use.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_advisory_lock_shared</CODE
+> works the same as
+    <CODE
+CLASS="FUNCTION"
+>pg_advisory_lock</CODE
+>,
+    except the lock can be shared with other sessions requesting shared locks.
+    Only would-be exclusive lockers are locked out.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_try_advisory_lock</CODE
+> is similar to
+    <CODE
+CLASS="FUNCTION"
+>pg_advisory_lock</CODE
+>, except the function will not wait for the
+    lock to become available.  It will either obtain the lock immediately and
+    return <TT
+CLASS="LITERAL"
+>true</TT
+>, or return <TT
+CLASS="LITERAL"
+>false</TT
+> if the lock cannot be
+    acquired immediately.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_try_advisory_lock_shared</CODE
+> works the same as
+    <CODE
+CLASS="FUNCTION"
+>pg_try_advisory_lock</CODE
+>, except it attempts to acquire
+    a shared rather than an exclusive lock.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_advisory_unlock</CODE
+> will release a previously-acquired
+    exclusive session level advisory lock.  It
+    returns <TT
+CLASS="LITERAL"
+>true</TT
+> if the lock is successfully released.
+    If the lock was not held, it will return <TT
+CLASS="LITERAL"
+>false</TT
+>,
+    and in addition, an SQL warning will be reported by the server.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_advisory_unlock_shared</CODE
+> works the same as
+    <CODE
+CLASS="FUNCTION"
+>pg_advisory_unlock</CODE
+>,
+    except it releases a shared session level advisory lock.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_advisory_unlock_all</CODE
+> will release all session level advisory
+    locks held by the current session.  (This function is implicitly invoked
+    at session end, even if the client disconnects ungracefully.)
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_advisory_xact_lock</CODE
+> works the same as
+    <CODE
+CLASS="FUNCTION"
+>pg_advisory_lock</CODE
+>, except the lock is automatically released
+    at the end of the current transaction and cannot be released explicitly.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_advisory_xact_lock_shared</CODE
+> works the same as
+    <CODE
+CLASS="FUNCTION"
+>pg_advisory_lock_shared</CODE
+>, except the lock is automatically released
+    at the end of the current transaction and cannot be released explicitly.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_try_advisory_xact_lock</CODE
+> works the same as
+    <CODE
+CLASS="FUNCTION"
+>pg_try_advisory_lock</CODE
+>, except the lock, if acquired,
+    is automatically released at the end of the current transaction and
+    cannot be released explicitly.
+   </P
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_try_advisory_xact_lock_shared</CODE
+> works the same as
+    <CODE
+CLASS="FUNCTION"
+>pg_try_advisory_lock_shared</CODE
+>, except the lock, if acquired,
+    is automatically released at the end of the current transaction and
+    cannot be released explicitly.
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions-info.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="functions-trigger.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>System Information Functions</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Trigger Functions</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

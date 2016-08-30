@@ -1,0 +1,230 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Foreign Data Wrapper Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Writing A Foreign Data Wrapper"
+HREF="fdwhandler.html"><LINK
+REL="PREVIOUS"
+TITLE="Writing A Foreign Data Wrapper"
+HREF="fdwhandler.html"><LINK
+REL="NEXT"
+TITLE="Foreign Data Wrapper Callback Routines"
+HREF="fdw-callbacks.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Writing A Foreign Data Wrapper"
+HREF="fdwhandler.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="fdwhandler.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 54. Writing A Foreign Data Wrapper</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Foreign Data Wrapper Callback Routines"
+HREF="fdw-callbacks.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="FDW-FUNCTIONS"
+>54.1. Foreign Data Wrapper Functions</A
+></H1
+><P
+>     The FDW author needs to implement a handler function, and optionally
+     a validator function. Both functions must be written in a compiled
+     language such as C, using the version-1 interface.
+     For details on C language calling conventions and dynamic loading,
+     see <A
+HREF="xfunc-c.html"
+>Section 35.9</A
+>.
+    </P
+><P
+>     The handler function simply returns a struct of function pointers to
+     callback functions that will be called by the planner, executor, and
+     various maintenance commands.
+     Most of the effort in writing an FDW is in implementing these callback
+     functions.
+     The handler function must be registered with
+     <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> as taking no arguments and
+     returning the special pseudo-type <TT
+CLASS="TYPE"
+>fdw_handler</TT
+>.  The
+     callback functions are plain C functions and are not visible or
+     callable at the SQL level.  The callback functions are described in
+     <A
+HREF="fdw-callbacks.html"
+>Section 54.2</A
+>.
+    </P
+><P
+>     The validator function is responsible for validating options given in
+     <TT
+CLASS="COMMAND"
+>CREATE</TT
+> and <TT
+CLASS="COMMAND"
+>ALTER</TT
+> commands for its
+     foreign data wrapper, as well as foreign servers, user mappings, and
+     foreign tables using the wrapper.
+     The validator function must be registered as taking two arguments, a
+     text array containing the options to be validated, and an OID
+     representing the type of object the options are associated with (in
+     the form of the OID of the system catalog the object would be stored
+     in, either
+     <TT
+CLASS="LITERAL"
+>ForeignDataWrapperRelationId</TT
+>,
+     <TT
+CLASS="LITERAL"
+>ForeignServerRelationId</TT
+>,
+     <TT
+CLASS="LITERAL"
+>UserMappingRelationId</TT
+>,
+     or <TT
+CLASS="LITERAL"
+>ForeignTableRelationId</TT
+>).
+     If no validator function is supplied, options are not checked at object
+     creation time or object alteration time.
+    </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="fdwhandler.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="fdw-callbacks.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Writing A Foreign Data Wrapper</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="fdwhandler.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Foreign Data Wrapper Callback Routines</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

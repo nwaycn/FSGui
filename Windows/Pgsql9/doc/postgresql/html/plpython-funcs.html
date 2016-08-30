@@ -1,0 +1,308 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>PL/Python Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="PL/Python - Python Procedural Language"
+HREF="plpython.html"><LINK
+REL="PREVIOUS"
+TITLE="Python 2 vs. Python 3"
+HREF="plpython-python23.html"><LINK
+REL="NEXT"
+TITLE="Data Values"
+HREF="plpython-data.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Python 2 vs. Python 3"
+HREF="plpython-python23.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plpython.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 43. PL/Python - Python Procedural Language</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Data Values"
+HREF="plpython-data.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PLPYTHON-FUNCS"
+>43.2. PL/Python Functions</A
+></H1
+><P
+>   Functions in PL/Python are declared via the
+   standard <A
+HREF="sql-createfunction.html"
+>CREATE FUNCTION</A
+> syntax:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION <TT
+CLASS="REPLACEABLE"
+><I
+>funcname</I
+></TT
+> (<TT
+CLASS="REPLACEABLE"
+><I
+>argument-list</I
+></TT
+>)
+  RETURNS <TT
+CLASS="REPLACEABLE"
+><I
+>return-type</I
+></TT
+>
+AS $$
+  # PL/Python function body
+$$ LANGUAGE plpythonu;</PRE
+><P>
+  </P
+><P
+>   The body of a function is simply a Python script. When the function
+   is called, its arguments are passed as elements of the list
+   <TT
+CLASS="VARNAME"
+>args</TT
+>; named arguments are also passed as
+   ordinary variables to the Python script.  Use of named arguments is
+   usually more readable.  The result is returned from the Python code
+   in the usual way, with <TT
+CLASS="LITERAL"
+>return</TT
+> or
+   <TT
+CLASS="LITERAL"
+>yield</TT
+> (in case of a result-set statement).  If
+   you do not provide a return value, Python returns the default
+   <TT
+CLASS="SYMBOL"
+>None</TT
+>. <SPAN
+CLASS="APPLICATION"
+>PL/Python</SPAN
+> translates
+   Python's <TT
+CLASS="SYMBOL"
+>None</TT
+> into the SQL null value.
+  </P
+><P
+>   For example, a function to return the greater of two integers can be
+   defined as:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION pymax (a integer, b integer)
+  RETURNS integer
+AS $$
+  if a &gt; b:
+    return a
+  return b
+$$ LANGUAGE plpythonu;</PRE
+><P>
+
+   The Python code that is given as the body of the function definition
+   is transformed into a Python function. For example, the above results in:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>def __plpython_procedure_pymax_23456():
+  if a &gt; b:
+    return a
+  return b</PRE
+><P>
+
+   assuming that 23456 is the OID assigned to the function by
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>.
+  </P
+><P
+>   The arguments are set as global variables.  Because of the scoping
+   rules of Python, this has the subtle consequence that an argument
+   variable cannot be reassigned inside the function to the value of
+   an expression that involves the variable name itself, unless the
+   variable is redeclared as global in the block.  For example, the
+   following won't work:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION pystrip(x text)
+  RETURNS text
+AS $$
+  x = x.strip()  # error
+  return x
+$$ LANGUAGE plpythonu;</PRE
+><P>
+   because assigning to <TT
+CLASS="VARNAME"
+>x</TT
+>
+   makes <TT
+CLASS="VARNAME"
+>x</TT
+> a local variable for the entire block,
+   and so the <TT
+CLASS="VARNAME"
+>x</TT
+> on the right-hand side of the
+   assignment refers to a not-yet-assigned local
+   variable <TT
+CLASS="VARNAME"
+>x</TT
+>, not the PL/Python function
+   parameter.  Using the <TT
+CLASS="LITERAL"
+>global</TT
+> statement, this can
+   be made to work:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION pystrip(x text)
+  RETURNS text
+AS $$
+  global x
+  x = x.strip()  # ok now
+  return x
+$$ LANGUAGE plpythonu;</PRE
+><P>
+   But it is advisable not to rely on this implementation detail of
+   PL/Python.  It is better to treat the function parameters as
+   read-only.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plpython-python23.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="plpython-data.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Python 2 vs. Python 3</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="plpython.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Data Values</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,529 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>ALTER DEFAULT PRIVILEGES</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="ALTER DATABASE"
+HREF="sql-alterdatabase.html"><LINK
+REL="NEXT"
+TITLE="ALTER DOMAIN"
+HREF="sql-alterdomain.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="ALTER DATABASE"
+HREF="sql-alterdatabase.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="ALTER DOMAIN"
+HREF="sql-alterdomain.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-ALTERDEFAULTPRIVILEGES"
+></A
+>ALTER DEFAULT PRIVILEGES</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN69312"
+></A
+><H2
+>Name</H2
+>ALTER DEFAULT PRIVILEGES&nbsp;--&nbsp;define default access privileges</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN69315"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>ALTER DEFAULT PRIVILEGES
+    [ FOR { ROLE | USER } <TT
+CLASS="REPLACEABLE"
+><I
+>target_role</I
+></TT
+> [, ...] ]
+    [ IN SCHEMA <TT
+CLASS="REPLACEABLE"
+><I
+>schema_name</I
+></TT
+> [, ...] ]
+    <TT
+CLASS="REPLACEABLE"
+><I
+>abbreviated_grant_or_revoke</I
+></TT
+>
+
+<SPAN
+CLASS="phrase"
+><SPAN
+CLASS="PHRASE"
+>where <TT
+CLASS="REPLACEABLE"
+><I
+>abbreviated_grant_or_revoke</I
+></TT
+> is one of:</SPAN
+></SPAN
+>
+
+GRANT { { SELECT | INSERT | UPDATE | DELETE | TRUNCATE | REFERENCES | TRIGGER }
+    [, ...] | ALL [ PRIVILEGES ] }
+    ON TABLES
+    TO { [ GROUP ] <TT
+CLASS="REPLACEABLE"
+><I
+>role_name</I
+></TT
+> | PUBLIC } [, ...] [ WITH GRANT OPTION ]
+
+GRANT { { USAGE | SELECT | UPDATE }
+    [, ...] | ALL [ PRIVILEGES ] }
+    ON SEQUENCES
+    TO { [ GROUP ] <TT
+CLASS="REPLACEABLE"
+><I
+>role_name</I
+></TT
+> | PUBLIC } [, ...] [ WITH GRANT OPTION ]
+
+GRANT { EXECUTE | ALL [ PRIVILEGES ] }
+    ON FUNCTIONS
+    TO { [ GROUP ] <TT
+CLASS="REPLACEABLE"
+><I
+>role_name</I
+></TT
+> | PUBLIC } [, ...] [ WITH GRANT OPTION ]
+
+GRANT { USAGE | ALL [ PRIVILEGES ] }
+    ON TYPES
+    TO { [ GROUP ] <TT
+CLASS="REPLACEABLE"
+><I
+>role_name</I
+></TT
+> | PUBLIC } [, ...] [ WITH GRANT OPTION ]
+
+REVOKE [ GRANT OPTION FOR ]
+    { { SELECT | INSERT | UPDATE | DELETE | TRUNCATE | REFERENCES | TRIGGER }
+    [, ...] | ALL [ PRIVILEGES ] }
+    ON TABLES
+    FROM { [ GROUP ] <TT
+CLASS="REPLACEABLE"
+><I
+>role_name</I
+></TT
+> | PUBLIC } [, ...]
+    [ CASCADE | RESTRICT ]
+
+REVOKE [ GRANT OPTION FOR ]
+    { { USAGE | SELECT | UPDATE }
+    [, ...] | ALL [ PRIVILEGES ] }
+    ON SEQUENCES
+    FROM { [ GROUP ] <TT
+CLASS="REPLACEABLE"
+><I
+>role_name</I
+></TT
+> | PUBLIC } [, ...]
+    [ CASCADE | RESTRICT ]
+
+REVOKE [ GRANT OPTION FOR ]
+    { EXECUTE | ALL [ PRIVILEGES ] }
+    ON FUNCTIONS
+    FROM { [ GROUP ] <TT
+CLASS="REPLACEABLE"
+><I
+>role_name</I
+></TT
+> | PUBLIC } [, ...]
+    [ CASCADE | RESTRICT ]
+
+REVOKE [ GRANT OPTION FOR ]
+    { USAGE | ALL [ PRIVILEGES ] }
+    ON TYPES
+    FROM { [ GROUP ] <TT
+CLASS="REPLACEABLE"
+><I
+>role_name</I
+></TT
+> | PUBLIC } [, ...]
+    [ CASCADE | RESTRICT ]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-ALTERDEFAULTPRIVILEGES-DESCRIPTION"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>ALTER DEFAULT PRIVILEGES</TT
+> allows you to set the privileges
+   that will be applied to objects created in the future.  (It does not
+   affect privileges assigned to already-existing objects.)  Currently,
+   only the privileges for tables (including views and foreign tables),
+   sequences, functions, and types (including domains) can be altered.
+  </P
+><P
+>   You can change default privileges only for objects that will be created by
+   yourself or by roles that you are a member of.  The privileges can be set
+   globally (i.e., for all objects created in the current database),
+   or just for objects created in specified schemas.  Default privileges
+   that are specified per-schema are added to whatever the global default
+   privileges are for the particular object type.
+  </P
+><P
+>   As explained under <A
+HREF="sql-grant.html"
+>GRANT</A
+>,
+   the default privileges for any object type normally grant all grantable
+   permissions to the object owner, and may grant some privileges to
+   <TT
+CLASS="LITERAL"
+>PUBLIC</TT
+> as well.  However, this behavior can be changed by
+   altering the global default privileges with
+   <TT
+CLASS="COMMAND"
+>ALTER DEFAULT PRIVILEGES</TT
+>.
+  </P
+><DIV
+CLASS="REFSECT2"
+><A
+NAME="AEN69339"
+></A
+><H3
+>Parameters</H3
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>target_role</I
+></TT
+></DT
+><DD
+><P
+>      The name of an existing role of which the current role is a member.
+      If <TT
+CLASS="LITERAL"
+>FOR ROLE</TT
+> is omitted, the current role is assumed.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>schema_name</I
+></TT
+></DT
+><DD
+><P
+>      The name of an existing schema.  If specified, the default privileges
+      are altered for objects later created in that schema.
+      If <TT
+CLASS="LITERAL"
+>IN SCHEMA</TT
+> is omitted, the global default privileges
+      are altered.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>role_name</I
+></TT
+></DT
+><DD
+><P
+>      The name of an existing role to grant or revoke privileges for.
+      This parameter, and all the other parameters in
+      <TT
+CLASS="REPLACEABLE"
+><I
+>abbreviated_grant_or_revoke</I
+></TT
+>,
+      act as described under
+      <A
+HREF="sql-grant.html"
+>GRANT</A
+> or
+      <A
+HREF="sql-revoke.html"
+>REVOKE</A
+>,
+      except that one is setting permissions for a whole class of objects
+      rather than specific named objects.
+     </P
+></DD
+></DL
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-ALTERDEFAULTPRIVILEGES-NOTES"
+></A
+><H2
+>Notes</H2
+><P
+>   Use <A
+HREF="app-psql.html"
+><SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+></A
+>'s <TT
+CLASS="COMMAND"
+>\ddp</TT
+> command
+   to obtain information about existing assignments of default privileges.
+   The meaning of the privilege values is the same as explained for
+   <TT
+CLASS="COMMAND"
+>\dp</TT
+> under
+   <A
+HREF="sql-grant.html"
+>GRANT</A
+>.
+  </P
+><P
+>   If you wish to drop a role for which the default privileges have been
+   altered, it is necessary to reverse the changes in its default privileges
+   or use <TT
+CLASS="COMMAND"
+>DROP OWNED BY</TT
+> to get rid of the default privileges entry
+   for the role.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-ALTERDEFAULTPRIVILEGES-EXAMPLES"
+></A
+><H2
+>Examples</H2
+><P
+>   Grant SELECT privilege to everyone for all tables (and views) you
+   subsequently create in schema <TT
+CLASS="LITERAL"
+>myschema</TT
+>, and allow
+   role <TT
+CLASS="LITERAL"
+>webuser</TT
+> to INSERT into them too:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER DEFAULT PRIVILEGES IN SCHEMA myschema GRANT SELECT ON TABLES TO PUBLIC;
+ALTER DEFAULT PRIVILEGES IN SCHEMA myschema GRANT INSERT ON TABLES TO webuser;</PRE
+><P>
+  </P
+><P
+>   Undo the above, so that subsequently-created tables won't have any
+   more permissions than normal:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER DEFAULT PRIVILEGES IN SCHEMA myschema REVOKE SELECT ON TABLES FROM PUBLIC;
+ALTER DEFAULT PRIVILEGES IN SCHEMA myschema REVOKE INSERT ON TABLES FROM webuser;</PRE
+><P>
+  </P
+><P
+>   Remove the public EXECUTE permission that is normally granted on functions,
+   for all functions subsequently created by role <TT
+CLASS="LITERAL"
+>admin</TT
+>:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER DEFAULT PRIVILEGES FOR ROLE admin REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;</PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN69382"
+></A
+><H2
+>Compatibility</H2
+><P
+>   There is no <TT
+CLASS="COMMAND"
+>ALTER DEFAULT PRIVILEGES</TT
+> statement in the SQL
+   standard.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN69386"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-grant.html"
+>GRANT</A
+>, <A
+HREF="sql-revoke.html"
+>REVOKE</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-alterdatabase.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-alterdomain.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>ALTER DATABASE</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>ALTER DOMAIN</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

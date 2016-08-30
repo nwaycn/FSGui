@@ -1,0 +1,346 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.2.4</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.2.5"
+HREF="release-8-2-5.html"><LINK
+REL="NEXT"
+TITLE="Release 8.2.3"
+HREF="release-8-2-3.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.2.5"
+HREF="release-8-2-5.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.2.3"
+HREF="release-8-2-3.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-2-4"
+>E.164. Release 8.2.4</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2007-04-23</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.2.3,
+   including a security fix.
+   For information about new features in the 8.2 major release, see
+   <A
+HREF="release-8-2.html"
+>Section E.168</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN156567"
+>E.164.1. Migration to Version 8.2.4</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.2.X.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN156570"
+>E.164.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Support explicit placement of the temporary-table schema within
+      <TT
+CLASS="VARNAME"
+>search_path</TT
+>, and disable searching it for functions
+      and operators (Tom)
+     </P
+><P
+>      This is needed to allow a security-definer function to set a
+      truly secure value of <TT
+CLASS="VARNAME"
+>search_path</TT
+>.  Without it,
+      an unprivileged SQL user can use temporary objects to execute code
+      with the privileges of the security-definer function (CVE-2007-2138).
+      See <TT
+CLASS="COMMAND"
+>CREATE FUNCTION</TT
+> for more information.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="VARNAME"
+>shared_preload_libraries</TT
+> for Windows
+      by forcing reload in each backend (Korry Douglas)
+     </P
+></LI
+><LI
+><P
+>      Fix <CODE
+CLASS="FUNCTION"
+>to_char()</CODE
+> so it properly upper/lower cases localized day or month
+      names (Pavel Stehule)
+     </P
+></LI
+><LI
+><P
+>      <TT
+CLASS="FILENAME"
+>/contrib/tsearch2</TT
+> crash fixes (Teodor)
+     </P
+></LI
+><LI
+><P
+>      Require <TT
+CLASS="COMMAND"
+>COMMIT PREPARED</TT
+> to be executed in the same
+      database as the transaction was prepared in (Heikki)
+     </P
+></LI
+><LI
+><P
+>      Allow <TT
+CLASS="COMMAND"
+>pg_dump</TT
+> to do binary backups larger than two gigabytes
+      on Windows (Magnus)
+     </P
+></LI
+><LI
+><P
+>      New traditional (Taiwan) Chinese <ACRONYM
+CLASS="ACRONYM"
+>FAQ</ACRONYM
+> (Zhou Daojing)
+     </P
+></LI
+><LI
+><P
+>      Prevent the statistics collector from writing to disk too frequently (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix potential-data-corruption bug in how <TT
+CLASS="COMMAND"
+>VACUUM FULL</TT
+> handles
+      <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> chains (Tom, Pavan Deolasee)
+     </P
+></LI
+><LI
+><P
+>      Fix bug in domains that use array types (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>pg_dump</TT
+> so it can dump a serial column's sequence
+      using <TT
+CLASS="OPTION"
+>-t</TT
+> when not also dumping the owning table
+      (Tom)
+     </P
+></LI
+><LI
+><P
+>      Planner fixes, including improving outer join and bitmap scan
+      selection logic (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix possible wrong answers or crash when a PL/pgSQL function tries
+      to <TT
+CLASS="LITERAL"
+>RETURN</TT
+> from within an <TT
+CLASS="LITERAL"
+>EXCEPTION</TT
+> block
+      (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix PANIC during enlargement of a hash index (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix POSIX-style timezone specs to follow new USA DST rules (Tom)
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-2-5.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-2-3.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.2.5</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.2.3</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

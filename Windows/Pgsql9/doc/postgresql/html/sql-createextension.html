@@ -1,0 +1,515 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>CREATE EXTENSION</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="CREATE EVENT TRIGGER"
+HREF="sql-createeventtrigger.html"><LINK
+REL="NEXT"
+TITLE="CREATE FOREIGN DATA WRAPPER"
+HREF="sql-createforeigndatawrapper.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="CREATE EVENT TRIGGER"
+HREF="sql-createeventtrigger.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="CREATE FOREIGN DATA WRAPPER"
+HREF="sql-createforeigndatawrapper.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-CREATEEXTENSION"
+></A
+>CREATE EXTENSION</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN75698"
+></A
+><H2
+>Name</H2
+>CREATE EXTENSION&nbsp;--&nbsp;install an extension</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN75701"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>CREATE EXTENSION [ IF NOT EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>extension_name</I
+></TT
+>
+    [ WITH ] [ SCHEMA <TT
+CLASS="REPLACEABLE"
+><I
+>schema_name</I
+></TT
+> ]
+             [ VERSION <TT
+CLASS="REPLACEABLE"
+><I
+>version</I
+></TT
+> ]
+             [ FROM <TT
+CLASS="REPLACEABLE"
+><I
+>old_version</I
+></TT
+> ]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75707"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>CREATE EXTENSION</TT
+> loads a new extension into the current
+   database.  There must not be an extension of the same name already loaded.
+  </P
+><P
+>   Loading an extension essentially amounts to running the extension's script
+   file.  The script will typically create new <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> objects such as
+   functions, data types, operators and index support methods.
+   <TT
+CLASS="COMMAND"
+>CREATE EXTENSION</TT
+> additionally records the identities
+   of all the created objects, so that they can be dropped again if
+   <TT
+CLASS="COMMAND"
+>DROP EXTENSION</TT
+> is issued.
+  </P
+><P
+>   Loading an extension requires the same privileges that would be
+   required to create its component objects.  For most extensions this
+   means superuser or database owner privileges are needed.
+   The user who runs <TT
+CLASS="COMMAND"
+>CREATE EXTENSION</TT
+> becomes the
+   owner of the extension for purposes of later privilege checks, as well
+   as the owner of any objects created by the extension's script.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75717"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>IF NOT EXISTS</TT
+></DT
+><DD
+><P
+>        Do not throw an error if an extension with the same name already
+        exists.  A notice is issued in this case.  Note that there is no
+        guarantee that the existing extension is anything like the one that
+        would have been created from the currently-available script file.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>extension_name</I
+></TT
+></DT
+><DD
+><P
+>        The name of the extension to be
+        installed. <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> will create the
+        extension using details from the file
+        <TT
+CLASS="LITERAL"
+>SHAREDIR/extension/</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>extension_name</I
+></TT
+><TT
+CLASS="LITERAL"
+>.control</TT
+>.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>schema_name</I
+></TT
+></DT
+><DD
+><P
+>        The name of the schema in which to install the extension's
+        objects, given that the extension allows its contents to be
+        relocated.  The named schema must already exist.
+        If not specified, and the extension's control file does not specify a
+        schema either, the current default object creation schema is used.
+       </P
+><P
+>        Remember that the extension itself is not considered to be within any
+        schema: extensions have unqualified names that must be unique
+        database-wide.  But objects belonging to the extension can be within
+        schemas.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>version</I
+></TT
+></DT
+><DD
+><P
+>        The version of the extension to install.  This can be written as
+        either an identifier or a string literal.  The default version is
+        whatever is specified in the extension's control file.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>old_version</I
+></TT
+></DT
+><DD
+><P
+><TT
+CLASS="LITERAL"
+>FROM</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>old_version</I
+></TT
+>
+        must be specified when, and only when, you are attempting to install
+        an extension that replaces an <SPAN
+CLASS="QUOTE"
+>"old style"</SPAN
+> module that is just
+        a collection of objects not packaged into an extension.  This option
+        causes <TT
+CLASS="COMMAND"
+>CREATE EXTENSION</TT
+> to run an alternative installation
+        script that absorbs the existing objects into the extension, instead
+        of creating new objects.  Be careful that <TT
+CLASS="LITERAL"
+>SCHEMA</TT
+> specifies
+        the schema containing these pre-existing objects.
+       </P
+><P
+>        The value to use for <TT
+CLASS="REPLACEABLE"
+><I
+>old_version</I
+></TT
+> is determined by the
+        extension's author, and might vary if there is more than one version
+        of the old-style module that can be upgraded into an extension.
+        For the standard additional modules supplied with pre-9.1
+        <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>, use <TT
+CLASS="LITERAL"
+>unpackaged</TT
+>
+        for <TT
+CLASS="REPLACEABLE"
+><I
+>old_version</I
+></TT
+> when
+        updating a module to extension style.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75760"
+></A
+><H2
+>Notes</H2
+><P
+>   Before you can use <TT
+CLASS="COMMAND"
+>CREATE EXTENSION</TT
+> to load an extension
+   into a database, the extension's supporting files must be installed.
+   Information about installing the extensions supplied with
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> can be found in
+   <A
+HREF="contrib.html"
+>Additional Supplied Modules</A
+>.
+  </P
+><P
+>   The extensions currently available for loading can be identified from the
+   <A
+HREF="view-pg-available-extensions.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_available_extensions</TT
+></A
+>
+   or
+   <A
+HREF="view-pg-available-extension-versions.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_available_extension_versions</TT
+></A
+>
+   system views.
+  </P
+><P
+>   For information about writing new extensions, see
+   <A
+HREF="extend-extensions.html"
+>Section 35.15</A
+>.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75773"
+></A
+><H2
+>Examples</H2
+><P
+>   Install the <A
+HREF="hstore.html"
+>hstore</A
+> extension into the
+   current database:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE EXTENSION hstore;</PRE
+><P>
+  </P
+><P
+>   Update a pre-9.1 installation of <TT
+CLASS="LITERAL"
+>hstore</TT
+> into
+   extension style:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE EXTENSION hstore SCHEMA public FROM unpackaged;</PRE
+><P>
+   Be careful to specify the schema in which you installed the existing
+   <TT
+CLASS="LITERAL"
+>hstore</TT
+> objects.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75782"
+></A
+><H2
+>Compatibility</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>CREATE EXTENSION</TT
+> is a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+   extension.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75787"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-alterextension.html"
+>ALTER EXTENSION</A
+>, <A
+HREF="sql-dropextension.html"
+>DROP EXTENSION</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-createeventtrigger.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-createforeigndatawrapper.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>CREATE EVENT TRIGGER</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>CREATE FOREIGN DATA WRAPPER</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,872 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>EXPLAIN</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="EXECUTE"
+HREF="sql-execute.html"><LINK
+REL="NEXT"
+TITLE="FETCH"
+HREF="sql-fetch.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="EXECUTE"
+HREF="sql-execute.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="FETCH"
+HREF="sql-fetch.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-EXPLAIN"
+></A
+>EXPLAIN</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN83998"
+></A
+><H2
+>Name</H2
+>EXPLAIN&nbsp;--&nbsp;show the execution plan of a statement</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN84001"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>EXPLAIN [ ( <TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+> [, ...] ) ] <TT
+CLASS="REPLACEABLE"
+><I
+>statement</I
+></TT
+>
+EXPLAIN [ ANALYZE ] [ VERBOSE ] <TT
+CLASS="REPLACEABLE"
+><I
+>statement</I
+></TT
+>
+
+<SPAN
+CLASS="phrase"
+><SPAN
+CLASS="PHRASE"
+>where <TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+> can be one of:</SPAN
+></SPAN
+>
+
+    ANALYZE [ <TT
+CLASS="REPLACEABLE"
+><I
+>boolean</I
+></TT
+> ]
+    VERBOSE [ <TT
+CLASS="REPLACEABLE"
+><I
+>boolean</I
+></TT
+> ]
+    COSTS [ <TT
+CLASS="REPLACEABLE"
+><I
+>boolean</I
+></TT
+> ]
+    BUFFERS [ <TT
+CLASS="REPLACEABLE"
+><I
+>boolean</I
+></TT
+> ]
+    TIMING [ <TT
+CLASS="REPLACEABLE"
+><I
+>boolean</I
+></TT
+> ]
+    FORMAT { TEXT | XML | JSON | YAML }</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN84013"
+></A
+><H2
+>Description</H2
+><P
+>   This command displays the execution plan that the
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> planner generates for the
+   supplied statement.  The execution plan shows how the table(s)
+   referenced by the statement will be scanned &mdash; by plain sequential scan,
+   index scan, etc. &mdash; and if multiple tables are referenced, what join
+   algorithms will be used to bring together the required rows from
+   each input table.
+  </P
+><P
+>   The most critical part of the display is the estimated statement execution
+   cost, which is the planner's guess at how long it will take to run the
+   statement (measured in cost units that are arbitrary, but conventionally
+   mean disk page fetches).  Actually two numbers
+   are shown: the start-up cost before the first row can be returned, and
+   the total cost to return all the rows.  For most queries the total cost
+   is what matters, but in contexts such as a subquery in <TT
+CLASS="LITERAL"
+>EXISTS</TT
+>, the planner
+   will choose the smallest start-up cost instead of the smallest total cost
+   (since the executor will stop after getting one row, anyway).
+   Also, if you limit the number of rows to return with a <TT
+CLASS="LITERAL"
+>LIMIT</TT
+> clause,
+   the planner makes an appropriate interpolation between the endpoint
+   costs to estimate which plan is really the cheapest.
+  </P
+><P
+>   The <TT
+CLASS="LITERAL"
+>ANALYZE</TT
+> option causes the statement to be actually
+   executed, not only planned.  Then actual run time statistics are added to
+   the display, including the total elapsed time expended within each plan
+   node (in milliseconds) and the total number of rows it actually returned.
+   This is useful for seeing whether the planner's estimates
+   are close to reality.
+  </P
+><DIV
+CLASS="IMPORTANT"
+><BLOCKQUOTE
+CLASS="IMPORTANT"
+><P
+><B
+>Important: </B
+>    Keep in mind that the statement is actually executed when
+    the <TT
+CLASS="LITERAL"
+>ANALYZE</TT
+> option is used.  Although
+    <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+> will discard any output that a
+    <TT
+CLASS="COMMAND"
+>SELECT</TT
+> would return, other side effects of the
+    statement will happen as usual.  If you wish to use
+    <TT
+CLASS="COMMAND"
+>EXPLAIN ANALYZE</TT
+> on an
+    <TT
+CLASS="COMMAND"
+>INSERT</TT
+>, <TT
+CLASS="COMMAND"
+>UPDATE</TT
+>,
+    <TT
+CLASS="COMMAND"
+>DELETE</TT
+>, <TT
+CLASS="COMMAND"
+>CREATE TABLE AS</TT
+>,
+    or <TT
+CLASS="COMMAND"
+>EXECUTE</TT
+> statement
+    without letting the command affect your data, use this approach:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>BEGIN;
+EXPLAIN ANALYZE ...;
+ROLLBACK;</PRE
+><P>
+   </P
+></BLOCKQUOTE
+></DIV
+><P
+>   Only the <TT
+CLASS="LITERAL"
+>ANALYZE</TT
+> and <TT
+CLASS="LITERAL"
+>VERBOSE</TT
+> options
+   can be specified, and only in that order, without surrounding the option
+   list in parentheses.  Prior to <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 9.0,
+   the unparenthesized syntax was the only one supported.  It is expected that
+   all new options will be supported only in the parenthesized syntax.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN84038"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>ANALYZE</TT
+></DT
+><DD
+><P
+>      Carry out the command and show actual run times and other statistics.
+      This parameter defaults to <TT
+CLASS="LITERAL"
+>FALSE</TT
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>VERBOSE</TT
+></DT
+><DD
+><P
+>      Display additional information regarding the plan.  Specifically, include
+      the output column list for each node in the plan tree, schema-qualify
+      table and function names, always label variables in expressions with
+      their range table alias, and always print the name of each trigger for
+      which statistics are displayed.  This parameter defaults to
+      <TT
+CLASS="LITERAL"
+>FALSE</TT
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>COSTS</TT
+></DT
+><DD
+><P
+>      Include information on the estimated startup and total cost of each
+      plan node, as well as the estimated number of rows and the estimated
+      width of each row.
+      This parameter defaults to <TT
+CLASS="LITERAL"
+>TRUE</TT
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>BUFFERS</TT
+></DT
+><DD
+><P
+>      Include information on buffer usage. Specifically, include the number of
+      shared blocks hit, read, dirtied, and written, the number of local blocks
+      hit, read, dirtied, and written, and the number of temp blocks read and
+      written.
+      A <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>hit</I
+></SPAN
+> means that a read was avoided because the block was
+      found already in cache when needed.
+      Shared blocks contain data from regular tables and indexes;
+      local blocks contain data from temporary tables and indexes;
+      while temp blocks contain short-term working data used in sorts, hashes,
+      Materialize plan nodes, and similar cases.
+      The number of blocks <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>dirtied</I
+></SPAN
+> indicates the number of
+      previously unmodified blocks that were changed by this query; while the
+      number of blocks <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>written</I
+></SPAN
+> indicates the number of
+      previously-dirtied blocks evicted from cache by this backend during
+      query processing.
+      The number of blocks shown for an
+      upper-level node includes those used by all its child nodes.  In text
+      format, only non-zero values are printed.  This parameter may only be
+      used when <TT
+CLASS="LITERAL"
+>ANALYZE</TT
+> is also enabled.  It defaults to
+      <TT
+CLASS="LITERAL"
+>FALSE</TT
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>TIMING</TT
+></DT
+><DD
+><P
+>      Include actual startup time and time spent in each node in the output.
+      The overhead of repeatedly reading the system clock can slow down the
+      query significantly on some systems, so it may be useful to set this
+      parameter to <TT
+CLASS="LITERAL"
+>FALSE</TT
+> when only actual row counts, and
+      not exact times, are needed.  Run time of the entire statement is
+      always measured, even when node-level timing is turned off with this
+      option.
+      This parameter may only be used when <TT
+CLASS="LITERAL"
+>ANALYZE</TT
+> is also
+      enabled.  It defaults to <TT
+CLASS="LITERAL"
+>TRUE</TT
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>FORMAT</TT
+></DT
+><DD
+><P
+>      Specify the output format, which can be TEXT, XML, JSON, or YAML.
+      Non-text output contains the same information as the text output
+      format, but is easier for programs to parse.  This parameter defaults to
+      <TT
+CLASS="LITERAL"
+>TEXT</TT
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>boolean</I
+></TT
+></DT
+><DD
+><P
+>      Specifies whether the selected option should be turned on or off.
+      You can write <TT
+CLASS="LITERAL"
+>TRUE</TT
+>, <TT
+CLASS="LITERAL"
+>ON</TT
+>, or
+      <TT
+CLASS="LITERAL"
+>1</TT
+> to enable the option, and <TT
+CLASS="LITERAL"
+>FALSE</TT
+>,
+      <TT
+CLASS="LITERAL"
+>OFF</TT
+>, or <TT
+CLASS="LITERAL"
+>0</TT
+> to disable it.  The
+      <TT
+CLASS="REPLACEABLE"
+><I
+>boolean</I
+></TT
+> value can also
+      be omitted, in which case <TT
+CLASS="LITERAL"
+>TRUE</TT
+> is assumed.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>statement</I
+></TT
+></DT
+><DD
+><P
+>      Any <TT
+CLASS="COMMAND"
+>SELECT</TT
+>, <TT
+CLASS="COMMAND"
+>INSERT</TT
+>, <TT
+CLASS="COMMAND"
+>UPDATE</TT
+>,
+      <TT
+CLASS="COMMAND"
+>DELETE</TT
+>, <TT
+CLASS="COMMAND"
+>VALUES</TT
+>, <TT
+CLASS="COMMAND"
+>EXECUTE</TT
+>,
+      <TT
+CLASS="COMMAND"
+>DECLARE</TT
+>, <TT
+CLASS="COMMAND"
+>CREATE TABLE AS</TT
+>, or
+      <TT
+CLASS="COMMAND"
+>CREATE MATERIALIZED VIEW AS</TT
+> statement, whose execution
+      plan you wish to see.
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN84110"
+></A
+><H2
+>Outputs</H2
+><P
+>    The command's result is a textual description of the plan selected
+    for the <TT
+CLASS="REPLACEABLE"
+><I
+>statement</I
+></TT
+>,
+    optionally annotated with execution statistics.
+    <A
+HREF="using-explain.html"
+>Section 14.1</A
+> describes the information provided.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN84115"
+></A
+><H2
+>Notes</H2
+><P
+>   In order to allow the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> query
+   planner to make reasonably informed decisions when optimizing
+   queries, the <A
+HREF="catalog-pg-statistic.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_statistic</TT
+></A
+>
+   data should be up-to-date for all tables used in the query.  Normally
+   the <A
+HREF="routine-vacuuming.html#AUTOVACUUM"
+>autovacuum daemon</A
+> will take care
+   of that automatically.  But if a table has recently had substantial
+   changes in its contents, you might need to do a manual
+   <A
+HREF="sql-analyze.html"
+>ANALYZE</A
+> rather than wait for autovacuum to catch up
+   with the changes.
+  </P
+><P
+>   In order to measure the run-time cost of each node in the execution
+   plan, the current implementation of <TT
+CLASS="COMMAND"
+>EXPLAIN
+   ANALYZE</TT
+> adds profiling overhead to query execution.
+   As a result, running <TT
+CLASS="COMMAND"
+>EXPLAIN ANALYZE</TT
+>
+   on a query can sometimes take significantly longer than executing
+   the query normally. The amount of overhead depends on the nature of
+   the query, as well as the platform being used.  The worst case occurs
+   for plan nodes that in themselves require very little time per
+   execution, and on machines that have relatively slow operating
+   system calls for obtaining the time of day.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN84126"
+></A
+><H2
+>Examples</H2
+><P
+>   To show the plan for a simple query on a table with a single
+   <TT
+CLASS="TYPE"
+>integer</TT
+> column and 10000 rows:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXPLAIN SELECT * FROM foo;
+
+                       QUERY PLAN
+---------------------------------------------------------
+ Seq Scan on foo  (cost=0.00..155.00 rows=10000 width=4)
+(1 row)</PRE
+><P>
+  </P
+><P
+>  Here is the same query, with JSON output formatting:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXPLAIN (FORMAT JSON) SELECT * FROM foo;
+           QUERY PLAN
+--------------------------------
+ [                             +
+   {                           +
+     "Plan": {                 +
+       "Node Type": "Seq Scan",+
+       "Relation Name": "foo", +
+       "Alias": "foo",         +
+       "Startup Cost": 0.00,   +
+       "Total Cost": 155.00,   +
+       "Plan Rows": 10000,     +
+       "Plan Width": 4         +
+     }                         +
+   }                           +
+ ]
+(1 row)</PRE
+><P>
+  </P
+><P
+>   If there is an index and we use a query with an indexable
+   <TT
+CLASS="LITERAL"
+>WHERE</TT
+> condition, <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+>
+   might show a different plan:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXPLAIN SELECT * FROM foo WHERE i = 4;
+
+                         QUERY PLAN
+--------------------------------------------------------------
+ Index Scan using fi on foo  (cost=0.00..5.98 rows=1 width=4)
+   Index Cond: (i = 4)
+(2 rows)</PRE
+><P>
+  </P
+><P
+>  Here is the same query, but in YAML format:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXPLAIN (FORMAT YAML) SELECT * FROM foo WHERE i='4';
+          QUERY PLAN
+-------------------------------
+ - Plan:                      +
+     Node Type: "Index Scan"  +
+     Scan Direction: "Forward"+
+     Index Name: "fi"         +
+     Relation Name: "foo"     +
+     Alias: "foo"             +
+     Startup Cost: 0.00       +
+     Total Cost: 5.98         +
+     Plan Rows: 1             +
+     Plan Width: 4            +
+     Index Cond: "(i = 4)"    
+(1 row)</PRE
+><P>
+
+    XML format is left as an exercise for the reader.
+  </P
+><P
+>   Here is the same plan with cost estimates suppressed:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXPLAIN (COSTS FALSE) SELECT * FROM foo WHERE i = 4;
+
+        QUERY PLAN
+----------------------------
+ Index Scan using fi on foo
+   Index Cond: (i = 4)
+(2 rows)</PRE
+><P>
+  </P
+><P
+>   Here is an example of a query plan for a query using an aggregate
+   function:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXPLAIN SELECT sum(i) FROM foo WHERE i &lt; 10;
+
+                             QUERY PLAN
+---------------------------------------------------------------------
+ Aggregate  (cost=23.93..23.93 rows=1 width=4)
+   -&gt;  Index Scan using fi on foo  (cost=0.00..23.92 rows=6 width=4)
+         Index Cond: (i &lt; 10)
+(3 rows)</PRE
+><P>
+  </P
+><P
+>   Here is an example of using <TT
+CLASS="COMMAND"
+>EXPLAIN EXECUTE</TT
+> to
+   display the execution plan for a prepared query:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>PREPARE query(int, int) AS SELECT sum(bar) FROM test
+    WHERE id &gt; $1 AND id &lt; $2
+    GROUP BY foo;
+
+EXPLAIN ANALYZE EXECUTE query(100, 200);
+
+                                                       QUERY PLAN                                                       
+------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=9.54..9.54 rows=1 width=8) (actual time=0.156..0.161 rows=11 loops=1)
+   Group Key: foo
+   -&gt;  Index Scan using test_pkey on test  (cost=0.29..9.29 rows=50 width=8) (actual time=0.039..0.091 rows=99 loops=1)
+         Index Cond: ((id &gt; $1) AND (id &lt; $2))
+ Planning time: 0.197 ms
+ Execution time: 0.225 ms
+(6 rows)</PRE
+><P>
+  </P
+><P
+>   Of course, the specific numbers shown here depend on the actual
+   contents of the tables involved.  Also note that the numbers, and
+   even the selected query strategy, might vary between
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> releases due to planner
+   improvements. In addition, the <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> command
+   uses random sampling to estimate data statistics; therefore, it is
+   possible for cost estimates to change after a fresh run of
+   <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+>, even if the actual distribution of data
+   in the table has not changed.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN84150"
+></A
+><H2
+>Compatibility</H2
+><P
+>   There is no <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+> statement defined in the SQL standard.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN84154"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-analyze.html"
+>ANALYZE</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-execute.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-fetch.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>EXECUTE</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>FETCH</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,274 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Expressions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="PL/pgSQL - SQL Procedural Language"
+HREF="plpgsql.html"><LINK
+REL="PREVIOUS"
+TITLE="Declarations"
+HREF="plpgsql-declarations.html"><LINK
+REL="NEXT"
+TITLE="Basic Statements"
+HREF="plpgsql-statements.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Declarations"
+HREF="plpgsql-declarations.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plpgsql.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 40. <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> - <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Procedural Language</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Basic Statements"
+HREF="plpgsql-statements.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PLPGSQL-EXPRESSIONS"
+>40.4. Expressions</A
+></H1
+><P
+>     All expressions used in <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+>
+     statements are processed using the server's main
+     <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> executor.  For example, when you write
+     a <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> statement like
+</P><PRE
+CLASS="SYNOPSIS"
+>IF <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+> THEN ...</PRE
+><P>
+     <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> will evaluate the expression by
+     feeding a query like
+</P><PRE
+CLASS="SYNOPSIS"
+>SELECT <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+></PRE
+><P>
+     to the main SQL engine.  While forming the <TT
+CLASS="COMMAND"
+>SELECT</TT
+> command,
+     any occurrences of <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> variable names
+     are replaced by parameters, as discussed in detail in
+     <A
+HREF="plpgsql-implementation.html#PLPGSQL-VAR-SUBST"
+>Section 40.10.1</A
+>.
+     This allows the query plan for the <TT
+CLASS="COMMAND"
+>SELECT</TT
+> to
+     be prepared just once and then reused for subsequent
+     evaluations with different values of the variables.  Thus, what
+     really happens on first use of an expression is essentially a
+     <TT
+CLASS="COMMAND"
+>PREPARE</TT
+> command.  For example, if we have declared
+     two integer variables <TT
+CLASS="LITERAL"
+>x</TT
+> and <TT
+CLASS="LITERAL"
+>y</TT
+>, and we write
+</P><PRE
+CLASS="PROGRAMLISTING"
+>IF x &lt; y THEN ...</PRE
+><P>
+     what happens behind the scenes is equivalent to
+</P><PRE
+CLASS="PROGRAMLISTING"
+>PREPARE <TT
+CLASS="REPLACEABLE"
+><I
+>statement_name</I
+></TT
+>(integer, integer) AS SELECT $1 &lt; $2;</PRE
+><P>
+     and then this prepared statement is <TT
+CLASS="COMMAND"
+>EXECUTE</TT
+>d for each
+     execution of the <TT
+CLASS="COMMAND"
+>IF</TT
+> statement, with the current values
+     of the <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> variables supplied as
+     parameter values.  Normally these details are
+     not important to a <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> user, but
+     they are useful to know when trying to diagnose a problem.
+     More information appears in <A
+HREF="plpgsql-implementation.html#PLPGSQL-PLAN-CACHING"
+>Section 40.10.2</A
+>.
+    </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plpgsql-declarations.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="plpgsql-statements.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Declarations</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="plpgsql.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Basic Statements</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

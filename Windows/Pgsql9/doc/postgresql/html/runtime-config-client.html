@@ -1,0 +1,2027 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Client Connection Defaults</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Configuration"
+HREF="runtime-config.html"><LINK
+REL="PREVIOUS"
+TITLE="Automatic Vacuuming"
+HREF="runtime-config-autovacuum.html"><LINK
+REL="NEXT"
+TITLE="Lock Management"
+HREF="runtime-config-locks.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Automatic Vacuuming"
+HREF="runtime-config-autovacuum.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 18. Server Configuration</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Lock Management"
+HREF="runtime-config-locks.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RUNTIME-CONFIG-CLIENT"
+>18.11. Client Connection Defaults</A
+></H1
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-CLIENT-STATEMENT"
+>18.11.1. Statement Behavior</A
+></H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-SEARCH-PATH"
+></A
+><TT
+CLASS="VARNAME"
+>search_path</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      
+      </DT
+><DD
+><P
+>        This variable specifies the order in which schemas are searched
+        when an object (table, data type, function, etc.) is referenced by a
+        simple name with no schema specified.  When there are objects of
+        identical names in different schemas, the one found first
+        in the search path is used.  An object that is not in any of the
+        schemas in the search path can only be referenced by specifying
+        its containing schema with a qualified (dotted) name.
+       </P
+><P
+>        The value for <TT
+CLASS="VARNAME"
+>search_path</TT
+> must be a comma-separated
+        list of schema names.  Any name that is not an existing schema, or is
+        a schema for which the user does not have <TT
+CLASS="LITERAL"
+>USAGE</TT
+>
+        permission, is silently ignored.
+       </P
+><P
+>        If one of the list items is the special name
+        <TT
+CLASS="LITERAL"
+>$user</TT
+>, then the schema having the name returned by
+        <CODE
+CLASS="FUNCTION"
+>SESSION_USER</CODE
+> is substituted, if there is such a schema
+        and the user has <TT
+CLASS="LITERAL"
+>USAGE</TT
+> permission for it.
+        (If not, <TT
+CLASS="LITERAL"
+>$user</TT
+> is ignored.)
+       </P
+><P
+>        The system catalog schema, <TT
+CLASS="LITERAL"
+>pg_catalog</TT
+>, is always
+        searched, whether it is mentioned in the path or not.  If it is
+        mentioned in the path then it will be searched in the specified
+        order.  If <TT
+CLASS="LITERAL"
+>pg_catalog</TT
+> is not in the path then it will
+        be searched <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>before</I
+></SPAN
+> searching any of the path items.
+       </P
+><P
+>        Likewise, the current session's temporary-table schema,
+        <TT
+CLASS="LITERAL"
+>pg_temp_<TT
+CLASS="REPLACEABLE"
+><I
+>nnn</I
+></TT
+></TT
+>, is always searched if it
+        exists.  It can be explicitly listed in the path by using the
+        alias <TT
+CLASS="LITERAL"
+>pg_temp</TT
+>.  If it is not listed in the path then
+        it is searched first (even before <TT
+CLASS="LITERAL"
+>pg_catalog</TT
+>).  However,
+        the temporary schema is only searched for relation (table, view,
+        sequence, etc) and data type names.  It is never searched for
+        function or operator names.
+       </P
+><P
+>        When objects are created without specifying a particular target
+        schema, they will be placed in the first valid schema named in
+        <TT
+CLASS="VARNAME"
+>search_path</TT
+>.  An error is reported if the search
+        path is empty.
+       </P
+><P
+>        The default value for this parameter is
+        <TT
+CLASS="LITERAL"
+>"$user", public</TT
+>.
+        This setting supports shared use of a database (where no users
+        have private schemas, and all share use of <TT
+CLASS="LITERAL"
+>public</TT
+>),
+        private per-user schemas, and combinations of these.  Other
+        effects can be obtained by altering the default search path
+        setting, either globally or per-user.
+       </P
+><P
+>        The current effective value of the search path can be examined
+        via the <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> function
+        <CODE
+CLASS="FUNCTION"
+>current_schemas</CODE
+>
+        (see <A
+HREF="functions-info.html"
+>Section 9.25</A
+>).
+        This is not quite the same as
+        examining the value of <TT
+CLASS="VARNAME"
+>search_path</TT
+>, since
+        <CODE
+CLASS="FUNCTION"
+>current_schemas</CODE
+> shows how the items
+        appearing in <TT
+CLASS="VARNAME"
+>search_path</TT
+> were resolved.
+       </P
+><P
+>        For more information on schema handling, see <A
+HREF="ddl-schemas.html"
+>Section 5.8</A
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-ROW-SECURITY"
+></A
+><TT
+CLASS="VARNAME"
+>row_security</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        This variable controls whether to raise an error in lieu of applying a
+        row security policy.  When set to <TT
+CLASS="LITERAL"
+>on</TT
+>, policies apply
+        normally.  When set to <TT
+CLASS="LITERAL"
+>off</TT
+>, queries fail which would
+        otherwise apply at least one policy.  The default is <TT
+CLASS="LITERAL"
+>on</TT
+>.
+        Change to <TT
+CLASS="LITERAL"
+>off</TT
+> where limited row visibility could cause
+        incorrect results; for example, <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> makes that
+        change by default.  This variable has no effect on roles which bypass
+        every row security policy, to wit, superusers and roles with
+        the <TT
+CLASS="LITERAL"
+>BYPASSRLS</TT
+> attribute.
+       </P
+><P
+>        For more information on row security policies,
+        see <A
+HREF="sql-createpolicy.html"
+>CREATE POLICY</A
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-DEFAULT-TABLESPACE"
+></A
+><TT
+CLASS="VARNAME"
+>default_tablespace</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      
+      </DT
+><DD
+><P
+>        This variable specifies the default tablespace in which to create
+        objects (tables and indexes) when a <TT
+CLASS="COMMAND"
+>CREATE</TT
+> command does
+        not explicitly specify a tablespace.
+       </P
+><P
+>        The value is either the name of a tablespace, or an empty string
+        to specify using the default tablespace of the current database.
+        If the value does not match the name of any existing tablespace,
+        <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> will automatically use the default
+        tablespace of the current database.  If a nondefault tablespace
+        is specified, the user must have <TT
+CLASS="LITERAL"
+>CREATE</TT
+> privilege
+        for it, or creation attempts will fail.
+       </P
+><P
+>        This variable is not used for temporary tables; for them,
+        <A
+HREF="runtime-config-client.html#GUC-TEMP-TABLESPACES"
+>temp_tablespaces</A
+> is consulted instead.
+       </P
+><P
+>        This variable is also not used when creating databases.
+        By default, a new database inherits its tablespace setting from
+        the template database it is copied from.
+       </P
+><P
+>        For more information on tablespaces,
+        see <A
+HREF="manage-ag-tablespaces.html"
+>Section 21.6</A
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-TEMP-TABLESPACES"
+></A
+><TT
+CLASS="VARNAME"
+>temp_tablespaces</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      
+      </DT
+><DD
+><P
+>        This variable specifies tablespaces in which to create temporary
+        objects (temp tables and indexes on temp tables) when a
+        <TT
+CLASS="COMMAND"
+>CREATE</TT
+> command does not explicitly specify a tablespace.
+        Temporary files for purposes such as sorting large data sets
+        are also created in these tablespaces.
+       </P
+><P
+>        The value is a list of names of tablespaces.  When there is more than
+        one name in the list, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> chooses a random
+        member of the list each time a temporary object is to be created;
+        except that within a transaction, successively created temporary
+        objects are placed in successive tablespaces from the list.
+        If the selected element of the list is an empty string,
+        <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> will automatically use the default
+        tablespace of the current database instead.
+       </P
+><P
+>        When <TT
+CLASS="VARNAME"
+>temp_tablespaces</TT
+> is set interactively, specifying a
+        nonexistent tablespace is an error, as is specifying a tablespace for
+        which the user does not have <TT
+CLASS="LITERAL"
+>CREATE</TT
+> privilege.  However,
+        when using a previously set value, nonexistent tablespaces are
+        ignored, as are tablespaces for which the user lacks
+        <TT
+CLASS="LITERAL"
+>CREATE</TT
+> privilege.  In particular, this rule applies when
+        using a value set in <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>.
+       </P
+><P
+>        The default value is an empty string, which results in all temporary
+        objects being created in the default tablespace of the current
+        database.
+       </P
+><P
+>        See also <A
+HREF="runtime-config-client.html#GUC-DEFAULT-TABLESPACE"
+>default_tablespace</A
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-CHECK-FUNCTION-BODIES"
+></A
+><TT
+CLASS="VARNAME"
+>check_function_bodies</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        This parameter is normally on. When set to <TT
+CLASS="LITERAL"
+>off</TT
+>, it
+        disables validation of the function body string during <A
+HREF="sql-createfunction.html"
+>CREATE FUNCTION</A
+>.  Disabling validation avoids side
+        effects of the validation process and avoids false positives due
+        to problems such as forward references.  Set this parameter
+        to <TT
+CLASS="LITERAL"
+>off</TT
+> before loading functions on behalf of other
+        users; <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> does so automatically.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-DEFAULT-TRANSACTION-ISOLATION"
+></A
+><TT
+CLASS="VARNAME"
+>default_transaction_isolation</TT
+> (<TT
+CLASS="TYPE"
+>enum</TT
+>)
+      
+      </DT
+><DD
+><P
+>        Each SQL transaction has an isolation level, which can be
+        either <SPAN
+CLASS="QUOTE"
+>"read uncommitted"</SPAN
+>, <SPAN
+CLASS="QUOTE"
+>"read
+        committed"</SPAN
+>, <SPAN
+CLASS="QUOTE"
+>"repeatable read"</SPAN
+>, or
+        <SPAN
+CLASS="QUOTE"
+>"serializable"</SPAN
+>.  This parameter controls the
+        default isolation level of each new transaction. The default
+        is <SPAN
+CLASS="QUOTE"
+>"read committed"</SPAN
+>.
+       </P
+><P
+>        Consult <A
+HREF="mvcc.html"
+>Chapter 13</A
+> and <A
+HREF="sql-set-transaction.html"
+>SET TRANSACTION</A
+> for more information.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-DEFAULT-TRANSACTION-READ-ONLY"
+></A
+><TT
+CLASS="VARNAME"
+>default_transaction_read_only</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      
+      </DT
+><DD
+><P
+>        A read-only SQL transaction cannot alter non-temporary tables.
+        This parameter controls the default read-only status of each new
+        transaction. The default is <TT
+CLASS="LITERAL"
+>off</TT
+> (read/write).
+       </P
+><P
+>        Consult <A
+HREF="sql-set-transaction.html"
+>SET TRANSACTION</A
+> for more information.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-DEFAULT-TRANSACTION-DEFERRABLE"
+></A
+><TT
+CLASS="VARNAME"
+>default_transaction_deferrable</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      
+      </DT
+><DD
+><P
+>        When running at the <TT
+CLASS="LITERAL"
+>serializable</TT
+> isolation level,
+        a deferrable read-only SQL transaction may be delayed before
+        it is allowed to proceed.  However, once it begins executing
+        it does not incur any of the overhead required to ensure
+        serializability; so serialization code will have no reason to
+        force it to abort because of concurrent updates, making this
+        option suitable for long-running read-only transactions.
+        </P
+><P
+>        This parameter controls the default deferrable status of each
+        new transaction.  It currently has no effect on read-write
+        transactions or those operating at isolation levels lower
+        than <TT
+CLASS="LITERAL"
+>serializable</TT
+>. The default is <TT
+CLASS="LITERAL"
+>off</TT
+>.
+       </P
+><P
+>        Consult <A
+HREF="sql-set-transaction.html"
+>SET TRANSACTION</A
+> for more information.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-SESSION-REPLICATION-ROLE"
+></A
+><TT
+CLASS="VARNAME"
+>session_replication_role</TT
+> (<TT
+CLASS="TYPE"
+>enum</TT
+>)
+      </DT
+><DD
+><P
+>        Controls firing of replication-related triggers and rules for the
+        current session.  Setting this variable requires
+        superuser privilege and results in discarding any previously cached
+        query plans.  Possible values are <TT
+CLASS="LITERAL"
+>origin</TT
+> (the default),
+        <TT
+CLASS="LITERAL"
+>replica</TT
+> and <TT
+CLASS="LITERAL"
+>local</TT
+>.
+        See <A
+HREF="sql-altertable.html"
+>ALTER TABLE</A
+> for
+        more information.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-STATEMENT-TIMEOUT"
+></A
+><TT
+CLASS="VARNAME"
+>statement_timeout</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Abort any statement that takes more than the specified number of
+        milliseconds, starting from the time the command arrives at the server
+        from the client.  If <TT
+CLASS="VARNAME"
+>log_min_error_statement</TT
+> is set to
+        <TT
+CLASS="LITERAL"
+>ERROR</TT
+> or lower, the statement that timed out will also be
+        logged.  A value of zero (the default) turns this off.
+       </P
+><P
+>        Setting <TT
+CLASS="VARNAME"
+>statement_timeout</TT
+> in
+        <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> is not recommended because it would
+        affect all sessions.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-LOCK-TIMEOUT"
+></A
+><TT
+CLASS="VARNAME"
+>lock_timeout</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Abort any statement that waits longer than the specified number of
+        milliseconds while attempting to acquire a lock on a table, index,
+        row, or other database object.  The time limit applies separately to
+        each lock acquisition attempt.  The limit applies both to explicit
+        locking requests (such as <TT
+CLASS="COMMAND"
+>LOCK TABLE</TT
+>, or <TT
+CLASS="COMMAND"
+>SELECT
+        FOR UPDATE</TT
+> without <TT
+CLASS="LITERAL"
+>NOWAIT</TT
+>) and to implicitly-acquired
+        locks.  If <TT
+CLASS="VARNAME"
+>log_min_error_statement</TT
+> is set to
+        <TT
+CLASS="LITERAL"
+>ERROR</TT
+> or lower, the statement that timed out will be
+        logged.  A value of zero (the default) turns this off.
+       </P
+><P
+>        Unlike <TT
+CLASS="VARNAME"
+>statement_timeout</TT
+>, this timeout can only occur
+        while waiting for locks.  Note that if <TT
+CLASS="VARNAME"
+>statement_timeout</TT
+>
+        is nonzero, it is rather pointless to set <TT
+CLASS="VARNAME"
+>lock_timeout</TT
+> to
+        the same or larger value, since the statement timeout would always
+        trigger first.
+       </P
+><P
+>        Setting <TT
+CLASS="VARNAME"
+>lock_timeout</TT
+> in
+        <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> is not recommended because it would
+        affect all sessions.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-VACUUM-FREEZE-TABLE-AGE"
+></A
+><TT
+CLASS="VARNAME"
+>vacuum_freeze_table_age</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> performs a whole-table scan if the table's
+        <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>relfrozenxid</TT
+> field has reached
+        the age specified by this setting.  The default is 150 million
+        transactions.  Although users can set this value anywhere from zero to
+        two billions, <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> will silently limit the effective value
+        to 95% of <A
+HREF="runtime-config-autovacuum.html#GUC-AUTOVACUUM-FREEZE-MAX-AGE"
+>autovacuum_freeze_max_age</A
+>, so that a
+        periodical manual <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> has a chance to run before an
+        anti-wraparound autovacuum is launched for the table. For more
+        information see
+        <A
+HREF="routine-vacuuming.html#VACUUM-FOR-WRAPAROUND"
+>Section 23.1.5</A
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-VACUUM-FREEZE-MIN-AGE"
+></A
+><TT
+CLASS="VARNAME"
+>vacuum_freeze_min_age</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the cutoff age (in transactions) that <TT
+CLASS="COMMAND"
+>VACUUM</TT
+>
+        should use to decide whether to freeze row versions
+        while scanning a table.
+        The default is 50 million transactions.  Although
+        users can set this value anywhere from zero to one billion,
+        <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> will silently limit the effective value to half
+        the value of <A
+HREF="runtime-config-autovacuum.html#GUC-AUTOVACUUM-FREEZE-MAX-AGE"
+>autovacuum_freeze_max_age</A
+>, so
+        that there is not an unreasonably short time between forced
+        autovacuums.  For more information see <A
+HREF="routine-vacuuming.html#VACUUM-FOR-WRAPAROUND"
+>Section 23.1.5</A
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-VACUUM-MULTIXACT-FREEZE-TABLE-AGE"
+></A
+><TT
+CLASS="VARNAME"
+>vacuum_multixact_freeze_table_age</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> performs a whole-table scan if the table's
+        <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>relminmxid</TT
+> field has reached
+        the age specified by this setting.  The default is 150 million multixacts.
+        Although users can set this value anywhere from zero to two billions,
+        <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> will silently limit the effective value to 95% of
+        <A
+HREF="runtime-config-autovacuum.html#GUC-AUTOVACUUM-MULTIXACT-FREEZE-MAX-AGE"
+>autovacuum_multixact_freeze_max_age</A
+>, so that a
+        periodical manual <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> has a chance to run before an
+        anti-wraparound is launched for the table.
+        For more information see <A
+HREF="routine-vacuuming.html#VACUUM-FOR-MULTIXACT-WRAPAROUND"
+>Section 23.1.5.1</A
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-VACUUM-MULTIXACT-FREEZE-MIN-AGE"
+></A
+><TT
+CLASS="VARNAME"
+>vacuum_multixact_freeze_min_age</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the cutoff age (in multixacts) that <TT
+CLASS="COMMAND"
+>VACUUM</TT
+>
+        should use to decide whether to replace multixact IDs with a newer
+        transaction ID or multixact ID while scanning a table.  The default
+        is 5 million multixacts.
+        Although users can set this value anywhere from zero to one billion,
+        <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> will silently limit the effective value to half
+        the value of <A
+HREF="runtime-config-autovacuum.html#GUC-AUTOVACUUM-MULTIXACT-FREEZE-MAX-AGE"
+>autovacuum_multixact_freeze_max_age</A
+>,
+        so that there is not an unreasonably short time between forced
+        autovacuums.
+        For more information see <A
+HREF="routine-vacuuming.html#VACUUM-FOR-MULTIXACT-WRAPAROUND"
+>Section 23.1.5.1</A
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-BYTEA-OUTPUT"
+></A
+><TT
+CLASS="VARNAME"
+>bytea_output</TT
+> (<TT
+CLASS="TYPE"
+>enum</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the output format for values of type <TT
+CLASS="TYPE"
+>bytea</TT
+>.
+        Valid values are <TT
+CLASS="LITERAL"
+>hex</TT
+> (the default)
+        and <TT
+CLASS="LITERAL"
+>escape</TT
+> (the traditional PostgreSQL
+        format).  See <A
+HREF="datatype-binary.html"
+>Section 8.4</A
+> for more
+        information.  The <TT
+CLASS="TYPE"
+>bytea</TT
+> type always
+        accepts both formats on input, regardless of this setting.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-XMLBINARY"
+></A
+><TT
+CLASS="VARNAME"
+>xmlbinary</TT
+> (<TT
+CLASS="TYPE"
+>enum</TT
+>)
+      </DT
+><DD
+><P
+>        Sets how binary values are to be encoded in XML.  This applies
+        for example when <TT
+CLASS="TYPE"
+>bytea</TT
+> values are converted to
+        XML by the functions <CODE
+CLASS="FUNCTION"
+>xmlelement</CODE
+> or
+        <CODE
+CLASS="FUNCTION"
+>xmlforest</CODE
+>.  Possible values are
+        <TT
+CLASS="LITERAL"
+>base64</TT
+> and <TT
+CLASS="LITERAL"
+>hex</TT
+>, which
+        are both defined in the XML Schema standard.  The default is
+        <TT
+CLASS="LITERAL"
+>base64</TT
+>.  For further information about
+        XML-related functions, see <A
+HREF="functions-xml.html"
+>Section 9.14</A
+>.
+       </P
+><P
+>        The actual choice here is mostly a matter of taste,
+        constrained only by possible restrictions in client
+        applications.  Both methods support all possible values,
+        although the hex encoding will be somewhat larger than the
+        base64 encoding.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-XMLOPTION"
+></A
+><TT
+CLASS="VARNAME"
+>xmloption</TT
+> (<TT
+CLASS="TYPE"
+>enum</TT
+>)
+      
+      
+      </DT
+><DD
+><P
+>        Sets whether <TT
+CLASS="LITERAL"
+>DOCUMENT</TT
+> or
+        <TT
+CLASS="LITERAL"
+>CONTENT</TT
+> is implicit when converting between
+        XML and character string values.  See <A
+HREF="datatype-xml.html"
+>Section 8.13</A
+> for a description of this.  Valid
+        values are <TT
+CLASS="LITERAL"
+>DOCUMENT</TT
+> and
+        <TT
+CLASS="LITERAL"
+>CONTENT</TT
+>.  The default is
+        <TT
+CLASS="LITERAL"
+>CONTENT</TT
+>.
+       </P
+><P
+>        According to the SQL standard, the command to set this option is
+</P><PRE
+CLASS="SYNOPSIS"
+>SET XML OPTION { DOCUMENT | CONTENT };</PRE
+><P>
+        This syntax is also available in PostgreSQL.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-GIN-PENDING-LIST-LIMIT"
+></A
+><TT
+CLASS="VARNAME"
+>gin_pending_list_limit</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the maximum size of the GIN pending list which is used
+        when <TT
+CLASS="LITERAL"
+>fastupdate</TT
+> is enabled. If the list grows
+        larger than this maximum size, it is cleaned up by moving
+        the entries in it to the main GIN data structure in bulk.
+        The default is four megabytes (<TT
+CLASS="LITERAL"
+>4MB</TT
+>). This setting
+        can be overridden for individual GIN indexes by changing
+        index storage parameters.
+         See <A
+HREF="gin-implementation.html#GIN-FAST-UPDATE"
+>Section 61.4.1</A
+> and <A
+HREF="gin-tips.html"
+>Section 61.5</A
+>
+         for more information.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-CLIENT-FORMAT"
+>18.11.2. Locale and Formatting</A
+></H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-DATESTYLE"
+></A
+><TT
+CLASS="VARNAME"
+>DateStyle</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the display format for date and time values, as well as the
+        rules for interpreting ambiguous date input values. For
+        historical reasons, this variable contains two independent
+        components: the output format specification (<TT
+CLASS="LITERAL"
+>ISO</TT
+>,
+        <TT
+CLASS="LITERAL"
+>Postgres</TT
+>, <TT
+CLASS="LITERAL"
+>SQL</TT
+>, or <TT
+CLASS="LITERAL"
+>German</TT
+>)
+        and the input/output specification for year/month/day ordering
+        (<TT
+CLASS="LITERAL"
+>DMY</TT
+>, <TT
+CLASS="LITERAL"
+>MDY</TT
+>, or <TT
+CLASS="LITERAL"
+>YMD</TT
+>). These
+        can be set separately or together. The keywords <TT
+CLASS="LITERAL"
+>Euro</TT
+>
+        and <TT
+CLASS="LITERAL"
+>European</TT
+> are synonyms for <TT
+CLASS="LITERAL"
+>DMY</TT
+>; the
+        keywords <TT
+CLASS="LITERAL"
+>US</TT
+>, <TT
+CLASS="LITERAL"
+>NonEuro</TT
+>, and
+        <TT
+CLASS="LITERAL"
+>NonEuropean</TT
+> are synonyms for <TT
+CLASS="LITERAL"
+>MDY</TT
+>. See
+        <A
+HREF="datatype-datetime.html"
+>Section 8.5</A
+> for more information. The
+        built-in default is <TT
+CLASS="LITERAL"
+>ISO, MDY</TT
+>, but
+        <SPAN
+CLASS="APPLICATION"
+>initdb</SPAN
+> will initialize the
+        configuration file with a setting that corresponds to the
+        behavior of the chosen <TT
+CLASS="VARNAME"
+>lc_time</TT
+> locale.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-INTERVALSTYLE"
+></A
+><TT
+CLASS="VARNAME"
+>IntervalStyle</TT
+> (<TT
+CLASS="TYPE"
+>enum</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the display format for interval values.
+        The value <TT
+CLASS="LITERAL"
+>sql_standard</TT
+> will produce
+        output matching <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> standard interval literals.
+        The value <TT
+CLASS="LITERAL"
+>postgres</TT
+> (which is the default) will produce
+        output matching <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> releases prior to 8.4
+        when the <A
+HREF="runtime-config-client.html#GUC-DATESTYLE"
+>DateStyle</A
+>
+        parameter was set to <TT
+CLASS="LITERAL"
+>ISO</TT
+>.
+        The value <TT
+CLASS="LITERAL"
+>postgres_verbose</TT
+> will produce output
+        matching <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> releases prior to 8.4
+        when the <TT
+CLASS="VARNAME"
+>DateStyle</TT
+>
+        parameter was set to non-<TT
+CLASS="LITERAL"
+>ISO</TT
+> output.
+        The value <TT
+CLASS="LITERAL"
+>iso_8601</TT
+> will produce output matching the time
+        interval <SPAN
+CLASS="QUOTE"
+>"format with designators"</SPAN
+> defined in section
+        4.4.3.2 of ISO 8601.
+       </P
+><P
+>        The <TT
+CLASS="VARNAME"
+>IntervalStyle</TT
+> parameter also affects the
+        interpretation of ambiguous interval input.  See
+        <A
+HREF="datatype-datetime.html#DATATYPE-INTERVAL-INPUT"
+>Section 8.5.4</A
+> for more information.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-TIMEZONE"
+></A
+><TT
+CLASS="VARNAME"
+>TimeZone</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      
+      </DT
+><DD
+><P
+>        Sets the time zone for displaying and interpreting time stamps.
+        The built-in default is <TT
+CLASS="LITERAL"
+>GMT</TT
+>, but that is typically
+        overridden in <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>; <SPAN
+CLASS="APPLICATION"
+>initdb</SPAN
+>
+        will install a setting there corresponding to its system environment.
+        See <A
+HREF="datatype-datetime.html#DATATYPE-TIMEZONES"
+>Section 8.5.3</A
+> for more information.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-TIMEZONE-ABBREVIATIONS"
+></A
+><TT
+CLASS="VARNAME"
+>timezone_abbreviations</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      
+      </DT
+><DD
+><P
+>        Sets the collection of time zone abbreviations that will be accepted
+        by the server for datetime input.  The default is <TT
+CLASS="LITERAL"
+>'Default'</TT
+>,
+        which is a collection that works in most of the world; there are
+        also <TT
+CLASS="LITERAL"
+>'Australia'</TT
+> and <TT
+CLASS="LITERAL"
+>'India'</TT
+>,
+        and other collections can be defined for a particular installation.
+        See <A
+HREF="datetime-config-files.html"
+>Section B.3</A
+> for more information.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-EXTRA-FLOAT-DIGITS"
+></A
+><TT
+CLASS="VARNAME"
+>extra_float_digits</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      
+      
+      </DT
+><DD
+><P
+>        This parameter adjusts the number of digits displayed for
+        floating-point values, including <TT
+CLASS="TYPE"
+>float4</TT
+>, <TT
+CLASS="TYPE"
+>float8</TT
+>,
+        and geometric data types.  The parameter value is added to the
+        standard number of digits (<TT
+CLASS="LITERAL"
+>FLT_DIG</TT
+> or <TT
+CLASS="LITERAL"
+>DBL_DIG</TT
+>
+        as appropriate).  The value can be set as high as 3, to include
+        partially-significant digits; this is especially useful for dumping
+        float data that needs to be restored exactly.  Or it can be set
+        negative to suppress unwanted digits.
+        See also <A
+HREF="datatype-numeric.html#DATATYPE-FLOAT"
+>Section 8.1.3</A
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-CLIENT-ENCODING"
+></A
+><TT
+CLASS="VARNAME"
+>client_encoding</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      
+      </DT
+><DD
+><P
+>        Sets the client-side encoding (character set).
+        The default is to use the database encoding.
+        The character sets supported by the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+        server are described in <A
+HREF="multibyte.html#MULTIBYTE-CHARSET-SUPPORTED"
+>Section 22.3.1</A
+>.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-LC-MESSAGES"
+></A
+><TT
+CLASS="VARNAME"
+>lc_messages</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the language in which messages are displayed.  Acceptable
+        values are system-dependent; see <A
+HREF="locale.html"
+>Section 22.1</A
+> for
+        more information.  If this variable is set to the empty string
+        (which is the default) then the value is inherited from the
+        execution environment of the server in a system-dependent way.
+       </P
+><P
+>        On some systems, this locale category does not exist.  Setting
+        this variable will still work, but there will be no effect.
+        Also, there is a chance that no translated messages for the
+        desired language exist.  In that case you will continue to see
+        the English messages.
+       </P
+><P
+>        Only superusers can change this setting, because it affects the
+        messages sent to the server log as well as to the client, and
+        an improper value might obscure the readability of the server
+        logs.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-LC-MONETARY"
+></A
+><TT
+CLASS="VARNAME"
+>lc_monetary</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the locale to use for formatting monetary amounts, for
+        example with the <CODE
+CLASS="FUNCTION"
+>to_char</CODE
+> family of
+        functions.  Acceptable values are system-dependent; see <A
+HREF="locale.html"
+>Section 22.1</A
+> for more information.  If this variable is
+        set to the empty string (which is the default) then the value
+        is inherited from the execution environment of the server in a
+        system-dependent way.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-LC-NUMERIC"
+></A
+><TT
+CLASS="VARNAME"
+>lc_numeric</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the locale to use for formatting numbers, for example
+        with the <CODE
+CLASS="FUNCTION"
+>to_char</CODE
+> family of
+        functions. Acceptable values are system-dependent; see <A
+HREF="locale.html"
+>Section 22.1</A
+> for more information.  If this variable is
+        set to the empty string (which is the default) then the value
+        is inherited from the execution environment of the server in a
+        system-dependent way.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-LC-TIME"
+></A
+><TT
+CLASS="VARNAME"
+>lc_time</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        Sets the locale to use for formatting dates and times, for example
+        with the <CODE
+CLASS="FUNCTION"
+>to_char</CODE
+> family of
+        functions. Acceptable values are system-dependent; see <A
+HREF="locale.html"
+>Section 22.1</A
+> for more information.  If this variable is
+        set to the empty string (which is the default) then the value
+        is inherited from the execution environment of the server in a
+        system-dependent way.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-DEFAULT-TEXT-SEARCH-CONFIG"
+></A
+><TT
+CLASS="VARNAME"
+>default_text_search_config</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        Selects the text search configuration that is used by those variants
+        of the text search functions that do not have an explicit argument
+        specifying the configuration.
+        See <A
+HREF="textsearch.html"
+>Chapter 12</A
+> for further information.
+        The built-in default is <TT
+CLASS="LITERAL"
+>pg_catalog.simple</TT
+>, but
+        <SPAN
+CLASS="APPLICATION"
+>initdb</SPAN
+> will initialize the
+        configuration file with a setting that corresponds to the
+        chosen <TT
+CLASS="VARNAME"
+>lc_ctype</TT
+> locale, if a configuration
+        matching that locale can be identified.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-CLIENT-PRELOAD"
+>18.11.3. Shared Library Preloading</A
+></H2
+><P
+>      Several settings are available for preloading shared libraries into the
+      server, in order to load additional functionality or achieve performance
+      benefits.  For example, a setting of
+      <TT
+CLASS="LITERAL"
+>'$libdir/mylib'</TT
+> would cause
+      <TT
+CLASS="LITERAL"
+>mylib.so</TT
+> (or on some platforms,
+      <TT
+CLASS="LITERAL"
+>mylib.sl</TT
+>) to be preloaded from the installation's standard
+      library directory.  The differences between the settings are when they
+      take effect and what privileges are required to change them.
+     </P
+><P
+>      <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> procedural language libraries can
+      be preloaded in this way, typically by using the
+      syntax <TT
+CLASS="LITERAL"
+>'$libdir/plXXX'</TT
+> where
+      <TT
+CLASS="LITERAL"
+>XXX</TT
+> is <TT
+CLASS="LITERAL"
+>pgsql</TT
+>, <TT
+CLASS="LITERAL"
+>perl</TT
+>,
+      <TT
+CLASS="LITERAL"
+>tcl</TT
+>, or <TT
+CLASS="LITERAL"
+>python</TT
+>.
+     </P
+><P
+>      For each parameter, if more than one library is to be loaded, separate
+      their names with commas.  All library names are converted to lower case
+      unless double-quoted.
+     </P
+><P
+>      Only shared libraries specifically intended to be used with PostgreSQL
+      can be loaded this way.  Every PostgreSQL-supported library has
+      a <SPAN
+CLASS="QUOTE"
+>"magic block"</SPAN
+> that is checked to guarantee compatibility.  For
+      this reason, non-PostgreSQL libraries cannot be loaded in this way.  You
+      might be able to use operating-system facilities such
+      as <TT
+CLASS="ENVAR"
+>LD_PRELOAD</TT
+> for that.
+     </P
+><P
+>      In general, refer to the documentation of a specific module for the
+      recommended way to load that module.
+     </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-LOCAL-PRELOAD-LIBRARIES"
+></A
+><TT
+CLASS="VARNAME"
+>local_preload_libraries</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      
+      </DT
+><DD
+><P
+>        This variable specifies one or more shared libraries that are to be
+        preloaded at connection start.
+        The parameter value only takes effect at the start of the connection.
+        Subsequent changes have no effect.  If a specified library is not
+        found, the connection attempt will fail.
+       </P
+><P
+>        This option can be set by any user.  Because of that, the libraries
+        that can be loaded are restricted to those appearing in the
+        <TT
+CLASS="FILENAME"
+>plugins</TT
+> subdirectory of the installation's
+        standard library directory.  (It is the database administrator's
+        responsibility to ensure that only <SPAN
+CLASS="QUOTE"
+>"safe"</SPAN
+> libraries
+        are installed there.)  Entries in <TT
+CLASS="VARNAME"
+>local_preload_libraries</TT
+>
+        can specify this directory explicitly, for example
+        <TT
+CLASS="LITERAL"
+>$libdir/plugins/mylib</TT
+>, or just specify
+        the library name &mdash; <TT
+CLASS="LITERAL"
+>mylib</TT
+> would have
+        the same effect as <TT
+CLASS="LITERAL"
+>$libdir/plugins/mylib</TT
+>.
+       </P
+><P
+>        The intent of this feature is to allow unprivileged users to load
+        debugging or performance-measurement libraries into specific sessions
+        without requiring an explicit <TT
+CLASS="COMMAND"
+>LOAD</TT
+> command.  To that end,
+        it would be typical to set this parameter using
+        the <TT
+CLASS="ENVAR"
+>PGOPTIONS</TT
+> environment variable on the client or by
+        using
+        <TT
+CLASS="COMMAND"
+>ALTER ROLE SET</TT
+>.
+       </P
+><P
+>        However, unless a module is specifically designed to be used in this way by
+        non-superusers, this is usually not the right setting to use.  Look
+        at <A
+HREF="runtime-config-client.html#GUC-SESSION-PRELOAD-LIBRARIES"
+>session_preload_libraries</A
+> instead.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-SESSION-PRELOAD-LIBRARIES"
+></A
+><TT
+CLASS="VARNAME"
+>session_preload_libraries</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        This variable specifies one or more shared libraries that are to be
+        preloaded at connection start.  Only superusers can change this setting.
+        The parameter value only takes effect at the start of the connection.
+        Subsequent changes have no effect.  If a specified library is not
+        found, the connection attempt will fail.
+       </P
+><P
+>        The intent of this feature is to allow debugging or
+        performance-measurement libraries to be loaded into specific sessions
+        without an explicit
+        <TT
+CLASS="COMMAND"
+>LOAD</TT
+> command being given.  For
+        example, <A
+HREF="auto-explain.html"
+>auto_explain</A
+> could be enabled for all
+        sessions under a given user name by setting this parameter
+        with <TT
+CLASS="COMMAND"
+>ALTER ROLE SET</TT
+>.  Also, this parameter can be changed
+        without restarting the server (but changes only take effect when a new
+        session is started), so it is easier to add new modules this way, even
+        if they should apply to all sessions.
+       </P
+><P
+>        Unlike <A
+HREF="runtime-config-client.html#GUC-SHARED-PRELOAD-LIBRARIES"
+>shared_preload_libraries</A
+>, there is no large
+        performance advantage to loading a library at session start rather than
+        when it is first used.  There is some advantage, however, when
+        connection pooling is used.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-SHARED-PRELOAD-LIBRARIES"
+></A
+><TT
+CLASS="VARNAME"
+>shared_preload_libraries</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        This variable specifies one or more shared libraries to be preloaded at
+        server start.  This parameter can only be set at server
+        start.  If a specified library is not found, the server will fail to
+        start.
+       </P
+><P
+>        Some libraries need to perform certain operations that can only take
+        place at postmaster start, such as allocating shared memory, reserving
+        light-weight locks, or starting background workers.  Those libraries
+        must be loaded at server start through this parameter.  See the
+        documentation of each library for details.
+       </P
+><P
+>        Other libraries can also be preloaded.  By preloading a shared library,
+        the library startup time is avoided when the library is first used.
+        However, the time to start each new server process might increase
+        slightly, even if that process never uses the library.  So this
+        parameter is recommended only for libraries that will be used in most
+        sessions.  Also, changing this parameter requires a server restart, so
+        this is not the right setting to use for short-term debugging tasks,
+        say.  Use <A
+HREF="runtime-config-client.html#GUC-SESSION-PRELOAD-LIBRARIES"
+>session_preload_libraries</A
+> for that
+        instead.
+       </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>        On Windows hosts, preloading a library at server start will not reduce
+        the time required to start each new server process; each server process
+        will re-load all preload libraries.  However, <TT
+CLASS="VARNAME"
+>shared_preload_libraries
+        </TT
+> is still useful on Windows hosts for libraries that need to
+        perform operations at postmaster start time.
+       </P
+></BLOCKQUOTE
+></DIV
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-CLIENT-OTHER"
+>18.11.4. Other Defaults</A
+></H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-DYNAMIC-LIBRARY-PATH"
+></A
+><TT
+CLASS="VARNAME"
+>dynamic_library_path</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      
+      </DT
+><DD
+><P
+>        If a dynamically loadable module needs to be opened and the
+        file name specified in the <TT
+CLASS="COMMAND"
+>CREATE FUNCTION</TT
+> or
+        <TT
+CLASS="COMMAND"
+>LOAD</TT
+> command
+        does not have a directory component (i.e., the
+        name does not contain a slash), the system will search this
+        path for the required file.
+       </P
+><P
+>        The value for <TT
+CLASS="VARNAME"
+>dynamic_library_path</TT
+> must be a
+        list of absolute directory paths separated by colons (or semi-colons
+        on Windows).  If a list element starts
+        with the special string <TT
+CLASS="LITERAL"
+>$libdir</TT
+>, the
+        compiled-in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> package
+        library directory is substituted for <TT
+CLASS="LITERAL"
+>$libdir</TT
+>; this
+        is where the modules provided by the standard
+        <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> distribution are installed.
+        (Use <TT
+CLASS="LITERAL"
+>pg_config --pkglibdir</TT
+> to find out the name of
+        this directory.) For example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>dynamic_library_path = '/usr/local/lib/postgresql:/home/my_project/lib:$libdir'</PRE
+><P>
+        or, in a Windows environment:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>dynamic_library_path = 'C:\tools\postgresql;H:\my_project\lib;$libdir'</PRE
+><P>
+       </P
+><P
+>        The default value for this parameter is
+        <TT
+CLASS="LITERAL"
+>'$libdir'</TT
+>. If the value is set to an empty
+        string, the automatic path search is turned off.
+       </P
+><P
+>        This parameter can be changed at run time by superusers, but a
+        setting done that way will only persist until the end of the
+        client connection, so this method should be reserved for
+        development purposes. The recommended way to set this parameter
+        is in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> configuration
+        file.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-GIN-FUZZY-SEARCH-LIMIT"
+></A
+><TT
+CLASS="VARNAME"
+>gin_fuzzy_search_limit</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Soft upper limit of the size of the set returned by GIN index scans. For more
+        information see <A
+HREF="gin-tips.html"
+>Section 61.5</A
+>.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime-config-autovacuum.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="runtime-config-locks.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Automatic Vacuuming</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="runtime-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Lock Management</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,720 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>ALTER DOMAIN</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="ALTER DEFAULT PRIVILEGES"
+HREF="sql-alterdefaultprivileges.html"><LINK
+REL="NEXT"
+TITLE="ALTER EVENT TRIGGER"
+HREF="sql-altereventtrigger.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="ALTER DEFAULT PRIVILEGES"
+HREF="sql-alterdefaultprivileges.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="ALTER EVENT TRIGGER"
+HREF="sql-altereventtrigger.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-ALTERDOMAIN"
+></A
+>ALTER DOMAIN</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN69400"
+></A
+><H2
+>Name</H2
+>ALTER DOMAIN&nbsp;--&nbsp;   change the definition of a domain
+  </DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN69403"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>ALTER DOMAIN <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>
+    { SET DEFAULT <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+> | DROP DEFAULT }
+ALTER DOMAIN <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>
+    { SET | DROP } NOT NULL
+ALTER DOMAIN <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>
+    ADD <TT
+CLASS="REPLACEABLE"
+><I
+>domain_constraint</I
+></TT
+> [ NOT VALID ]
+ALTER DOMAIN <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>
+    DROP CONSTRAINT [ IF EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>constraint_name</I
+></TT
+> [ RESTRICT | CASCADE ]
+ALTER DOMAIN <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>
+     RENAME CONSTRAINT <TT
+CLASS="REPLACEABLE"
+><I
+>constraint_name</I
+></TT
+> TO <TT
+CLASS="REPLACEABLE"
+><I
+>new_constraint_name</I
+></TT
+>
+ALTER DOMAIN <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>
+    VALIDATE CONSTRAINT <TT
+CLASS="REPLACEABLE"
+><I
+>constraint_name</I
+></TT
+>
+ALTER DOMAIN <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>
+    OWNER TO { <TT
+CLASS="REPLACEABLE"
+><I
+>new_owner</I
+></TT
+> | CURRENT_USER | SESSION_USER }
+ALTER DOMAIN <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>
+    RENAME TO <TT
+CLASS="REPLACEABLE"
+><I
+>new_name</I
+></TT
+>
+ALTER DOMAIN <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>
+    SET SCHEMA <TT
+CLASS="REPLACEABLE"
+><I
+>new_schema</I
+></TT
+></PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN69423"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>ALTER DOMAIN</TT
+> changes the definition of an existing domain.
+   There are several sub-forms:
+  </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>SET/DROP DEFAULT</DT
+><DD
+><P
+>      These forms set or remove the default value for a domain. Note
+      that defaults only apply to subsequent <TT
+CLASS="COMMAND"
+>INSERT</TT
+>
+      commands; they do not affect rows already in a table using the domain.
+     </P
+></DD
+><DT
+>SET/DROP NOT NULL</DT
+><DD
+><P
+>      These forms change whether a domain is marked to allow NULL
+      values or to reject NULL values.  You can only <TT
+CLASS="LITERAL"
+>SET NOT NULL</TT
+>
+      when the columns using the domain contain no null values.
+     </P
+></DD
+><DT
+>ADD <TT
+CLASS="REPLACEABLE"
+><I
+>domain_constraint</I
+></TT
+> [ NOT VALID ]</DT
+><DD
+><P
+>      This form adds a new constraint to a domain using the same syntax as
+      <A
+HREF="sql-createdomain.html"
+>CREATE DOMAIN</A
+>.
+      When a new constraint is added to a domain, all columns using that
+      domain will be checked against the newly added constraint.  These
+      checks can be suppressed by adding the new constraint using the
+      <TT
+CLASS="LITERAL"
+>NOT VALID</TT
+> option; the constraint can later be made
+      valid using <TT
+CLASS="COMMAND"
+>ALTER DOMAIN ... VALIDATE CONSTRAINT</TT
+>.
+      Newly inserted or updated rows are always checked against all
+      constraints, even those marked <TT
+CLASS="LITERAL"
+>NOT VALID</TT
+>.
+      <TT
+CLASS="LITERAL"
+>NOT VALID</TT
+> is only accepted for <TT
+CLASS="LITERAL"
+>CHECK</TT
+> constraints.
+     </P
+></DD
+><DT
+>DROP CONSTRAINT [ IF EXISTS ]</DT
+><DD
+><P
+>      This form drops constraints on a domain.
+      If <TT
+CLASS="LITERAL"
+>IF EXISTS</TT
+> is specified and the constraint
+      does not exist, no error is thrown. In this case a notice is issued instead.
+     </P
+></DD
+><DT
+>RENAME CONSTRAINT</DT
+><DD
+><P
+>      This form changes the name of a constraint on a domain.
+     </P
+></DD
+><DT
+>VALIDATE CONSTRAINT</DT
+><DD
+><P
+>      This form validates a constraint previously added as
+      <TT
+CLASS="LITERAL"
+>NOT VALID</TT
+>, that is, verify that all data in columns using the
+      domain satisfy the specified constraint.
+     </P
+></DD
+><DT
+>OWNER</DT
+><DD
+><P
+>      This form changes the owner of the domain to the specified user.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>RENAME</TT
+></DT
+><DD
+><P
+>      This form changes the name of the domain.
+     </P
+></DD
+><DT
+>SET SCHEMA</DT
+><DD
+><P
+>      This form changes the schema of the domain.  Any constraints
+      associated with the domain are moved into the new schema as well.
+     </P
+></DD
+></DL
+></DIV
+><P
+>   You must own the domain to use <TT
+CLASS="COMMAND"
+>ALTER DOMAIN</TT
+>.
+   To change the schema of a domain, you must also have
+   <TT
+CLASS="LITERAL"
+>CREATE</TT
+> privilege on the new schema.
+   To alter the owner, you must also be a direct or indirect member of the new
+   owning role, and that role must have <TT
+CLASS="LITERAL"
+>CREATE</TT
+> privilege on
+   the domain's schema.  (These restrictions enforce that altering the owner
+   doesn't do anything you couldn't do by dropping and recreating the domain.
+   However, a superuser can alter ownership of any domain anyway.)
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN69480"
+></A
+><H2
+>Parameters</H2
+><P
+>    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></DT
+><DD
+><P
+>        The name (possibly schema-qualified) of an existing domain to
+        alter.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>domain_constraint</I
+></TT
+></DT
+><DD
+><P
+>        New domain constraint for the domain.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>constraint_name</I
+></TT
+></DT
+><DD
+><P
+>        Name of an existing constraint to drop or rename.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>NOT VALID</I
+></TT
+></DT
+><DD
+><P
+>        Do not verify existing column data for constraint validity.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>CASCADE</TT
+></DT
+><DD
+><P
+>        Automatically drop objects that depend on the constraint.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>RESTRICT</TT
+></DT
+><DD
+><P
+>        Refuse to drop the constraint if there are any dependent
+        objects. This is the default behavior.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_name</I
+></TT
+></DT
+><DD
+><P
+>        The new name for the domain.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_constraint_name</I
+></TT
+></DT
+><DD
+><P
+>        The new name for the constraint.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_owner</I
+></TT
+></DT
+><DD
+><P
+>        The user name of the new owner of the domain.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_schema</I
+></TT
+></DT
+><DD
+><P
+>        The new schema for the domain.
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN69534"
+></A
+><H2
+>Notes</H2
+><P
+>   Currently, <TT
+CLASS="COMMAND"
+>ALTER DOMAIN ADD CONSTRAINT</TT
+>, <TT
+CLASS="COMMAND"
+>ALTER
+   DOMAIN VALIDATE CONSTRAINT</TT
+>, and <TT
+CLASS="COMMAND"
+>ALTER DOMAIN SET NOT NULL</TT
+>
+   will fail if the validated named domain or
+   any derived domain is used within a composite-type column of any
+   table in the database.  They should eventually be improved to be
+   able to verify the new constraint for such nested columns.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN69540"
+></A
+><H2
+>Examples</H2
+><P
+>   To add a <TT
+CLASS="LITERAL"
+>NOT NULL</TT
+> constraint to a domain:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER DOMAIN zipcode SET NOT NULL;</PRE
+><P>
+   To remove a <TT
+CLASS="LITERAL"
+>NOT NULL</TT
+> constraint from a domain:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER DOMAIN zipcode DROP NOT NULL;</PRE
+><P>
+  </P
+><P
+>   To add a check constraint to a domain:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER DOMAIN zipcode ADD CONSTRAINT zipchk CHECK (char_length(VALUE) = 5);</PRE
+><P>
+  </P
+><P
+>   To remove a check constraint from a domain:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER DOMAIN zipcode DROP CONSTRAINT zipchk;</PRE
+><P>
+  </P
+><P
+>   To rename a check constraint on a domain:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER DOMAIN zipcode RENAME CONSTRAINT zipchk TO zip_check;</PRE
+><P>
+  </P
+><P
+>   To move the domain into a different schema:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER DOMAIN zipcode SET SCHEMA customers;</PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-ALTERDOMAIN-COMPATIBILITY"
+></A
+><H2
+>Compatibility</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>ALTER DOMAIN</TT
+> conforms to the <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+>
+   standard, except for the <TT
+CLASS="LITERAL"
+>OWNER</TT
+>, <TT
+CLASS="LITERAL"
+>RENAME</TT
+>, <TT
+CLASS="LITERAL"
+>SET SCHEMA</TT
+>, and
+   <TT
+CLASS="LITERAL"
+>VALIDATE CONSTRAINT</TT
+> variants, which are
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> extensions.  The <TT
+CLASS="LITERAL"
+>NOT VALID</TT
+>
+   clause of the <TT
+CLASS="LITERAL"
+>ADD CONSTRAINT</TT
+> variant is also a
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> extension.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-ALTERDOMAIN-SEE-ALSO"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-createdomain.html"
+>CREATE DOMAIN</A
+>, <A
+HREF="sql-dropdomain.html"
+>DROP DOMAIN</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-alterdefaultprivileges.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-altereventtrigger.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>ALTER DEFAULT PRIVILEGES</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>ALTER EVENT TRIGGER</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

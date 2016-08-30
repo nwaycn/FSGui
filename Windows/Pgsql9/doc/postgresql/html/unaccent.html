@@ -1,0 +1,449 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>unaccent</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="tsm_system_time"
+HREF="tsm-system-time.html"><LINK
+REL="NEXT"
+TITLE="uuid-ossp"
+HREF="uuid-ossp.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="tsm_system_time"
+HREF="tsm-system-time.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="uuid-ossp"
+HREF="uuid-ossp.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="UNACCENT"
+>F.42. unaccent</A
+></H1
+><P
+>  <TT
+CLASS="FILENAME"
+>unaccent</TT
+> is a text search dictionary that removes accents
+  (diacritic signs) from lexemes.
+  It's a filtering dictionary, which means its output is
+  always passed to the next dictionary (if any), unlike the normal
+  behavior of dictionaries.  This allows accent-insensitive processing
+  for full text search.
+ </P
+><P
+>  The current implementation of <TT
+CLASS="FILENAME"
+>unaccent</TT
+> cannot be used as a
+  normalizing dictionary for the <TT
+CLASS="FILENAME"
+>thesaurus</TT
+> dictionary.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN176164"
+>F.42.1. Configuration</A
+></H2
+><P
+>   An <TT
+CLASS="LITERAL"
+>unaccent</TT
+> dictionary accepts the following options:
+  </P
+><P
+></P
+><UL
+><LI
+><P
+>     <TT
+CLASS="LITERAL"
+>RULES</TT
+> is the base name of the file containing the list of
+     translation rules.  This file must be stored in
+     <TT
+CLASS="FILENAME"
+>$SHAREDIR/tsearch_data/</TT
+> (where <TT
+CLASS="LITERAL"
+>$SHAREDIR</TT
+> means
+     the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> installation's shared-data directory).
+     Its name must end in <TT
+CLASS="LITERAL"
+>.rules</TT
+> (which is not to be included in
+     the <TT
+CLASS="LITERAL"
+>RULES</TT
+> parameter).
+    </P
+></LI
+></UL
+><P
+>   The rules file has the following format:
+  </P
+><P
+></P
+><UL
+><LI
+><P
+>     Each line represents one translation rule, consisting of a character with
+     accent followed by a character without accent.  The first is translated
+     into the second.  For example,
+</P><PRE
+CLASS="PROGRAMLISTING"
+>&Agrave;        A
+&Aacute;        A
+&Acirc;        A
+&Atilde;        A
+&Auml;        A
+&Aring;        A
+&AElig;        A</PRE
+><P>
+     The two characters must be separated by whitespace, and any leading or
+     trailing whitespace on a line is ignored.
+    </P
+></LI
+><LI
+><P
+>     Alternatively, if only one character is given on a line, instances of
+     that character are deleted; this is useful in languages where accents
+     are represented by separate characters.
+    </P
+></LI
+><LI
+><P
+>     Actually, each <SPAN
+CLASS="QUOTE"
+>"character"</SPAN
+> can be any string not containing
+     whitespace, so <TT
+CLASS="FILENAME"
+>unaccent</TT
+> dictionaries could be used for
+     other sorts of substring substitutions besides diacritic removal.
+    </P
+></LI
+><LI
+><P
+>     As with other <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> text search configuration files,
+     the rules file must be stored in UTF-8 encoding.  The data is
+     automatically translated into the current database's encoding when
+     loaded.  Any lines containing untranslatable characters are silently
+     ignored, so that rules files can contain rules that are not applicable in
+     the current encoding.
+    </P
+></LI
+></UL
+><P
+>   A more complete example, which is directly useful for most European
+   languages, can be found in <TT
+CLASS="FILENAME"
+>unaccent.rules</TT
+>, which is installed
+   in <TT
+CLASS="FILENAME"
+>$SHAREDIR/tsearch_data/</TT
+> when the <TT
+CLASS="FILENAME"
+>unaccent</TT
+>
+   module is installed.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN176195"
+>F.42.2. Usage</A
+></H2
+><P
+>   Installing the <TT
+CLASS="LITERAL"
+>unaccent</TT
+> extension creates a text
+   search template <TT
+CLASS="LITERAL"
+>unaccent</TT
+> and a dictionary <TT
+CLASS="LITERAL"
+>unaccent</TT
+>
+   based on it.  The <TT
+CLASS="LITERAL"
+>unaccent</TT
+> dictionary has the default
+   parameter setting <TT
+CLASS="LITERAL"
+>RULES='unaccent'</TT
+>, which makes it immediately
+   usable with the standard <TT
+CLASS="FILENAME"
+>unaccent.rules</TT
+> file.
+   If you wish, you can alter the parameter, for example
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>mydb=# ALTER TEXT SEARCH DICTIONARY unaccent (RULES='my_rules');</PRE
+><P>
+
+   or create new dictionaries based on the template.
+  </P
+><P
+>   To test the dictionary, you can try:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>mydb=# select ts_lexize('unaccent','H&ocirc;tel');
+ ts_lexize
+-----------
+ {Hotel}
+(1 row)</PRE
+><P>
+  </P
+><P
+>   Here is an example showing how to insert the
+   <TT
+CLASS="FILENAME"
+>unaccent</TT
+> dictionary into a text search configuration:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>mydb=# CREATE TEXT SEARCH CONFIGURATION fr ( COPY = french );
+mydb=# ALTER TEXT SEARCH CONFIGURATION fr
+        ALTER MAPPING FOR hword, hword_part, word
+        WITH unaccent, french_stem;
+mydb=# select to_tsvector('fr','H&ocirc;tels de la Mer');
+    to_tsvector
+-------------------
+ 'hotel':1 'mer':4
+(1 row)
+
+mydb=# select to_tsvector('fr','H&ocirc;tel de la Mer') @@ to_tsquery('fr','Hotels');
+ ?column?
+----------
+ t
+(1 row)
+
+mydb=# select ts_headline('fr','H&ocirc;tel de la Mer',to_tsquery('fr','Hotels'));
+      ts_headline
+------------------------
+ &lt;b&gt;H&ocirc;tel&lt;/b&gt; de la Mer
+(1 row)</PRE
+><P>
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN176210"
+>F.42.3. Functions</A
+></H2
+><P
+>  The <CODE
+CLASS="FUNCTION"
+>unaccent()</CODE
+> function removes accents (diacritic signs) from
+  a given string.  Basically, it's a wrapper around
+  <TT
+CLASS="FILENAME"
+>unaccent</TT
+>-type dictionaries, but it can be used outside normal
+  text search contexts.
+ </P
+><PRE
+CLASS="SYNOPSIS"
+>unaccent([<SPAN
+CLASS="OPTIONAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>dictionary</I
+></TT
+>, </SPAN
+>] <TT
+CLASS="REPLACEABLE"
+><I
+>string</I
+></TT
+>) returns <TT
+CLASS="TYPE"
+>text</TT
+></PRE
+><P
+>  If the <TT
+CLASS="REPLACEABLE"
+><I
+>dictionary</I
+></TT
+> argument is
+  omitted, <TT
+CLASS="LITERAL"
+>unaccent</TT
+> is assumed.
+ </P
+><P
+>  For example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT unaccent('unaccent', 'H&ocirc;tel');
+SELECT unaccent('H&ocirc;tel');</PRE
+><P>
+ </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="tsm-system-time.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="uuid-ossp.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>tsm_system_time</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>uuid-ossp</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

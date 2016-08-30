@@ -1,0 +1,274 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Visibility of Data Changes</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Triggers"
+HREF="triggers.html"><LINK
+REL="PREVIOUS"
+TITLE="Overview of Trigger Behavior"
+HREF="trigger-definition.html"><LINK
+REL="NEXT"
+TITLE="Writing Trigger Functions in C"
+HREF="trigger-interface.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Overview of Trigger Behavior"
+HREF="trigger-definition.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="triggers.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 36. Triggers</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Writing Trigger Functions in C"
+HREF="trigger-interface.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="TRIGGER-DATACHANGES"
+>36.2. Visibility of Data Changes</A
+></H1
+><P
+>    If you execute SQL commands in your trigger function, and these
+    commands access the table that the trigger is for, then
+    you need to be aware of the data visibility rules, because they determine
+    whether these SQL commands will see the data change that the trigger
+    is fired for.  Briefly:
+
+    <P
+></P
+></P><UL
+><LI
+><P
+>       Statement-level triggers follow simple visibility rules: none of
+       the changes made by a statement are visible to statement-level
+       triggers that are invoked before the statement, whereas all
+       modifications are visible to statement-level <TT
+CLASS="LITERAL"
+>AFTER</TT
+>
+       triggers.
+      </P
+></LI
+><LI
+><P
+>       The data change (insertion, update, or deletion) causing the
+       trigger to fire is naturally <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+> visible
+       to SQL commands executed in a row-level <TT
+CLASS="LITERAL"
+>BEFORE</TT
+> trigger,
+       because it hasn't happened yet.
+      </P
+></LI
+><LI
+><P
+>       However, SQL commands executed in a row-level <TT
+CLASS="LITERAL"
+>BEFORE</TT
+>
+       trigger <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>will</I
+></SPAN
+> see the effects of data
+       changes for rows previously processed in the same outer
+       command.  This requires caution, since the ordering of these
+       change events is not in general predictable; a SQL command that
+       affects multiple rows can visit the rows in any order.
+      </P
+></LI
+><LI
+><P
+>       Similarly, a row-level <TT
+CLASS="LITERAL"
+>INSTEAD OF</TT
+> trigger will see the
+       effects of data changes made by previous firings of <TT
+CLASS="LITERAL"
+>INSTEAD
+       OF</TT
+> triggers in the same outer command.
+      </P
+></LI
+><LI
+><P
+>       When a row-level <TT
+CLASS="LITERAL"
+>AFTER</TT
+> trigger is fired, all data
+       changes made
+       by the outer command are already complete, and are visible to
+       the invoked trigger function.
+      </P
+></LI
+></UL
+><P>
+   </P
+><P
+>    If your trigger function is written in any of the standard procedural
+    languages, then the above statements apply only if the function is
+    declared <TT
+CLASS="LITERAL"
+>VOLATILE</TT
+>.  Functions that are declared
+    <TT
+CLASS="LITERAL"
+>STABLE</TT
+> or <TT
+CLASS="LITERAL"
+>IMMUTABLE</TT
+> will not see changes made by
+    the calling command in any case.
+   </P
+><P
+>    Further information about data visibility rules can be found in
+    <A
+HREF="spi-visibility.html"
+>Section 44.4</A
+>.  The example in <A
+HREF="trigger-example.html"
+>Section 36.4</A
+> contains a demonstration of these rules.
+   </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="trigger-definition.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="trigger-interface.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Overview of Trigger Behavior</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="triggers.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Writing Trigger Functions in C</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

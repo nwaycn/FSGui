@@ -1,0 +1,386 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Control Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="libpq - C Library"
+HREF="libpq.html"><LINK
+REL="PREVIOUS"
+TITLE="Functions Associated with the COPY Command"
+HREF="libpq-copy.html"><LINK
+REL="NEXT"
+TITLE="Miscellaneous Functions"
+HREF="libpq-misc.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Functions Associated with the COPY Command"
+HREF="libpq-copy.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="libpq.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 31. <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> - C Library</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Miscellaneous Functions"
+HREF="libpq-misc.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="LIBPQ-CONTROL"
+>31.10. Control Functions</A
+></H1
+><P
+>   These functions control miscellaneous details of <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>'s
+   behavior.
+  </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="LIBPQ-PQCLIENTENCODING"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQclientEncoding</CODE
+>
+     </DT
+><DD
+><P
+>      Returns the client encoding.
+</P><PRE
+CLASS="SYNOPSIS"
+>int PQclientEncoding(const PGconn *<TT
+CLASS="REPLACEABLE"
+><I
+>conn</I
+></TT
+>);</PRE
+><P>
+
+      Note that it returns the encoding ID, not a symbolic string
+      such as <TT
+CLASS="LITERAL"
+>EUC_JP</TT
+>. If unsuccessful, it returns -1.
+      To convert an encoding ID to an encoding name, you
+      can use:
+
+</P><PRE
+CLASS="SYNOPSIS"
+>char *pg_encoding_to_char(int <TT
+CLASS="REPLACEABLE"
+><I
+>encoding_id</I
+></TT
+>);</PRE
+><P>
+     </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQSETCLIENTENCODING"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQsetClientEncoding</CODE
+>
+     </DT
+><DD
+><P
+>      Sets the client encoding.
+</P><PRE
+CLASS="SYNOPSIS"
+>int PQsetClientEncoding(PGconn *<TT
+CLASS="REPLACEABLE"
+><I
+>conn</I
+></TT
+>, const char *<TT
+CLASS="REPLACEABLE"
+><I
+>encoding</I
+></TT
+>);</PRE
+><P>
+
+      <TT
+CLASS="REPLACEABLE"
+><I
+>conn</I
+></TT
+> is a connection to the server,
+      and <TT
+CLASS="REPLACEABLE"
+><I
+>encoding</I
+></TT
+> is the encoding you want to
+      use. If the function successfully sets the encoding, it returns 0,
+      otherwise -1. The current encoding for this connection can be
+      determined by using <CODE
+CLASS="FUNCTION"
+>PQclientEncoding</CODE
+>.
+     </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQSETERRORVERBOSITY"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQsetErrorVerbosity</CODE
+>
+     </DT
+><DD
+><P
+>      Determines the verbosity of messages returned by
+      <CODE
+CLASS="FUNCTION"
+>PQerrorMessage</CODE
+> and <CODE
+CLASS="FUNCTION"
+>PQresultErrorMessage</CODE
+>.
+</P><PRE
+CLASS="SYNOPSIS"
+>typedef enum
+{
+    PQERRORS_TERSE,
+    PQERRORS_DEFAULT,
+    PQERRORS_VERBOSE
+} PGVerbosity;
+
+PGVerbosity PQsetErrorVerbosity(PGconn *conn, PGVerbosity verbosity);</PRE
+><P>
+
+      <CODE
+CLASS="FUNCTION"
+>PQsetErrorVerbosity</CODE
+> sets the verbosity mode, returning
+      the connection's previous setting.  In <I
+CLASS="FIRSTTERM"
+>TERSE</I
+> mode,
+      returned messages include severity, primary text, and position only;
+      this will normally fit on a single line.  The default mode produces
+      messages that include the above plus any detail, hint, or context
+      fields (these might span multiple lines).  The <I
+CLASS="FIRSTTERM"
+>VERBOSE</I
+>
+      mode includes all available fields.  Changing the verbosity does not
+      affect the messages available from already-existing
+      <TT
+CLASS="STRUCTNAME"
+>PGresult</TT
+> objects, only subsequently-created ones.
+     </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQTRACE"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQtrace</CODE
+>
+     </DT
+><DD
+><P
+>      Enables  tracing of the client/server communication to a debugging file stream.
+</P><PRE
+CLASS="SYNOPSIS"
+>void PQtrace(PGconn *conn, FILE *stream);</PRE
+><P>
+     </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>       On Windows, if the <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> library and an application are
+       compiled with different flags, this function call will crash the
+       application because the internal representation of the <TT
+CLASS="LITERAL"
+>FILE</TT
+>
+       pointers differ.  Specifically, multithreaded/single-threaded,
+       release/debug, and static/dynamic flags should be the same for the
+       library and all applications using that library.
+      </P
+></BLOCKQUOTE
+></DIV
+></DD
+><DT
+><A
+NAME="LIBPQ-PQUNTRACE"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQuntrace</CODE
+>
+     </DT
+><DD
+><P
+>      Disables tracing started by <CODE
+CLASS="FUNCTION"
+>PQtrace</CODE
+>.
+</P><PRE
+CLASS="SYNOPSIS"
+>void PQuntrace(PGconn *conn);</PRE
+><P>
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="libpq-copy.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="libpq-misc.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Functions Associated with the <TT
+CLASS="COMMAND"
+>COPY</TT
+> Command</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="libpq.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Miscellaneous Functions</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

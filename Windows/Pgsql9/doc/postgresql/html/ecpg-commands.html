@@ -1,0 +1,547 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Running SQL Commands</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="ECPG - Embedded SQL in C"
+HREF="ecpg.html"><LINK
+REL="PREVIOUS"
+TITLE="Managing Database Connections"
+HREF="ecpg-connect.html"><LINK
+REL="NEXT"
+TITLE="Using Host Variables"
+HREF="ecpg-variables.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Managing Database Connections"
+HREF="ecpg-connect.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ecpg.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 33. <SPAN
+CLASS="APPLICATION"
+>ECPG</SPAN
+> - Embedded <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> in C</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Using Host Variables"
+HREF="ecpg-variables.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="ECPG-COMMANDS"
+>33.3. Running SQL Commands</A
+></H1
+><P
+>   Any SQL command can be run from within an embedded SQL application.
+   Below are some examples of how to do that.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="ECPG-EXECUTING"
+>33.3.1. Executing SQL Statements</A
+></H2
+><P
+>   Creating a table:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL CREATE TABLE foo (number integer, ascii char(16));
+EXEC SQL CREATE UNIQUE INDEX num1 ON foo(number);
+EXEC SQL COMMIT;</PRE
+><P>
+  </P
+><P
+>   Inserting rows:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL INSERT INTO foo (number, ascii) VALUES (9999, 'doodad');
+EXEC SQL COMMIT;</PRE
+><P>
+  </P
+><P
+>   Deleting rows:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL DELETE FROM foo WHERE number = 9999;
+EXEC SQL COMMIT;</PRE
+><P>
+  </P
+><P
+>   Updates:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL UPDATE foo
+    SET ascii = 'foobar'
+    WHERE number = 9999;
+EXEC SQL COMMIT;</PRE
+><P>
+  </P
+><P
+>   <TT
+CLASS="LITERAL"
+>SELECT</TT
+> statements that return a single result
+   row can also be executed using
+   <TT
+CLASS="LITERAL"
+>EXEC SQL</TT
+> directly.  To handle result sets with
+   multiple rows, an application has to use a cursor;
+   see <A
+HREF="ecpg-commands.html#ECPG-CURSORS"
+>Section 33.3.2</A
+> below.  (As a special case, an
+   application can fetch multiple rows at once into an array host
+   variable; see <A
+HREF="ecpg-variables.html#ECPG-VARIABLES-ARRAYS"
+>Section 33.4.4.3.1</A
+>.)
+  </P
+><P
+>   Single-row select:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL SELECT foo INTO :FooBar FROM table1 WHERE ascii = 'doodad';</PRE
+><P>
+  </P
+><P
+>   Also, a configuration parameter can be retrieved with the
+   <TT
+CLASS="LITERAL"
+>SHOW</TT
+> command:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL SHOW search_path INTO :var;</PRE
+><P>
+  </P
+><P
+>   The tokens of the form
+   <TT
+CLASS="LITERAL"
+>:<TT
+CLASS="REPLACEABLE"
+><I
+>something</I
+></TT
+></TT
+> are
+   <I
+CLASS="FIRSTTERM"
+>host variables</I
+>, that is, they refer to
+   variables in the C program.  They are explained in <A
+HREF="ecpg-variables.html"
+>Section 33.4</A
+>.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="ECPG-CURSORS"
+>33.3.2. Using Cursors</A
+></H2
+><P
+>   To retrieve a result set holding multiple rows, an application has
+   to declare a cursor and fetch each row from the cursor.  The steps
+   to use a cursor are the following: declare a cursor, open it, fetch
+   a row from the cursor, repeat, and finally close it.
+  </P
+><P
+>   Select using cursors:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL DECLARE foo_bar CURSOR FOR
+    SELECT number, ascii FROM foo
+    ORDER BY ascii;
+EXEC SQL OPEN foo_bar;
+EXEC SQL FETCH foo_bar INTO :FooBar, DooDad;
+...
+EXEC SQL CLOSE foo_bar;
+EXEC SQL COMMIT;</PRE
+><P>
+  </P
+><P
+>   For more details about declaration of the cursor,
+   see <A
+HREF="ecpg-sql-declare.html"
+>DECLARE</A
+>, and
+   see <A
+HREF="sql-fetch.html"
+>FETCH</A
+> for <TT
+CLASS="LITERAL"
+>FETCH</TT
+> command
+   details.
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>     The ECPG <TT
+CLASS="COMMAND"
+>DECLARE</TT
+> command does not actually
+     cause a statement to be sent to the PostgreSQL backend.  The
+     cursor is opened in the backend (using the
+     backend's <TT
+CLASS="COMMAND"
+>DECLARE</TT
+> command) at the point when
+     the <TT
+CLASS="COMMAND"
+>OPEN</TT
+> command is executed.
+    </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="ECPG-TRANSACTIONS"
+>33.3.3. Managing Transactions</A
+></H2
+><P
+>   In the default mode, statements are committed only when
+   <TT
+CLASS="COMMAND"
+>EXEC SQL COMMIT</TT
+> is issued. The embedded SQL
+   interface also supports autocommit of transactions (similar to
+   <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s default behavior) via the <TT
+CLASS="OPTION"
+>-t</TT
+>
+   command-line option to <TT
+CLASS="COMMAND"
+>ecpg</TT
+> (see <A
+HREF="app-ecpg.html"
+><SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+></A
+>) or via the <TT
+CLASS="LITERAL"
+>EXEC SQL SET AUTOCOMMIT TO
+   ON</TT
+> statement. In autocommit mode, each command is
+   automatically committed unless it is inside an explicit transaction
+   block. This mode can be explicitly turned off using <TT
+CLASS="LITERAL"
+>EXEC
+   SQL SET AUTOCOMMIT TO OFF</TT
+>.
+  </P
+><P
+>    The following transaction management commands are available:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>EXEC SQL COMMIT</TT
+></DT
+><DD
+><P
+>        Commit an in-progress transaction.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>EXEC SQL ROLLBACK</TT
+></DT
+><DD
+><P
+>        Roll back an in-progress transaction.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>EXEC SQL SET AUTOCOMMIT TO ON</TT
+></DT
+><DD
+><P
+>        Enable autocommit mode.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET AUTOCOMMIT TO OFF</TT
+></DT
+><DD
+><P
+>        Disable autocommit mode.  This is the default.
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="ECPG-PREPARED"
+>33.3.4. Prepared Statements</A
+></H2
+><P
+>    When the values to be passed to an SQL statement are not known at
+    compile time, or the same statement is going to be used many
+    times, then prepared statements can be useful.
+   </P
+><P
+>    The statement is prepared using the
+    command <TT
+CLASS="LITERAL"
+>PREPARE</TT
+>.  For the values that are not
+    known yet, use the
+    placeholder <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="LITERAL"
+>?</TT
+>"</SPAN
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL PREPARE stmt1 FROM "SELECT oid, datname FROM pg_database WHERE oid = ?";</PRE
+><P>
+   </P
+><P
+>    If a statement returns a single row, the application can
+    call <TT
+CLASS="LITERAL"
+>EXECUTE</TT
+> after
+    <TT
+CLASS="LITERAL"
+>PREPARE</TT
+> to execute the statement, supplying the
+    actual values for the placeholders with a <TT
+CLASS="LITERAL"
+>USING</TT
+>
+    clause:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL EXECUTE stmt1 INTO :dboid, :dbname USING 1;</PRE
+><P>
+   </P
+><P
+>    If a statement returns multiple rows, the application can use a
+    cursor declared based on the prepared statement.  To bind input
+    parameters, the cursor must be opened with
+    a <TT
+CLASS="LITERAL"
+>USING</TT
+> clause:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL PREPARE stmt1 FROM "SELECT oid,datname FROM pg_database WHERE oid &gt; ?";
+EXEC SQL DECLARE foo_bar CURSOR FOR stmt1;
+
+/* when end of result set reached, break out of while loop */
+EXEC SQL WHENEVER NOT FOUND DO BREAK;
+
+EXEC SQL OPEN foo_bar USING 100;
+...
+while (1)
+{
+    EXEC SQL FETCH NEXT FROM foo_bar INTO :dboid, :dbname;
+    ...
+}
+EXEC SQL CLOSE foo_bar;</PRE
+><P>
+   </P
+><P
+>    When you don't need the prepared statement anymore, you should
+    deallocate it:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL DEALLOCATE PREPARE <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>;</PRE
+><P>
+   </P
+><P
+>    For more details about <TT
+CLASS="LITERAL"
+>PREPARE</TT
+>,
+    see <A
+HREF="ecpg-sql-prepare.html"
+>PREPARE</A
+>. Also
+    see <A
+HREF="ecpg-dynamic.html"
+>Section 33.5</A
+> for more details about using
+    placeholders and input parameters.
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ecpg-connect.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="ecpg-variables.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Managing Database Connections</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="ecpg.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Using Host Variables</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

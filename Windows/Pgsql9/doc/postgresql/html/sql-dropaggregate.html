@@ -1,0 +1,466 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>DROP AGGREGATE</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="DO"
+HREF="sql-do.html"><LINK
+REL="NEXT"
+TITLE="DROP CAST"
+HREF="sql-dropcast.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="DO"
+HREF="sql-do.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="DROP CAST"
+HREF="sql-dropcast.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-DROPAGGREGATE"
+></A
+>DROP AGGREGATE</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN81644"
+></A
+><H2
+>Name</H2
+>DROP AGGREGATE&nbsp;--&nbsp;remove an aggregate function</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN81647"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>DROP AGGREGATE [ IF EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> ( <TT
+CLASS="REPLACEABLE"
+><I
+>aggregate_signature</I
+></TT
+> ) [ CASCADE | RESTRICT ]
+
+<SPAN
+CLASS="phrase"
+><SPAN
+CLASS="PHRASE"
+>where <TT
+CLASS="REPLACEABLE"
+><I
+>aggregate_signature</I
+></TT
+> is:</SPAN
+></SPAN
+>
+
+* |
+[ <TT
+CLASS="REPLACEABLE"
+><I
+>argmode</I
+></TT
+> ] [ <TT
+CLASS="REPLACEABLE"
+><I
+>argname</I
+></TT
+> ] <TT
+CLASS="REPLACEABLE"
+><I
+>argtype</I
+></TT
+> [ , ... ] |
+[ [ <TT
+CLASS="REPLACEABLE"
+><I
+>argmode</I
+></TT
+> ] [ <TT
+CLASS="REPLACEABLE"
+><I
+>argname</I
+></TT
+> ] <TT
+CLASS="REPLACEABLE"
+><I
+>argtype</I
+></TT
+> [ , ... ] ] ORDER BY [ <TT
+CLASS="REPLACEABLE"
+><I
+>argmode</I
+></TT
+> ] [ <TT
+CLASS="REPLACEABLE"
+><I
+>argname</I
+></TT
+> ] <TT
+CLASS="REPLACEABLE"
+><I
+>argtype</I
+></TT
+> [ , ... ]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN81662"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>DROP AGGREGATE</TT
+> removes an existing
+   aggregate function. To execute this command the current
+   user must be the owner of the aggregate function.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN81666"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>IF EXISTS</TT
+></DT
+><DD
+><P
+>      Do not throw an error if the aggregate does not exist. A notice is issued
+      in this case.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></DT
+><DD
+><P
+>      The name (optionally schema-qualified) of an existing aggregate function.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>argmode</I
+></TT
+></DT
+><DD
+><P
+>      The mode of an argument: <TT
+CLASS="LITERAL"
+>IN</TT
+> or <TT
+CLASS="LITERAL"
+>VARIADIC</TT
+>.
+      If omitted, the default is <TT
+CLASS="LITERAL"
+>IN</TT
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>argname</I
+></TT
+></DT
+><DD
+><P
+>      The name of an argument.
+      Note that <TT
+CLASS="COMMAND"
+>DROP AGGREGATE</TT
+> does not actually pay
+      any attention to argument names, since only the argument data
+      types are needed to determine the aggregate function's identity.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>argtype</I
+></TT
+></DT
+><DD
+><P
+>      An input data type on which the aggregate function operates.
+      To reference a zero-argument aggregate function, write <TT
+CLASS="LITERAL"
+>*</TT
+>
+      in place of the list of argument specifications.
+      To reference an ordered-set aggregate function, write
+      <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> between the direct and aggregated argument
+      specifications.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>CASCADE</TT
+></DT
+><DD
+><P
+>      Automatically drop objects that depend on the aggregate function.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>RESTRICT</TT
+></DT
+><DD
+><P
+>      Refuse to drop the aggregate function if any objects depend on
+      it.  This is the default.
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN81710"
+></A
+><H2
+>Notes</H2
+><P
+>    Alternative syntaxes for referencing ordered-set aggregates
+    are described under <A
+HREF="sql-alteraggregate.html"
+>ALTER AGGREGATE</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN81714"
+></A
+><H2
+>Examples</H2
+><P
+>   To remove the aggregate function <TT
+CLASS="LITERAL"
+>myavg</TT
+> for type
+   <TT
+CLASS="TYPE"
+>integer</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>DROP AGGREGATE myavg(integer);</PRE
+><P>
+  </P
+><P
+>   To remove the hypothetical-set aggregate function <TT
+CLASS="LITERAL"
+>myrank</TT
+>,
+   which takes an arbitrary list of ordering columns and a matching list
+   of direct arguments:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>DROP AGGREGATE myrank(VARIADIC "any" ORDER BY VARIADIC "any");</PRE
+><P>
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN81723"
+></A
+><H2
+>Compatibility</H2
+><P
+>   There is no <TT
+CLASS="COMMAND"
+>DROP AGGREGATE</TT
+> statement in the SQL
+   standard.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN81727"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-alteraggregate.html"
+>ALTER AGGREGATE</A
+>, <A
+HREF="sql-createaggregate.html"
+>CREATE AGGREGATE</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-do.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-dropcast.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>DO</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>DROP CAST</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

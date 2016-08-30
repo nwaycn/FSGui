@@ -1,0 +1,659 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Functions and Operators</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="The SQL Language"
+HREF="sql.html"><LINK
+REL="PREVIOUS"
+TITLE="Pseudo-Types"
+HREF="datatype-pseudo.html"><LINK
+REL="NEXT"
+TITLE="Logical Operators"
+HREF="functions-logical.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="CHAPTER"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Pseudo-Types"
+HREF="datatype-pseudo.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Logical Operators"
+HREF="functions-logical.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="FUNCTIONS"
+></A
+>Chapter 9. Functions and Operators</H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+>9.1. <A
+HREF="functions-logical.html"
+>Logical Operators</A
+></DT
+><DT
+>9.2. <A
+HREF="functions-comparison.html"
+>Comparison Operators</A
+></DT
+><DT
+>9.3. <A
+HREF="functions-math.html"
+>Mathematical Functions and Operators</A
+></DT
+><DT
+>9.4. <A
+HREF="functions-string.html"
+>String Functions and Operators</A
+></DT
+><DT
+>9.5. <A
+HREF="functions-binarystring.html"
+>Binary String Functions and Operators</A
+></DT
+><DT
+>9.6. <A
+HREF="functions-bitstring.html"
+>Bit String Functions and Operators</A
+></DT
+><DT
+>9.7. <A
+HREF="functions-matching.html"
+>Pattern Matching</A
+></DT
+><DD
+><DL
+><DT
+>9.7.1. <A
+HREF="functions-matching.html#FUNCTIONS-LIKE"
+><CODE
+CLASS="FUNCTION"
+>LIKE</CODE
+></A
+></DT
+><DT
+>9.7.2. <A
+HREF="functions-matching.html#FUNCTIONS-SIMILARTO-REGEXP"
+><CODE
+CLASS="FUNCTION"
+>SIMILAR TO</CODE
+> Regular Expressions</A
+></DT
+><DT
+>9.7.3. <A
+HREF="functions-matching.html#FUNCTIONS-POSIX-REGEXP"
+><ACRONYM
+CLASS="ACRONYM"
+>POSIX</ACRONYM
+> Regular Expressions</A
+></DT
+></DL
+></DD
+><DT
+>9.8. <A
+HREF="functions-formatting.html"
+>Data Type Formatting Functions</A
+></DT
+><DT
+>9.9. <A
+HREF="functions-datetime.html"
+>Date/Time Functions and Operators</A
+></DT
+><DD
+><DL
+><DT
+>9.9.1. <A
+HREF="functions-datetime.html#FUNCTIONS-DATETIME-EXTRACT"
+><CODE
+CLASS="FUNCTION"
+>EXTRACT</CODE
+>, <CODE
+CLASS="FUNCTION"
+>date_part</CODE
+></A
+></DT
+><DT
+>9.9.2. <A
+HREF="functions-datetime.html#FUNCTIONS-DATETIME-TRUNC"
+><CODE
+CLASS="FUNCTION"
+>date_trunc</CODE
+></A
+></DT
+><DT
+>9.9.3. <A
+HREF="functions-datetime.html#FUNCTIONS-DATETIME-ZONECONVERT"
+><TT
+CLASS="LITERAL"
+>AT TIME ZONE</TT
+></A
+></DT
+><DT
+>9.9.4. <A
+HREF="functions-datetime.html#FUNCTIONS-DATETIME-CURRENT"
+>Current Date/Time</A
+></DT
+><DT
+>9.9.5. <A
+HREF="functions-datetime.html#FUNCTIONS-DATETIME-DELAY"
+>Delaying Execution</A
+></DT
+></DL
+></DD
+><DT
+>9.10. <A
+HREF="functions-enum.html"
+>Enum Support Functions</A
+></DT
+><DT
+>9.11. <A
+HREF="functions-geometry.html"
+>Geometric Functions and Operators</A
+></DT
+><DT
+>9.12. <A
+HREF="functions-net.html"
+>Network Address Functions and Operators</A
+></DT
+><DT
+>9.13. <A
+HREF="functions-textsearch.html"
+>Text Search Functions and Operators</A
+></DT
+><DT
+>9.14. <A
+HREF="functions-xml.html"
+>XML Functions</A
+></DT
+><DD
+><DL
+><DT
+>9.14.1. <A
+HREF="functions-xml.html#FUNCTIONS-PRODUCING-XML"
+>Producing XML Content</A
+></DT
+><DT
+>9.14.2. <A
+HREF="functions-xml.html#FUNCTIONS-XML-PREDICATES"
+>XML Predicates</A
+></DT
+><DT
+>9.14.3. <A
+HREF="functions-xml.html#FUNCTIONS-XML-PROCESSING"
+>Processing XML</A
+></DT
+><DT
+>9.14.4. <A
+HREF="functions-xml.html#FUNCTIONS-XML-MAPPING"
+>Mapping Tables to XML</A
+></DT
+></DL
+></DD
+><DT
+>9.15. <A
+HREF="functions-json.html"
+>JSON Functions and Operators</A
+></DT
+><DT
+>9.16. <A
+HREF="functions-sequence.html"
+>Sequence Manipulation Functions</A
+></DT
+><DT
+>9.17. <A
+HREF="functions-conditional.html"
+>Conditional Expressions</A
+></DT
+><DD
+><DL
+><DT
+>9.17.1. <A
+HREF="functions-conditional.html#FUNCTIONS-CASE"
+><TT
+CLASS="LITERAL"
+>CASE</TT
+></A
+></DT
+><DT
+>9.17.2. <A
+HREF="functions-conditional.html#FUNCTIONS-COALESCE-NVL-IFNULL"
+><TT
+CLASS="LITERAL"
+>COALESCE</TT
+></A
+></DT
+><DT
+>9.17.3. <A
+HREF="functions-conditional.html#FUNCTIONS-NULLIF"
+><TT
+CLASS="LITERAL"
+>NULLIF</TT
+></A
+></DT
+><DT
+>9.17.4. <A
+HREF="functions-conditional.html#FUNCTIONS-GREATEST-LEAST"
+><TT
+CLASS="LITERAL"
+>GREATEST</TT
+> and <TT
+CLASS="LITERAL"
+>LEAST</TT
+></A
+></DT
+></DL
+></DD
+><DT
+>9.18. <A
+HREF="functions-array.html"
+>Array Functions and Operators</A
+></DT
+><DT
+>9.19. <A
+HREF="functions-range.html"
+>Range Functions and Operators</A
+></DT
+><DT
+>9.20. <A
+HREF="functions-aggregate.html"
+>Aggregate Functions</A
+></DT
+><DT
+>9.21. <A
+HREF="functions-window.html"
+>Window Functions</A
+></DT
+><DT
+>9.22. <A
+HREF="functions-subquery.html"
+>Subquery Expressions</A
+></DT
+><DD
+><DL
+><DT
+>9.22.1. <A
+HREF="functions-subquery.html#FUNCTIONS-SUBQUERY-EXISTS"
+><TT
+CLASS="LITERAL"
+>EXISTS</TT
+></A
+></DT
+><DT
+>9.22.2. <A
+HREF="functions-subquery.html#FUNCTIONS-SUBQUERY-IN"
+><TT
+CLASS="LITERAL"
+>IN</TT
+></A
+></DT
+><DT
+>9.22.3. <A
+HREF="functions-subquery.html#FUNCTIONS-SUBQUERY-NOTIN"
+><TT
+CLASS="LITERAL"
+>NOT IN</TT
+></A
+></DT
+><DT
+>9.22.4. <A
+HREF="functions-subquery.html#FUNCTIONS-SUBQUERY-ANY-SOME"
+><TT
+CLASS="LITERAL"
+>ANY</TT
+>/<TT
+CLASS="LITERAL"
+>SOME</TT
+></A
+></DT
+><DT
+>9.22.5. <A
+HREF="functions-subquery.html#FUNCTIONS-SUBQUERY-ALL"
+><TT
+CLASS="LITERAL"
+>ALL</TT
+></A
+></DT
+><DT
+>9.22.6. <A
+HREF="functions-subquery.html#AEN20257"
+>Single-row Comparison</A
+></DT
+></DL
+></DD
+><DT
+>9.23. <A
+HREF="functions-comparisons.html"
+>Row and Array Comparisons</A
+></DT
+><DD
+><DL
+><DT
+>9.23.1. <A
+HREF="functions-comparisons.html#AEN20300"
+><TT
+CLASS="LITERAL"
+>IN</TT
+></A
+></DT
+><DT
+>9.23.2. <A
+HREF="functions-comparisons.html#AEN20316"
+><TT
+CLASS="LITERAL"
+>NOT IN</TT
+></A
+></DT
+><DT
+>9.23.3. <A
+HREF="functions-comparisons.html#AEN20338"
+><TT
+CLASS="LITERAL"
+>ANY</TT
+>/<TT
+CLASS="LITERAL"
+>SOME</TT
+> (array)</A
+></DT
+><DT
+>9.23.4. <A
+HREF="functions-comparisons.html#AEN20361"
+><TT
+CLASS="LITERAL"
+>ALL</TT
+> (array)</A
+></DT
+><DT
+>9.23.5. <A
+HREF="functions-comparisons.html#ROW-WISE-COMPARISON"
+>Row Constructor Comparison</A
+></DT
+><DT
+>9.23.6. <A
+HREF="functions-comparisons.html#COMPOSITE-TYPE-COMPARISON"
+>Composite Type Comparison</A
+></DT
+></DL
+></DD
+><DT
+>9.24. <A
+HREF="functions-srf.html"
+>Set Returning Functions</A
+></DT
+><DT
+>9.25. <A
+HREF="functions-info.html"
+>System Information Functions</A
+></DT
+><DT
+>9.26. <A
+HREF="functions-admin.html"
+>System Administration Functions</A
+></DT
+><DD
+><DL
+><DT
+>9.26.1. <A
+HREF="functions-admin.html#FUNCTIONS-ADMIN-SET"
+>Configuration Settings Functions</A
+></DT
+><DT
+>9.26.2. <A
+HREF="functions-admin.html#FUNCTIONS-ADMIN-SIGNAL"
+>Server Signaling Functions</A
+></DT
+><DT
+>9.26.3. <A
+HREF="functions-admin.html#FUNCTIONS-ADMIN-BACKUP"
+>Backup Control Functions</A
+></DT
+><DT
+>9.26.4. <A
+HREF="functions-admin.html#FUNCTIONS-RECOVERY-CONTROL"
+>Recovery Control Functions</A
+></DT
+><DT
+>9.26.5. <A
+HREF="functions-admin.html#FUNCTIONS-SNAPSHOT-SYNCHRONIZATION"
+>Snapshot Synchronization Functions</A
+></DT
+><DT
+>9.26.6. <A
+HREF="functions-admin.html#FUNCTIONS-REPLICATION"
+>Replication Functions</A
+></DT
+><DT
+>9.26.7. <A
+HREF="functions-admin.html#FUNCTIONS-ADMIN-DBOBJECT"
+>Database Object Management Functions</A
+></DT
+><DT
+>9.26.8. <A
+HREF="functions-admin.html#FUNCTIONS-ADMIN-INDEX"
+>Index Maintenance Functions</A
+></DT
+><DT
+>9.26.9. <A
+HREF="functions-admin.html#FUNCTIONS-ADMIN-GENFILE"
+>Generic File Access Functions</A
+></DT
+><DT
+>9.26.10. <A
+HREF="functions-admin.html#FUNCTIONS-ADVISORY-LOCKS"
+>Advisory Lock Functions</A
+></DT
+></DL
+></DD
+><DT
+>9.27. <A
+HREF="functions-trigger.html"
+>Trigger Functions</A
+></DT
+><DT
+>9.28. <A
+HREF="functions-event-triggers.html"
+>Event Trigger Functions</A
+></DT
+><DD
+><DL
+><DT
+>9.28.1. <A
+HREF="functions-event-triggers.html#PG-EVENT-TRIGGER-DDL-COMMAND-END-FUNCTIONS"
+>Capturing Changes at Command End</A
+></DT
+><DT
+>9.28.2. <A
+HREF="functions-event-triggers.html#PG-EVENT-TRIGGER-SQL-DROP-FUNCTIONS"
+>Processing Objects Dropped by a DDL Command</A
+></DT
+><DT
+>9.28.3. <A
+HREF="functions-event-triggers.html#PG-EVENT-TRIGGER-TABLE-REWRITE-FUNCTIONS"
+>Handling a Table Rewrite Event</A
+></DT
+></DL
+></DD
+></DL
+></DIV
+><P
+>   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> provides a large number of
+   functions and operators for the built-in data types.  Users can also
+   define their own functions and operators, as described in
+   <A
+HREF="server-programming.html"
+>Part V</A
+>.  The
+   <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> commands <TT
+CLASS="COMMAND"
+>\df</TT
+> and
+   <TT
+CLASS="COMMAND"
+>\do</TT
+> can be used to list all
+   available functions and operators, respectively.
+  </P
+><P
+>   If you are concerned about portability then note that most of
+   the functions and operators described in this chapter, with the
+   exception of the most trivial arithmetic and comparison operators
+   and some explicitly marked functions, are not specified by the
+   <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> standard. Some of this extended functionality
+   is present in other <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> database management
+   systems, and in many cases this functionality is compatible and
+   consistent between the various implementations.  This chapter is also
+   not exhaustive;  additional functions appear in relevant sections of
+   the manual.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="datatype-pseudo.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="functions-logical.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Pseudo-Types</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Logical Operators</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

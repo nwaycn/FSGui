@@ -1,0 +1,321 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.2.21</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.2.22"
+HREF="release-8-2-22.html"><LINK
+REL="NEXT"
+TITLE="Release 8.2.20"
+HREF="release-8-2-20.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.2.22"
+HREF="release-8-2-22.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.2.20"
+HREF="release-8-2-20.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-2-21"
+>E.147. Release 8.2.21</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2011-04-18</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.2.20.
+   For information about new features in the 8.2 major release, see
+   <A
+HREF="release-8-2.html"
+>Section E.168</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN155175"
+>E.147.1. Migration to Version 8.2.21</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.2.X.
+    However, if you are upgrading from a version earlier than 8.2.14,
+    see <A
+HREF="release-8-2-14.html"
+>Section E.154</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN155179"
+>E.147.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Avoid potential deadlock during catalog cache initialization
+      (Nikhil Sontakke)
+     </P
+><P
+>      In some cases the cache loading code would acquire share lock on a
+      system index before locking the index's catalog.  This could deadlock
+      against processes trying to acquire exclusive locks in the other,
+      more standard order.
+     </P
+></LI
+><LI
+><P
+>      Fix dangling-pointer problem in <TT
+CLASS="LITERAL"
+>BEFORE ROW UPDATE</TT
+> trigger
+      handling when there was a concurrent update to the target tuple
+      (Tom Lane)
+     </P
+><P
+>      This bug has been observed to result in intermittent <SPAN
+CLASS="QUOTE"
+>"cannot
+      extract system attribute from virtual tuple"</SPAN
+> failures while trying to
+      do <TT
+CLASS="LITERAL"
+>UPDATE RETURNING ctid</TT
+>.  There is a very small probability
+      of more serious errors, such as generating incorrect index entries for
+      the updated tuple.
+     </P
+></LI
+><LI
+><P
+>      Disallow <TT
+CLASS="COMMAND"
+>DROP TABLE</TT
+> when there are pending deferred trigger
+      events for the table (Tom Lane)
+     </P
+><P
+>      Formerly the <TT
+CLASS="COMMAND"
+>DROP</TT
+> would go through, leading to
+      <SPAN
+CLASS="QUOTE"
+>"could not open relation with OID nnn"</SPAN
+> errors when the
+      triggers were eventually fired.
+     </P
+></LI
+><LI
+><P
+>      Fix PL/Python memory leak involving array slices (Daniel Popowich)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> to cope with long lines (over 1KB) in
+      TOC files (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Put in more safeguards against crashing due to division-by-zero
+      with overly enthusiastic compiler optimization (Aurelien Jarno)
+     </P
+></LI
+><LI
+><P
+>      Support use of dlopen() in FreeBSD and OpenBSD on MIPS (Tom Lane)
+     </P
+><P
+>      There was a hard-wired assumption that this system function was not
+      available on MIPS hardware on these systems.  Use a compile-time test
+      instead, since more recent versions have it.
+     </P
+></LI
+><LI
+><P
+>      Fix compilation failures on HP-UX (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Fix path separator used by <SPAN
+CLASS="APPLICATION"
+>pg_regress</SPAN
+> on Cygwin
+      (Andrew Dunstan)
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2011f
+      for DST law changes in Chile, Cuba, Falkland Islands, Morocco, Samoa,
+      and Turkey; also historical corrections for South Australia, Alaska,
+      and Hawaii.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-2-22.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-2-20.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.2.22</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.2.20</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

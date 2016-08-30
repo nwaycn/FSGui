@@ -1,0 +1,733 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Developer Options</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Configuration"
+HREF="runtime-config.html"><LINK
+REL="PREVIOUS"
+TITLE="Customized Options"
+HREF="runtime-config-custom.html"><LINK
+REL="NEXT"
+TITLE="Short Options"
+HREF="runtime-config-short.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Customized Options"
+HREF="runtime-config-custom.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 18. Server Configuration</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Short Options"
+HREF="runtime-config-short.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RUNTIME-CONFIG-DEVELOPER"
+>18.17. Developer Options</A
+></H1
+><P
+>     The following parameters are intended for work on the
+     <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> source code, and in some cases
+     to assist with recovery of severely damaged databases.  There
+     should be no reason to use them on a production database.
+     As such, they have been excluded from the sample
+     <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> file.  Note that many of these
+     parameters require special source compilation flags to work at all.
+    </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-ALLOW-SYSTEM-TABLE-MODS"
+></A
+><TT
+CLASS="VARNAME"
+>allow_system_table_mods</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        Allows modification of the structure of system tables.
+        This is used by <TT
+CLASS="COMMAND"
+>initdb</TT
+>.
+        This parameter can only be set at server start.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-IGNORE-SYSTEM-INDEXES"
+></A
+><TT
+CLASS="VARNAME"
+>ignore_system_indexes</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        Ignore system indexes when reading system tables (but still
+        update the indexes when modifying the tables).  This is useful
+        when recovering from damaged system indexes.
+        This parameter cannot be changed after session start.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-POST-AUTH-DELAY"
+></A
+><TT
+CLASS="VARNAME"
+>post_auth_delay</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        If nonzero, a delay of this many seconds occurs when a new
+        server process is started, after it conducts the
+        authentication procedure.  This is intended to give developers an
+        opportunity to attach to the server process with a debugger.
+        This parameter cannot be changed after session start.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-PRE-AUTH-DELAY"
+></A
+><TT
+CLASS="VARNAME"
+>pre_auth_delay</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        If nonzero, a delay of this many seconds occurs just after a
+        new server process is forked, before it conducts the
+        authentication procedure.  This is intended to give developers an
+        opportunity to attach to the server process with a debugger to
+        trace down misbehavior in authentication.
+        This parameter can only be set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+        file or on the server command line.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-TRACE-NOTIFY"
+></A
+><TT
+CLASS="VARNAME"
+>trace_notify</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        Generates a great amount of debugging output for the
+        <TT
+CLASS="COMMAND"
+>LISTEN</TT
+> and <TT
+CLASS="COMMAND"
+>NOTIFY</TT
+>
+        commands.  <A
+HREF="runtime-config-logging.html#GUC-CLIENT-MIN-MESSAGES"
+>client_min_messages</A
+> or
+        <A
+HREF="runtime-config-logging.html#GUC-LOG-MIN-MESSAGES"
+>log_min_messages</A
+> must be
+        <TT
+CLASS="LITERAL"
+>DEBUG1</TT
+> or lower to send this output to the
+        client or server logs, respectively.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-TRACE-RECOVERY-MESSAGES"
+></A
+><TT
+CLASS="VARNAME"
+>trace_recovery_messages</TT
+> (<TT
+CLASS="TYPE"
+>enum</TT
+>)
+      </DT
+><DD
+><P
+>        Enables logging of recovery-related debugging output that otherwise
+        would not be logged. This parameter allows the user to override the
+        normal setting of <A
+HREF="runtime-config-logging.html#GUC-LOG-MIN-MESSAGES"
+>log_min_messages</A
+>, but only for
+        specific messages. This is intended for use in debugging Hot Standby.
+        Valid values are <TT
+CLASS="LITERAL"
+>DEBUG5</TT
+>, <TT
+CLASS="LITERAL"
+>DEBUG4</TT
+>,
+        <TT
+CLASS="LITERAL"
+>DEBUG3</TT
+>, <TT
+CLASS="LITERAL"
+>DEBUG2</TT
+>, <TT
+CLASS="LITERAL"
+>DEBUG1</TT
+>, and
+        <TT
+CLASS="LITERAL"
+>LOG</TT
+>.  The default, <TT
+CLASS="LITERAL"
+>LOG</TT
+>, does not affect
+        logging decisions at all.  The other values cause recovery-related
+        debug messages of that priority or higher to be logged as though they
+        had <TT
+CLASS="LITERAL"
+>LOG</TT
+> priority; for common settings of
+        <TT
+CLASS="VARNAME"
+>log_min_messages</TT
+> this results in unconditionally sending
+        them to the server log.
+        This parameter can only be set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+        file or on the server command line.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-TRACE-SORT"
+></A
+><TT
+CLASS="VARNAME"
+>trace_sort</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        If on, emit information about resource usage during sort operations.
+        This parameter is only available if the <TT
+CLASS="SYMBOL"
+>TRACE_SORT</TT
+> macro
+        was defined when <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> was compiled.
+        (However, <TT
+CLASS="SYMBOL"
+>TRACE_SORT</TT
+> is currently defined by default.)
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>trace_locks</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        If on, emit information about lock usage.  Information dumped
+        includes the type of lock operation, the type of lock and the unique
+        identifier of the object being locked or unlocked.  Also included
+        are bit masks for the lock types already granted on this object as
+        well as for the lock types awaited on this object.  For each lock
+        type a count of the number of granted locks and waiting locks is
+        also dumped as well as the totals.  An example of the log file output
+        is shown here:
+</P><PRE
+CLASS="SCREEN"
+>LOG:  LockAcquire: new: lock(0xb7acd844) id(24688,24696,0,0,0,1)
+      grantMask(0) req(0,0,0,0,0,0,0)=0 grant(0,0,0,0,0,0,0)=0
+      wait(0) type(AccessShareLock)
+LOG:  GrantLock: lock(0xb7acd844) id(24688,24696,0,0,0,1)
+      grantMask(2) req(1,0,0,0,0,0,0)=1 grant(1,0,0,0,0,0,0)=1
+      wait(0) type(AccessShareLock)
+LOG:  UnGrantLock: updated: lock(0xb7acd844) id(24688,24696,0,0,0,1)
+      grantMask(0) req(0,0,0,0,0,0,0)=0 grant(0,0,0,0,0,0,0)=0
+      wait(0) type(AccessShareLock)
+LOG:  CleanUpLock: deleting: lock(0xb7acd844) id(24688,24696,0,0,0,1)
+      grantMask(0) req(0,0,0,0,0,0,0)=0 grant(0,0,0,0,0,0,0)=0
+      wait(0) type(INVALID)</PRE
+><P>
+        Details of the structure being dumped may be found in
+        <TT
+CLASS="FILENAME"
+>src/include/storage/lock.h</TT
+>.
+       </P
+><P
+>        This parameter is only available if the <TT
+CLASS="SYMBOL"
+>LOCK_DEBUG</TT
+>
+        macro was defined when <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> was
+        compiled.
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>trace_lwlocks</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        If on, emit information about lightweight lock usage.  Lightweight
+        locks are intended primarily to provide mutual exclusion of access
+        to shared-memory data structures.
+       </P
+><P
+>        This parameter is only available if the <TT
+CLASS="SYMBOL"
+>LOCK_DEBUG</TT
+>
+        macro was defined when <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> was
+        compiled.
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>trace_userlocks</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        If on, emit information about user lock usage.  Output is the same
+        as for <TT
+CLASS="SYMBOL"
+>trace_locks</TT
+>, only for advisory locks.
+       </P
+><P
+>        This parameter is only available if the <TT
+CLASS="SYMBOL"
+>LOCK_DEBUG</TT
+>
+        macro was defined when <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> was
+        compiled.
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>trace_lock_oidmin</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        If set, do not trace locks for tables below this OID. (use to avoid
+        output on system tables)
+       </P
+><P
+>        This parameter is only available if the <TT
+CLASS="SYMBOL"
+>LOCK_DEBUG</TT
+>
+        macro was defined when <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> was
+        compiled.
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>trace_lock_table</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Unconditionally trace locks on this table (OID).
+       </P
+><P
+>        This parameter is only available if the <TT
+CLASS="SYMBOL"
+>LOCK_DEBUG</TT
+>
+        macro was defined when <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> was
+        compiled.
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>debug_deadlocks</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        If set, dumps information about all current locks when a
+        deadlock timeout occurs.
+       </P
+><P
+>        This parameter is only available if the <TT
+CLASS="SYMBOL"
+>LOCK_DEBUG</TT
+>
+        macro was defined when <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> was
+        compiled.
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>log_btree_build_stats</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        If set, logs system resource usage statistics (memory and CPU) on
+        various B-tree operations.
+       </P
+><P
+>        This parameter is only available if the <TT
+CLASS="SYMBOL"
+>BTREE_BUILD_STATS</TT
+>
+        macro was defined when <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> was
+        compiled.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-WAL-DEBUG"
+></A
+><TT
+CLASS="VARNAME"
+>wal_debug</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        If on, emit WAL-related debugging output. This parameter is
+        only available if the <TT
+CLASS="SYMBOL"
+>WAL_DEBUG</TT
+> macro was
+        defined when <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> was
+        compiled.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-IGNORE-CHECKSUM-FAILURE"
+></A
+><TT
+CLASS="VARNAME"
+>ignore_checksum_failure</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        Only has effect if <A
+HREF="app-initdb.html#APP-INITDB-DATA-CHECKSUMS"
+>data checksums</A
+> are enabled.
+       </P
+><P
+>        Detection of a checksum failure during a read normally causes
+        <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> to report an error, aborting the current
+        transaction.  Setting <TT
+CLASS="VARNAME"
+>ignore_checksum_failure</TT
+> to on causes
+        the system to ignore the failure (but still report a warning), and
+        continue processing.  This behavior may <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>cause crashes, propagate
+        or hide corruption, or other serious problems</I
+></SPAN
+>.  However, it may allow
+        you to get past the error and retrieve undamaged tuples that might still be
+        present in the table if the block header is still sane. If the header is
+        corrupt an error will be reported even if this option is enabled. The
+        default setting is <TT
+CLASS="LITERAL"
+>off</TT
+>, and it can only be changed by a superuser.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-ZERO-DAMAGED-PAGES"
+></A
+><TT
+CLASS="VARNAME"
+>zero_damaged_pages</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        Detection of a damaged page header normally causes
+        <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> to report an error, aborting the current
+        transaction.  Setting <TT
+CLASS="VARNAME"
+>zero_damaged_pages</TT
+> to on causes
+        the system to instead report a warning, zero out the damaged
+        page in memory, and continue processing.  This behavior <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>will destroy data</I
+></SPAN
+>,
+        namely all the rows on the damaged page.  However, it does allow you to get
+        past the error and retrieve rows from any undamaged pages that might
+        be present in the table.  It is useful for recovering data if
+        corruption has occurred due to a hardware or software error.  You should
+        generally not set this on until you have given up hope of recovering
+        data from the damaged pages of a table.  Zeroed-out pages are not
+        forced to disk so it is recommended to recreate the table or
+        the index before turning this parameter off again.  The
+        default setting is <TT
+CLASS="LITERAL"
+>off</TT
+>, and it can only be changed
+        by a superuser.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime-config-custom.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="runtime-config-short.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Customized Options</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="runtime-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Short Options</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,522 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>CLUSTER</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="CLOSE"
+HREF="sql-close.html"><LINK
+REL="NEXT"
+TITLE="COMMENT"
+HREF="sql-comment.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="CLOSE"
+HREF="sql-close.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="COMMENT"
+HREF="sql-comment.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-CLUSTER"
+></A
+>CLUSTER</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN73742"
+></A
+><H2
+>Name</H2
+>CLUSTER&nbsp;--&nbsp;cluster a table according to an index</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN73745"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>CLUSTER [VERBOSE] <TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+> [ USING <TT
+CLASS="REPLACEABLE"
+><I
+>index_name</I
+></TT
+> ]
+CLUSTER [VERBOSE]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN73749"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+> instructs <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+   to cluster the table specified
+   by <TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+>
+   based on the index specified by
+   <TT
+CLASS="REPLACEABLE"
+><I
+>index_name</I
+></TT
+>. The index must
+   already have been defined on
+   <TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+>.
+  </P
+><P
+>   When a table is clustered, it is physically reordered
+   based on the index information. Clustering is a one-time operation:
+   when the table is subsequently updated, the changes are
+   not clustered.  That is, no attempt is made to store new or
+   updated rows according to their index order.  (If one wishes, one can
+   periodically recluster by issuing the command again.  Also, setting
+   the table's <TT
+CLASS="LITERAL"
+>fillfactor</TT
+> storage parameter to less than
+   100% can aid in preserving cluster ordering during updates, since updated
+   rows are kept on the same page if enough space is available there.)
+  </P
+><P
+>   When a table is clustered, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+   remembers which index it was clustered by.  The form
+   <TT
+CLASS="COMMAND"
+>CLUSTER <TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+></TT
+>
+   reclusters the table using the same index as before.  You can also
+   use the <TT
+CLASS="LITERAL"
+>CLUSTER</TT
+> or <TT
+CLASS="LITERAL"
+>SET WITHOUT CLUSTER</TT
+>
+   forms of <A
+HREF="sql-altertable.html"
+>ALTER TABLE</A
+> to set the index to be used for
+   future cluster operations, or to clear any previous setting.
+  </P
+><P
+>   <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+> without any parameter reclusters all the
+   previously-clustered tables in the current database that the calling user
+   owns, or all such tables if called by a superuser.  This
+   form of <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+> cannot be executed inside a transaction
+   block.
+  </P
+><P
+>   When a table is being clustered, an <TT
+CLASS="LITERAL"
+>ACCESS
+   EXCLUSIVE</TT
+> lock is acquired on it. This prevents any other
+   database operations (both reads and writes) from operating on the
+   table until the <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+> is finished.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN73772"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+></DT
+><DD
+><P
+>      The name (possibly schema-qualified) of a table.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>index_name</I
+></TT
+></DT
+><DD
+><P
+>      The name of an index.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>VERBOSE</TT
+></DT
+><DD
+><P
+>      Prints a progress report as each table is clustered.
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN73790"
+></A
+><H2
+>Notes</H2
+><P
+>    In cases where you are accessing single rows randomly
+    within a table, the actual order of the data in the
+    table is unimportant. However, if you tend to access some
+    data more than others, and there is an index that groups
+    them together, you will benefit from using <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+>.
+    If you are requesting a range of indexed values from a table, or a
+    single indexed value that has multiple rows that match,
+    <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+> will help because once the index identifies the
+    table page for the first row that matches, all other rows
+    that match are probably already on the same table page,
+    and so you save disk accesses and speed up the query.
+   </P
+><P
+>    <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+> can re-sort the table using either an index scan
+    on the specified index, or (if the index is a b-tree) a sequential
+    scan followed by sorting.  It will attempt to choose the method that
+    will be faster, based on planner cost parameters and available statistical
+    information.
+   </P
+><P
+>    When an index scan is used, a temporary copy of the table is created that
+    contains the table data in the index order.  Temporary copies of each
+    index on the table are created as well.  Therefore, you need free space on
+    disk at least equal to the sum of the table size and the index sizes.
+   </P
+><P
+>    When a sequential scan and sort is used, a temporary sort file is
+    also created, so that the peak temporary space requirement is as much
+    as double the table size, plus the index sizes.  This method is often
+    faster than the index scan method, but if the disk space requirement is
+    intolerable, you can disable this choice by temporarily setting <A
+HREF="runtime-config-query.html#GUC-ENABLE-SORT"
+>enable_sort</A
+> to <TT
+CLASS="LITERAL"
+>off</TT
+>.
+   </P
+><P
+>    It is advisable to set <A
+HREF="runtime-config-resource.html#GUC-MAINTENANCE-WORK-MEM"
+>maintenance_work_mem</A
+> to
+    a reasonably large value (but not more than the amount of RAM you can
+    dedicate to the <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+> operation) before clustering.
+   </P
+><P
+>    Because the planner records statistics about the ordering of
+    tables, it is advisable to run <A
+HREF="sql-analyze.html"
+>ANALYZE</A
+>
+    on the newly clustered table.
+    Otherwise, the planner might make poor choices of query plans.
+   </P
+><P
+>    Because <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+> remembers which indexes are clustered,
+    one can cluster the tables one wants clustered manually the first time,
+    then set up a periodic maintenance script that executes
+    <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+> without any parameters, so that the desired tables
+    are periodically reclustered.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN73809"
+></A
+><H2
+>Examples</H2
+><P
+>   Cluster the table <TT
+CLASS="LITERAL"
+>employees</TT
+> on the basis of
+   its index <TT
+CLASS="LITERAL"
+>employees_ind</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CLUSTER employees USING employees_ind;</PRE
+><P>
+  </P
+><P
+>   Cluster the <TT
+CLASS="LITERAL"
+>employees</TT
+> table using the same
+   index that was used before:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CLUSTER employees;</PRE
+><P>
+  </P
+><P
+>   Cluster all tables in the database that have previously been clustered:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CLUSTER;</PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN73820"
+></A
+><H2
+>Compatibility</H2
+><P
+>   There is no <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+> statement in the SQL standard.
+  </P
+><P
+>   The syntax
+</P><PRE
+CLASS="SYNOPSIS"
+>CLUSTER <TT
+CLASS="REPLACEABLE"
+><I
+>index_name</I
+></TT
+> ON <TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+></PRE
+><P>
+  is also supported for compatibility with pre-8.3 <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+  versions.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN73829"
+></A
+><H2
+>See Also</H2
+><A
+HREF="app-clusterdb.html"
+><SPAN
+CLASS="APPLICATION"
+>clusterdb</SPAN
+></A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-close.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-comment.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>CLOSE</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>COMMENT</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

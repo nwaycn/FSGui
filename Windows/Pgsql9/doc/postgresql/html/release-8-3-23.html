@@ -1,0 +1,380 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.3.23</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.4"
+HREF="release-8-4.html"><LINK
+REL="NEXT"
+TITLE="Release 8.3.22"
+HREF="release-8-3-22.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.4"
+HREF="release-8-4.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.3.22"
+HREF="release-8-3-22.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-3-23"
+>E.121. Release 8.3.23</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2013-02-07</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.3.22.
+   For information about new features in the 8.3 major release, see
+   <A
+HREF="release-8-3.html"
+>Section E.144</A
+>.
+  </P
+><P
+>   This is expected to be the last <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> release
+   in the 8.3.X series.  Users are encouraged to update to a newer
+   release branch soon.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN151541"
+>E.121.1. Migration to Version 8.3.23</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.3.X.
+   </P
+><P
+>    However, if you are upgrading from a version earlier than 8.3.17,
+    see <A
+HREF="release-8-3-17.html"
+>Section E.127</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN151546"
+>E.121.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Prevent execution of <CODE
+CLASS="FUNCTION"
+>enum_recv</CODE
+> from SQL (Tom Lane)
+     </P
+><P
+>      The function was misdeclared, allowing a simple SQL command to crash the
+      server.  In principle an attacker might be able to use it to examine the
+      contents of server memory.  Our thanks to Sumit Soni (via Secunia SVCRP)
+      for reporting this issue.  (CVE-2013-0255)
+     </P
+></LI
+><LI
+><P
+>      Fix SQL grammar to allow subscripting or field selection from a
+      sub-SELECT result (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Protect against race conditions when scanning
+      <TT
+CLASS="STRUCTNAME"
+>pg_tablespace</TT
+> (Stephen Frost, Tom Lane)
+     </P
+><P
+>      <TT
+CLASS="COMMAND"
+>CREATE DATABASE</TT
+> and <TT
+CLASS="COMMAND"
+>DROP DATABASE</TT
+> could
+      misbehave if there were concurrent updates of
+      <TT
+CLASS="STRUCTNAME"
+>pg_tablespace</TT
+> entries.
+     </P
+></LI
+><LI
+><P
+>      Prevent <TT
+CLASS="COMMAND"
+>DROP OWNED</TT
+> from trying to drop whole databases or
+      tablespaces (&Aacute;lvaro Herrera)
+     </P
+><P
+>      For safety, ownership of these objects must be reassigned, not dropped.
+     </P
+></LI
+><LI
+><P
+>      Prevent misbehavior when a <TT
+CLASS="SYMBOL"
+>RowExpr</TT
+> or <TT
+CLASS="SYMBOL"
+>XmlExpr</TT
+>
+      is parse-analyzed twice (Andres Freund, Tom Lane)
+     </P
+><P
+>      This mistake could be user-visible in contexts such as
+      <TT
+CLASS="LITERAL"
+>CREATE TABLE LIKE INCLUDING INDEXES</TT
+>.
+     </P
+></LI
+><LI
+><P
+>      Improve defenses against integer overflow in hashtable sizing
+      calculations (Jeff Davis)
+     </P
+></LI
+><LI
+><P
+>      Ensure that non-ASCII prompt strings are translated to the correct
+      code page on Windows (Alexander Law, Noah Misch)
+     </P
+><P
+>      This bug affected <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> and some other client programs.
+     </P
+></LI
+><LI
+><P
+>      Fix possible crash in <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s <TT
+CLASS="COMMAND"
+>\?</TT
+> command
+      when not connected to a database (Meng Qingzhong)
+     </P
+></LI
+><LI
+><P
+>      Fix one-byte buffer overrun in <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>'s
+      <CODE
+CLASS="FUNCTION"
+>PQprintTuples</CODE
+> (Xi Wang)
+     </P
+><P
+>      This ancient function is not used anywhere by
+      <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> itself, but it might still be used by some
+      client code.
+     </P
+></LI
+><LI
+><P
+>      Rearrange configure's tests for supplied functions so it is not
+      fooled by bogus exports from libedit/libreadline (Christoph Berg)
+     </P
+></LI
+><LI
+><P
+>      Ensure Windows build number increases over time (Magnus Hagander)
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>pgxs</SPAN
+> build executables with the right
+      <TT
+CLASS="LITERAL"
+>.exe</TT
+> suffix when cross-compiling for Windows
+      (Zoltan Boszormenyi)
+     </P
+></LI
+><LI
+><P
+>      Add new timezone abbreviation <TT
+CLASS="LITERAL"
+>FET</TT
+> (Tom Lane)
+     </P
+><P
+>      This is now used in some eastern-European time zones.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-4.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-3-22.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.4</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.3.22</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

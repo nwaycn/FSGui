@@ -1,0 +1,388 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.2.12</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.2.13"
+HREF="release-8-2-13.html"><LINK
+REL="NEXT"
+TITLE="Release 8.2.11"
+HREF="release-8-2-11.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.2.13"
+HREF="release-8-2-13.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.2.11"
+HREF="release-8-2-11.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-2-12"
+>E.156. Release 8.2.12</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2009-02-02</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.2.11.
+   For information about new features in the 8.2 major release, see
+   <A
+HREF="release-8-2.html"
+>Section E.168</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN155908"
+>E.156.1. Migration to Version 8.2.12</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.2.X.
+    However, if you are upgrading from a version earlier than 8.2.11,
+    see <A
+HREF="release-8-2-11.html"
+>Section E.157</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN155912"
+>E.156.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Improve handling of URLs in <CODE
+CLASS="FUNCTION"
+>headline()</CODE
+> function (Teodor)
+     </P
+></LI
+><LI
+><P
+>      Improve handling of overlength headlines in <CODE
+CLASS="FUNCTION"
+>headline()</CODE
+>
+      function (Teodor)
+     </P
+></LI
+><LI
+><P
+>      Prevent possible Assert failure or misconversion if an encoding
+      conversion is created with the wrong conversion function for the
+      specified pair of encodings (Tom, Heikki)
+     </P
+></LI
+><LI
+><P
+>      Fix possible Assert failure if a statement executed in PL/pgSQL is
+      rewritten into another kind of statement, for example if an
+      <TT
+CLASS="COMMAND"
+>INSERT</TT
+> is rewritten into an <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> (Heikki)
+     </P
+></LI
+><LI
+><P
+>      Ensure that a snapshot is available to datatype input functions (Tom)
+     </P
+><P
+>      This primarily affects domains that are declared with <TT
+CLASS="LITERAL"
+>CHECK</TT
+>
+      constraints involving user-defined stable or immutable functions.  Such
+      functions typically fail if no snapshot has been set.
+     </P
+></LI
+><LI
+><P
+>      Make it safer for SPI-using functions to be used within datatype I/O;
+      in particular, to be used in domain check constraints (Tom)
+     </P
+></LI
+><LI
+><P
+>      Avoid unnecessary locking of small tables in <TT
+CLASS="COMMAND"
+>VACUUM</TT
+>
+      (Heikki)
+     </P
+></LI
+><LI
+><P
+>      Fix a problem that made <TT
+CLASS="LITERAL"
+>UPDATE RETURNING tableoid</TT
+>
+      return zero instead of the correct OID (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix planner misestimation of selectivity when transitive equality
+      is applied to an outer-join clause (Tom)
+     </P
+><P
+>      This could result in bad plans for queries like
+      <TT
+CLASS="LITERAL"
+>... from a left join b on a.a1 = b.b1 where a.a1 = 42 ...</TT
+>
+     </P
+></LI
+><LI
+><P
+>      Improve optimizer's handling of long <TT
+CLASS="LITERAL"
+>IN</TT
+> lists (Tom)
+     </P
+><P
+>      This change avoids wasting large amounts of time on such lists
+      when constraint exclusion is enabled.
+     </P
+></LI
+><LI
+><P
+>      Ensure that the contents of a holdable cursor don't depend on the
+      contents of TOAST tables (Tom)
+     </P
+><P
+>      Previously, large field values in a cursor result might be represented
+      as TOAST pointers, which would fail if the referenced table got dropped
+      before the cursor is read, or if the large value is deleted and then
+      vacuumed away.  This cannot happen with an ordinary cursor,
+      but it could with a cursor that is held past its creating transaction.
+     </P
+></LI
+><LI
+><P
+>      Fix memory leak when a set-returning function is terminated without
+      reading its whole result (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="FILENAME"
+>contrib/dblink</TT
+>'s
+      <CODE
+CLASS="FUNCTION"
+>dblink_get_result(text,bool)</CODE
+> function (Joe)
+     </P
+></LI
+><LI
+><P
+>      Fix possible garbage output from <TT
+CLASS="FILENAME"
+>contrib/sslinfo</TT
+> functions
+      (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>configure</SPAN
+> script to properly report failure when
+      unable to obtain linkage information for PL/Perl (Andrew)
+     </P
+></LI
+><LI
+><P
+>      Make all documentation reference <TT
+CLASS="LITERAL"
+>pgsql-bugs</TT
+> and/or
+      <TT
+CLASS="LITERAL"
+>pgsql-hackers</TT
+> as appropriate, instead of the
+      now-decommissioned <TT
+CLASS="LITERAL"
+>pgsql-ports</TT
+> and <TT
+CLASS="LITERAL"
+>pgsql-patches</TT
+>
+      mailing lists (Tom)
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2009a (for
+      Kathmandu and historical DST corrections in Switzerland, Cuba)
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-2-13.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-2-11.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.2.13</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.2.11</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

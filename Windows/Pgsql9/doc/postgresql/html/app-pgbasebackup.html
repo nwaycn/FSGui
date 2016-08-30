@@ -1,0 +1,1363 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_basebackup</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="PostgreSQL Client Applications"
+HREF="reference-client.html"><LINK
+REL="PREVIOUS"
+TITLE="ecpg"
+HREF="app-ecpg.html"><LINK
+REL="NEXT"
+TITLE="pgbench"
+HREF="pgbench.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="ecpg"
+HREF="app-ecpg.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="reference-client.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pgbench"
+HREF="pgbench.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="APP-PGBASEBACKUP"
+></A
+>pg_basebackup</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN90898"
+></A
+><H2
+>Name</H2
+>pg_basebackup&nbsp;--&nbsp;take a base backup of a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> cluster</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN90902"
+></A
+><H2
+>Synopsis</H2
+><P
+><TT
+CLASS="COMMAND"
+>pg_basebackup</TT
+> [<TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+>...]</P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN90907"
+></A
+><H2
+>   Description
+  </H2
+><P
+>   <SPAN
+CLASS="APPLICATION"
+>pg_basebackup</SPAN
+> is used to take base backups of
+   a running <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> database cluster. These
+   are taken without affecting other clients to the database, and can be used
+   both for point-in-time recovery (see <A
+HREF="continuous-archiving.html"
+>Section 24.3</A
+>)
+   and as the starting point for a log shipping or streaming replication standby
+   servers (see <A
+HREF="warm-standby.html"
+>Section 25.2</A
+>).
+  </P
+><P
+>   <SPAN
+CLASS="APPLICATION"
+>pg_basebackup</SPAN
+> makes a binary copy of the database
+   cluster files, while making sure the system is put in and
+   out of backup mode automatically. Backups are always taken of the entire
+   database cluster; it is not possible to back up individual databases or
+   database objects. For individual database backups, a tool such as
+   <A
+HREF="app-pgdump.html"
+>pg_dump</A
+> must be used.
+  </P
+><P
+>   The backup is made over a regular <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+   connection, and uses the replication protocol. The connection must be made
+   with a superuser or a user having <TT
+CLASS="LITERAL"
+>REPLICATION</TT
+>
+   permissions (see <A
+HREF="role-attributes.html"
+>Section 20.2</A
+>),
+   and <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> must explicitly permit the replication
+   connection. The server must also be configured
+   with <A
+HREF="runtime-config-replication.html#GUC-MAX-WAL-SENDERS"
+>max_wal_senders</A
+> set high enough to leave at least
+   one session available for the backup.
+  </P
+><P
+>   There can be multiple <TT
+CLASS="COMMAND"
+>pg_basebackup</TT
+>s running at the same time, but it is
+   better from a performance point of view to take only one backup, and copy
+   the result.
+  </P
+><P
+>   <SPAN
+CLASS="APPLICATION"
+>pg_basebackup</SPAN
+> can make a base backup from
+   not only the master but also the standby. To take a backup from the standby,
+   set up the standby so that it can accept replication connections (that is, set
+   <TT
+CLASS="VARNAME"
+>max_wal_senders</TT
+> and <A
+HREF="runtime-config-replication.html#GUC-HOT-STANDBY"
+>hot_standby</A
+>,
+   and configure <A
+HREF="auth-pg-hba-conf.html"
+>host-based authentication</A
+>).
+   You will also need to enable <A
+HREF="runtime-config-wal.html#GUC-FULL-PAGE-WRITES"
+>full_page_writes</A
+> on the master.
+  </P
+><P
+>   Note that there are some limitations in an online backup from the standby:
+
+   <P
+></P
+></P><UL
+><LI
+><P
+>      The backup history file is not created in the database cluster backed up.
+     </P
+></LI
+><LI
+><P
+>      There is no guarantee that all WAL files required for the backup are archived
+      at the end of backup. If you are planning to use the backup for an archive
+      recovery and want to ensure that all required files are available at that moment,
+      you need to include them into the backup by using <TT
+CLASS="LITERAL"
+>-x</TT
+> option.
+     </P
+></LI
+><LI
+><P
+>      If the standby is promoted to the master during online backup, the backup fails.
+     </P
+></LI
+><LI
+><P
+>      All WAL records required for the backup must contain sufficient full-page writes,
+      which requires you to enable <TT
+CLASS="VARNAME"
+>full_page_writes</TT
+> on the master and
+      not to use a tool like <SPAN
+CLASS="APPLICATION"
+>pg_compresslog</SPAN
+> as
+      <TT
+CLASS="VARNAME"
+>archive_command</TT
+> to remove full-page writes from WAL files.
+     </P
+></LI
+></UL
+><P>
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN90945"
+></A
+><H2
+>Options</H2
+><P
+>    The following command-line options control the location and format of the
+    output.
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-D <TT
+CLASS="REPLACEABLE"
+><I
+>directory</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--pgdata=<TT
+CLASS="REPLACEABLE"
+><I
+>directory</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Directory to write the output to.
+        <SPAN
+CLASS="APPLICATION"
+>pg_basebackup</SPAN
+> will create the directory and
+        any parent directories if necessary.  The directory may already exist,
+        but it is an error if the directory already exists and is not empty.
+       </P
+><P
+>        When the backup is in tar mode, and the directory is specified as
+        <TT
+CLASS="LITERAL"
+>-</TT
+> (dash), the tar file will be written to
+        <TT
+CLASS="LITERAL"
+>stdout</TT
+>.
+       </P
+><P
+>        This option is required.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-F <TT
+CLASS="REPLACEABLE"
+><I
+>format</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--format=<TT
+CLASS="REPLACEABLE"
+><I
+>format</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Selects the format for the output. <TT
+CLASS="REPLACEABLE"
+><I
+>format</I
+></TT
+>
+        can be one of the following:
+
+        <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>p</TT
+><BR><TT
+CLASS="LITERAL"
+>plain</TT
+></DT
+><DD
+><P
+>            Write the output as plain files, with the same layout as the
+            current data directory and tablespaces. When the cluster has
+            no additional tablespaces, the whole database will be placed in
+            the target directory. If the cluster contains additional
+            tablespaces, the main data directory will be placed in the
+            target directory, but all other tablespaces will be placed
+            in the same absolute path as they have on the server.
+           </P
+><P
+>            This is the default format.
+           </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>t</TT
+><BR><TT
+CLASS="LITERAL"
+>tar</TT
+></DT
+><DD
+><P
+>            Write the output as tar files in the target directory. The main
+            data directory will be written to a file named
+            <TT
+CLASS="FILENAME"
+>base.tar</TT
+>, and all other tablespaces will
+            be named after the tablespace OID.
+            </P
+><P
+>            If the value <TT
+CLASS="LITERAL"
+>-</TT
+> (dash) is specified as
+            target directory, the tar contents will be written to
+            standard output, suitable for piping to for example
+            <SPAN
+CLASS="PRODUCTNAME"
+>gzip</SPAN
+>. This is only possible if
+            the cluster has no additional tablespaces.
+           </P
+></DD
+></DL
+></DIV
+><P></P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-r <TT
+CLASS="REPLACEABLE"
+><I
+>rate</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--max-rate=<TT
+CLASS="REPLACEABLE"
+><I
+>rate</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        The maximum transfer rate of data transferred from the server.  Values are
+        in kilobytes per second.  Use a suffix of <TT
+CLASS="LITERAL"
+>M</TT
+> to indicate megabytes
+        per second.  A suffix of <TT
+CLASS="LITERAL"
+>k</TT
+> is also accepted, and has no effect.
+        Valid values are between 32 kilobytes per second and 1024 megabytes per second.
+       </P
+><P
+>        The purpose is to limit the impact of <SPAN
+CLASS="APPLICATION"
+>pg_basebackup</SPAN
+>
+        on the running server.
+       </P
+><P
+>        This option always affects transfer of the data directory. Transfer of
+        WAL files is only affected if the collection method is <TT
+CLASS="LITERAL"
+>fetch</TT
+>.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-R</TT
+><BR><TT
+CLASS="OPTION"
+>--write-recovery-conf</TT
+></DT
+><DD
+><P
+>        Write a minimal <TT
+CLASS="FILENAME"
+>recovery.conf</TT
+> in the output directory (or into
+        the base archive file when using tar format) to ease setting
+        up a standby server.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-T <TT
+CLASS="REPLACEABLE"
+><I
+>olddir</I
+></TT
+>=<TT
+CLASS="REPLACEABLE"
+><I
+>newdir</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--tablespace-mapping=<TT
+CLASS="REPLACEABLE"
+><I
+>olddir</I
+></TT
+>=<TT
+CLASS="REPLACEABLE"
+><I
+>newdir</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Relocate the tablespace in directory <TT
+CLASS="REPLACEABLE"
+><I
+>olddir</I
+></TT
+>
+        to <TT
+CLASS="REPLACEABLE"
+><I
+>newdir</I
+></TT
+> during the backup.  To be
+        effective, <TT
+CLASS="REPLACEABLE"
+><I
+>olddir</I
+></TT
+> must exactly match the
+        path specification of the tablespace as it is currently defined.  (But
+        it is not an error if there is no tablespace
+        in <TT
+CLASS="REPLACEABLE"
+><I
+>olddir</I
+></TT
+> contained in the backup.)
+        Both <TT
+CLASS="REPLACEABLE"
+><I
+>olddir</I
+></TT
+>
+        and <TT
+CLASS="REPLACEABLE"
+><I
+>newdir</I
+></TT
+> must be absolute paths.  If a
+        path happens to contain a <TT
+CLASS="LITERAL"
+>=</TT
+> sign, escape it with a
+        backslash.  This option can be specified multiple times for multiple
+        tablespaces.  See examples below.
+       </P
+><P
+>        If a tablespace is relocated in this way, the symbolic links inside
+        the main data directory are updated to point to the new location.  So
+        the new data directory is ready to be used for a new server instance
+        with all tablespaces in the updated locations.
+        </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>--xlogdir=<TT
+CLASS="REPLACEABLE"
+><I
+>xlogdir</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Specifies the location for the transaction log directory.
+        <TT
+CLASS="REPLACEABLE"
+><I
+>xlogdir</I
+></TT
+> must be an absolute path.
+        The transaction log directory can only be specified when
+        the backup is in plain mode.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-x</TT
+><BR><TT
+CLASS="OPTION"
+>--xlog</TT
+></DT
+><DD
+><P
+>        Using this option is equivalent of using <TT
+CLASS="LITERAL"
+>-X</TT
+> with
+        method <TT
+CLASS="LITERAL"
+>fetch</TT
+>.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-X <TT
+CLASS="REPLACEABLE"
+><I
+>method</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--xlog-method=<TT
+CLASS="REPLACEABLE"
+><I
+>method</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Includes the required transaction log files (WAL files) in the
+        backup. This will include all transaction logs generated during
+        the backup. If this option is specified, it is possible to start
+        a postmaster directly in the extracted directory without the need
+        to consult the log archive, thus making this a completely standalone
+        backup.
+       </P
+><P
+>        The following methods for collecting the transaction logs are
+        supported:
+
+        <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>f</TT
+><BR><TT
+CLASS="LITERAL"
+>fetch</TT
+></DT
+><DD
+><P
+>            The transaction log files are collected at the end of the backup.
+            Therefore, it is necessary for the
+            <A
+HREF="runtime-config-replication.html#GUC-WAL-KEEP-SEGMENTS"
+>wal_keep_segments</A
+> parameter to be set high
+             enough that the log is not removed before the end of the backup.
+             If the log has been rotated when it's time to transfer it, the
+             backup will fail and be unusable.
+           </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>s</TT
+><BR><TT
+CLASS="LITERAL"
+>stream</TT
+></DT
+><DD
+><P
+>            Stream the transaction log while the backup is created. This will
+            open a second connection to the server and start streaming the
+            transaction log in parallel while running the backup. Therefore,
+            it will use up two connections configured by the
+            <A
+HREF="runtime-config-replication.html#GUC-MAX-WAL-SENDERS"
+>max_wal_senders</A
+> parameter. As long as the
+             client can keep up with transaction log received, using this mode
+             requires no extra transaction logs to be saved on the master.
+           </P
+></DD
+></DL
+></DIV
+><P>
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-z</TT
+><BR><TT
+CLASS="OPTION"
+>--gzip</TT
+></DT
+><DD
+><P
+>        Enables gzip compression of tar file output, with the default
+        compression level. Compression is only available when using
+        the tar format.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-Z <TT
+CLASS="REPLACEABLE"
+><I
+>level</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--compress=<TT
+CLASS="REPLACEABLE"
+><I
+>level</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Enables gzip compression of tar file output, and specifies the
+        compression level (0 through 9, 0 being no compression and 9 being best
+        compression). Compression is only available when using the tar
+        format.
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+><P
+>    The following command-line options control the generation of the
+    backup and the running of the program.
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-c <TT
+CLASS="REPLACEABLE"
+><I
+>fast|spread</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--checkpoint=<TT
+CLASS="REPLACEABLE"
+><I
+>fast|spread</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Sets checkpoint mode to fast or spread (default) (see <A
+HREF="continuous-archiving.html#BACKUP-LOWLEVEL-BASE-BACKUP"
+>Section 24.3.3</A
+>).
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-l <TT
+CLASS="REPLACEABLE"
+><I
+>label</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--label=<TT
+CLASS="REPLACEABLE"
+><I
+>label</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Sets the label for the backup. If none is specified, a default value of
+        <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="LITERAL"
+>pg_basebackup base backup</TT
+>"</SPAN
+> will be used.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-P</TT
+><BR><TT
+CLASS="OPTION"
+>--progress</TT
+></DT
+><DD
+><P
+>        Enables progress reporting. Turning this on will deliver an approximate
+        progress report during the backup. Since the database may change during
+        the backup, this is only an approximation and may not end at exactly
+        <TT
+CLASS="LITERAL"
+>100%</TT
+>. In particular, when WAL log is included in the
+        backup, the total amount of data cannot be estimated in advance, and
+        in this case the estimated target size will increase once it passes the
+        total estimate without WAL.
+       </P
+><P
+>        When this is enabled, the backup will start by enumerating the size of
+        the entire database, and then go back and send the actual contents.
+        This may make the backup take slightly longer, and in particular it
+        will take longer before the first data is sent.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-v</TT
+><BR><TT
+CLASS="OPTION"
+>--verbose</TT
+></DT
+><DD
+><P
+>        Enables verbose mode. Will output some extra steps during startup and
+        shutdown, as well as show the exact file name that is currently being
+        processed if progress reporting is also enabled.
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+><P
+>    The following command-line options control the database connection parameters.
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-d <TT
+CLASS="REPLACEABLE"
+><I
+>connstr</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--dbname=<TT
+CLASS="REPLACEABLE"
+><I
+>connstr</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Specifies parameters used to connect to the server, as a connection
+        string. See <A
+HREF="libpq-connect.html#LIBPQ-CONNSTRING"
+>Section 31.1.1</A
+> for more information.
+       </P
+><P
+>        The option is called <TT
+CLASS="LITERAL"
+>--dbname</TT
+> for consistency with other
+        client applications, but because <SPAN
+CLASS="APPLICATION"
+>pg_basebackup</SPAN
+>
+        doesn't connect to any particular database in the cluster, database
+        name in the connection string will be ignored.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-h <TT
+CLASS="REPLACEABLE"
+><I
+>host</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--host=<TT
+CLASS="REPLACEABLE"
+><I
+>host</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Specifies the host name of the machine on which the server is
+        running.  If the value begins with a slash, it is used as the
+        directory for the Unix domain socket. The default is taken
+        from the <TT
+CLASS="ENVAR"
+>PGHOST</TT
+> environment variable, if set,
+        else a Unix domain socket connection is attempted.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-p <TT
+CLASS="REPLACEABLE"
+><I
+>port</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--port=<TT
+CLASS="REPLACEABLE"
+><I
+>port</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Specifies the TCP port or local Unix domain socket file
+        extension on which the server is listening for connections.
+        Defaults to the <TT
+CLASS="ENVAR"
+>PGPORT</TT
+> environment variable, if
+        set, or a compiled-in default.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-s <TT
+CLASS="REPLACEABLE"
+><I
+>interval</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--status-interval=<TT
+CLASS="REPLACEABLE"
+><I
+>interval</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Specifies the number of seconds between status packets sent back to the
+        server. This allows for easier monitoring of the progress from server.
+        A value of zero disables the periodic status updates completely,
+        although an update will still be sent when requested by the server, to
+        avoid timeout disconnect. The default value is 10 seconds.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-U <TT
+CLASS="REPLACEABLE"
+><I
+>username</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--username=<TT
+CLASS="REPLACEABLE"
+><I
+>username</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        User name to connect as.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-w</TT
+><BR><TT
+CLASS="OPTION"
+>--no-password</TT
+></DT
+><DD
+><P
+>        Never issue a password prompt.  If the server requires
+        password authentication and a password is not available by
+        other means such as a <TT
+CLASS="FILENAME"
+>.pgpass</TT
+> file, the
+        connection attempt will fail.  This option can be useful in
+        batch jobs and scripts where no user is present to enter a
+        password.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-W</TT
+><BR><TT
+CLASS="OPTION"
+>--password</TT
+></DT
+><DD
+><P
+>        Force <SPAN
+CLASS="APPLICATION"
+>pg_basebackup</SPAN
+> to prompt for a
+        password before connecting to a database.
+       </P
+><P
+>        This option is never essential, since
+        <SPAN
+CLASS="APPLICATION"
+>pg_basebackup</SPAN
+> will automatically prompt
+        for a password if the server demands password authentication.
+        However, <SPAN
+CLASS="APPLICATION"
+>pg_basebackup</SPAN
+> will waste a
+        connection attempt finding out that the server wants a password.
+        In some cases it is worth typing <TT
+CLASS="OPTION"
+>-W</TT
+> to avoid the extra
+        connection attempt.
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+><P
+>    Other options are also available:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-V</TT
+><BR><TT
+CLASS="OPTION"
+>--version</TT
+></DT
+><DD
+><P
+>       Print the <SPAN
+CLASS="APPLICATION"
+>pg_basebackup</SPAN
+> version and exit.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-?</TT
+><BR><TT
+CLASS="OPTION"
+>--help</TT
+></DT
+><DD
+><P
+>       Show help about <SPAN
+CLASS="APPLICATION"
+>pg_basebackup</SPAN
+> command line
+       arguments, and exit.
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN91224"
+></A
+><H2
+>Environment</H2
+><P
+>   This utility, like most other <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> utilities,
+   uses the environment variables supported by <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>
+   (see <A
+HREF="libpq-envars.html"
+>Section 31.14</A
+>).
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN91230"
+></A
+><H2
+>Notes</H2
+><P
+>   The backup will include all files in the data directory and tablespaces,
+   including the configuration files and any additional files placed in the
+   directory by third parties. But only regular files and directories are
+   copied.  Symbolic links (other than those used for tablespaces) and special
+   device files are skipped.  (See <A
+HREF="protocol-replication.html"
+>Section 50.3</A
+> for
+   the precise details.)
+  </P
+><P
+>   Tablespaces will in plain format by default be backed up to the same path
+   they have on the server, unless the
+   option <TT
+CLASS="LITERAL"
+>--tablespace-mapping</TT
+> is used.  Without
+   this option, running a plain format base backup on the same host as the
+   server will not work if tablespaces are in use, because the backup would
+   have to be written to the same directory locations as the original
+   tablespaces.
+  </P
+><P
+>   When tar format mode is used, it is the user's responsibility to unpack each
+   tar file before starting the PostgreSQL server. If there are additional tablespaces, the
+   tar files for them need to be unpacked in the correct locations. In this
+   case the symbolic links for those tablespaces will be created by the server
+   according to the contents of the <TT
+CLASS="FILENAME"
+>tablespace_map</TT
+> file that is
+   included in the <TT
+CLASS="FILENAME"
+>base.tar</TT
+> file.
+  </P
+><P
+>   <SPAN
+CLASS="APPLICATION"
+>pg_basebackup</SPAN
+> works with servers of the same
+   or an older major version, down to 9.1. However, WAL streaming mode (<TT
+CLASS="LITERAL"
+>-X
+   stream</TT
+>) only works with server version 9.3 and later, and tar format mode
+   (<TT
+CLASS="LITERAL"
+>--format=tar</TT
+>) of the current version only works with server version 9.5
+   or later.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN91243"
+></A
+><H2
+>Examples</H2
+><P
+>   To create a base backup of the server at <TT
+CLASS="LITERAL"
+>mydbserver</TT
+>
+   and store it in the local directory
+   <TT
+CLASS="FILENAME"
+>/usr/local/pgsql/data</TT
+>:
+</P><PRE
+CLASS="SCREEN"
+><SAMP
+CLASS="PROMPT"
+>$</SAMP
+> <KBD
+CLASS="USERINPUT"
+>pg_basebackup -h mydbserver -D /usr/local/pgsql/data</KBD
+></PRE
+><P>
+  </P
+><P
+>   To create a backup of the local server with one compressed
+   tar file for each tablespace, and store it in the directory
+   <TT
+CLASS="FILENAME"
+>backup</TT
+>, showing a progress report while running:
+</P><PRE
+CLASS="SCREEN"
+><SAMP
+CLASS="PROMPT"
+>$</SAMP
+> <KBD
+CLASS="USERINPUT"
+>pg_basebackup -D backup -Ft -z -P</KBD
+></PRE
+><P>
+  </P
+><P
+>   To create a backup of a single-tablespace local database and compress
+   this with <SPAN
+CLASS="PRODUCTNAME"
+>bzip2</SPAN
+>:
+</P><PRE
+CLASS="SCREEN"
+><SAMP
+CLASS="PROMPT"
+>$</SAMP
+> <KBD
+CLASS="USERINPUT"
+>pg_basebackup -D - -Ft | bzip2 &gt; backup.tar.bz2</KBD
+></PRE
+><P>
+   (This command will fail if there are multiple tablespaces in the
+   database.)
+  </P
+><P
+>   To create a backup of a local database where the tablespace in
+   <TT
+CLASS="FILENAME"
+>/opt/ts</TT
+> is relocated
+   to <TT
+CLASS="FILENAME"
+>./backup/ts</TT
+>:
+</P><PRE
+CLASS="SCREEN"
+><SAMP
+CLASS="PROMPT"
+>$</SAMP
+> <KBD
+CLASS="USERINPUT"
+>pg_basebackup -D backup/data -T /opt/ts=$(pwd)/backup/ts</KBD
+></PRE
+><P>
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN91267"
+></A
+><H2
+>See Also</H2
+><A
+HREF="app-pgdump.html"
+>pg_dump</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="app-ecpg.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="pgbench.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="reference-client.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

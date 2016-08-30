@@ -1,0 +1,716 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Miscellaneous Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="libpq - C Library"
+HREF="libpq.html"><LINK
+REL="PREVIOUS"
+TITLE="Control Functions"
+HREF="libpq-control.html"><LINK
+REL="NEXT"
+TITLE="Notice Processing"
+HREF="libpq-notice-processing.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Control Functions"
+HREF="libpq-control.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="libpq.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 31. <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> - C Library</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Notice Processing"
+HREF="libpq-notice-processing.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="LIBPQ-MISC"
+>31.11. Miscellaneous Functions</A
+></H1
+><P
+>   As always, there are some functions that just don't fit anywhere.
+  </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="LIBPQ-PQFREEMEM"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQfreemem</CODE
+>
+     </DT
+><DD
+><P
+>      Frees memory allocated by <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>.
+</P><PRE
+CLASS="SYNOPSIS"
+>void PQfreemem(void *ptr);</PRE
+><P>
+     </P
+><P
+>      Frees memory allocated by <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>, particularly
+      <CODE
+CLASS="FUNCTION"
+>PQescapeByteaConn</CODE
+>,
+      <CODE
+CLASS="FUNCTION"
+>PQescapeBytea</CODE
+>,
+      <CODE
+CLASS="FUNCTION"
+>PQunescapeBytea</CODE
+>,
+      and <CODE
+CLASS="FUNCTION"
+>PQnotifies</CODE
+>.
+      It is particularly important that this function, rather than
+      <CODE
+CLASS="FUNCTION"
+>free()</CODE
+>, be used on Microsoft Windows.  This is because
+      allocating memory in a DLL and releasing it in the application works
+      only if multithreaded/single-threaded, release/debug, and static/dynamic
+      flags are the same for the DLL and the application.  On non-Microsoft
+      Windows platforms, this function is the same as the standard library
+      function <CODE
+CLASS="FUNCTION"
+>free()</CODE
+>.
+     </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQCONNINFOFREE"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQconninfoFree</CODE
+>
+     </DT
+><DD
+><P
+>      Frees the data structures allocated by
+      <CODE
+CLASS="FUNCTION"
+>PQconndefaults</CODE
+> or <CODE
+CLASS="FUNCTION"
+>PQconninfoParse</CODE
+>.
+</P><PRE
+CLASS="SYNOPSIS"
+>void PQconninfoFree(PQconninfoOption *connOptions);</PRE
+><P>
+     </P
+><P
+>      A simple <CODE
+CLASS="FUNCTION"
+>PQfreemem</CODE
+> will not do for this, since
+      the array contains references to subsidiary strings.
+     </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQENCRYPTPASSWORD"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQencryptPassword</CODE
+>
+     </DT
+><DD
+><P
+>      Prepares the encrypted form of a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> password.
+</P><PRE
+CLASS="SYNOPSIS"
+>char * PQencryptPassword(const char *passwd, const char *user);</PRE
+><P>
+      This function is intended to be used by client applications that
+      wish to send commands like <TT
+CLASS="LITERAL"
+>ALTER USER joe PASSWORD
+      'pwd'</TT
+>.  It is good practice not to send the original cleartext
+      password in such a command, because it might be exposed in command
+      logs, activity displays, and so on.  Instead, use this function to
+      convert the password to encrypted form before it is sent.  The
+      arguments are the cleartext password, and the SQL name of the user
+      it is for.  The return value is a string allocated by
+      <CODE
+CLASS="FUNCTION"
+>malloc</CODE
+>, or <TT
+CLASS="SYMBOL"
+>NULL</TT
+> if out of
+      memory.  The caller can assume the string doesn't contain any
+      special characters that would require escaping.  Use
+      <CODE
+CLASS="FUNCTION"
+>PQfreemem</CODE
+> to free the result when done with it.
+     </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQMAKEEMPTYPGRESULT"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQmakeEmptyPGresult</CODE
+>
+     </DT
+><DD
+><P
+>      Constructs an empty <TT
+CLASS="STRUCTNAME"
+>PGresult</TT
+> object with the given status.
+</P><PRE
+CLASS="SYNOPSIS"
+>PGresult *PQmakeEmptyPGresult(PGconn *conn, ExecStatusType status);</PRE
+><P>
+     </P
+><P
+>      This is <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>'s internal function to allocate and
+      initialize an empty <TT
+CLASS="STRUCTNAME"
+>PGresult</TT
+> object.  This
+      function returns <TT
+CLASS="SYMBOL"
+>NULL</TT
+> if memory could not be allocated. It is
+      exported because some applications find it useful to generate result
+      objects (particularly objects with error status) themselves.  If
+      <TT
+CLASS="PARAMETER"
+>conn</TT
+> is not null and <TT
+CLASS="PARAMETER"
+>status</TT
+>
+      indicates an error, the current error message of the specified
+      connection is copied into the <TT
+CLASS="STRUCTNAME"
+>PGresult</TT
+>.
+      Also, if <TT
+CLASS="PARAMETER"
+>conn</TT
+> is not null, any event procedures
+      registered in the connection are copied into the
+      <TT
+CLASS="STRUCTNAME"
+>PGresult</TT
+>.  (They do not get
+      <TT
+CLASS="LITERAL"
+>PGEVT_RESULTCREATE</TT
+> calls, but see
+      <CODE
+CLASS="FUNCTION"
+>PQfireResultCreateEvents</CODE
+>.)
+      Note that <CODE
+CLASS="FUNCTION"
+>PQclear</CODE
+> should eventually be called
+      on the object, just as with a <TT
+CLASS="STRUCTNAME"
+>PGresult</TT
+>
+      returned by <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> itself.
+     </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQFIRERESULTCREATEEVENTS"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQfireResultCreateEvents</CODE
+>
+     </DT
+><DD
+><P
+>      Fires a <TT
+CLASS="LITERAL"
+>PGEVT_RESULTCREATE</TT
+> event (see <A
+HREF="libpq-events.html"
+>Section 31.13</A
+>) for each event procedure registered in the
+      <TT
+CLASS="STRUCTNAME"
+>PGresult</TT
+> object.  Returns non-zero for success,
+      zero if any event procedure fails.
+
+</P><PRE
+CLASS="SYNOPSIS"
+>int PQfireResultCreateEvents(PGconn *conn, PGresult *res);</PRE
+><P>
+     </P
+><P
+>      The <TT
+CLASS="LITERAL"
+>conn</TT
+> argument is passed through to event procedures
+      but not used directly.  It can be <TT
+CLASS="SYMBOL"
+>NULL</TT
+> if the event
+      procedures won't use it.
+     </P
+><P
+>      Event procedures that have already received a
+      <TT
+CLASS="LITERAL"
+>PGEVT_RESULTCREATE</TT
+> or <TT
+CLASS="LITERAL"
+>PGEVT_RESULTCOPY</TT
+> event
+      for this object are not fired again.
+     </P
+><P
+>      The main reason that this function is separate from
+      <CODE
+CLASS="FUNCTION"
+>PQmakeEmptyPGresult</CODE
+> is that it is often appropriate
+      to create a <TT
+CLASS="STRUCTNAME"
+>PGresult</TT
+> and fill it with data
+      before invoking the event procedures.
+     </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQCOPYRESULT"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQcopyResult</CODE
+>
+     </DT
+><DD
+><P
+>      Makes a copy of a <TT
+CLASS="STRUCTNAME"
+>PGresult</TT
+> object.  The copy is
+      not linked to the source result in any way and
+      <CODE
+CLASS="FUNCTION"
+>PQclear</CODE
+> must be called when the copy is no longer
+      needed.  If the function fails, <TT
+CLASS="SYMBOL"
+>NULL</TT
+> is returned.
+
+</P><PRE
+CLASS="SYNOPSIS"
+>PGresult *PQcopyResult(const PGresult *src, int flags);</PRE
+><P>
+     </P
+><P
+>      This is not intended to make an exact copy.  The returned result is
+      always put into <TT
+CLASS="LITERAL"
+>PGRES_TUPLES_OK</TT
+> status, and does not
+      copy any error message in the source.  (It does copy the command status
+      string, however.)  The <TT
+CLASS="PARAMETER"
+>flags</TT
+> argument determines
+      what else is copied.  It is a bitwise OR of several flags.
+      <TT
+CLASS="LITERAL"
+>PG_COPYRES_ATTRS</TT
+> specifies copying the source
+      result's attributes (column definitions).
+      <TT
+CLASS="LITERAL"
+>PG_COPYRES_TUPLES</TT
+> specifies copying the source
+      result's tuples.  (This implies copying the attributes, too.)
+      <TT
+CLASS="LITERAL"
+>PG_COPYRES_NOTICEHOOKS</TT
+> specifies
+      copying the source result's notify hooks.
+      <TT
+CLASS="LITERAL"
+>PG_COPYRES_EVENTS</TT
+> specifies copying the source
+      result's events.  (But any instance data associated with the source
+      is not copied.)
+     </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQSETRESULTATTRS"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQsetResultAttrs</CODE
+>
+     </DT
+><DD
+><P
+>      Sets the attributes of a <TT
+CLASS="STRUCTNAME"
+>PGresult</TT
+> object.
+</P><PRE
+CLASS="SYNOPSIS"
+>int PQsetResultAttrs(PGresult *res, int numAttributes, PGresAttDesc *attDescs);</PRE
+><P>
+     </P
+><P
+>      The provided <TT
+CLASS="PARAMETER"
+>attDescs</TT
+> are copied into the result.
+      If the <TT
+CLASS="PARAMETER"
+>attDescs</TT
+> pointer is <TT
+CLASS="SYMBOL"
+>NULL</TT
+> or
+      <TT
+CLASS="PARAMETER"
+>numAttributes</TT
+> is less than one, the request is
+      ignored and the function succeeds.  If <TT
+CLASS="PARAMETER"
+>res</TT
+>
+      already contains attributes, the function will fail.  If the function
+      fails, the return value is zero.  If the function succeeds, the return
+      value is non-zero.
+     </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQSETVALUE"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQsetvalue</CODE
+>
+     </DT
+><DD
+><P
+>      Sets a tuple field value of a <TT
+CLASS="STRUCTNAME"
+>PGresult</TT
+> object.
+</P><PRE
+CLASS="SYNOPSIS"
+>int PQsetvalue(PGresult *res, int tup_num, int field_num, char *value, int len);</PRE
+><P>
+     </P
+><P
+>      The function will automatically grow the result's internal tuples array
+      as needed.  However, the <TT
+CLASS="PARAMETER"
+>tup_num</TT
+> argument must be
+      less than or equal to <CODE
+CLASS="FUNCTION"
+>PQntuples</CODE
+>, meaning this
+      function can only grow the tuples array one tuple at a time.  But any
+      field of any existing tuple can be modified in any order.  If a value at
+      <TT
+CLASS="PARAMETER"
+>field_num</TT
+> already exists, it will be overwritten.
+      If <TT
+CLASS="PARAMETER"
+>len</TT
+> is -1 or
+      <TT
+CLASS="PARAMETER"
+>value</TT
+> is <TT
+CLASS="SYMBOL"
+>NULL</TT
+>, the field value
+      will be set to an SQL null value.  The
+      <TT
+CLASS="PARAMETER"
+>value</TT
+> is copied into the result's private storage,
+      thus is no longer needed after the function
+      returns.  If the function fails, the return value is zero.  If the
+      function succeeds, the return value is non-zero.
+     </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQRESULTALLOC"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQresultAlloc</CODE
+>
+     </DT
+><DD
+><P
+>      Allocate subsidiary storage for a <TT
+CLASS="STRUCTNAME"
+>PGresult</TT
+> object.
+</P><PRE
+CLASS="SYNOPSIS"
+>void *PQresultAlloc(PGresult *res, size_t nBytes);</PRE
+><P>
+     </P
+><P
+>      Any memory allocated with this function will be freed when
+      <TT
+CLASS="PARAMETER"
+>res</TT
+> is cleared.  If the function fails,
+      the return value is <TT
+CLASS="SYMBOL"
+>NULL</TT
+>.  The result is
+      guaranteed to be adequately aligned for any type of data,
+      just as for <CODE
+CLASS="FUNCTION"
+>malloc</CODE
+>.
+     </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQLIBVERSION"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQlibVersion</CODE
+>
+     </DT
+><DD
+><P
+>      Return the version of <SPAN
+CLASS="PRODUCTNAME"
+>libpq</SPAN
+> that is being used.
+</P><PRE
+CLASS="SYNOPSIS"
+>int PQlibVersion(void);</PRE
+><P>
+     </P
+><P
+>      The result of this function can be used to determine, at
+      run time, if specific functionality is available in the currently
+      loaded version of libpq. The function can be used, for example,
+      to determine which connection options are available for
+      <CODE
+CLASS="FUNCTION"
+>PQconnectdb</CODE
+> or if the <TT
+CLASS="LITERAL"
+>hex</TT
+> <TT
+CLASS="TYPE"
+>bytea</TT
+>
+      output added in PostgreSQL 9.0 is supported.
+     </P
+><P
+>      The number is formed by converting the major, minor, and revision
+      numbers into two-decimal-digit numbers and appending them together.
+      For example, version 9.1 will be returned as 90100, and version
+      9.1.2 will be returned as 90102 (leading zeroes are not shown).
+     </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>       This function appeared in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> version 9.1, so
+       it cannot be used to detect required functionality in earlier
+       versions, since linking to it will create a link dependency
+       on version 9.1.
+      </P
+></BLOCKQUOTE
+></DIV
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="libpq-control.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="libpq-notice-processing.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Control Functions</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="libpq.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Notice Processing</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,357 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>REASSIGN OWNED</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="PREPARE TRANSACTION"
+HREF="sql-prepare-transaction.html"><LINK
+REL="NEXT"
+TITLE="REFRESH MATERIALIZED VIEW"
+HREF="sql-refreshmaterializedview.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="PREPARE TRANSACTION"
+HREF="sql-prepare-transaction.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="REFRESH MATERIALIZED VIEW"
+HREF="sql-refreshmaterializedview.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-REASSIGN-OWNED"
+></A
+>REASSIGN OWNED</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN85726"
+></A
+><H2
+>Name</H2
+>REASSIGN OWNED&nbsp;--&nbsp;change the ownership of database objects owned by a database role</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN85729"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>REASSIGN OWNED BY { <TT
+CLASS="REPLACEABLE"
+><I
+>old_role</I
+></TT
+> | CURRENT_USER | SESSION_USER } [, ...]
+               TO { <TT
+CLASS="REPLACEABLE"
+><I
+>new_role</I
+></TT
+> | CURRENT_USER | SESSION_USER }</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN85733"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>REASSIGN OWNED</TT
+> instructs the system to change
+   the ownership of database objects owned by any of the
+   <TT
+CLASS="REPLACEABLE"
+><I
+>old_roles</I
+></TT
+> to
+   <TT
+CLASS="REPLACEABLE"
+><I
+>new_role</I
+></TT
+>.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN85739"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>old_role</I
+></TT
+></DT
+><DD
+><P
+>      The name of a role. The ownership of all the objects within the
+      current database, and of all shared objects (databases, tablespaces),
+      owned by this role will be reassigned to
+      <TT
+CLASS="REPLACEABLE"
+><I
+>new_role</I
+></TT
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_role</I
+></TT
+></DT
+><DD
+><P
+>      The name of the role that will be made the new owner of the
+      affected objects.
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN85753"
+></A
+><H2
+>Notes</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>REASSIGN OWNED</TT
+> is often used to prepare for the
+   removal of one or more roles. Because <TT
+CLASS="COMMAND"
+>REASSIGN
+   OWNED</TT
+> does not affect objects within other databases,
+   it is usually necessary to execute this command in each database
+   that contains objects owned by a role that is to be removed.
+  </P
+><P
+>   <TT
+CLASS="COMMAND"
+>REASSIGN OWNED</TT
+> requires privileges on both the
+   source role(s) and the target role.
+  </P
+><P
+>   The <A
+HREF="sql-drop-owned.html"
+>DROP OWNED</A
+> command is an alternative that
+   simply drops all the database objects owned by one or more roles.
+  </P
+><P
+>   The <TT
+CLASS="COMMAND"
+>REASSIGN OWNED</TT
+> command does not affect any
+   privileges granted to the <TT
+CLASS="REPLACEABLE"
+><I
+>old_roles</I
+></TT
+> for
+   objects that are not owned by them.  Use <TT
+CLASS="COMMAND"
+>DROP OWNED</TT
+> to
+   revoke such privileges.
+  </P
+><P
+>   See <A
+HREF="role-removal.html"
+>Section 20.4</A
+> for more discussion.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN85768"
+></A
+><H2
+>Compatibility</H2
+><P
+>   The <TT
+CLASS="COMMAND"
+>REASSIGN OWNED</TT
+> command is a
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> extension.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN85773"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-drop-owned.html"
+>DROP OWNED</A
+>, <A
+HREF="sql-droprole.html"
+>DROP ROLE</A
+>, <A
+HREF="sql-alterdatabase.html"
+>ALTER DATABASE</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-prepare-transaction.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-refreshmaterializedview.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>PREPARE TRANSACTION</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>REFRESH MATERIALIZED VIEW</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

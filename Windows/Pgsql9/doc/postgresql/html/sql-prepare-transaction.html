@@ -1,0 +1,471 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>PREPARE TRANSACTION</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="PREPARE"
+HREF="sql-prepare.html"><LINK
+REL="NEXT"
+TITLE="REASSIGN OWNED"
+HREF="sql-reassign-owned.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="PREPARE"
+HREF="sql-prepare.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="REASSIGN OWNED"
+HREF="sql-reassign-owned.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-PREPARE-TRANSACTION"
+></A
+>PREPARE TRANSACTION</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN85643"
+></A
+><H2
+>Name</H2
+>PREPARE TRANSACTION&nbsp;--&nbsp;prepare the current transaction for two-phase commit</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN85646"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>PREPARE TRANSACTION <TT
+CLASS="REPLACEABLE"
+><I
+>transaction_id</I
+></TT
+></PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN85649"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>PREPARE TRANSACTION</TT
+> prepares the current transaction
+   for two-phase commit. After this command, the transaction is no longer
+   associated with the current session; instead, its state is fully stored on
+   disk, and there is a very high probability that it can be committed
+   successfully, even if a database crash occurs before the commit is
+   requested.
+  </P
+><P
+>   Once prepared, a transaction can later be committed or rolled back
+   with <A
+HREF="sql-commit-prepared.html"
+>COMMIT PREPARED</A
+>
+   or <A
+HREF="sql-rollback-prepared.html"
+>ROLLBACK PREPARED</A
+>,
+   respectively.  Those commands can be issued from any session, not
+   only the one that executed the original transaction.
+  </P
+><P
+>   From the point of view of the issuing session, <TT
+CLASS="COMMAND"
+>PREPARE
+   TRANSACTION</TT
+> is not unlike a <TT
+CLASS="COMMAND"
+>ROLLBACK</TT
+> command:
+   after executing it, there is no active current transaction, and the
+   effects of the prepared transaction are no longer visible.  (The effects
+   will become visible again if the transaction is committed.)
+  </P
+><P
+>   If the <TT
+CLASS="COMMAND"
+>PREPARE TRANSACTION</TT
+> command fails for any
+   reason, it becomes a <TT
+CLASS="COMMAND"
+>ROLLBACK</TT
+>: the current transaction
+   is canceled.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN85662"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>transaction_id</I
+></TT
+></DT
+><DD
+><P
+>      An arbitrary identifier that later identifies this transaction for
+      <TT
+CLASS="COMMAND"
+>COMMIT PREPARED</TT
+> or <TT
+CLASS="COMMAND"
+>ROLLBACK PREPARED</TT
+>.
+      The identifier must be written as a string literal, and must be
+      less than 200 bytes long.  It must not be the same as the identifier
+      used for any currently prepared transaction.
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN85672"
+></A
+><H2
+>Notes</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>PREPARE TRANSACTION</TT
+> is not intended for use in applications
+   or interactive sessions. Its purpose is to allow an external
+   transaction manager to perform atomic global transactions across multiple
+   databases or other transactional resources. Unless you're writing a
+   transaction manager, you probably shouldn't be using <TT
+CLASS="COMMAND"
+>PREPARE
+   TRANSACTION</TT
+>.
+  </P
+><P
+>   This command must be used inside a transaction block. Use <A
+HREF="sql-begin.html"
+>BEGIN</A
+> to start one.
+  </P
+><P
+>   It is not currently allowed to <TT
+CLASS="COMMAND"
+>PREPARE</TT
+> a transaction that
+   has executed any operations involving temporary tables,
+   created any cursors <TT
+CLASS="LITERAL"
+>WITH HOLD</TT
+>, or executed
+   <TT
+CLASS="COMMAND"
+>LISTEN</TT
+> or <TT
+CLASS="COMMAND"
+>UNLISTEN</TT
+>.
+   Those features are too tightly
+   tied to the current session to be useful in a transaction to be prepared.
+  </P
+><P
+>   If the transaction modified any run-time parameters with <TT
+CLASS="COMMAND"
+>SET</TT
+>
+   (without the <TT
+CLASS="LITERAL"
+>LOCAL</TT
+> option),
+   those effects persist after <TT
+CLASS="COMMAND"
+>PREPARE TRANSACTION</TT
+>, and will not
+   be affected by any later <TT
+CLASS="COMMAND"
+>COMMIT PREPARED</TT
+> or
+   <TT
+CLASS="COMMAND"
+>ROLLBACK PREPARED</TT
+>.  Thus, in this one respect
+   <TT
+CLASS="COMMAND"
+>PREPARE TRANSACTION</TT
+> acts more like <TT
+CLASS="COMMAND"
+>COMMIT</TT
+> than
+   <TT
+CLASS="COMMAND"
+>ROLLBACK</TT
+>.
+  </P
+><P
+>   All currently available prepared transactions are listed in the
+   <A
+HREF="view-pg-prepared-xacts.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_prepared_xacts</TT
+></A
+>
+   system view.
+  </P
+><DIV
+CLASS="CAUTION"
+><P
+></P
+><TABLE
+CLASS="CAUTION"
+BORDER="1"
+WIDTH="100%"
+><TR
+><TD
+ALIGN="CENTER"
+><B
+>Caution</B
+></TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+><P
+>    It is unwise to leave transactions in the prepared state for a long time.
+    This will interfere with the ability of <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> to reclaim
+    storage, and in extreme cases could cause the database to shut down
+    to prevent transaction ID wraparound (see <A
+HREF="routine-vacuuming.html#VACUUM-FOR-WRAPAROUND"
+>Section 23.1.5</A
+>).  Keep in mind also that the transaction
+    continues to hold whatever locks it held.  The intended usage of the
+    feature is that a prepared transaction will normally be committed or
+    rolled back as soon as an external transaction manager has verified that
+    other databases are also prepared to commit.
+   </P
+><P
+>    If you have not set up an external transaction manager to track prepared
+    transactions and ensure they get closed out promptly, it is best to keep
+    the prepared-transaction feature disabled by setting
+    <A
+HREF="runtime-config-resource.html#GUC-MAX-PREPARED-TRANSACTIONS"
+>max_prepared_transactions</A
+> to zero.  This will
+    prevent accidental creation of prepared transactions that might then
+    be forgotten and eventually cause problems.
+   </P
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-PREPARE-TRANSACTION-EXAMPLES"
+></A
+><H2
+>Examples</H2
+><P
+>   Prepare the current transaction for two-phase commit, using
+   <TT
+CLASS="LITERAL"
+>foobar</TT
+> as the transaction identifier:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>PREPARE TRANSACTION 'foobar';</PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN85707"
+></A
+><H2
+>Compatibility</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>PREPARE TRANSACTION</TT
+> is a
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> extension.  It is intended for use by
+   external transaction management systems, some of which are covered by
+   standards (such as X/Open XA), but the SQL side of those systems is not
+   standardized.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN85712"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-commit-prepared.html"
+>COMMIT PREPARED</A
+>, <A
+HREF="sql-rollback-prepared.html"
+>ROLLBACK PREPARED</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-prepare.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-reassign-owned.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>PREPARE</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>REASSIGN OWNED</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

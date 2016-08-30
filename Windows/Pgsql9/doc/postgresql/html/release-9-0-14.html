@@ -1,0 +1,524 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.0.14</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.0.15"
+HREF="release-9-0-15.html"><LINK
+REL="NEXT"
+TITLE="Release 9.0.13"
+HREF="release-9-0-13.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.0.15"
+HREF="release-9-0-15.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.0.13"
+HREF="release-9-0-13.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-0-14"
+>E.83. Release 9.0.14</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2013-10-10</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 9.0.13.
+   For information about new features in the 9.0 major release, see
+   <A
+HREF="release-9-0.html"
+>Section E.97</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN144071"
+>E.83.1. Migration to Version 9.0.14</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.0.X.
+   </P
+><P
+>    However, if you are upgrading from a version earlier than 9.0.13,
+    see <A
+HREF="release-9-0-13.html"
+>Section E.84</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN144076"
+>E.83.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Prevent corruption of multi-byte characters when attempting to
+      case-fold identifiers (Andrew Dunstan)
+     </P
+><P
+>      <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> case-folds non-ASCII characters only
+      when using a single-byte server encoding.
+     </P
+></LI
+><LI
+><P
+>      Fix checkpoint memory leak in background writer when <TT
+CLASS="LITERAL"
+>wal_level =
+      hot_standby</TT
+> (Naoya Anzai)
+     </P
+></LI
+><LI
+><P
+>      Fix memory leak caused by <CODE
+CLASS="FUNCTION"
+>lo_open()</CODE
+> failure
+      (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Fix memory overcommit bug when <TT
+CLASS="VARNAME"
+>work_mem</TT
+> is using more
+      than 24GB of memory (Stephen Frost)
+     </P
+></LI
+><LI
+><P
+>      Fix deadlock bug in libpq when using SSL (Stephen Frost)
+     </P
+></LI
+><LI
+><P
+>      Fix possible SSL state corruption in threaded libpq applications
+      (Nick Phillips, Stephen Frost)
+     </P
+></LI
+><LI
+><P
+>      Properly compute row estimates for boolean columns containing many NULL
+      values (Andrew Gierth)
+     </P
+><P
+>      Previously tests like <TT
+CLASS="LITERAL"
+>col IS NOT TRUE</TT
+> and <TT
+CLASS="LITERAL"
+>col IS
+      NOT FALSE</TT
+> did not properly factor in NULL values when estimating
+      plan costs.
+     </P
+></LI
+><LI
+><P
+>      Prevent pushing down <TT
+CLASS="LITERAL"
+>WHERE</TT
+> clauses into unsafe
+      <TT
+CLASS="LITERAL"
+>UNION/INTERSECT</TT
+> subqueries (Tom Lane)
+     </P
+><P
+>      Subqueries of a <TT
+CLASS="LITERAL"
+>UNION</TT
+> or <TT
+CLASS="LITERAL"
+>INTERSECT</TT
+> that
+      contain set-returning functions or volatile functions in their
+      <TT
+CLASS="LITERAL"
+>SELECT</TT
+> lists could be improperly optimized, leading to
+      run-time errors or incorrect query results.
+     </P
+></LI
+><LI
+><P
+>      Fix rare case of <SPAN
+CLASS="QUOTE"
+>"failed to locate grouping columns"</SPAN
+>
+      planner failure (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Improve view dumping code's handling of dropped columns in referenced
+      tables (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Properly record index comments created using <TT
+CLASS="LITERAL"
+>UNIQUE</TT
+>
+      and <TT
+CLASS="LITERAL"
+>PRIMARY KEY</TT
+> syntax (Andres Freund)
+     </P
+><P
+>      This fixes a parallel <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> failure.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>REINDEX TABLE</TT
+> and <TT
+CLASS="COMMAND"
+>REINDEX DATABASE</TT
+>
+      to properly revalidate constraints and mark invalidated indexes as
+      valid (Noah Misch)
+     </P
+><P
+>      <TT
+CLASS="COMMAND"
+>REINDEX INDEX</TT
+> has always worked properly.
+     </P
+></LI
+><LI
+><P
+>      Fix possible deadlock during concurrent <TT
+CLASS="COMMAND"
+>CREATE INDEX
+      CONCURRENTLY</TT
+> operations (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <CODE
+CLASS="FUNCTION"
+>regexp_matches()</CODE
+> handling of zero-length matches
+      (Jeevan Chalke)
+     </P
+><P
+>      Previously, zero-length matches like '^' could return too many matches.
+     </P
+></LI
+><LI
+><P
+>      Fix crash for overly-complex regular expressions (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Fix regular expression match failures for back references combined with
+      non-greedy quantifiers (Jeevan Chalke)
+     </P
+></LI
+><LI
+><P
+>      Prevent <TT
+CLASS="COMMAND"
+>CREATE FUNCTION</TT
+> from checking <TT
+CLASS="COMMAND"
+>SET</TT
+>
+      variables unless function body checking is enabled (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Allow <TT
+CLASS="COMMAND"
+>ALTER DEFAULT PRIVILEGES</TT
+> to operate on schemas
+      without requiring CREATE permission (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Loosen restriction on keywords used in queries (Tom Lane)
+     </P
+><P
+>      Specifically, lessen keyword restrictions for role names, language
+      names, <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+> and <TT
+CLASS="COMMAND"
+>COPY</TT
+> options, and
+      <TT
+CLASS="COMMAND"
+>SET</TT
+> values.  This allows <TT
+CLASS="LITERAL"
+>COPY ... (FORMAT
+      BINARY)</TT
+> to work as expected; previously <TT
+CLASS="LITERAL"
+>BINARY</TT
+> needed
+      to be quoted.
+     </P
+></LI
+><LI
+><P
+>      Fix <CODE
+CLASS="FUNCTION"
+>pgp_pub_decrypt()</CODE
+> so it works for secret keys with
+      passwords (Marko Kreen)
+     </P
+></LI
+><LI
+><P
+>      Remove rare inaccurate warning during vacuum of index-less tables
+      (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Ensure that <TT
+CLASS="COMMAND"
+>VACUUM ANALYZE</TT
+> still runs the ANALYZE phase
+      if its attempt to truncate the file is cancelled due to lock conflicts
+      (Kevin Grittner)
+     </P
+></LI
+><LI
+><P
+>      Avoid possible failure when performing transaction control commands (e.g
+      ROLLBACK) in prepared queries (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Ensure that floating-point data input accepts standard spellings
+      of <SPAN
+CLASS="QUOTE"
+>"infinity"</SPAN
+> on all platforms (Tom Lane)
+     </P
+><P
+>      The C99 standard says that allowable spellings are <TT
+CLASS="LITERAL"
+>inf</TT
+>,
+      <TT
+CLASS="LITERAL"
+>+inf</TT
+>, <TT
+CLASS="LITERAL"
+>-inf</TT
+>, <TT
+CLASS="LITERAL"
+>infinity</TT
+>,
+      <TT
+CLASS="LITERAL"
+>+infinity</TT
+>, and <TT
+CLASS="LITERAL"
+>-infinity</TT
+>.  Make sure we
+      recognize these even if the platform's <CODE
+CLASS="FUNCTION"
+>strtod</CODE
+> function
+      doesn't.
+     </P
+></LI
+><LI
+><P
+>      Expand ability to compare rows to records and arrays (Rafal Rzepecki,
+      Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2013d
+      for DST law changes in Israel, Morocco, Palestine, and Paraguay.
+      Also, historical zone data corrections for Macquarie Island.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-0-15.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-0-13.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.0.15</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.0.13</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

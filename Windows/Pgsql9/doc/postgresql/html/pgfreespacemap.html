@@ -1,0 +1,321 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_freespacemap</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="pgcrypto"
+HREF="pgcrypto.html"><LINK
+REL="NEXT"
+TITLE="pg_prewarm"
+HREF="pgprewarm.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pgcrypto"
+HREF="pgcrypto.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pg_prewarm"
+HREF="pgprewarm.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PGFREESPACEMAP"
+>F.25. pg_freespacemap</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>pg_freespacemap</TT
+> module provides a means for examining the
+  free space map (FSM). It provides a function called
+  <CODE
+CLASS="FUNCTION"
+>pg_freespace</CODE
+>, or two overloaded functions, to be
+  precise. The functions show the value recorded in the free space map for
+  a given page, or for all pages in the relation.
+ </P
+><P
+>  By default public access is revoked from the functions, just in case
+  there are security issues lurking.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN173687"
+>F.25.1. Functions</A
+></H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><CODE
+CLASS="FUNCTION"
+>pg_freespace(rel regclass IN, blkno bigint IN) returns int2</CODE
+>
+     </DT
+><DD
+><P
+>      Returns the amount of free space on the page of the relation, specified
+      by <TT
+CLASS="LITERAL"
+>blkno</TT
+>, according to the FSM.
+     </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>pg_freespace(rel regclass IN, blkno OUT bigint, avail OUT int2)</CODE
+></DT
+><DD
+><P
+>      Displays the amount of free space on each page of the relation,
+      according to the FSM. A set of <TT
+CLASS="LITERAL"
+>(blkno bigint, avail int2)</TT
+>
+      tuples is returned, one tuple for each page in the relation.
+     </P
+></DD
+></DL
+></DIV
+><P
+>   The values stored in the free space map are not exact. They're rounded
+   to precision of 1/256th of <TT
+CLASS="SYMBOL"
+>BLCKSZ</TT
+> (32 bytes with default <TT
+CLASS="SYMBOL"
+>BLCKSZ</TT
+>), and
+   they're not kept fully up-to-date as tuples are inserted and updated.
+  </P
+><P
+>   For indexes, what is tracked is entirely-unused pages, rather than free
+   space within pages.  Therefore, the values are not meaningful, just
+   whether a page is full or empty.
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    The interface was changed in version 8.4, to reflect the new FSM
+    implementation introduced in the same version.
+   </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN173710"
+>F.25.2. Sample Output</A
+></H2
+><PRE
+CLASS="SCREEN"
+>postgres=# SELECT * FROM pg_freespace('foo');
+ blkno | avail 
+-------+-------
+     0 |     0
+     1 |     0
+     2 |     0
+     3 |    32
+     4 |   704
+     5 |   704
+     6 |   704
+     7 |  1216
+     8 |   704
+     9 |   704
+    10 |   704
+    11 |   704
+    12 |   704
+    13 |   704
+    14 |   704
+    15 |   704
+    16 |   704
+    17 |   704
+    18 |   704
+    19 |  3648
+(20 rows)
+
+postgres=# SELECT * FROM pg_freespace('foo', 7);
+ pg_freespace 
+--------------
+         1216
+(1 row)</PRE
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN173713"
+>F.25.3. Author</A
+></H2
+><P
+>   Original version by Mark Kirkwood <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:markir@paradise.net.nz"
+>markir@paradise.net.nz</A
+>&#62;</CODE
+>.
+   Rewritten in version 8.4 to suit new FSM implementation by Heikki
+   Linnakangas <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:heikki@enterprisedb.com"
+>heikki@enterprisedb.com</A
+>&#62;</CODE
+>
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="pgcrypto.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="pgprewarm.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>pgcrypto</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>pg_prewarm</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

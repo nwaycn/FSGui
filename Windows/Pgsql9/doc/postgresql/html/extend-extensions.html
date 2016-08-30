@@ -1,0 +1,1340 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Packaging Related Objects into an Extension</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Extending SQL"
+HREF="extend.html"><LINK
+REL="PREVIOUS"
+TITLE="Interfacing Extensions To Indexes"
+HREF="xindex.html"><LINK
+REL="NEXT"
+TITLE="Extension Building Infrastructure"
+HREF="extend-pgxs.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Interfacing Extensions To Indexes"
+HREF="xindex.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="extend.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 35. Extending <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Extension Building Infrastructure"
+HREF="extend-pgxs.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="EXTEND-EXTENSIONS"
+>35.15. Packaging Related Objects into an Extension</A
+></H1
+><P
+>    A useful extension to <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> typically includes
+    multiple SQL objects; for example, a new data type will require new
+    functions, new operators, and probably new index operator classes.
+    It is helpful to collect all these objects into a single package
+    to simplify database management.  <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> calls
+    such a package an <I
+CLASS="FIRSTTERM"
+>extension</I
+>.  To define an extension,
+    you need at least a <I
+CLASS="FIRSTTERM"
+>script file</I
+> that contains the
+    <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> commands to create the extension's objects, and a
+    <I
+CLASS="FIRSTTERM"
+>control file</I
+> that specifies a few basic properties
+    of the extension itself.  If the extension includes C code, there
+    will typically also be a shared library file into which the C code
+    has been built.  Once you have these files, a simple
+    <A
+HREF="sql-createextension.html"
+>CREATE EXTENSION</A
+> command loads the objects into
+    your database.
+   </P
+><P
+>    The main advantage of using an extension, rather than just running the
+    <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> script to load a bunch of <SPAN
+CLASS="QUOTE"
+>"loose"</SPAN
+> objects
+    into your database, is that <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> will then
+    understand that the objects of the extension go together.  You can
+    drop all the objects with a single <A
+HREF="sql-dropextension.html"
+>DROP EXTENSION</A
+>
+    command (no need to maintain a separate <SPAN
+CLASS="QUOTE"
+>"uninstall"</SPAN
+> script).
+    Even more useful, <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> knows that it should not
+    dump the individual member objects of the extension &mdash; it will
+    just include a <TT
+CLASS="COMMAND"
+>CREATE EXTENSION</TT
+> command in dumps, instead.
+    This vastly simplifies migration to a new version of the extension
+    that might contain more or different objects than the old version.
+    Note however that you must have the extension's control, script, and
+    other files available when loading such a dump into a new database.
+   </P
+><P
+>    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> will not let you drop an individual object
+    contained in an extension, except by dropping the whole extension.
+    Also, while you can change the definition of an extension member object
+    (for example, via <TT
+CLASS="COMMAND"
+>CREATE OR REPLACE FUNCTION</TT
+> for a
+    function), bear in mind that the modified definition will not be dumped
+    by <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>.  Such a change is usually only sensible if
+    you concurrently make the same change in the extension's script file.
+    (But there are special provisions for tables containing configuration
+    data; see below.)
+   </P
+><P
+>    The extension mechanism also has provisions for packaging modification
+    scripts that adjust the definitions of the SQL objects contained in an
+    extension.  For example, if version 1.1 of an extension adds one function
+    and changes the body of another function compared to 1.0, the extension
+    author can provide an <I
+CLASS="FIRSTTERM"
+>update script</I
+> that makes just those
+    two changes.  The <TT
+CLASS="COMMAND"
+>ALTER EXTENSION UPDATE</TT
+> command can then
+    be used to apply these changes and track which version of the extension
+    is actually installed in a given database.
+   </P
+><P
+>    The kinds of SQL objects that can be members of an extension are shown in
+    the description of <A
+HREF="sql-alterextension.html"
+>ALTER EXTENSION</A
+>.  Notably, objects
+    that are database-cluster-wide, such as databases, roles, and tablespaces,
+    cannot be extension members since an extension is only known within one
+    database.  (Although an extension script is not prohibited from creating
+    such objects, if it does so they will not be tracked as part of the
+    extension.)  Also notice that while a table can be a member of an
+    extension, its subsidiary objects such as indexes are not directly
+    considered members of the extension.
+    Another important point is that schemas can belong to extensions, but not
+    vice versa: an extension as such has an unqualified name and does not
+    exist <SPAN
+CLASS="QUOTE"
+>"within"</SPAN
+> any schema.  The extension's member objects,
+    however, will belong to schemas whenever appropriate for their object
+    types.  It may or may not be appropriate for an extension to own the
+    schema(s) its member objects are within.
+   </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN58965"
+>35.15.1. Extension Files</A
+></H2
+><P
+>     The <A
+HREF="sql-createextension.html"
+>CREATE EXTENSION</A
+> command relies on a control
+     file for each extension, which must be named the same as the extension
+     with a suffix of <TT
+CLASS="LITERAL"
+>.control</TT
+>, and must be placed in the
+     installation's <TT
+CLASS="LITERAL"
+>SHAREDIR/extension</TT
+> directory.  There
+     must also be at least one <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> script file, which follows the
+     naming pattern
+     <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>extension</I
+></TT
+>--<TT
+CLASS="REPLACEABLE"
+><I
+>version</I
+></TT
+>.sql</TT
+>
+     (for example, <TT
+CLASS="LITERAL"
+>foo--1.0.sql</TT
+> for version <TT
+CLASS="LITERAL"
+>1.0</TT
+> of
+     extension <TT
+CLASS="LITERAL"
+>foo</TT
+>).  By default, the script file(s) are also
+     placed in the <TT
+CLASS="LITERAL"
+>SHAREDIR/extension</TT
+> directory; but the
+     control file can specify a different directory for the script file(s).
+    </P
+><P
+>     The file format for an extension control file is the same as for the
+     <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> file, namely a list of
+     <TT
+CLASS="REPLACEABLE"
+><I
+>parameter_name</I
+></TT
+> <TT
+CLASS="LITERAL"
+>=</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>
+     assignments, one per line.  Blank lines and comments introduced by
+     <TT
+CLASS="LITERAL"
+>#</TT
+> are allowed.  Be sure to quote any value that is not
+     a single word or number.
+    </P
+><P
+>     A control file can set the following parameters:
+    </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="VARNAME"
+>directory</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)</DT
+><DD
+><P
+>        The directory containing the extension's <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> script
+        file(s).  Unless an absolute path is given, the name is relative to
+        the installation's <TT
+CLASS="LITERAL"
+>SHAREDIR</TT
+> directory.  The
+        default behavior is equivalent to specifying
+        <TT
+CLASS="LITERAL"
+>directory = 'extension'</TT
+>.
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>default_version</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)</DT
+><DD
+><P
+>        The default version of the extension (the one that will be installed
+        if no version is specified in <TT
+CLASS="COMMAND"
+>CREATE EXTENSION</TT
+>).  Although
+        this can be omitted, that will result in <TT
+CLASS="COMMAND"
+>CREATE EXTENSION</TT
+>
+        failing if no <TT
+CLASS="LITERAL"
+>VERSION</TT
+> option appears, so you generally
+        don't want to do that.
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>comment</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)</DT
+><DD
+><P
+>        A comment (any string) about the extension.  Alternatively,
+        the comment can be set by means of the <A
+HREF="sql-comment.html"
+>COMMENT</A
+>
+        command in the script file.
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>encoding</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)</DT
+><DD
+><P
+>        The character set encoding used by the script file(s).  This should
+        be specified if the script files contain any non-ASCII characters.
+        Otherwise the files will be assumed to be in the database encoding.
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>module_pathname</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)</DT
+><DD
+><P
+>        The value of this parameter will be substituted for each occurrence
+        of <TT
+CLASS="LITERAL"
+>MODULE_PATHNAME</TT
+> in the script file(s).  If it is not
+        set, no substitution is made.  Typically, this is set to
+        <TT
+CLASS="LITERAL"
+>$libdir/<TT
+CLASS="REPLACEABLE"
+><I
+>shared_library_name</I
+></TT
+></TT
+> and
+        then <TT
+CLASS="LITERAL"
+>MODULE_PATHNAME</TT
+> is used in <TT
+CLASS="COMMAND"
+>CREATE
+        FUNCTION</TT
+> commands for C-language functions, so that the script
+        files do not need to hard-wire the name of the shared library.
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>requires</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)</DT
+><DD
+><P
+>        A list of names of extensions that this extension depends on,
+        for example <TT
+CLASS="LITERAL"
+>requires = 'foo, bar'</TT
+>.  Those
+        extensions must be installed before this one can be installed.
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>superuser</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)</DT
+><DD
+><P
+>        If this parameter is <TT
+CLASS="LITERAL"
+>true</TT
+> (which is the default),
+        only superusers can create the extension or update it to a new
+        version.  If it is set to <TT
+CLASS="LITERAL"
+>false</TT
+>, just the privileges
+        required to execute the commands in the installation or update script
+        are required.
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>relocatable</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)</DT
+><DD
+><P
+>        An extension is <I
+CLASS="FIRSTTERM"
+>relocatable</I
+> if it is possible to move
+        its contained objects into a different schema after initial creation
+        of the extension.  The default is <TT
+CLASS="LITERAL"
+>false</TT
+>, i.e. the
+        extension is not relocatable.
+        See below for more information.
+       </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>schema</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)</DT
+><DD
+><P
+>        This parameter can only be set for non-relocatable extensions.
+        It forces the extension to be loaded into exactly the named schema
+        and not any other.  See below for more information.
+       </P
+></DD
+></DL
+></DIV
+><P
+>     In addition to the primary control file
+     <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>extension</I
+></TT
+>.control</TT
+>,
+     an extension can have secondary control files named in the style
+     <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>extension</I
+></TT
+>--<TT
+CLASS="REPLACEABLE"
+><I
+>version</I
+></TT
+>.control</TT
+>.
+     If supplied, these must be located in the script file directory.
+     Secondary control files follow the same format as the primary control
+     file.  Any parameters set in a secondary control file override the
+     primary control file when installing or updating to that version of
+     the extension.  However, the parameters <TT
+CLASS="VARNAME"
+>directory</TT
+> and
+     <TT
+CLASS="VARNAME"
+>default_version</TT
+> cannot be set in a secondary control file.
+    </P
+><P
+>     An extension's <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> script files can contain any SQL commands,
+     except for transaction control commands (<TT
+CLASS="COMMAND"
+>BEGIN</TT
+>,
+     <TT
+CLASS="COMMAND"
+>COMMIT</TT
+>, etc) and commands that cannot be executed inside a
+     transaction block (such as <TT
+CLASS="COMMAND"
+>VACUUM</TT
+>).  This is because the
+     script files are implicitly executed within a transaction block.
+    </P
+><P
+>     An extension's <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> script files can also contain lines
+     beginning with <TT
+CLASS="LITERAL"
+>\echo</TT
+>, which will be ignored (treated as
+     comments) by the extension mechanism.  This provision is commonly used
+     to throw an error if the script file is fed to <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>
+     rather than being loaded via <TT
+CLASS="COMMAND"
+>CREATE EXTENSION</TT
+> (see example
+     script below).  Without that, users might accidentally load the
+     extension's contents as <SPAN
+CLASS="QUOTE"
+>"loose"</SPAN
+> objects rather than as an
+     extension, a state of affairs that's a bit tedious to recover from.
+    </P
+><P
+>     While the script files can contain any characters allowed by the specified
+     encoding, control files should contain only plain ASCII, because there
+     is no way for <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> to know what encoding a
+     control file is in.  In practice this is only an issue if you want to
+     use non-ASCII characters in the extension's comment.  Recommended
+     practice in that case is to not use the control file <TT
+CLASS="VARNAME"
+>comment</TT
+>
+     parameter, but instead use <TT
+CLASS="COMMAND"
+>COMMENT ON EXTENSION</TT
+>
+     within a script file to set the comment.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN59083"
+>35.15.2. Extension Relocatability</A
+></H2
+><P
+>     Users often wish to load the objects contained in an extension into a
+     different schema than the extension's author had in mind.  There are
+     three supported levels of relocatability:
+    </P
+><P
+></P
+><UL
+><LI
+><P
+>       A fully relocatable extension can be moved into another schema
+       at any time, even after it's been loaded into a database.
+       This is done with the <TT
+CLASS="COMMAND"
+>ALTER EXTENSION SET SCHEMA</TT
+>
+       command, which automatically renames all the member objects into
+       the new schema.  Normally, this is only possible if the extension
+       contains no internal assumptions about what schema any of its
+       objects are in.  Also, the extension's objects must all be in one
+       schema to begin with (ignoring objects that do not belong to any
+       schema, such as procedural languages).  Mark a fully relocatable
+       extension by setting <TT
+CLASS="LITERAL"
+>relocatable = true</TT
+> in its control
+       file.
+      </P
+></LI
+><LI
+><P
+>       An extension might be relocatable during installation but not
+       afterwards.  This is typically the case if the extension's script
+       file needs to reference the target schema explicitly, for example
+       in setting <TT
+CLASS="LITERAL"
+>search_path</TT
+> properties for SQL functions.
+       For such an extension, set <TT
+CLASS="LITERAL"
+>relocatable = false</TT
+> in its
+       control file, and use <TT
+CLASS="LITERAL"
+>@extschema@</TT
+> to refer to the target
+       schema in the script file.  All occurrences of this string will be
+       replaced by the actual target schema's name before the script is
+       executed.  The user can set the target schema using the
+       <TT
+CLASS="LITERAL"
+>SCHEMA</TT
+> option of <TT
+CLASS="COMMAND"
+>CREATE EXTENSION</TT
+>.
+      </P
+></LI
+><LI
+><P
+>       If the extension does not support relocation at all, set
+       <TT
+CLASS="LITERAL"
+>relocatable = false</TT
+> in its control file, and also set
+       <TT
+CLASS="LITERAL"
+>schema</TT
+> to the name of the intended target schema.  This
+       will prevent use of the <TT
+CLASS="LITERAL"
+>SCHEMA</TT
+> option of <TT
+CLASS="COMMAND"
+>CREATE
+       EXTENSION</TT
+>, unless it specifies the same schema named in the control
+       file.  This choice is typically necessary if the extension contains
+       internal assumptions about schema names that can't be replaced by
+       uses of <TT
+CLASS="LITERAL"
+>@extschema@</TT
+>.  The <TT
+CLASS="LITERAL"
+>@extschema@</TT
+>
+       substitution mechanism is available in this case too, although it is
+       of limited use since the schema name is determined by the control file.
+      </P
+></LI
+></UL
+><P
+>     In all cases, the script file will be executed with
+     <A
+HREF="runtime-config-client.html#GUC-SEARCH-PATH"
+>search_path</A
+> initially set to point to the target
+     schema; that is, <TT
+CLASS="COMMAND"
+>CREATE EXTENSION</TT
+> does the equivalent of
+     this:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SET LOCAL search_path TO @extschema@;</PRE
+><P>
+     This allows the objects created by the script file to go into the target
+     schema.  The script file can change <TT
+CLASS="VARNAME"
+>search_path</TT
+> if it wishes,
+     but that is generally undesirable.  <TT
+CLASS="VARNAME"
+>search_path</TT
+> is restored
+     to its previous setting upon completion of <TT
+CLASS="COMMAND"
+>CREATE EXTENSION</TT
+>.
+    </P
+><P
+>     The target schema is determined by the <TT
+CLASS="VARNAME"
+>schema</TT
+> parameter in
+     the control file if that is given, otherwise by the <TT
+CLASS="LITERAL"
+>SCHEMA</TT
+>
+     option of <TT
+CLASS="COMMAND"
+>CREATE EXTENSION</TT
+> if that is given, otherwise the
+     current default object creation schema (the first one in the caller's
+     <TT
+CLASS="VARNAME"
+>search_path</TT
+>).  When the control file <TT
+CLASS="VARNAME"
+>schema</TT
+>
+     parameter is used, the target schema will be created if it doesn't
+     already exist, but in the other two cases it must already exist.
+    </P
+><P
+>     If any prerequisite extensions are listed in <TT
+CLASS="VARNAME"
+>requires</TT
+>
+     in the control file, their target schemas are appended to the initial
+     setting of <TT
+CLASS="VARNAME"
+>search_path</TT
+>.  This allows their objects to be
+     visible to the new extension's script file.
+    </P
+><P
+>     Although a non-relocatable extension can contain objects spread across
+     multiple schemas, it is usually desirable to place all the objects meant
+     for external use into a single schema, which is considered the extension's
+     target schema.  Such an arrangement works conveniently with the default
+     setting of <TT
+CLASS="VARNAME"
+>search_path</TT
+> during creation of dependent
+     extensions.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN59124"
+>35.15.3. Extension Configuration Tables</A
+></H2
+><P
+>     Some extensions include configuration tables, which contain data that
+     might be added or changed by the user after installation of the
+     extension.  Ordinarily, if a table is part of an extension, neither
+     the table's definition nor its content will be dumped by
+     <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>.  But that behavior is undesirable for a
+     configuration table; any data changes made by the user need to be
+     included in dumps, or the extension will behave differently after a dump
+     and reload.
+    </P
+><P
+>     To solve this problem, an extension's script file can mark a table
+     it has created as a configuration table, which will cause
+     <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> to include the table's contents (not its
+     definition) in dumps.  To do that, call the function
+     <CODE
+CLASS="FUNCTION"
+>pg_extension_config_dump(regclass, text)</CODE
+> after creating the
+     table, for example
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE my_config (key text, value text);
+
+SELECT pg_catalog.pg_extension_config_dump('my_config', '');</PRE
+><P>
+     Any number of tables can be marked this way.
+    </P
+><P
+>     When the second argument of <CODE
+CLASS="FUNCTION"
+>pg_extension_config_dump</CODE
+> is
+     an empty string, the entire contents of the table are dumped by
+     <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>.  This is usually only correct if the table
+     is initially empty as created by the extension script.  If there is
+     a mixture of initial data and user-provided data in the table,
+     the second argument of <CODE
+CLASS="FUNCTION"
+>pg_extension_config_dump</CODE
+> provides
+     a <TT
+CLASS="LITERAL"
+>WHERE</TT
+> condition that selects the data to be dumped.
+     For example, you might do
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE my_config (key text, value text, standard_entry boolean);
+
+SELECT pg_catalog.pg_extension_config_dump('my_config', 'WHERE NOT standard_entry');</PRE
+><P>
+     and then make sure that <TT
+CLASS="STRUCTFIELD"
+>standard_entry</TT
+> is true only
+     in the rows created by the extension's script.
+    </P
+><P
+>     More complicated situations, such as initially-provided rows that might
+     be modified by users, can be handled by creating triggers on the
+     configuration table to ensure that modified rows are marked correctly.
+    </P
+><P
+>     You can alter the filter condition associated with a configuration table
+     by calling <CODE
+CLASS="FUNCTION"
+>pg_extension_config_dump</CODE
+> again.  (This would
+     typically be useful in an extension update script.)  The only way to mark
+     a table as no longer a configuration table is to dissociate it from the
+     extension with <TT
+CLASS="COMMAND"
+>ALTER EXTENSION ... DROP TABLE</TT
+>.
+    </P
+><P
+>     Note that foreign key relationships between these tables will dictate the
+     order in which the tables are dumped out by pg_dump.  Specifically, pg_dump
+     will attempt to dump the referenced-by table before the referencing table.
+     As the foreign key relationships are set up at CREATE EXTENSION time (prior
+     to data being loaded into the tables) circular dependencies are not
+     supported.  When circular dependencies exist, the data will still be dumped
+     out but the dump will not be able to be restored directly and user
+     intervention will be required.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN59146"
+>35.15.4. Extension Updates</A
+></H2
+><P
+>     One advantage of the extension mechanism is that it provides convenient
+     ways to manage updates to the SQL commands that define an extension's
+     objects.  This is done by associating a version name or number with
+     each released version of the extension's installation script.
+     In addition, if you want users to be able to update their databases
+     dynamically from one version to the next, you should provide
+     <I
+CLASS="FIRSTTERM"
+>update scripts</I
+> that make the necessary changes to go from
+     one version to the next.  Update scripts have names following the pattern
+     <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>extension</I
+></TT
+>--<TT
+CLASS="REPLACEABLE"
+><I
+>oldversion</I
+></TT
+>--<TT
+CLASS="REPLACEABLE"
+><I
+>newversion</I
+></TT
+>.sql</TT
+>
+     (for example, <TT
+CLASS="LITERAL"
+>foo--1.0--1.1.sql</TT
+> contains the commands to modify
+     version <TT
+CLASS="LITERAL"
+>1.0</TT
+> of extension <TT
+CLASS="LITERAL"
+>foo</TT
+> into version
+     <TT
+CLASS="LITERAL"
+>1.1</TT
+>).
+    </P
+><P
+>     Given that a suitable update script is available, the command
+     <TT
+CLASS="COMMAND"
+>ALTER EXTENSION UPDATE</TT
+> will update an installed extension
+     to the specified new version.  The update script is run in the same
+     environment that <TT
+CLASS="COMMAND"
+>CREATE EXTENSION</TT
+> provides for installation
+     scripts: in particular, <TT
+CLASS="VARNAME"
+>search_path</TT
+> is set up in the same
+     way, and any new objects created by the script are automatically added
+     to the extension.
+    </P
+><P
+>     If an extension has secondary control files, the control parameters
+     that are used for an update script are those associated with the script's
+     target (new) version.
+    </P
+><P
+>     The update mechanism can be used to solve an important special case:
+     converting a <SPAN
+CLASS="QUOTE"
+>"loose"</SPAN
+> collection of objects into an extension.
+     Before the extension mechanism was added to
+     <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> (in 9.1), many people wrote
+     extension modules that simply created assorted unpackaged objects.
+     Given an existing database containing such objects, how can we convert
+     the objects into a properly packaged extension?  Dropping them and then
+     doing a plain <TT
+CLASS="COMMAND"
+>CREATE EXTENSION</TT
+> is one way, but it's not
+     desirable if the objects have dependencies (for example, if there are
+     table columns of a data type created by the extension).  The way to fix
+     this situation is to create an empty extension, then use <TT
+CLASS="COMMAND"
+>ALTER
+     EXTENSION ADD</TT
+> to attach each pre-existing object to the extension,
+     then finally create any new objects that are in the current extension
+     version but were not in the unpackaged release.  <TT
+CLASS="COMMAND"
+>CREATE
+     EXTENSION</TT
+> supports this case with its <TT
+CLASS="LITERAL"
+>FROM</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>old_version</I
+></TT
+> option, which causes it to not run the
+     normal installation script for the target version, but instead the update
+     script named
+     <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>extension</I
+></TT
+>--<TT
+CLASS="REPLACEABLE"
+><I
+>old_version</I
+></TT
+>--<TT
+CLASS="REPLACEABLE"
+><I
+>target_version</I
+></TT
+>.sql</TT
+>.
+     The choice of the dummy version name to use as <TT
+CLASS="REPLACEABLE"
+><I
+>old_version</I
+></TT
+> is up to the extension author, though
+     <TT
+CLASS="LITERAL"
+>unpackaged</TT
+> is a common convention.  If you have multiple
+     prior versions you need to be able to update into extension style, use
+     multiple dummy version names to identify them.
+    </P
+><P
+>     <TT
+CLASS="COMMAND"
+>ALTER EXTENSION</TT
+> is able to execute sequences of update
+     script files to achieve a requested update.  For example, if only
+     <TT
+CLASS="LITERAL"
+>foo--1.0--1.1.sql</TT
+> and <TT
+CLASS="LITERAL"
+>foo--1.1--2.0.sql</TT
+> are
+     available, <TT
+CLASS="COMMAND"
+>ALTER EXTENSION</TT
+> will apply them in sequence if an
+     update to version <TT
+CLASS="LITERAL"
+>2.0</TT
+> is requested when <TT
+CLASS="LITERAL"
+>1.0</TT
+> is
+     currently installed.
+    </P
+><P
+>     <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> doesn't assume anything about the properties
+     of version names: for example, it does not know whether <TT
+CLASS="LITERAL"
+>1.1</TT
+>
+     follows <TT
+CLASS="LITERAL"
+>1.0</TT
+>.  It just matches up the available version names
+     and follows the path that requires applying the fewest update scripts.
+     (A version name can actually be any string that doesn't contain
+     <TT
+CLASS="LITERAL"
+>--</TT
+> or leading or trailing <TT
+CLASS="LITERAL"
+>-</TT
+>.)
+    </P
+><P
+>     Sometimes it is useful to provide <SPAN
+CLASS="QUOTE"
+>"downgrade"</SPAN
+> scripts, for
+     example <TT
+CLASS="LITERAL"
+>foo--1.1--1.0.sql</TT
+> to allow reverting the changes
+     associated with version <TT
+CLASS="LITERAL"
+>1.1</TT
+>.  If you do that, be careful
+     of the possibility that a downgrade script might unexpectedly
+     get applied because it yields a shorter path.  The risky case is where
+     there is a <SPAN
+CLASS="QUOTE"
+>"fast path"</SPAN
+> update script that jumps ahead several
+     versions as well as a downgrade script to the fast path's start point.
+     It might take fewer steps to apply the downgrade and then the fast
+     path than to move ahead one version at a time.  If the downgrade script
+     drops any irreplaceable objects, this will yield undesirable results.
+    </P
+><P
+>     To check for unexpected update paths, use this command:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT * FROM pg_extension_update_paths('<TT
+CLASS="REPLACEABLE"
+><I
+>extension_name</I
+></TT
+>');</PRE
+><P>
+     This shows each pair of distinct known version names for the specified
+     extension, together with the update path sequence that would be taken to
+     get from the source version to the target version, or <TT
+CLASS="LITERAL"
+>NULL</TT
+> if
+     there is no available update path.  The path is shown in textual form
+     with <TT
+CLASS="LITERAL"
+>--</TT
+> separators.  You can use
+     <TT
+CLASS="LITERAL"
+>regexp_split_to_array(path,'--')</TT
+> if you prefer an array
+     format.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN59201"
+>35.15.5. Extension Example</A
+></H2
+><P
+>     Here is a complete example of an <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+>-only
+     extension, a two-element composite type that can store any type of value
+     in its slots, which are named <SPAN
+CLASS="QUOTE"
+>"k"</SPAN
+> and <SPAN
+CLASS="QUOTE"
+>"v"</SPAN
+>.  Non-text
+     values are automatically coerced to text for storage.
+    </P
+><P
+>     The script file <TT
+CLASS="FILENAME"
+>pair--1.0.sql</TT
+> looks like this:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>-- complain if script is sourced in psql, rather than via CREATE EXTENSION
+\echo Use "CREATE EXTENSION pair" to load this file. \quit
+
+CREATE TYPE pair AS ( k text, v text );
+
+CREATE OR REPLACE FUNCTION pair(anyelement, text)
+RETURNS pair LANGUAGE SQL AS 'SELECT ROW($1, $2)::pair';
+
+CREATE OR REPLACE FUNCTION pair(text, anyelement)
+RETURNS pair LANGUAGE SQL AS 'SELECT ROW($1, $2)::pair';
+
+CREATE OR REPLACE FUNCTION pair(anyelement, anyelement)
+RETURNS pair LANGUAGE SQL AS 'SELECT ROW($1, $2)::pair';
+
+CREATE OR REPLACE FUNCTION pair(text, text)
+RETURNS pair LANGUAGE SQL AS 'SELECT ROW($1, $2)::pair;';
+
+CREATE OPERATOR ~&#62; (LEFTARG = text, RIGHTARG = anyelement, PROCEDURE = pair);
+CREATE OPERATOR ~&#62; (LEFTARG = anyelement, RIGHTARG = text, PROCEDURE = pair);
+CREATE OPERATOR ~&#62; (LEFTARG = anyelement, RIGHTARG = anyelement, PROCEDURE = pair);
+CREATE OPERATOR ~&#62; (LEFTARG = text, RIGHTARG = text, PROCEDURE = pair);</PRE
+><P>
+    </P
+><P
+>     The control file <TT
+CLASS="FILENAME"
+>pair.control</TT
+> looks like this:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+># pair extension
+comment = 'A key/value pair data type'
+default_version = '1.0'
+relocatable = true</PRE
+><P>
+    </P
+><P
+>     While you hardly need a makefile to install these two files into the
+     correct directory, you could use a <TT
+CLASS="FILENAME"
+>Makefile</TT
+> containing this:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXTENSION = pair
+DATA = pair--1.0.sql
+
+PG_CONFIG = pg_config
+PGXS := $(shell $(PG_CONFIG) --pgxs)
+include $(PGXS)</PRE
+><P>
+
+     This makefile relies on <ACRONYM
+CLASS="ACRONYM"
+>PGXS</ACRONYM
+>, which is described
+     in <A
+HREF="extend-pgxs.html"
+>Section 35.16</A
+>.  The command <TT
+CLASS="LITERAL"
+>make install</TT
+>
+     will install the control and script files into the correct
+     directory as reported by <SPAN
+CLASS="APPLICATION"
+>pg_config</SPAN
+>.
+    </P
+><P
+>     Once the files are installed, use the
+     <A
+HREF="sql-createextension.html"
+>CREATE EXTENSION</A
+> command to load the objects into
+     any particular database.
+    </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="xindex.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="extend-pgxs.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Interfacing Extensions To Indexes</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="extend.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Extension Building Infrastructure</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

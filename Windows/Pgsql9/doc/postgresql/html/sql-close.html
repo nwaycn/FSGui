@@ -1,0 +1,356 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>CLOSE</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="CHECKPOINT"
+HREF="sql-checkpoint.html"><LINK
+REL="NEXT"
+TITLE="CLUSTER"
+HREF="sql-cluster.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="CHECKPOINT"
+HREF="sql-checkpoint.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="CLUSTER"
+HREF="sql-cluster.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-CLOSE"
+></A
+>CLOSE</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN73676"
+></A
+><H2
+>Name</H2
+>CLOSE&nbsp;--&nbsp;close a cursor</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN73679"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>CLOSE { <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> | ALL }</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN73682"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>CLOSE</TT
+> frees the resources associated with an open cursor.
+   After the cursor is closed, no subsequent operations
+   are allowed on it. A cursor should be closed when it is
+   no longer needed.
+  </P
+><P
+>   Every non-holdable open cursor is implicitly closed when a
+   transaction is terminated by <TT
+CLASS="COMMAND"
+>COMMIT</TT
+> or
+   <TT
+CLASS="COMMAND"
+>ROLLBACK</TT
+>.  A holdable cursor is implicitly
+   closed if the transaction that created it aborts via
+   <TT
+CLASS="COMMAND"
+>ROLLBACK</TT
+>.  If the creating transaction
+   successfully commits, the holdable cursor remains open until an
+   explicit <TT
+CLASS="COMMAND"
+>CLOSE</TT
+> is executed, or the client
+   disconnects.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN73691"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></DT
+><DD
+><P
+>      The name of an open cursor to close.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>ALL</TT
+></DT
+><DD
+><P
+>      Close all open cursors.
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN73704"
+></A
+><H2
+>Notes</H2
+><P
+>   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> does not have an explicit
+   <TT
+CLASS="COMMAND"
+>OPEN</TT
+> cursor statement; a cursor is considered
+   open when it is declared.  Use the
+   <A
+HREF="sql-declare.html"
+>DECLARE</A
+>
+   statement to declare a cursor.
+  </P
+><P
+>   You can see all available cursors by querying the <A
+HREF="view-pg-cursors.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_cursors</TT
+></A
+> system view.
+  </P
+><P
+>   If a cursor is closed after a savepoint which is later rolled back,
+   the <TT
+CLASS="COMMAND"
+>CLOSE</TT
+> is not rolled back; that is, the cursor
+   remains closed.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN73715"
+></A
+><H2
+>Examples</H2
+><P
+>   Close the cursor <TT
+CLASS="LITERAL"
+>liahona</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CLOSE liahona;</PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN73720"
+></A
+><H2
+>Compatibility</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>CLOSE</TT
+> is fully conforming with the SQL
+   standard. <TT
+CLASS="COMMAND"
+>CLOSE ALL</TT
+> is a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+   extension.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN73726"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-declare.html"
+>DECLARE</A
+>, <A
+HREF="sql-fetch.html"
+>FETCH</A
+>, <A
+HREF="sql-move.html"
+>MOVE</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-checkpoint.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-cluster.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>CHECKPOINT</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>CLUSTER</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

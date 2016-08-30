@@ -1,0 +1,525 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.4.7</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.4.8"
+HREF="release-9-4-8.html"><LINK
+REL="NEXT"
+TITLE="Release 9.4.6"
+HREF="release-9-4-6.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.4.8"
+HREF="release-9-4-8.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.4.6"
+HREF="release-9-4-6.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-4-7"
+>E.8. Release 9.4.7</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2016-03-31</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 9.4.6.
+   For information about new features in the 9.4 major release, see
+   <A
+HREF="release-9-4.html"
+>Section E.15</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN128177"
+>E.8.1. Migration to Version 9.4.7</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.4.X.
+   </P
+><P
+>    However, if you are upgrading from a version earlier than 9.4.6,
+    see <A
+HREF="release-9-4-6.html"
+>Section E.9</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN128182"
+>E.8.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix incorrect handling of NULL index entries in
+      indexed <TT
+CLASS="LITERAL"
+>ROW()</TT
+> comparisons (Tom Lane)
+     </P
+><P
+>      An index search using a row comparison such as <TT
+CLASS="LITERAL"
+>ROW(a, b) &gt;
+      ROW('x', 'y')</TT
+> would stop upon reaching a NULL entry in
+      the <TT
+CLASS="STRUCTFIELD"
+>b</TT
+> column, ignoring the fact that there might be
+      non-NULL <TT
+CLASS="STRUCTFIELD"
+>b</TT
+> values associated with later values
+      of <TT
+CLASS="STRUCTFIELD"
+>a</TT
+>.
+     </P
+></LI
+><LI
+><P
+>      Avoid unlikely data-loss scenarios due to renaming files without
+      adequate <CODE
+CLASS="FUNCTION"
+>fsync()</CODE
+> calls before and after (Michael Paquier,
+      Tomas Vondra, Andres Freund)
+     </P
+></LI
+><LI
+><P
+>      Fix bug in <CODE
+CLASS="FUNCTION"
+>json_to_record()</CODE
+> when a field of its input
+      object contains a sub-object with a field name matching one of the
+      requested output column names (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix misformatting of negative time zone offsets
+      by <CODE
+CLASS="FUNCTION"
+>to_char()</CODE
+>'s <TT
+CLASS="LITERAL"
+>OF</TT
+> format code
+      (Thomas Munro, Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Ignore <A
+HREF="standby-settings.html#RECOVERY-MIN-APPLY-DELAY"
+>recovery_min_apply_delay</A
+> parameter until
+      recovery has reached a consistent state (Michael Paquier)
+     </P
+><P
+>      Previously, standby servers would delay application of WAL records in
+      response to <TT
+CLASS="VARNAME"
+>recovery_min_apply_delay</TT
+> even while replaying
+      the initial portion of WAL needed to make their database state valid.
+      Since the standby is useless until it's reached a consistent database
+      state, this was deemed unhelpful.
+     </P
+></LI
+><LI
+><P
+>      Correctly handle cases where <TT
+CLASS="LITERAL"
+>pg_subtrans</TT
+> is close to XID
+      wraparound during server startup (Jeff Janes)
+     </P
+></LI
+><LI
+><P
+>      Fix assorted bugs in logical decoding (Andres Freund)
+     </P
+><P
+>      Trouble cases included tuples larger than one page when replica
+      identity is <TT
+CLASS="LITERAL"
+>FULL</TT
+>, <TT
+CLASS="COMMAND"
+>UPDATE</TT
+>s that change a
+      primary key within a transaction large enough to be spooled to disk,
+      incorrect reports of <SPAN
+CLASS="QUOTE"
+>"subxact logged without previous toplevel
+      record"</SPAN
+>, and incorrect reporting of a transaction's commit time.
+     </P
+></LI
+><LI
+><P
+>      Fix planner error with nested security barrier views when the outer
+      view has a <TT
+CLASS="LITERAL"
+>WHERE</TT
+> clause containing a correlated subquery
+      (Dean Rasheed)
+     </P
+></LI
+><LI
+><P
+>      Fix corner-case crash due to trying to free <CODE
+CLASS="FUNCTION"
+>localeconv()</CODE
+>
+      output strings more than once (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix parsing of affix files for <TT
+CLASS="LITERAL"
+>ispell</TT
+> dictionaries
+      (Tom Lane)
+     </P
+><P
+>      The code could go wrong if the affix file contained any characters
+      whose byte length changes during case-folding, for
+      example <TT
+CLASS="LITERAL"
+>I</TT
+> in Turkish UTF8 locales.
+     </P
+></LI
+><LI
+><P
+>      Avoid use of <CODE
+CLASS="FUNCTION"
+>sscanf()</CODE
+> to parse <TT
+CLASS="LITERAL"
+>ispell</TT
+>
+      dictionary files (Artur Zakirov)
+     </P
+><P
+>      This dodges a portability problem on FreeBSD-derived platforms
+      (including OS X).
+     </P
+></LI
+><LI
+><P
+>      Avoid a crash on old Windows versions (before 7SP1/2008R2SP1) with an
+      AVX2-capable CPU and a Postgres build done with Visual Studio 2013
+      (Christian Ullrich)
+     </P
+><P
+>      This is a workaround for a bug in Visual Studio 2013's runtime
+      library, which Microsoft have stated they will not fix in that
+      version.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s tab completion logic to handle multibyte
+      characters properly (Kyotaro Horiguchi, Robert Haas)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s tab completion for
+      <TT
+CLASS="LITERAL"
+>SECURITY LABEL</TT
+> (Tom Lane)
+     </P
+><P
+>      Pressing TAB after <TT
+CLASS="LITERAL"
+>SECURITY LABEL</TT
+> might cause a crash
+      or offering of inappropriate keywords.
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> accept a wait timeout from the
+      <TT
+CLASS="ENVAR"
+>PGCTLTIMEOUT</TT
+> environment variable, if none is specified on
+      the command line (Noah Misch)
+     </P
+><P
+>      This eases testing of slower buildfarm members by allowing them
+      to globally specify a longer-than-normal timeout for postmaster
+      startup and shutdown.
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect test for Windows service status
+      in <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> (Manuel Mathar)
+     </P
+><P
+>      The previous set of minor releases attempted to
+      fix <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> to properly determine whether to send log
+      messages to Window's Event Log, but got the test backwards.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> to correctly handle the combination
+      of <TT
+CLASS="LITERAL"
+>-C</TT
+> and <TT
+CLASS="LITERAL"
+>-M prepared</TT
+> options (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>, skip creating a deletion script when
+      the new data directory is inside the old data directory (Bruce
+      Momjian)
+     </P
+><P
+>      Blind application of the script in such cases would result in loss of
+      the new data directory.
+     </P
+></LI
+><LI
+><P
+>      In PL/Perl, properly translate empty Postgres arrays into empty Perl
+      arrays (Alex Hunsaker)
+     </P
+></LI
+><LI
+><P
+>      Make PL/Python cope with function names that aren't valid Python
+      identifiers (Jim Nasby)
+     </P
+></LI
+><LI
+><P
+>      Fix multiple mistakes in the statistics returned
+      by <TT
+CLASS="FILENAME"
+>contrib/pgstattuple</TT
+>'s <CODE
+CLASS="FUNCTION"
+>pgstatindex()</CODE
+>
+      function (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Remove dependency on <TT
+CLASS="LITERAL"
+>psed</TT
+> in MSVC builds, since it's no
+      longer provided by core Perl (Michael Paquier, Andrew Dunstan)
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2016c
+      for DST law changes in Azerbaijan, Chile, Haiti, Palestine, and Russia
+      (Altai, Astrakhan, Kirov, Sakhalin, Ulyanovsk regions), plus
+      historical corrections for Lithuania, Moldova, and Russia
+      (Kaliningrad, Samara, Volgograd).
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-4-8.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-4-6.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.4.8</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.4.6</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

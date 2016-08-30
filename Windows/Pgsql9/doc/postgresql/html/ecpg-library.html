@@ -1,0 +1,355 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Library Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="ECPG - Embedded SQL in C"
+HREF="ecpg.html"><LINK
+REL="PREVIOUS"
+TITLE="Processing Embedded SQL Programs"
+HREF="ecpg-process.html"><LINK
+REL="NEXT"
+TITLE="Large Objects"
+HREF="ecpg-lo.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Processing Embedded SQL Programs"
+HREF="ecpg-process.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ecpg.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 33. <SPAN
+CLASS="APPLICATION"
+>ECPG</SPAN
+> - Embedded <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> in C</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Large Objects"
+HREF="ecpg-lo.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="ECPG-LIBRARY"
+>33.11. Library Functions</A
+></H1
+><P
+>   The <TT
+CLASS="FILENAME"
+>libecpg</TT
+> library primarily contains
+   <SPAN
+CLASS="QUOTE"
+>"hidden"</SPAN
+> functions that are used to implement the
+   functionality expressed by the embedded SQL commands.  But there
+   are some functions that can usefully be called directly.  Note that
+   this makes your code unportable.
+  </P
+><P
+></P
+><UL
+><LI
+><P
+>     <CODE
+CLASS="FUNCTION"
+>ECPGdebug(int <TT
+CLASS="REPLACEABLE"
+><I
+>on</I
+></TT
+>, FILE
+     *<TT
+CLASS="REPLACEABLE"
+><I
+>stream</I
+></TT
+>)</CODE
+> turns on debug
+     logging if called with the first argument non-zero. Debug logging
+     is done on <TT
+CLASS="REPLACEABLE"
+><I
+>stream</I
+></TT
+>.  The log contains
+     all <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> statements with all the input
+     variables inserted, and the results from the
+     <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> server. This can be very
+     useful when searching for errors in your <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+>
+     statements.
+    </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    On Windows, if the <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+> libraries and an application are
+    compiled with different flags, this function call will crash the
+    application because the internal representation of the
+    <TT
+CLASS="LITERAL"
+>FILE</TT
+> pointers differ.  Specifically,
+    multithreaded/single-threaded, release/debug, and static/dynamic
+    flags should be the same for the library and all applications using
+    that library.
+    </P
+></BLOCKQUOTE
+></DIV
+></LI
+><LI
+><P
+>       <CODE
+CLASS="FUNCTION"
+>ECPGget_PGconn(const char *<TT
+CLASS="REPLACEABLE"
+><I
+>connection_name</I
+></TT
+>)
+       </CODE
+> returns the library database connection handle identified by the given name.
+       If <TT
+CLASS="REPLACEABLE"
+><I
+>connection_name</I
+></TT
+> is set to <TT
+CLASS="LITERAL"
+>NULL</TT
+>, the current
+       connection handle is returned. If no connection handle can be identified, the function returns
+       <TT
+CLASS="LITERAL"
+>NULL</TT
+>. The returned connection handle can be used to call any other functions
+       from <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>, if necessary.
+     </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>       It is a bad idea to manipulate database connection handles made from <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+> directly
+       with <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> routines.
+     </P
+></BLOCKQUOTE
+></DIV
+></LI
+><LI
+><P
+>       <CODE
+CLASS="FUNCTION"
+>ECPGtransactionStatus(const char *<TT
+CLASS="REPLACEABLE"
+><I
+>connection_name</I
+></TT
+>)</CODE
+>
+       returns the current transaction status of the given connection identified by <TT
+CLASS="REPLACEABLE"
+><I
+>connection_name</I
+></TT
+>.
+       See <A
+HREF="libpq-status.html"
+>Section 31.2</A
+> and libpq's <CODE
+CLASS="FUNCTION"
+>PQtransactionStatus()</CODE
+> for details about the returned status codes.
+     </P
+></LI
+><LI
+><P
+>     <CODE
+CLASS="FUNCTION"
+>ECPGstatus(int <TT
+CLASS="REPLACEABLE"
+><I
+>lineno</I
+></TT
+>,
+     const char* <TT
+CLASS="REPLACEABLE"
+><I
+>connection_name</I
+></TT
+>)</CODE
+>
+     returns true if you are connected to a database and false if not.
+     <TT
+CLASS="REPLACEABLE"
+><I
+>connection_name</I
+></TT
+> can be <TT
+CLASS="LITERAL"
+>NULL</TT
+>
+     if a single connection is being used.
+    </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ecpg-process.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="ecpg-lo.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Processing Embedded SQL Programs</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="ecpg.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Large Objects</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

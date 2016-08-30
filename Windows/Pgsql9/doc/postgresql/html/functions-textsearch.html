@@ -1,0 +1,1703 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Text Search Functions and Operators</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Functions and Operators"
+HREF="functions.html"><LINK
+REL="PREVIOUS"
+TITLE="Network Address Functions and Operators"
+HREF="functions-net.html"><LINK
+REL="NEXT"
+TITLE="XML Functions"
+HREF="functions-xml.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Network Address Functions and Operators"
+HREF="functions-net.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 9. Functions and Operators</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="XML Functions"
+HREF="functions-xml.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="FUNCTIONS-TEXTSEARCH"
+>9.13. Text Search Functions and Operators</A
+></H1
+><P
+>   <A
+HREF="functions-textsearch.html#TEXTSEARCH-OPERATORS-TABLE"
+>Table 9-37</A
+>,
+   <A
+HREF="functions-textsearch.html#TEXTSEARCH-FUNCTIONS-TABLE"
+>Table 9-38</A
+> and
+   <A
+HREF="functions-textsearch.html#TEXTSEARCH-FUNCTIONS-DEBUG-TABLE"
+>Table 9-39</A
+>
+   summarize the functions and operators that are provided
+   for full text searching.  See <A
+HREF="textsearch.html"
+>Chapter 12</A
+> for a detailed
+   explanation of <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>'s text search
+   facility.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="TEXTSEARCH-OPERATORS-TABLE"
+></A
+><P
+><B
+>Table 9-37. Text Search Operators</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Operator</TH
+><TH
+>Description</TH
+><TH
+>Example</TH
+><TH
+>Result</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>@@</TT
+> </TD
+><TD
+><TT
+CLASS="TYPE"
+>tsvector</TT
+> matches <TT
+CLASS="TYPE"
+>tsquery</TT
+> ?</TD
+><TD
+><TT
+CLASS="LITERAL"
+>to_tsvector('fat cats ate rats') @@ to_tsquery('cat &amp; rat')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>t</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>@@@</TT
+> </TD
+><TD
+>deprecated synonym for <TT
+CLASS="LITERAL"
+>@@</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>to_tsvector('fat cats ate rats') @@@ to_tsquery('cat &amp; rat')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>t</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>||</TT
+> </TD
+><TD
+>concatenate <TT
+CLASS="TYPE"
+>tsvector</TT
+>s</TD
+><TD
+><TT
+CLASS="LITERAL"
+>'a:1 b:2'::tsvector || 'c:1 d:2 b:3'::tsvector</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>'a':1 'b':2,5 'c':3 'd':4</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>&amp;&amp;</TT
+> </TD
+><TD
+>AND <TT
+CLASS="TYPE"
+>tsquery</TT
+>s together</TD
+><TD
+><TT
+CLASS="LITERAL"
+>'fat | rat'::tsquery &amp;&amp; 'cat'::tsquery</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>( 'fat' | 'rat' ) &amp; 'cat'</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>||</TT
+> </TD
+><TD
+>OR <TT
+CLASS="TYPE"
+>tsquery</TT
+>s together</TD
+><TD
+><TT
+CLASS="LITERAL"
+>'fat | rat'::tsquery || 'cat'::tsquery</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>( 'fat' | 'rat' ) | 'cat'</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>!!</TT
+> </TD
+><TD
+>negate a <TT
+CLASS="TYPE"
+>tsquery</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>!! 'cat'::tsquery</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>!'cat'</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>@&gt;</TT
+> </TD
+><TD
+><TT
+CLASS="TYPE"
+>tsquery</TT
+> contains another ?</TD
+><TD
+><TT
+CLASS="LITERAL"
+>'cat'::tsquery @&gt; 'cat &amp; rat'::tsquery</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>f</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>&lt;@</TT
+> </TD
+><TD
+><TT
+CLASS="TYPE"
+>tsquery</TT
+> is contained in ?</TD
+><TD
+><TT
+CLASS="LITERAL"
+>'cat'::tsquery &lt;@ 'cat &amp; rat'::tsquery</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>t</TT
+></TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>      The <TT
+CLASS="TYPE"
+>tsquery</TT
+> containment operators consider only the lexemes
+      listed in the two queries, ignoring the combining operators.
+     </P
+></BLOCKQUOTE
+></DIV
+><P
+>     In addition to the operators shown in the table, the ordinary B-tree
+     comparison operators (<TT
+CLASS="LITERAL"
+>=</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;</TT
+>, etc) are defined
+     for types <TT
+CLASS="TYPE"
+>tsvector</TT
+> and <TT
+CLASS="TYPE"
+>tsquery</TT
+>.  These are not very
+     useful for text searching but allow, for example, unique indexes to be
+     built on columns of these types.
+    </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="TEXTSEARCH-FUNCTIONS-TABLE"
+></A
+><P
+><B
+>Table 9-38. Text Search Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+><TH
+>Example</TH
+><TH
+>Result</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>get_current_ts_config()</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>regconfig</TT
+></TD
+><TD
+>get default text search configuration</TD
+><TD
+><TT
+CLASS="LITERAL"
+>get_current_ts_config()</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>english</TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>length(<TT
+CLASS="TYPE"
+>tsvector</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>number of lexemes in <TT
+CLASS="TYPE"
+>tsvector</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>length('fat:2,4 cat:3 rat:5A'::tsvector)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>3</TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>numnode(<TT
+CLASS="TYPE"
+>tsquery</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>number of lexemes plus operators in <TT
+CLASS="TYPE"
+>tsquery</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+> numnode('(fat &amp; rat) | cat'::tsquery)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>5</TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>plainto_tsquery([<SPAN
+CLASS="OPTIONAL"
+> <TT
+CLASS="REPLACEABLE"
+><I
+>config</I
+></TT
+> <TT
+CLASS="TYPE"
+>regconfig</TT
+> , </SPAN
+>] <TT
+CLASS="REPLACEABLE"
+><I
+>query</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>tsquery</TT
+></TD
+><TD
+>produce <TT
+CLASS="TYPE"
+>tsquery</TT
+> ignoring punctuation</TD
+><TD
+><TT
+CLASS="LITERAL"
+>plainto_tsquery('english', 'The Fat Rats')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>'fat' &amp; 'rat'</TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>querytree(<TT
+CLASS="REPLACEABLE"
+><I
+>query</I
+></TT
+> <TT
+CLASS="TYPE"
+>tsquery</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>get indexable part of a <TT
+CLASS="TYPE"
+>tsquery</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>querytree('foo &amp; ! bar'::tsquery)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>'foo'</TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>setweight(<TT
+CLASS="TYPE"
+>tsvector</TT
+>, <TT
+CLASS="TYPE"
+>"char"</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>tsvector</TT
+></TD
+><TD
+>assign weight to each element of <TT
+CLASS="TYPE"
+>tsvector</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>setweight('fat:2,4 cat:3 rat:5B'::tsvector, 'A')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>'cat':3A 'fat':2A,4A 'rat':5A</TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>strip(<TT
+CLASS="TYPE"
+>tsvector</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>tsvector</TT
+></TD
+><TD
+>remove positions and weights from <TT
+CLASS="TYPE"
+>tsvector</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>strip('fat:2,4 cat:3 rat:5A'::tsvector)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>'cat' 'fat' 'rat'</TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>to_tsquery([<SPAN
+CLASS="OPTIONAL"
+> <TT
+CLASS="REPLACEABLE"
+><I
+>config</I
+></TT
+> <TT
+CLASS="TYPE"
+>regconfig</TT
+> , </SPAN
+>] <TT
+CLASS="REPLACEABLE"
+><I
+>query</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>tsquery</TT
+></TD
+><TD
+>normalize words and convert to <TT
+CLASS="TYPE"
+>tsquery</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>to_tsquery('english', 'The &amp; Fat &amp; Rats')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>'fat' &amp; 'rat'</TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>to_tsvector([<SPAN
+CLASS="OPTIONAL"
+> <TT
+CLASS="REPLACEABLE"
+><I
+>config</I
+></TT
+> <TT
+CLASS="TYPE"
+>regconfig</TT
+> , </SPAN
+>] <TT
+CLASS="REPLACEABLE"
+><I
+>document</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>tsvector</TT
+></TD
+><TD
+>reduce document text to <TT
+CLASS="TYPE"
+>tsvector</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>to_tsvector('english', 'The Fat Rats')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>'fat':2 'rat':3</TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>ts_headline([<SPAN
+CLASS="OPTIONAL"
+> <TT
+CLASS="REPLACEABLE"
+><I
+>config</I
+></TT
+> <TT
+CLASS="TYPE"
+>regconfig</TT
+>, </SPAN
+>] <TT
+CLASS="REPLACEABLE"
+><I
+>document</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>query</I
+></TT
+> <TT
+CLASS="TYPE"
+>tsquery</TT
+> [<SPAN
+CLASS="OPTIONAL"
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>options</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+> </SPAN
+>])</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>display a query match</TD
+><TD
+><TT
+CLASS="LITERAL"
+>ts_headline('x y z', 'z'::tsquery)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>x y &lt;b&gt;z&lt;/b&gt;</TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>ts_rank([<SPAN
+CLASS="OPTIONAL"
+> <TT
+CLASS="REPLACEABLE"
+><I
+>weights</I
+></TT
+> <TT
+CLASS="TYPE"
+>float4[]</TT
+>, </SPAN
+>] <TT
+CLASS="REPLACEABLE"
+><I
+>vector</I
+></TT
+> <TT
+CLASS="TYPE"
+>tsvector</TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>query</I
+></TT
+> <TT
+CLASS="TYPE"
+>tsquery</TT
+> [<SPAN
+CLASS="OPTIONAL"
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>normalization</I
+></TT
+> <TT
+CLASS="TYPE"
+>integer</TT
+> </SPAN
+>])</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>float4</TT
+></TD
+><TD
+>rank document for query</TD
+><TD
+><TT
+CLASS="LITERAL"
+>ts_rank(textsearch, query)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>0.818</TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>ts_rank_cd([<SPAN
+CLASS="OPTIONAL"
+> <TT
+CLASS="REPLACEABLE"
+><I
+>weights</I
+></TT
+> <TT
+CLASS="TYPE"
+>float4[]</TT
+>, </SPAN
+>] <TT
+CLASS="REPLACEABLE"
+><I
+>vector</I
+></TT
+> <TT
+CLASS="TYPE"
+>tsvector</TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>query</I
+></TT
+> <TT
+CLASS="TYPE"
+>tsquery</TT
+> [<SPAN
+CLASS="OPTIONAL"
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>normalization</I
+></TT
+> <TT
+CLASS="TYPE"
+>integer</TT
+> </SPAN
+>])</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>float4</TT
+></TD
+><TD
+>rank document for query using cover density</TD
+><TD
+><TT
+CLASS="LITERAL"
+>ts_rank_cd('{0.1, 0.2, 0.4, 1.0}', textsearch, query)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>2.01317</TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>ts_rewrite(<TT
+CLASS="REPLACEABLE"
+><I
+>query</I
+></TT
+> <TT
+CLASS="TYPE"
+>tsquery</TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>target</I
+></TT
+> <TT
+CLASS="TYPE"
+>tsquery</TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>substitute</I
+></TT
+> <TT
+CLASS="TYPE"
+>tsquery</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>tsquery</TT
+></TD
+><TD
+>replace target with substitute within query</TD
+><TD
+><TT
+CLASS="LITERAL"
+>ts_rewrite('a &amp; b'::tsquery, 'a'::tsquery, 'foo|bar'::tsquery)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>'b' &amp; ( 'foo' | 'bar' )</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>ts_rewrite(<TT
+CLASS="REPLACEABLE"
+><I
+>query</I
+></TT
+> <TT
+CLASS="TYPE"
+>tsquery</TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>select</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>tsquery</TT
+></TD
+><TD
+>replace using targets and substitutes from a <TT
+CLASS="COMMAND"
+>SELECT</TT
+> command</TD
+><TD
+><TT
+CLASS="LITERAL"
+>SELECT ts_rewrite('a &amp; b'::tsquery, 'SELECT t,s FROM aliases')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>'b' &amp; ( 'foo' | 'bar' )</TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>tsvector_update_trigger()</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>trigger</TT
+></TD
+><TD
+>trigger function for automatic <TT
+CLASS="TYPE"
+>tsvector</TT
+> column update</TD
+><TD
+><TT
+CLASS="LITERAL"
+>CREATE TRIGGER ... tsvector_update_trigger(tsvcol, 'pg_catalog.swedish', title, body)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+></TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>tsvector_update_trigger_column()</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>trigger</TT
+></TD
+><TD
+>trigger function for automatic <TT
+CLASS="TYPE"
+>tsvector</TT
+> column update</TD
+><TD
+><TT
+CLASS="LITERAL"
+>CREATE TRIGGER ... tsvector_update_trigger_column(tsvcol, configcol, title, body)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+></TT
+></TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    All the text search functions that accept an optional <TT
+CLASS="TYPE"
+>regconfig</TT
+>
+    argument will use the configuration specified by
+    <A
+HREF="runtime-config-client.html#GUC-DEFAULT-TEXT-SEARCH-CONFIG"
+>default_text_search_config</A
+>
+    when that argument is omitted.
+   </P
+></BLOCKQUOTE
+></DIV
+><P
+>   The functions in
+   <A
+HREF="functions-textsearch.html#TEXTSEARCH-FUNCTIONS-DEBUG-TABLE"
+>Table 9-39</A
+>
+   are listed separately because they are not usually used in everyday text
+   searching operations.  They are helpful for development and debugging
+   of new text search configurations.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="TEXTSEARCH-FUNCTIONS-DEBUG-TABLE"
+></A
+><P
+><B
+>Table 9-39. Text Search Debugging Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+><TH
+>Example</TH
+><TH
+>Result</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>ts_debug([<SPAN
+CLASS="OPTIONAL"
+> <TT
+CLASS="REPLACEABLE"
+><I
+>config</I
+></TT
+> <TT
+CLASS="TYPE"
+>regconfig</TT
+>, </SPAN
+>] <TT
+CLASS="REPLACEABLE"
+><I
+>document</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, OUT <TT
+CLASS="REPLACEABLE"
+><I
+>alias</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, OUT <TT
+CLASS="REPLACEABLE"
+><I
+>description</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, OUT <TT
+CLASS="REPLACEABLE"
+><I
+>token</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, OUT <TT
+CLASS="REPLACEABLE"
+><I
+>dictionaries</I
+></TT
+> <TT
+CLASS="TYPE"
+>regdictionary[]</TT
+>, OUT <TT
+CLASS="REPLACEABLE"
+><I
+>dictionary</I
+></TT
+> <TT
+CLASS="TYPE"
+>regdictionary</TT
+>, OUT <TT
+CLASS="REPLACEABLE"
+><I
+>lexemes</I
+></TT
+> <TT
+CLASS="TYPE"
+>text[]</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>setof record</TT
+></TD
+><TD
+>test a configuration</TD
+><TD
+><TT
+CLASS="LITERAL"
+>ts_debug('english', 'The Brightest supernovaes')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>(asciiword,"Word, all ASCII",The,{english_stem},english_stem,{}) ...</TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>ts_lexize(<TT
+CLASS="REPLACEABLE"
+><I
+>dict</I
+></TT
+> <TT
+CLASS="TYPE"
+>regdictionary</TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>token</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>text[]</TT
+></TD
+><TD
+>test a dictionary</TD
+><TD
+><TT
+CLASS="LITERAL"
+>ts_lexize('english_stem', 'stars')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>{star}</TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>ts_parse(<TT
+CLASS="REPLACEABLE"
+><I
+>parser_name</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>document</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, OUT <TT
+CLASS="REPLACEABLE"
+><I
+>tokid</I
+></TT
+> <TT
+CLASS="TYPE"
+>integer</TT
+>, OUT <TT
+CLASS="REPLACEABLE"
+><I
+>token</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>setof record</TT
+></TD
+><TD
+>test a parser</TD
+><TD
+><TT
+CLASS="LITERAL"
+>ts_parse('default', 'foo - bar')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>(1,foo) ...</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>ts_parse(<TT
+CLASS="REPLACEABLE"
+><I
+>parser_oid</I
+></TT
+> <TT
+CLASS="TYPE"
+>oid</TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>document</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, OUT <TT
+CLASS="REPLACEABLE"
+><I
+>tokid</I
+></TT
+> <TT
+CLASS="TYPE"
+>integer</TT
+>, OUT <TT
+CLASS="REPLACEABLE"
+><I
+>token</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>setof record</TT
+></TD
+><TD
+>test a parser</TD
+><TD
+><TT
+CLASS="LITERAL"
+>ts_parse(3722, 'foo - bar')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>(1,foo) ...</TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>ts_token_type(<TT
+CLASS="REPLACEABLE"
+><I
+>parser_name</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, OUT <TT
+CLASS="REPLACEABLE"
+><I
+>tokid</I
+></TT
+> <TT
+CLASS="TYPE"
+>integer</TT
+>, OUT <TT
+CLASS="REPLACEABLE"
+><I
+>alias</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, OUT <TT
+CLASS="REPLACEABLE"
+><I
+>description</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>setof record</TT
+></TD
+><TD
+>get token types defined by parser</TD
+><TD
+><TT
+CLASS="LITERAL"
+>ts_token_type('default')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>(1,asciiword,"Word, all ASCII") ...</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>ts_token_type(<TT
+CLASS="REPLACEABLE"
+><I
+>parser_oid</I
+></TT
+> <TT
+CLASS="TYPE"
+>oid</TT
+>, OUT <TT
+CLASS="REPLACEABLE"
+><I
+>tokid</I
+></TT
+> <TT
+CLASS="TYPE"
+>integer</TT
+>, OUT <TT
+CLASS="REPLACEABLE"
+><I
+>alias</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, OUT <TT
+CLASS="REPLACEABLE"
+><I
+>description</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>setof record</TT
+></TD
+><TD
+>get token types defined by parser</TD
+><TD
+><TT
+CLASS="LITERAL"
+>ts_token_type(3722)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>(1,asciiword,"Word, all ASCII") ...</TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>ts_stat(<TT
+CLASS="REPLACEABLE"
+><I
+>sqlquery</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, [<SPAN
+CLASS="OPTIONAL"
+> <TT
+CLASS="REPLACEABLE"
+><I
+>weights</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, </SPAN
+>] OUT <TT
+CLASS="REPLACEABLE"
+><I
+>word</I
+></TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, OUT <TT
+CLASS="REPLACEABLE"
+><I
+>ndoc</I
+></TT
+> <TT
+CLASS="TYPE"
+>integer</TT
+>, OUT <TT
+CLASS="REPLACEABLE"
+><I
+>nentry</I
+></TT
+> <TT
+CLASS="TYPE"
+>integer</TT
+>)</CODE
+></TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>setof record</TT
+></TD
+><TD
+>get statistics of a <TT
+CLASS="TYPE"
+>tsvector</TT
+> column</TD
+><TD
+><TT
+CLASS="LITERAL"
+>ts_stat('SELECT vector from apod')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>(foo,10,15) ...</TT
+></TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions-net.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="functions-xml.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Network Address Functions and Operators</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>XML Functions</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

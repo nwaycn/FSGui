@@ -1,0 +1,1824 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Using Descriptor Areas</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="ECPG - Embedded SQL in C"
+HREF="ecpg.html"><LINK
+REL="PREVIOUS"
+TITLE="pgtypes Library"
+HREF="ecpg-pgtypes.html"><LINK
+REL="NEXT"
+TITLE="Error Handling"
+HREF="ecpg-errors.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pgtypes Library"
+HREF="ecpg-pgtypes.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ecpg.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 33. <SPAN
+CLASS="APPLICATION"
+>ECPG</SPAN
+> - Embedded <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> in C</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Error Handling"
+HREF="ecpg-errors.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="ECPG-DESCRIPTORS"
+>33.7. Using Descriptor Areas</A
+></H1
+><P
+>   An SQL descriptor area is a more sophisticated method for processing
+   the result of a <TT
+CLASS="COMMAND"
+>SELECT</TT
+>, <TT
+CLASS="COMMAND"
+>FETCH</TT
+> or
+   a <TT
+CLASS="COMMAND"
+>DESCRIBE</TT
+> statement. An SQL descriptor area groups
+   the data of one row of data together with metadata items into one
+   data structure.  The metadata is particularly useful when executing
+   dynamic SQL statements, where the nature of the result columns might
+   not be known ahead of time. PostgreSQL provides two ways to use
+   Descriptor Areas: the named SQL Descriptor Areas and the C-structure
+   SQLDAs.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="ECPG-NAMED-DESCRIPTORS"
+>33.7.1. Named SQL Descriptor Areas</A
+></H2
+><P
+>    A named SQL descriptor area consists of a header, which contains
+    information concerning the entire descriptor, and one or more item
+    descriptor areas, which basically each describe one column in the
+    result row.
+   </P
+><P
+>    Before you can use an SQL descriptor area, you need to allocate one:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL ALLOCATE DESCRIPTOR <TT
+CLASS="REPLACEABLE"
+><I
+>identifier</I
+></TT
+>;</PRE
+><P>
+    The identifier serves as the <SPAN
+CLASS="QUOTE"
+>"variable name"</SPAN
+> of the
+    descriptor area.  
+    When you don't need the descriptor anymore, you should deallocate
+    it:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL DEALLOCATE DESCRIPTOR <TT
+CLASS="REPLACEABLE"
+><I
+>identifier</I
+></TT
+>;</PRE
+><P>
+   </P
+><P
+>    To use a descriptor area, specify it as the storage target in an
+    <TT
+CLASS="LITERAL"
+>INTO</TT
+> clause, instead of listing host variables:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL FETCH NEXT FROM mycursor INTO SQL DESCRIPTOR mydesc;</PRE
+><P>
+    If the result set is empty, the Descriptor Area will still contain
+    the metadata from the query, i.e. the field names.
+   </P
+><P
+>    For not yet executed prepared queries, the <TT
+CLASS="COMMAND"
+>DESCRIBE</TT
+>
+    statement can be used to get the metadata of the result set:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL BEGIN DECLARE SECTION;
+char *sql_stmt = "SELECT * FROM table1";
+EXEC SQL END DECLARE SECTION;
+
+EXEC SQL PREPARE stmt1 FROM :sql_stmt;
+EXEC SQL DESCRIBE stmt1 INTO SQL DESCRIPTOR mydesc;</PRE
+><P>
+   </P
+><P
+>    Before PostgreSQL 9.0, the <TT
+CLASS="LITERAL"
+>SQL</TT
+> keyword was optional,
+    so using <TT
+CLASS="LITERAL"
+>DESCRIPTOR</TT
+> and <TT
+CLASS="LITERAL"
+>SQL DESCRIPTOR</TT
+>
+    produced named SQL Descriptor Areas. Now it is mandatory, omitting
+    the <TT
+CLASS="LITERAL"
+>SQL</TT
+> keyword produces SQLDA Descriptor Areas,
+    see <A
+HREF="ecpg-descriptors.html#ECPG-SQLDA-DESCRIPTORS"
+>Section 33.7.2</A
+>.
+   </P
+><P
+>    In <TT
+CLASS="COMMAND"
+>DESCRIBE</TT
+> and <TT
+CLASS="COMMAND"
+>FETCH</TT
+> statements,
+    the <TT
+CLASS="LITERAL"
+>INTO</TT
+> and <TT
+CLASS="LITERAL"
+>USING</TT
+> keywords can be
+    used to similarly: they produce the result set and the metadata in a
+    Descriptor Area.
+   </P
+><P
+>    Now how do you get the data out of the descriptor area?  You can
+    think of the descriptor area as a structure with named fields.  To
+    retrieve the value of a field from the header and store it into a
+    host variable, use the following command:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL GET DESCRIPTOR <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> :<TT
+CLASS="REPLACEABLE"
+><I
+>hostvar</I
+></TT
+> = <TT
+CLASS="REPLACEABLE"
+><I
+>field</I
+></TT
+>;</PRE
+><P>
+    Currently, there is only one header field defined:
+    <TT
+CLASS="REPLACEABLE"
+><I
+>COUNT</I
+></TT
+>, which tells how many item
+    descriptor areas exist (that is, how many columns are contained in
+    the result).  The host variable needs to be of an integer type.  To
+    get a field from the item descriptor area, use the following
+    command:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL GET DESCRIPTOR <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> VALUE <TT
+CLASS="REPLACEABLE"
+><I
+>num</I
+></TT
+> :<TT
+CLASS="REPLACEABLE"
+><I
+>hostvar</I
+></TT
+> = <TT
+CLASS="REPLACEABLE"
+><I
+>field</I
+></TT
+>;</PRE
+><P>
+    <TT
+CLASS="REPLACEABLE"
+><I
+>num</I
+></TT
+> can be a literal integer or a host
+    variable containing an integer. Possible fields are:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>CARDINALITY</TT
+> (integer)</DT
+><DD
+><P
+>        number of rows in the result set
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>DATA</TT
+></DT
+><DD
+><P
+>        actual data item (therefore, the data type of this field
+        depends on the query)
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>DATETIME_INTERVAL_CODE</TT
+> (integer)</DT
+><DD
+><P
+>        When <TT
+CLASS="LITERAL"
+>TYPE</TT
+> is <TT
+CLASS="LITERAL"
+>9</TT
+>,
+        <TT
+CLASS="LITERAL"
+>DATETIME_INTERVAL_CODE</TT
+> will have a value of
+        <TT
+CLASS="LITERAL"
+>1</TT
+> for <TT
+CLASS="LITERAL"
+>DATE</TT
+>,
+        <TT
+CLASS="LITERAL"
+>2</TT
+> for <TT
+CLASS="LITERAL"
+>TIME</TT
+>,
+        <TT
+CLASS="LITERAL"
+>3</TT
+> for <TT
+CLASS="LITERAL"
+>TIMESTAMP</TT
+>,
+        <TT
+CLASS="LITERAL"
+>4</TT
+> for <TT
+CLASS="LITERAL"
+>TIME WITH TIME ZONE</TT
+>, or
+        <TT
+CLASS="LITERAL"
+>5</TT
+> for <TT
+CLASS="LITERAL"
+>TIMESTAMP WITH TIME ZONE</TT
+>.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>DATETIME_INTERVAL_PRECISION</TT
+> (integer)</DT
+><DD
+><P
+>        not implemented
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>INDICATOR</TT
+> (integer)</DT
+><DD
+><P
+>        the indicator (indicating a null value or a value truncation)
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>KEY_MEMBER</TT
+> (integer)</DT
+><DD
+><P
+>        not implemented
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>LENGTH</TT
+> (integer)</DT
+><DD
+><P
+>        length of the datum in characters
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>NAME</TT
+> (string)</DT
+><DD
+><P
+>        name of the column
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>NULLABLE</TT
+> (integer)</DT
+><DD
+><P
+>        not implemented
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>OCTET_LENGTH</TT
+> (integer)</DT
+><DD
+><P
+>        length of the character representation of the datum in bytes
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>PRECISION</TT
+> (integer)</DT
+><DD
+><P
+>        precision (for type <TT
+CLASS="TYPE"
+>numeric</TT
+>)
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>RETURNED_LENGTH</TT
+> (integer)</DT
+><DD
+><P
+>        length of the datum in characters
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>RETURNED_OCTET_LENGTH</TT
+> (integer)</DT
+><DD
+><P
+>        length of the character representation of the datum in bytes
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SCALE</TT
+> (integer)</DT
+><DD
+><P
+>        scale (for type <TT
+CLASS="TYPE"
+>numeric</TT
+>)
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>TYPE</TT
+> (integer)</DT
+><DD
+><P
+>        numeric code of the data type of the column
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+><P
+>    In <TT
+CLASS="COMMAND"
+>EXECUTE</TT
+>, <TT
+CLASS="COMMAND"
+>DECLARE</TT
+> and <TT
+CLASS="COMMAND"
+>OPEN</TT
+>
+    statements, the effect of the <TT
+CLASS="LITERAL"
+>INTO</TT
+> and <TT
+CLASS="LITERAL"
+>USING</TT
+>
+    keywords are different. A Descriptor Area can also be manually built to
+    provide the input parameters for a query or a cursor and
+    <TT
+CLASS="LITERAL"
+>USING SQL DESCRIPTOR <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></TT
+>
+    is the way to pass the input parameters into a parametrized query. The statement
+    to build a named SQL Descriptor Area is below:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL SET DESCRIPTOR <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> VALUE <TT
+CLASS="REPLACEABLE"
+><I
+>num</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>field</I
+></TT
+> = :<TT
+CLASS="REPLACEABLE"
+><I
+>hostvar</I
+></TT
+>;</PRE
+><P>
+   </P
+><P
+>    PostgreSQL supports retrieving more that one record in one <TT
+CLASS="COMMAND"
+>FETCH</TT
+>
+    statement and storing the data in host variables in this case assumes that the
+    variable is an array. E.g.:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL BEGIN DECLARE SECTION;
+int id[5];
+EXEC SQL END DECLARE SECTION;
+
+EXEC SQL FETCH 5 FROM mycursor INTO SQL DESCRIPTOR mydesc;
+
+EXEC SQL GET DESCRIPTOR mydesc VALUE 1 :id = DATA;</PRE
+><P>
+
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="ECPG-SQLDA-DESCRIPTORS"
+>33.7.2. SQLDA Descriptor Areas</A
+></H2
+><P
+>    An SQLDA Descriptor Area is a C language structure which can be also used
+    to get the result set and the metadata of a query. One structure stores one
+    record from the result set.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL include sqlda.h;
+sqlda_t         *mysqlda;
+
+EXEC SQL FETCH 3 FROM mycursor INTO DESCRIPTOR mysqlda;</PRE
+><P>
+    Note that the <TT
+CLASS="LITERAL"
+>SQL</TT
+> keyword is omitted. The paragraphs about
+    the use cases of the <TT
+CLASS="LITERAL"
+>INTO</TT
+> and <TT
+CLASS="LITERAL"
+>USING</TT
+>
+    keywords in <A
+HREF="ecpg-descriptors.html#ECPG-NAMED-DESCRIPTORS"
+>Section 33.7.1</A
+> also apply here with an addition.
+    In a <TT
+CLASS="COMMAND"
+>DESCRIBE</TT
+> statement the <TT
+CLASS="LITERAL"
+>DESCRIPTOR</TT
+>
+    keyword can be completely omitted if the <TT
+CLASS="LITERAL"
+>INTO</TT
+> keyword is used:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL DESCRIBE prepared_statement INTO mysqlda;</PRE
+><P>
+   </P
+><DIV
+CLASS="PROCEDURE"
+><P
+>      The general flow of a program that uses SQLDA is:
+     </P
+><OL
+TYPE="1"
+><LI
+CLASS="STEP"
+><P
+>Prepare a query, and declare a cursor for it.</P
+></LI
+><LI
+CLASS="STEP"
+><P
+>Declare an SQLDA for the result rows.</P
+></LI
+><LI
+CLASS="STEP"
+><P
+>Declare an SQLDA for the input parameters, and initialize them (memory allocation, parameter settings).</P
+></LI
+><LI
+CLASS="STEP"
+><P
+>Open a cursor with the input SQLDA.</P
+></LI
+><LI
+CLASS="STEP"
+><P
+>Fetch rows from the cursor, and store them into an output SQLDA.</P
+></LI
+><LI
+CLASS="STEP"
+><P
+>Read values from the output SQLDA into the host variables (with conversion if necessary).</P
+></LI
+><LI
+CLASS="STEP"
+><P
+>Close the cursor.</P
+></LI
+><LI
+CLASS="STEP"
+><P
+>Free the memory area allocated for the input SQLDA.</P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN48333"
+>33.7.2.1. SQLDA Data Structure</A
+></H3
+><P
+>     SQLDA uses three data structure
+     types: <TT
+CLASS="TYPE"
+>sqlda_t</TT
+>, <TT
+CLASS="TYPE"
+>sqlvar_t</TT
+>,
+     and <TT
+CLASS="TYPE"
+>struct sqlname</TT
+>.
+    </P
+><DIV
+CLASS="TIP"
+><BLOCKQUOTE
+CLASS="TIP"
+><P
+><B
+>Tip: </B
+>      PostgreSQL's SQLDA has a similar data structure to the one in
+      IBM DB2 Universal Database, so some technical information on
+      DB2's SQLDA could help understanding PostgreSQL's one better.
+     </P
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="ECPG-SQLDA-SQLDA"
+>33.7.2.1.1. sqlda_t Structure</A
+></H4
+><P
+>      The structure type <TT
+CLASS="TYPE"
+>sqlda_t</TT
+> is the type of the
+      actual SQLDA.  It holds one record.  And two or
+      more <TT
+CLASS="TYPE"
+>sqlda_t</TT
+> structures can be connected in a
+      linked list with the pointer in
+      the <TT
+CLASS="STRUCTFIELD"
+>desc_next</TT
+> field, thus
+      representing an ordered collection of rows.  So, when two or
+      more rows are fetched, the application can read them by
+      following the <TT
+CLASS="STRUCTFIELD"
+>desc_next</TT
+> pointer in
+      each <TT
+CLASS="TYPE"
+>sqlda_t</TT
+> node.
+     </P
+><P
+>      The definition of <TT
+CLASS="TYPE"
+>sqlda_t</TT
+> is:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>struct sqlda_struct
+{
+    char            sqldaid[8];
+    long            sqldabc;
+    short           sqln;
+    short           sqld;
+    struct sqlda_struct *desc_next;
+    struct sqlvar_struct sqlvar[1];
+};
+
+typedef struct sqlda_struct sqlda_t;</PRE
+><P>
+
+      The meaning of the fields is:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>sqldaid</TT
+></DT
+><DD
+><P
+>        It contains the literal string <TT
+CLASS="LITERAL"
+>"SQLDA  "</TT
+>.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>sqldabc</TT
+></DT
+><DD
+><P
+>        It contains the size of the allocated space in bytes.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>sqln</TT
+></DT
+><DD
+><P
+>        It contains the number of input parameters for a parametrized query in
+        case it's passed into <TT
+CLASS="COMMAND"
+>OPEN</TT
+>, <TT
+CLASS="COMMAND"
+>DECLARE</TT
+> or
+        <TT
+CLASS="COMMAND"
+>EXECUTE</TT
+> statements using the <TT
+CLASS="LITERAL"
+>USING</TT
+>
+        keyword. In case it's used as output of <TT
+CLASS="COMMAND"
+>SELECT</TT
+>,
+        <TT
+CLASS="COMMAND"
+>EXECUTE</TT
+> or <TT
+CLASS="COMMAND"
+>FETCH</TT
+> statements,
+        its value is the same as <TT
+CLASS="LITERAL"
+>sqld</TT
+>
+        statement
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>sqld</TT
+></DT
+><DD
+><P
+>        It contains the number of fields in a result set.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>desc_next</TT
+></DT
+><DD
+><P
+>        If the query returns more than one record, multiple linked
+        SQLDA structures are returned, and <TT
+CLASS="LITERAL"
+>desc_next</TT
+> holds
+        a pointer to the next entry in the list.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>sqlvar</TT
+></DT
+><DD
+><P
+>        This is the array of the columns in the result set.
+       </P
+></DD
+></DL
+></DIV
+><P>
+     </P
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="ECPG-SQLDA-SQLVAR"
+>33.7.2.1.2. sqlvar_t Structure</A
+></H4
+><P
+>      The structure type <TT
+CLASS="TYPE"
+>sqlvar_t</TT
+> holds a column value
+      and metadata such as type and length. The definition of the type
+      is:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>struct sqlvar_struct
+{
+    short          sqltype;
+    short          sqllen;
+    char          *sqldata;
+    short         *sqlind;
+    struct sqlname sqlname;
+};
+
+typedef struct sqlvar_struct sqlvar_t;</PRE
+><P>
+
+      The meaning of the fields is:
+
+        <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>sqltype</TT
+></DT
+><DD
+><P
+>            Contains the type identifier of the field. For values,
+            see <TT
+CLASS="LITERAL"
+>enum ECPGttype</TT
+> in <TT
+CLASS="LITERAL"
+>ecpgtype.h</TT
+>.
+           </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>sqllen</TT
+></DT
+><DD
+><P
+>            Contains the binary length of the field. e.g. 4 bytes for <TT
+CLASS="TYPE"
+>ECPGt_int</TT
+>.
+           </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>sqldata</TT
+></DT
+><DD
+><P
+>            Points to the data.  The format of the data is described
+            in <A
+HREF="ecpg-variables.html#ECPG-VARIABLES-TYPE-MAPPING"
+>Section 33.4.4</A
+>.
+           </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>sqlind</TT
+></DT
+><DD
+><P
+>            Points to the null indicator.  0 means not null, -1 means
+            null.
+           </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>sqlname</TT
+></DT
+><DD
+><P
+>            The name of the field.
+           </P
+></DD
+></DL
+></DIV
+><P>
+     </P
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="ECPG-SQLDA-SQLNAME"
+>33.7.2.1.3. struct sqlname Structure</A
+></H4
+><P
+>      A <TT
+CLASS="TYPE"
+>struct sqlname</TT
+> structure holds a column name.  It
+      is used as a member of the <TT
+CLASS="TYPE"
+>sqlvar_t</TT
+> structure.  The
+      definition of the structure is:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>#define NAMEDATALEN 64
+
+struct sqlname
+{
+        short           length;
+        char            data[NAMEDATALEN];
+};</PRE
+><P>
+      The meaning of the fields is:
+            <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>length</TT
+></DT
+><DD
+><P
+>                 Contains the length of the field name.
+                </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>data</TT
+></DT
+><DD
+><P
+>                 Contains the actual field name.
+                </P
+></DD
+></DL
+></DIV
+><P>
+     </P
+></DIV
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="ECPG-SQLDA-OUTPUT"
+>33.7.2.2. Retrieving a Result Set Using an SQLDA</A
+></H3
+><DIV
+CLASS="PROCEDURE"
+><P
+>      The general steps to retrieve a query result set through an
+      SQLDA are:
+     </P
+><OL
+TYPE="1"
+><LI
+CLASS="STEP"
+><P
+>Declare an <TT
+CLASS="TYPE"
+>sqlda_t</TT
+> structure to receive the result set.</P
+></LI
+><LI
+CLASS="STEP"
+><P
+>Execute <TT
+CLASS="COMMAND"
+>FETCH</TT
+>/<TT
+CLASS="COMMAND"
+>EXECUTE</TT
+>/<TT
+CLASS="COMMAND"
+>DESCRIBE</TT
+> commands to process a query specifying the declared SQLDA.</P
+></LI
+><LI
+CLASS="STEP"
+><P
+>Check the number of records in the result set by looking at <TT
+CLASS="STRUCTFIELD"
+>sqln</TT
+>, a member of the <TT
+CLASS="TYPE"
+>sqlda_t</TT
+> structure.</P
+></LI
+><LI
+CLASS="STEP"
+><P
+>Get the values of each column from <TT
+CLASS="LITERAL"
+>sqlvar[0]</TT
+>, <TT
+CLASS="LITERAL"
+>sqlvar[1]</TT
+>, etc., members of the <TT
+CLASS="TYPE"
+>sqlda_t</TT
+> structure.</P
+></LI
+><LI
+CLASS="STEP"
+><P
+>Go to next row (<TT
+CLASS="TYPE"
+>sqlda_t</TT
+> structure) by following the <TT
+CLASS="STRUCTFIELD"
+>desc_next</TT
+> pointer, a member of the <TT
+CLASS="TYPE"
+>sqlda_t</TT
+> structure.</P
+></LI
+><LI
+CLASS="STEP"
+><P
+>Repeat above as you need.</P
+></LI
+></OL
+></DIV
+><P
+>     Here is an example retrieving a result set through an SQLDA.
+    </P
+><P
+>     First, declare a <TT
+CLASS="TYPE"
+>sqlda_t</TT
+> structure to receive the result set.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>sqlda_t *sqlda1;</PRE
+><P>
+    </P
+><P
+>     Next, specify the SQLDA in a command.  This is
+     a <TT
+CLASS="COMMAND"
+>FETCH</TT
+> command example.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL FETCH NEXT FROM cur1 INTO DESCRIPTOR sqlda1;</PRE
+><P>
+    </P
+><P
+>     Run a loop following the linked list to retrieve the rows.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>sqlda_t *cur_sqlda;
+
+for (cur_sqlda = sqlda1;
+     cur_sqlda != NULL;
+     cur_sqlda = cur_sqlda-&#62;desc_next)
+{
+    ...
+}</PRE
+><P>
+    </P
+><P
+>     Inside the loop, run another loop to retrieve each column data
+     (<TT
+CLASS="TYPE"
+>sqlvar_t</TT
+> structure) of the row.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>for (i = 0; i &lt; cur_sqlda-&#62;sqld; i++)
+{
+    sqlvar_t v = cur_sqlda-&#62;sqlvar[i];
+    char *sqldata = v.sqldata;
+    short sqllen  = v.sqllen;
+    ...
+}</PRE
+><P>
+    </P
+><P
+>     To get a column value, check the <TT
+CLASS="STRUCTFIELD"
+>sqltype</TT
+> value,
+     a member of the <TT
+CLASS="TYPE"
+>sqlvar_t</TT
+> structure.  Then, switch
+     to an appropriate way, depending on the column type, to copy
+     data from the <TT
+CLASS="STRUCTFIELD"
+>sqlvar</TT
+> field to a host variable.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>char var_buf[1024];
+
+switch (v.sqltype)
+{
+    case ECPGt_char:
+        memset(&amp;var_buf, 0, sizeof(var_buf));
+        memcpy(&amp;var_buf, sqldata, (sizeof(var_buf) &lt;= sqllen ? sizeof(var_buf) - 1 : sqllen));
+        break;
+
+    case ECPGt_int: /* integer */
+        memcpy(&amp;intval, sqldata, sqllen);
+        snprintf(var_buf, sizeof(var_buf), "%d", intval);
+        break;
+
+    ...
+}</PRE
+><P>
+    </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="ECPG-SQLDA-INPUT"
+>33.7.2.3. Passing Query Parameters Using an SQLDA</A
+></H3
+><DIV
+CLASS="PROCEDURE"
+><P
+>      The general steps to use an SQLDA to pass input
+      parameters to a prepared query are:
+     </P
+><OL
+TYPE="1"
+><LI
+CLASS="STEP"
+><P
+>Create a prepared query (prepared statement)</P
+></LI
+><LI
+CLASS="STEP"
+><P
+>Declare a sqlda_t structure as an input SQLDA.</P
+></LI
+><LI
+CLASS="STEP"
+><P
+>Allocate memory area (as sqlda_t structure) for the input SQLDA.</P
+></LI
+><LI
+CLASS="STEP"
+><P
+>Set (copy) input values in the allocated memory.</P
+></LI
+><LI
+CLASS="STEP"
+><P
+>Open a cursor with specifying the input SQLDA.</P
+></LI
+></OL
+></DIV
+><P
+>     Here is an example.
+    </P
+><P
+>     First, create a prepared statement.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL BEGIN DECLARE SECTION;
+char query[1024] = "SELECT d.oid, * FROM pg_database d, pg_stat_database s WHERE d.oid = s.datid AND (d.datname = ? OR d.oid = ?)";
+EXEC SQL END DECLARE SECTION;
+
+EXEC SQL PREPARE stmt1 FROM :query;</PRE
+><P>
+    </P
+><P
+>     Next, allocate memory for an SQLDA, and set the number of input
+     parameters in <TT
+CLASS="STRUCTFIELD"
+>sqln</TT
+>, a member variable of
+     the <TT
+CLASS="TYPE"
+>sqlda_t</TT
+> structure.  When two or more input
+     parameters are required for the prepared query, the application
+     has to allocate additional memory space which is calculated by
+     (nr. of params - 1) * sizeof(sqlvar_t).  The example shown here
+     allocates memory space for two input parameters.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>sqlda_t *sqlda2;
+
+sqlda2 = (sqlda_t *) malloc(sizeof(sqlda_t) + sizeof(sqlvar_t));
+memset(sqlda2, 0, sizeof(sqlda_t) + sizeof(sqlvar_t));
+
+sqlda2-&#62;sqln = 2; /* number of input variables */</PRE
+><P>
+    </P
+><P
+>     After memory allocation, store the parameter values into the
+     <TT
+CLASS="LITERAL"
+>sqlvar[]</TT
+> array.  (This is same array used for
+     retrieving column values when the SQLDA is receiving a result
+     set.)  In this example, the input parameters
+     are <TT
+CLASS="LITERAL"
+>"postgres"</TT
+>, having a string type,
+     and <TT
+CLASS="LITERAL"
+>1</TT
+>, having an integer type.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>sqlda2-&#62;sqlvar[0].sqltype = ECPGt_char;
+sqlda2-&#62;sqlvar[0].sqldata = "postgres";
+sqlda2-&#62;sqlvar[0].sqllen  = 8;
+
+int intval = 1;
+sqlda2-&#62;sqlvar[1].sqltype = ECPGt_int;
+sqlda2-&#62;sqlvar[1].sqldata = (char *) &amp;intval;
+sqlda2-&#62;sqlvar[1].sqllen  = sizeof(intval);</PRE
+><P>
+    </P
+><P
+>     By opening a cursor and specifying the SQLDA that was set up
+     beforehand, the input parameters are passed to the prepared
+     statement.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL OPEN cur1 USING DESCRIPTOR sqlda2;</PRE
+><P>
+    </P
+><P
+>     Finally, after using input SQLDAs, the allocated memory space
+     must be freed explicitly, unlike SQLDAs used for receiving query
+     results.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>free(sqlda2);</PRE
+><P>
+    </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="ECPG-SQLDA-EXAMPLE"
+>33.7.2.4. A Sample Application Using SQLDA</A
+></H3
+><P
+>     Here is an example program, which describes how to fetch access
+     statistics of the databases, specified by the input parameters,
+     from the system catalogs.
+    </P
+><P
+>     This application joins two system tables, pg_database and
+     pg_stat_database on the database OID, and also fetches and shows
+     the database statistics which are retrieved by two input
+     parameters (a database <TT
+CLASS="LITERAL"
+>postgres</TT
+>, and OID <TT
+CLASS="LITERAL"
+>1</TT
+>).
+    </P
+><P
+>     First, declare an SQLDA for input and an SQLDA for output.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL include sqlda.h;
+
+sqlda_t *sqlda1; /* an output descriptor */
+sqlda_t *sqlda2; /* an input descriptor  */</PRE
+><P>
+    </P
+><P
+>     Next, connect to the database, prepare a statement, and declare a
+     cursor for the prepared statement.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>int
+main(void)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+    char query[1024] = "SELECT d.oid,* FROM pg_database d, pg_stat_database s WHERE d.oid=s.datid AND ( d.datname=? OR d.oid=? )";
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL CONNECT TO testdb AS con1 USER testuser;
+
+    EXEC SQL PREPARE stmt1 FROM :query;
+    EXEC SQL DECLARE cur1 CURSOR FOR stmt1;</PRE
+><P>
+    </P
+><P
+>     Next, put some values in the input SQLDA for the input
+     parameters.  Allocate memory for the input SQLDA, and set the
+     number of input parameters to <TT
+CLASS="LITERAL"
+>sqln</TT
+>.  Store
+     type, value, and value length into <TT
+CLASS="LITERAL"
+>sqltype</TT
+>,
+     <TT
+CLASS="LITERAL"
+>sqldata</TT
+>, and <TT
+CLASS="LITERAL"
+>sqllen</TT
+> in the
+     <TT
+CLASS="LITERAL"
+>sqlvar</TT
+> structure.
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>    /* Create SQLDA structure for input parameters. */
+    sqlda2 = (sqlda_t *) malloc(sizeof(sqlda_t) + sizeof(sqlvar_t));
+    memset(sqlda2, 0, sizeof(sqlda_t) + sizeof(sqlvar_t));
+    sqlda2-&#62;sqln = 2; /* number of input variables */
+
+    sqlda2-&#62;sqlvar[0].sqltype = ECPGt_char;
+    sqlda2-&#62;sqlvar[0].sqldata = "postgres";
+    sqlda2-&#62;sqlvar[0].sqllen  = 8;
+
+    intval = 1;
+    sqlda2-&#62;sqlvar[1].sqltype = ECPGt_int;
+    sqlda2-&#62;sqlvar[1].sqldata = (char *)&amp;intval;
+    sqlda2-&#62;sqlvar[1].sqllen  = sizeof(intval);</PRE
+><P>
+    </P
+><P
+>     After setting up the input SQLDA, open a cursor with the input
+     SQLDA.
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>    /* Open a cursor with input parameters. */
+    EXEC SQL OPEN cur1 USING DESCRIPTOR sqlda2;</PRE
+><P>
+    </P
+><P
+>     Fetch rows into the output SQLDA from the opened cursor.
+     (Generally, you have to call <TT
+CLASS="COMMAND"
+>FETCH</TT
+> repeatedly
+     in the loop, to fetch all rows in the result set.)
+</P><PRE
+CLASS="PROGRAMLISTING"
+>    while (1)
+    {
+        sqlda_t *cur_sqlda;
+
+        /* Assign descriptor to the cursor  */
+        EXEC SQL FETCH NEXT FROM cur1 INTO DESCRIPTOR sqlda1;</PRE
+><P>
+    </P
+><P
+>     Next, retrieve the fetched records from the SQLDA, by following
+     the linked list of the <TT
+CLASS="TYPE"
+>sqlda_t</TT
+> structure.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>    for (cur_sqlda = sqlda1 ;
+         cur_sqlda != NULL ;
+         cur_sqlda = cur_sqlda-&#62;desc_next)
+    {
+        ...</PRE
+><P>
+    </P
+><P
+>     Read each columns in the first record.  The number of columns is
+     stored in <TT
+CLASS="STRUCTFIELD"
+>sqld</TT
+>, the actual data of the first
+     column is stored in <TT
+CLASS="LITERAL"
+>sqlvar[0]</TT
+>, both members of
+     the <TT
+CLASS="TYPE"
+>sqlda_t</TT
+> structure.
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>        /* Print every column in a row. */
+        for (i = 0; i &lt; sqlda1-&gt;sqld; i++)
+        {
+            sqlvar_t v = sqlda1-&#62;sqlvar[i];
+            char *sqldata = v.sqldata;
+            short sqllen  = v.sqllen;
+
+            strncpy(name_buf, v.sqlname.data, v.sqlname.length);
+            name_buf[v.sqlname.length] = '\0';</PRE
+><P>
+    </P
+><P
+>     Now, the column data is stored in the variable <TT
+CLASS="VARNAME"
+>v</TT
+>.
+     Copy every datum into host variables, looking
+     at <TT
+CLASS="LITERAL"
+>v.sqltype</TT
+> for the type of the column.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>            switch (v.sqltype) {
+                int intval;
+                double doubleval;
+                unsigned long long int longlongval;
+
+                case ECPGt_char:
+                    memset(&amp;var_buf, 0, sizeof(var_buf));
+                    memcpy(&amp;var_buf, sqldata, (sizeof(var_buf) &lt;= sqllen ? sizeof(var_buf)-1 : sqllen));
+                    break;
+
+                case ECPGt_int: /* integer */
+                    memcpy(&amp;intval, sqldata, sqllen);
+                    snprintf(var_buf, sizeof(var_buf), "%d", intval);
+                    break;
+
+                ...
+
+                default:
+                    ...
+            }
+
+            printf("%s = %s (type: %d)\n", name_buf, var_buf, v.sqltype);
+        }</PRE
+><P>
+    </P
+><P
+>     Close the cursor after processing all of records, and disconnect
+     from the database.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>    EXEC SQL CLOSE cur1;
+    EXEC SQL COMMIT;
+
+    EXEC SQL DISCONNECT ALL;</PRE
+><P>
+    </P
+><P
+>     The whole program is shown
+     in <A
+HREF="ecpg-descriptors.html#ECPG-SQLDA-EXAMPLE-EXAMPLE"
+>Example 33-1</A
+>.
+    </P
+><DIV
+CLASS="EXAMPLE"
+><A
+NAME="ECPG-SQLDA-EXAMPLE-EXAMPLE"
+></A
+><P
+><B
+>Example 33-1. Example SQLDA Program</B
+></P
+><PRE
+CLASS="PROGRAMLISTING"
+>#include &lt;stdlib.h&#62;
+#include &lt;string.h&#62;
+#include &lt;stdlib.h&#62;
+#include &lt;stdio.h&#62;
+#include &lt;unistd.h&#62;
+
+EXEC SQL include sqlda.h;
+
+sqlda_t *sqlda1; /* descriptor for output */
+sqlda_t *sqlda2; /* descriptor for input */
+
+EXEC SQL WHENEVER NOT FOUND DO BREAK;
+EXEC SQL WHENEVER SQLERROR STOP;
+
+int
+main(void)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+    char query[1024] = "SELECT d.oid,* FROM pg_database d, pg_stat_database s WHERE d.oid=s.datid AND ( d.datname=? OR d.oid=? )";
+
+    int intval;
+    unsigned long long int longlongval;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL CONNECT TO uptimedb AS con1 USER uptime;
+
+    EXEC SQL PREPARE stmt1 FROM :query;
+    EXEC SQL DECLARE cur1 CURSOR FOR stmt1;
+
+    /* Create a SQLDA structure for an input parameter */
+    sqlda2 = (sqlda_t *)malloc(sizeof(sqlda_t) + sizeof(sqlvar_t));
+    memset(sqlda2, 0, sizeof(sqlda_t) + sizeof(sqlvar_t));
+    sqlda2-&#62;sqln = 2; /* a number of input variables */
+
+    sqlda2-&#62;sqlvar[0].sqltype = ECPGt_char;
+    sqlda2-&#62;sqlvar[0].sqldata = "postgres";
+    sqlda2-&#62;sqlvar[0].sqllen  = 8;
+
+    intval = 1;
+    sqlda2-&#62;sqlvar[1].sqltype = ECPGt_int;
+    sqlda2-&#62;sqlvar[1].sqldata = (char *) &amp;intval;
+    sqlda2-&#62;sqlvar[1].sqllen  = sizeof(intval);
+
+    /* Open a cursor with input parameters. */
+    EXEC SQL OPEN cur1 USING DESCRIPTOR sqlda2;
+
+    while (1)
+    {
+        sqlda_t *cur_sqlda;
+
+        /* Assign descriptor to the cursor  */
+        EXEC SQL FETCH NEXT FROM cur1 INTO DESCRIPTOR sqlda1;
+
+        for (cur_sqlda = sqlda1 ;
+             cur_sqlda != NULL ;
+             cur_sqlda = cur_sqlda-&#62;desc_next)
+        {
+            int i;
+            char name_buf[1024];
+            char var_buf[1024];
+
+            /* Print every column in a row. */
+            for (i=0 ; i&lt;cur_sqlda-&#62;sqld ; i++)
+            {
+                sqlvar_t v = cur_sqlda-&#62;sqlvar[i];
+                char *sqldata = v.sqldata;
+                short sqllen  = v.sqllen;
+
+                strncpy(name_buf, v.sqlname.data, v.sqlname.length);
+                name_buf[v.sqlname.length] = '\0';
+
+                switch (v.sqltype)
+                {
+                    case ECPGt_char:
+                        memset(&amp;var_buf, 0, sizeof(var_buf));
+                        memcpy(&amp;var_buf, sqldata, (sizeof(var_buf)&lt;=sqllen ? sizeof(var_buf)-1 : sqllen) );
+                        break;
+
+                    case ECPGt_int: /* integer */
+                        memcpy(&amp;intval, sqldata, sqllen);
+                        snprintf(var_buf, sizeof(var_buf), "%d", intval);
+                        break;
+
+                    case ECPGt_long_long: /* bigint */
+                        memcpy(&amp;longlongval, sqldata, sqllen);
+                        snprintf(var_buf, sizeof(var_buf), "%lld", longlongval);
+                        break;
+
+                    default:
+                    {
+                        int i;
+                        memset(var_buf, 0, sizeof(var_buf));
+                        for (i = 0; i &lt; sqllen; i++)
+                        {
+                            char tmpbuf[16];
+                            snprintf(tmpbuf, sizeof(tmpbuf), "%02x ", (unsigned char) sqldata[i]);
+                            strncat(var_buf, tmpbuf, sizeof(var_buf));
+                        }
+                    }
+                        break;
+                }
+
+                printf("%s = %s (type: %d)\n", name_buf, var_buf, v.sqltype);
+            }
+
+            printf("\n");
+        }
+    }
+
+    EXEC SQL CLOSE cur1;
+    EXEC SQL COMMIT;
+
+    EXEC SQL DISCONNECT ALL;
+
+    return 0;
+}</PRE
+><P
+>      The output of this example should look something like the
+      following (some numbers will vary).
+     </P
+><PRE
+CLASS="SCREEN"
+>oid = 1 (type: 1)
+datname = template1 (type: 1)
+datdba = 10 (type: 1)
+encoding = 0 (type: 5)
+datistemplate = t (type: 1)
+datallowconn = t (type: 1)
+datconnlimit = -1 (type: 5)
+datlastsysoid = 11510 (type: 1)
+datfrozenxid = 379 (type: 1)
+dattablespace = 1663 (type: 1)
+datconfig =  (type: 1)
+datacl = {=c/uptime,uptime=CTc/uptime} (type: 1)
+datid = 1 (type: 1)
+datname = template1 (type: 1)
+numbackends = 0 (type: 5)
+xact_commit = 113606 (type: 9)
+xact_rollback = 0 (type: 9)
+blks_read = 130 (type: 9)
+blks_hit = 7341714 (type: 9)
+tup_returned = 38262679 (type: 9)
+tup_fetched = 1836281 (type: 9)
+tup_inserted = 0 (type: 9)
+tup_updated = 0 (type: 9)
+tup_deleted = 0 (type: 9)
+
+oid = 11511 (type: 1)
+datname = postgres (type: 1)
+datdba = 10 (type: 1)
+encoding = 0 (type: 5)
+datistemplate = f (type: 1)
+datallowconn = t (type: 1)
+datconnlimit = -1 (type: 5)
+datlastsysoid = 11510 (type: 1)
+datfrozenxid = 379 (type: 1)
+dattablespace = 1663 (type: 1)
+datconfig =  (type: 1)
+datacl =  (type: 1)
+datid = 11511 (type: 1)
+datname = postgres (type: 1)
+numbackends = 0 (type: 5)
+xact_commit = 221069 (type: 9)
+xact_rollback = 18 (type: 9)
+blks_read = 1176 (type: 9)
+blks_hit = 13943750 (type: 9)
+tup_returned = 77410091 (type: 9)
+tup_fetched = 3253694 (type: 9)
+tup_inserted = 0 (type: 9)
+tup_updated = 0 (type: 9)
+tup_deleted = 0 (type: 9)</PRE
+></DIV
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ecpg-pgtypes.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="ecpg-errors.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>pgtypes Library</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="ecpg.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Error Handling</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

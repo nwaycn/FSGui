@@ -1,0 +1,211 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Indexes and Collations</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Indexes"
+HREF="indexes.html"><LINK
+REL="PREVIOUS"
+TITLE="Operator Classes and Operator Families"
+HREF="indexes-opclass.html"><LINK
+REL="NEXT"
+TITLE="Examining Index Usage"
+HREF="indexes-examine.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Operator Classes and Operator Families"
+HREF="indexes-opclass.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="indexes.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 11. Indexes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Examining Index Usage"
+HREF="indexes-examine.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="INDEXES-COLLATIONS"
+>11.10. Indexes and Collations</A
+></H1
+><P
+>   An index can support only one collation per index column.
+   If multiple collations are of interest, multiple indexes may be needed.
+  </P
+><P
+>   Consider these statements:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE test1c (
+    id integer,
+    content varchar COLLATE "x"
+);
+
+CREATE INDEX test1c_content_index ON test1c (content);</PRE
+><P>
+   The index automatically uses the collation of the
+   underlying column.  So a query of the form
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT * FROM test1c WHERE content &gt; <TT
+CLASS="REPLACEABLE"
+><I
+>constant</I
+></TT
+>;</PRE
+><P>
+   could use the index, because the comparison will by default use the
+   collation of the column.  However, this index cannot accelerate queries
+   that involve some other collation.  So if queries of the form, say,
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT * FROM test1c WHERE content &gt; <TT
+CLASS="REPLACEABLE"
+><I
+>constant</I
+></TT
+> COLLATE "y";</PRE
+><P>
+   are also of interest, an additional index could be created that supports
+   the <TT
+CLASS="LITERAL"
+>"y"</TT
+> collation, like this:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE INDEX test1c_content_y_index ON test1c (content COLLATE "y");</PRE
+><P>
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="indexes-opclass.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="indexes-examine.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Operator Classes and Operator Families</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="indexes.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Examining Index Usage</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

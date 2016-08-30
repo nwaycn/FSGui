@@ -1,0 +1,336 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>intagg</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="hstore"
+HREF="hstore.html"><LINK
+REL="NEXT"
+TITLE="intarray"
+HREF="intarray.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="hstore"
+HREF="hstore.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="intarray"
+HREF="intarray.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="INTAGG"
+>F.16. intagg</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>intagg</TT
+> module provides an integer aggregator and an
+  enumerator.  <TT
+CLASS="FILENAME"
+>intagg</TT
+> is now obsolete, because there
+  are built-in functions that provide a superset of its capabilities.
+  However, the module is still provided as a compatibility wrapper around
+  the built-in functions.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN171404"
+>F.16.1. Functions</A
+></H2
+><P
+>  The aggregator is an aggregate function
+  <CODE
+CLASS="FUNCTION"
+>int_array_aggregate(integer)</CODE
+>
+  that produces an integer array
+  containing exactly the integers it is fed.
+  This is a wrapper around <CODE
+CLASS="FUNCTION"
+>array_agg</CODE
+>,
+  which does the same thing for any array type.
+ </P
+><P
+>  The enumerator is a function
+  <CODE
+CLASS="FUNCTION"
+>int_array_enum(integer[])</CODE
+>
+  that returns <TT
+CLASS="TYPE"
+>setof integer</TT
+>.  It is essentially the reverse
+  operation of the aggregator: given an array of integers, expand it
+  into a set of rows.  This is a wrapper around <CODE
+CLASS="FUNCTION"
+>unnest</CODE
+>,
+  which does the same thing for any array type.
+ </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN171419"
+>F.16.2. Sample Uses</A
+></H2
+><P
+>   Many database systems have the notion of a one to many table. Such a table
+   usually sits between two indexed tables, for example:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE left (id INT PRIMARY KEY, ...);
+CREATE TABLE right (id INT PRIMARY KEY, ...);
+CREATE TABLE one_to_many(left INT REFERENCES left, right INT REFERENCES right);</PRE
+><P>
+
+  It is typically used like this:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT right.* from right JOIN one_to_many ON (right.id = one_to_many.right)
+  WHERE one_to_many.left = <TT
+CLASS="REPLACEABLE"
+><I
+>item</I
+></TT
+>;</PRE
+><P>
+
+  This will return all the items in the right hand table for an entry
+  in the left hand table. This is a very common construct in SQL.
+ </P
+><P
+>  Now, this methodology can be cumbersome with a very large number of
+  entries in the <TT
+CLASS="STRUCTNAME"
+>one_to_many</TT
+> table.  Often,
+  a join like this would result in an index scan
+  and a fetch for each right hand entry in the table for a particular
+  left hand entry. If you have a very dynamic system, there is not much you
+  can do. However, if you have some data which is fairly static, you can
+  create a summary table with the aggregator.
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE summary AS
+  SELECT left, int_array_aggregate(right) AS right
+  FROM one_to_many
+  GROUP BY left;</PRE
+><P>
+
+  This will create a table with one row per left item, and an array
+  of right items. Now this is pretty useless without some way of using
+  the array; that's why there is an array enumerator.  You can do
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT left, int_array_enum(right) FROM summary WHERE left = <TT
+CLASS="REPLACEABLE"
+><I
+>item</I
+></TT
+>;</PRE
+><P>
+
+  The above query using <CODE
+CLASS="FUNCTION"
+>int_array_enum</CODE
+> produces the same results
+  as
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT left, right FROM one_to_many WHERE left = <TT
+CLASS="REPLACEABLE"
+><I
+>item</I
+></TT
+>;</PRE
+><P>
+
+  The difference is that the query against the summary table has to get
+  only one row from the table, whereas the direct query against
+  <TT
+CLASS="STRUCTNAME"
+>one_to_many</TT
+> must index scan and fetch a row for each entry.
+ </P
+><P
+>  On one system, an <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+> showed a query with a cost of 8488 was
+  reduced to a cost of 329.  The original query was a join involving the
+  <TT
+CLASS="STRUCTNAME"
+>one_to_many</TT
+> table, which was replaced by:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT right, count(right) FROM
+  ( SELECT left, int_array_enum(right) AS right
+    FROM summary JOIN (SELECT left FROM left_table WHERE left = <TT
+CLASS="REPLACEABLE"
+><I
+>item</I
+></TT
+>) AS lefts
+         ON (summary.left = lefts.left)
+  ) AS list
+  GROUP BY right
+  ORDER BY count DESC;</PRE
+><P>
+ </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="hstore.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="intarray.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>hstore</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>intarray</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

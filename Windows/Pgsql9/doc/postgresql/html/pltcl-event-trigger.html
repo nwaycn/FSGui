@@ -1,0 +1,231 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Event Trigger Procedures in PL/Tcl</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="PL/Tcl - Tcl Procedural Language"
+HREF="pltcl.html"><LINK
+REL="PREVIOUS"
+TITLE="Trigger Procedures in PL/Tcl"
+HREF="pltcl-trigger.html"><LINK
+REL="NEXT"
+TITLE="Modules and the unknown Command"
+HREF="pltcl-unknown.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Trigger Procedures in PL/Tcl"
+HREF="pltcl-trigger.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="pltcl.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 41. PL/Tcl - Tcl Procedural Language</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Modules and the unknown Command"
+HREF="pltcl-unknown.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PLTCL-EVENT-TRIGGER"
+>41.7. Event Trigger Procedures in PL/Tcl</A
+></H1
+><P
+>     Event trigger procedures can be written in PL/Tcl.
+     <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> requires that a procedure that is
+     to be called as an event trigger must be declared as a function with no
+     arguments and a return type of <TT
+CLASS="LITERAL"
+>event_trigger</TT
+>.
+    </P
+><P
+>     The information from the trigger manager is passed to the procedure body
+     in the following variables:
+
+     <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="VARNAME"
+>$TG_event</TT
+></DT
+><DD
+><P
+>         The name of the event the trigger is fired for.
+        </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>$TG_tag</TT
+></DT
+><DD
+><P
+>         The command tag for which the trigger is fired.
+        </P
+></DD
+></DL
+></DIV
+><P>
+    </P
+><P
+>     The return value of the trigger procedure is ignored.
+    </P
+><P
+>     Here's a little example event trigger procedure that simply raises
+     a <TT
+CLASS="LITERAL"
+>NOTICE</TT
+> message each time a supported command is
+     executed:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE OR REPLACE FUNCTION tclsnitch() RETURNS event_trigger AS $$
+  elog NOTICE "tclsnitch: $TG_event $TG_tag"
+$$ LANGUAGE pltcl;
+
+CREATE EVENT TRIGGER tcl_a_snitch ON ddl_command_start EXECUTE PROCEDURE tclsnitch();</PRE
+><P>
+    </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="pltcl-trigger.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="pltcl-unknown.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Trigger Procedures in PL/Tcl</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="pltcl.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Modules and the <CODE
+CLASS="FUNCTION"
+>unknown</CODE
+> Command</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

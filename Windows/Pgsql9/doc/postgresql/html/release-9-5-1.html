@@ -1,0 +1,515 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.5.1</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.5.2"
+HREF="release-9-5-2.html"><LINK
+REL="NEXT"
+TITLE="Release 9.5"
+HREF="release-9-5.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.5.2"
+HREF="release-9-5-2.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.5"
+HREF="release-9-5.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-5-1"
+>E.4. Release 9.5.1</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2016-02-11</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 9.5.0.
+   For information about new features in the 9.5 major release, see
+   <A
+HREF="release-9-5.html"
+>Section E.5</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN126538"
+>E.4.1. Migration to Version 9.5.1</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.5.X.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN126541"
+>E.4.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix infinite loops and buffer-overrun problems in regular expressions
+      (Tom Lane)
+     </P
+><P
+>      Very large character ranges in bracket expressions could cause
+      infinite loops in some cases, and memory overwrites in other cases.
+      (CVE-2016-0773)
+     </P
+></LI
+><LI
+><P
+>      Fix an oversight that caused hash joins to miss joining to some tuples
+      of the inner relation in rare cases (Tomas Vondra, Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Avoid pushdown of <TT
+CLASS="LITERAL"
+>HAVING</TT
+> clauses when grouping sets are
+      used (Andrew Gierth)
+     </P
+></LI
+><LI
+><P
+>      Fix deparsing of <TT
+CLASS="LITERAL"
+>ON CONFLICT</TT
+> arbiter <TT
+CLASS="LITERAL"
+>WHERE</TT
+>
+      clauses (Peter Geoghegan)
+     </P
+></LI
+><LI
+><P
+>      Make <TT
+CLASS="LITERAL"
+>%h</TT
+> and <TT
+CLASS="LITERAL"
+>%r</TT
+> escapes
+      in <TT
+CLASS="VARNAME"
+>log_line_prefix</TT
+> work for messages emitted due
+      to <TT
+CLASS="VARNAME"
+>log_connections</TT
+> (Tom Lane)
+     </P
+><P
+>      Previously, <TT
+CLASS="LITERAL"
+>%h</TT
+>/<TT
+CLASS="LITERAL"
+>%r</TT
+> started to work just after a
+      new session had emitted the <SPAN
+CLASS="QUOTE"
+>"connection received"</SPAN
+> log message;
+      now they work for that message too.
+     </P
+></LI
+><LI
+><P
+>      Avoid leaking a token handle during SSPI authentication
+      (Christian Ullrich)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s <TT
+CLASS="LITERAL"
+>\det</TT
+> command to interpret its
+      pattern argument the same way as other <TT
+CLASS="LITERAL"
+>\d</TT
+> commands with
+      potentially schema-qualified patterns do (Reece Hart)
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> on Windows, check service status to decide
+      where to send output, rather than checking if standard output is a
+      terminal (Michael Paquier)
+     </P
+></LI
+><LI
+><P
+>      Fix assorted corner-case bugs in <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>'s processing
+      of extension member objects (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix improper quoting of domain constraint names
+      in <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> (Elvis Pranskevichus)
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> mark a view's triggers as needing to be
+      processed after its rule, to prevent possible failure during
+      parallel <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Install guards in <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> against corner-case overflow
+      conditions during evaluation of script-specified division or modulo
+      operators (Fabien Coelho, Michael Paquier)
+     </P
+></LI
+><LI
+><P
+>      Suppress useless warning message when <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+>
+      connects to a pre-9.4 server (Marco Nenciarini)
+     </P
+></LI
+><LI
+><P
+>      Avoid dump/reload problems when using both <SPAN
+CLASS="APPLICATION"
+>plpython2</SPAN
+>
+      and <SPAN
+CLASS="APPLICATION"
+>plpython3</SPAN
+> (Tom Lane)
+     </P
+><P
+>      In principle, both versions of <SPAN
+CLASS="APPLICATION"
+>PL/Python</SPAN
+> can be used in
+      the same database, though not in the same session (because the two
+      versions of <SPAN
+CLASS="APPLICATION"
+>libpython</SPAN
+> cannot safely be used concurrently).
+      However, <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> and <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> both
+      do things that can fall foul of the same-session restriction.  Work
+      around that by changing the timing of the check.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>PL/Python</SPAN
+> regression tests to pass with Python 3.5
+      (Peter Eisentraut)
+     </P
+></LI
+><LI
+><P
+>      Prevent certain <SPAN
+CLASS="APPLICATION"
+>PL/Java</SPAN
+> parameters from being set by
+      non-superusers (Noah Misch)
+     </P
+><P
+>      This change mitigates a <SPAN
+CLASS="APPLICATION"
+>PL/Java</SPAN
+> security bug
+      (CVE-2016-0766), which was fixed in <SPAN
+CLASS="APPLICATION"
+>PL/Java</SPAN
+> by marking
+      these parameters as superuser-only.  To fix the security hazard for
+      sites that update <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> more frequently
+      than <SPAN
+CLASS="APPLICATION"
+>PL/Java</SPAN
+>, make the core code aware of them also.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>-supplied header files to not contain comments
+      continued from a preprocessor directive line onto the next line
+      (Michael Meskes)
+     </P
+><P
+>      Such a comment is rejected by <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>.  It's not yet clear
+      whether <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+> itself should be changed.
+     </P
+></LI
+><LI
+><P
+>      Fix <CODE
+CLASS="FUNCTION"
+>hstore_to_json_loose()</CODE
+>'s test for whether
+      an <TT
+CLASS="TYPE"
+>hstore</TT
+> value can be converted to a JSON number (Tom Lane)
+     </P
+><P
+>      Previously this function could be fooled by non-alphanumeric trailing
+      characters, leading to emitting syntactically-invalid JSON.
+     </P
+></LI
+><LI
+><P
+>      In <TT
+CLASS="FILENAME"
+>contrib/postgres_fdw</TT
+>, fix bugs triggered by use
+      of <TT
+CLASS="LITERAL"
+>tableoid</TT
+> in data-modifying commands (Etsuro Fujita,
+      Robert Haas)
+     </P
+></LI
+><LI
+><P
+>      Fix ill-advised restriction of <TT
+CLASS="LITERAL"
+>NAMEDATALEN</TT
+> to be less
+      than 256 (Robert Haas, Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Improve reproducibility of build output by ensuring filenames are given
+      to the linker in a fixed order (Christoph Berg)
+     </P
+><P
+>      This avoids possible bitwise differences in the produced executable
+      files from one build to the next.
+     </P
+></LI
+><LI
+><P
+>      Ensure that <TT
+CLASS="FILENAME"
+>dynloader.h</TT
+> is included in the installed
+      header files in MSVC builds (Bruce Momjian, Michael Paquier)
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2016a for
+      DST law changes in Cayman Islands, Metlakatla, and Trans-Baikal
+      Territory (Zabaykalsky Krai), plus historical corrections for Pakistan.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-5-2.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-5.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.5.2</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.5</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

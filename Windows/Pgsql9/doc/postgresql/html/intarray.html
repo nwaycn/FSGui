@@ -1,0 +1,972 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>intarray</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="intagg"
+HREF="intagg.html"><LINK
+REL="NEXT"
+TITLE="isn"
+HREF="isn.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="intagg"
+HREF="intagg.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="isn"
+HREF="isn.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="INTARRAY"
+>F.17. intarray</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>intarray</TT
+> module provides a number of useful functions
+  and operators for manipulating null-free arrays of integers.
+  There is also support for indexed searches using some of the operators.
+ </P
+><P
+>  All of these operations will throw an error if a supplied array contains any
+  NULL elements.
+ </P
+><P
+>  Many of these operations are only sensible for one-dimensional arrays.
+  Although they will accept input arrays of more dimensions, the data is
+  treated as though it were a linear array in storage order.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN171447"
+>F.17.1. <TT
+CLASS="FILENAME"
+>intarray</TT
+> Functions and Operators</A
+></H2
+><P
+>   The functions provided by the <TT
+CLASS="FILENAME"
+>intarray</TT
+> module
+   are shown in <A
+HREF="intarray.html#INTARRAY-FUNC-TABLE"
+>Table F-8</A
+>, the operators
+   in <A
+HREF="intarray.html#INTARRAY-OP-TABLE"
+>Table F-9</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="INTARRAY-FUNC-TABLE"
+></A
+><P
+><B
+>Table F-8. <TT
+CLASS="FILENAME"
+>intarray</TT
+> Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+><TH
+>Example</TH
+><TH
+>Result</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>icount(int[])</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+><TD
+>number of elements in array</TD
+><TD
+><TT
+CLASS="LITERAL"
+>icount('{1,2,3}'::int[])</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>3</TT
+></TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>sort(int[], text dir)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int[]</TT
+></TD
+><TD
+>sort array &mdash; <TT
+CLASS="PARAMETER"
+>dir</TT
+> must be <TT
+CLASS="LITERAL"
+>asc</TT
+> or <TT
+CLASS="LITERAL"
+>desc</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>sort('{1,2,3}'::int[], 'desc')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>{3,2,1}</TT
+></TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>sort(int[])</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int[]</TT
+></TD
+><TD
+>sort in ascending order</TD
+><TD
+><TT
+CLASS="LITERAL"
+>sort(array[11,77,44])</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>{11,44,77}</TT
+></TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>sort_asc(int[])</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int[]</TT
+></TD
+><TD
+>sort in ascending order</TD
+><TD
+><TT
+CLASS="LITERAL"
+></TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+></TT
+></TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>sort_desc(int[])</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int[]</TT
+></TD
+><TD
+>sort in descending order</TD
+><TD
+><TT
+CLASS="LITERAL"
+></TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+></TT
+></TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>uniq(int[])</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int[]</TT
+></TD
+><TD
+>remove adjacent duplicates</TD
+><TD
+><TT
+CLASS="LITERAL"
+>uniq(sort('{1,2,3,2,1}'::int[]))</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>{1,2,3}</TT
+></TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>idx(int[], int item)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+><TD
+>index of first element matching <TT
+CLASS="PARAMETER"
+>item</TT
+> (0 if none)</TD
+><TD
+><TT
+CLASS="LITERAL"
+>idx(array[11,22,33,22,11], 22)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>2</TT
+></TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>subarray(int[], int start, int len)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int[]</TT
+></TD
+><TD
+>portion of array starting at position <TT
+CLASS="PARAMETER"
+>start</TT
+>, <TT
+CLASS="PARAMETER"
+>len</TT
+> elements</TD
+><TD
+><TT
+CLASS="LITERAL"
+>subarray('{1,2,3,2,1}'::int[], 2, 3)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>{2,3,2}</TT
+></TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>subarray(int[], int start)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int[]</TT
+></TD
+><TD
+>portion of array starting at position <TT
+CLASS="PARAMETER"
+>start</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>subarray('{1,2,3,2,1}'::int[], 2)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>{2,3,2,1}</TT
+></TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>intset(int)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int[]</TT
+></TD
+><TD
+>make single-element array</TD
+><TD
+><TT
+CLASS="LITERAL"
+>intset(42)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>{42}</TT
+></TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><DIV
+CLASS="TABLE"
+><A
+NAME="INTARRAY-OP-TABLE"
+></A
+><P
+><B
+>Table F-9. <TT
+CLASS="FILENAME"
+>intarray</TT
+> Operators</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Operator</TH
+><TH
+>Returns</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>int[] &amp;&amp; int[]</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>overlap &mdash; <TT
+CLASS="LITERAL"
+>true</TT
+> if arrays have at least one common element</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>int[] @&gt; int[]</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>contains &mdash; <TT
+CLASS="LITERAL"
+>true</TT
+> if left array contains right array</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>int[] &lt;@ int[]</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>contained &mdash; <TT
+CLASS="LITERAL"
+>true</TT
+> if left array is contained in right array</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+># int[]</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+><TD
+>number of elements in array</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>int[] # int</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+><TD
+>index (same as <CODE
+CLASS="FUNCTION"
+>idx</CODE
+> function)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>int[] + int</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int[]</TT
+></TD
+><TD
+>push element onto array (add it to end of array)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>int[] + int[]  </TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int[]</TT
+></TD
+><TD
+>array concatenation (right array added to the end of left one)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>int[] - int</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int[]</TT
+></TD
+><TD
+>remove entries matching right argument from array</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>int[] - int[]</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int[]</TT
+></TD
+><TD
+>remove elements of right array from left</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>int[] | int</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int[]</TT
+></TD
+><TD
+>union of arguments</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>int[] | int[]</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int[]</TT
+></TD
+><TD
+>union of arrays</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>int[] &amp; int[]</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int[]</TT
+></TD
+><TD
+>intersection of arrays</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>int[] @@ query_int</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>true</TT
+> if array satisfies query (see below)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>query_int ~~ int[]</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>true</TT
+> if array satisfies query (commutator of <TT
+CLASS="LITERAL"
+>@@</TT
+>)</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   (Before PostgreSQL 8.2, the containment operators <TT
+CLASS="LITERAL"
+>@&gt;</TT
+> and
+   <TT
+CLASS="LITERAL"
+>&lt;@</TT
+> were respectively called <TT
+CLASS="LITERAL"
+>@</TT
+> and <TT
+CLASS="LITERAL"
+>~</TT
+>.
+   These names are still available, but are deprecated and will eventually be
+   retired.  Notice that the old names are reversed from the convention
+   formerly followed by the core geometric data types!)
+  </P
+><P
+>   The operators <TT
+CLASS="LITERAL"
+>&amp;&amp;</TT
+>, <TT
+CLASS="LITERAL"
+>@&gt;</TT
+> and
+   <TT
+CLASS="LITERAL"
+>&lt;@</TT
+> are equivalent to <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>'s built-in
+   operators of the same names, except that they work only on integer arrays
+   that do not contain nulls, while the built-in operators work for any array
+   type.  This restriction makes them faster than the built-in operators
+   in many cases.
+  </P
+><P
+>   The <TT
+CLASS="LITERAL"
+>@@</TT
+> and <TT
+CLASS="LITERAL"
+>~~</TT
+> operators test whether an array
+   satisfies a <I
+CLASS="FIRSTTERM"
+>query</I
+>, which is expressed as a value of a
+   specialized data type <TT
+CLASS="TYPE"
+>query_int</TT
+>.  A <I
+CLASS="FIRSTTERM"
+>query</I
+>
+   consists of integer values that are checked against the elements of
+   the array, possibly combined using the operators <TT
+CLASS="LITERAL"
+>&amp;</TT
+>
+   (AND), <TT
+CLASS="LITERAL"
+>|</TT
+> (OR), and <TT
+CLASS="LITERAL"
+>!</TT
+> (NOT).  Parentheses
+   can be used as needed.  For example,
+   the query <TT
+CLASS="LITERAL"
+>1&amp;(2|3)</TT
+> matches arrays that contain 1
+   and also contain either 2 or 3.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN171710"
+>F.17.2. Index Support</A
+></H2
+><P
+>   <TT
+CLASS="FILENAME"
+>intarray</TT
+> provides index support for the
+   <TT
+CLASS="LITERAL"
+>&amp;&amp;</TT
+>, <TT
+CLASS="LITERAL"
+>@&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;@</TT
+>,
+   and <TT
+CLASS="LITERAL"
+>@@</TT
+> operators, as well as regular array equality.
+  </P
+><P
+>   Two GiST index operator classes are provided:
+   <TT
+CLASS="LITERAL"
+>gist__int_ops</TT
+> (used by default) is suitable for
+   small- to medium-size data sets, while
+   <TT
+CLASS="LITERAL"
+>gist__intbig_ops</TT
+> uses a larger signature and is more
+   suitable for indexing large data sets (i.e., columns containing
+   a large number of distinct array values).
+   The implementation uses an RD-tree data structure with
+   built-in lossy compression.
+  </P
+><P
+>   There is also a non-default GIN operator class
+   <TT
+CLASS="LITERAL"
+>gin__int_ops</TT
+> supporting the same operators.
+  </P
+><P
+>   The choice between GiST and GIN indexing depends on the relative
+   performance characteristics of GiST and GIN, which are discussed elsewhere.
+   As a rule of thumb, a GIN index is faster to search than a GiST index, but
+   slower to build or update; so GIN is better suited for static data and GiST
+   for often-updated data.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN171724"
+>F.17.3. Example</A
+></H2
+><PRE
+CLASS="PROGRAMLISTING"
+>-- a message can be in one or more <SPAN
+CLASS="QUOTE"
+>"sections"</SPAN
+>
+CREATE TABLE message (mid INT PRIMARY KEY, sections INT[], ...);
+
+-- create specialized index
+CREATE INDEX message_rdtree_idx ON message USING GIST (sections gist__int_ops);
+
+-- select messages in section 1 OR 2 - OVERLAP operator
+SELECT message.mid FROM message WHERE message.sections &amp;&amp; '{1,2}';
+
+-- select messages in sections 1 AND 2 - CONTAINS operator
+SELECT message.mid FROM message WHERE message.sections @&gt; '{1,2}';
+
+-- the same, using QUERY operator
+SELECT message.mid FROM message WHERE message.sections @@ '1&amp;2'::query_int;</PRE
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN171728"
+>F.17.4. Benchmark</A
+></H2
+><P
+>   The source directory <TT
+CLASS="FILENAME"
+>contrib/intarray/bench</TT
+> contains a
+   benchmark test suite.  To run:
+  </P
+><PRE
+CLASS="PROGRAMLISTING"
+>cd .../bench
+createdb TEST
+psql TEST &lt; ../_int.sql
+./create_test.pl | psql TEST
+./bench.pl</PRE
+><P
+>   The <TT
+CLASS="FILENAME"
+>bench.pl</TT
+> script has numerous options, which
+   are displayed when it is run without any arguments.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN171735"
+>F.17.5. Authors</A
+></H2
+><P
+>   All work was done by Teodor Sigaev (<CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:teodor@sigaev.ru"
+>teodor@sigaev.ru</A
+>&#62;</CODE
+>) and
+   Oleg Bartunov (<CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:oleg@sai.msu.su"
+>oleg@sai.msu.su</A
+>&#62;</CODE
+>). See
+   <A
+HREF="http://www.sai.msu.su/~megera/postgres/gist/"
+TARGET="_top"
+>http://www.sai.msu.su/~megera/postgres/gist/</A
+> for
+   additional information. Andrey Oktyabrski did a great work on adding new
+   functions and operations.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="intagg.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="isn.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>intagg</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>isn</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

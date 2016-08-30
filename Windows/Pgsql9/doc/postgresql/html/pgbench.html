@@ -1,0 +1,2746 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pgbench</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="PostgreSQL Client Applications"
+HREF="reference-client.html"><LINK
+REL="PREVIOUS"
+TITLE="pg_basebackup"
+HREF="app-pgbasebackup.html"><LINK
+REL="NEXT"
+TITLE="pg_config"
+HREF="app-pgconfig.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pg_basebackup"
+HREF="app-pgbasebackup.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="reference-client.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pg_config"
+HREF="app-pgconfig.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="PGBENCH"
+></A
+><SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+></H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN91280"
+></A
+><H2
+>Name</H2
+>pgbench&nbsp;--&nbsp;run a benchmark test on <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+></DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN91284"
+></A
+><H2
+>Synopsis</H2
+><P
+><TT
+CLASS="COMMAND"
+>pgbench</TT
+>  <TT
+CLASS="OPTION"
+>-i</TT
+>  [<TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+>...] [<TT
+CLASS="REPLACEABLE"
+><I
+>dbname</I
+></TT
+>]</P
+><P
+><TT
+CLASS="COMMAND"
+>pgbench</TT
+> [<TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+>...] [<TT
+CLASS="REPLACEABLE"
+><I
+>dbname</I
+></TT
+>]</P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN91299"
+></A
+><H2
+>Description</H2
+><P
+>  <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> is a simple program for running benchmark
+  tests on <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>.  It runs the same sequence of SQL
+  commands over and over, possibly in multiple concurrent database sessions,
+  and then calculates the average transaction rate (transactions per second).
+  By default, <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> tests a scenario that is
+  loosely based on TPC-B, involving five <TT
+CLASS="COMMAND"
+>SELECT</TT
+>,
+  <TT
+CLASS="COMMAND"
+>UPDATE</TT
+>, and <TT
+CLASS="COMMAND"
+>INSERT</TT
+> commands per transaction.
+  However, it is easy to test other cases by writing your own transaction
+  script files.
+ </P
+><P
+>  Typical output from <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> looks like:
+
+</P><PRE
+CLASS="SCREEN"
+>transaction type: TPC-B (sort of)
+scaling factor: 10
+query mode: simple
+number of clients: 10
+number of threads: 1
+number of transactions per client: 1000
+number of transactions actually processed: 10000/10000
+tps = 85.184871 (including connections establishing)
+tps = 85.296346 (excluding connections establishing)</PRE
+><P>
+
+  The first six lines report some of the most important parameter
+  settings.  The next line reports the number of transactions completed
+  and intended (the latter being just the product of number of clients
+  and number of transactions per client); these will be equal unless the run
+  failed before completion.  (In <TT
+CLASS="OPTION"
+>-T</TT
+> mode, only the actual
+  number of transactions is printed.)
+  The last two lines report the number of transactions per second,
+  figured with and without counting the time to start database sessions.
+ </P
+><P
+>   The default TPC-B-like transaction test requires specific tables to be
+   set up beforehand.  <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> should be invoked with
+   the <TT
+CLASS="OPTION"
+>-i</TT
+> (initialize) option to create and populate these
+   tables.  (When you are testing a custom script, you don't need this
+   step, but will instead need to do whatever setup your test needs.)
+   Initialization looks like:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>pgbench -i [<SPAN
+CLASS="OPTIONAL"
+> <TT
+CLASS="REPLACEABLE"
+><I
+>other-options</I
+></TT
+> </SPAN
+>] <TT
+CLASS="REPLACEABLE"
+><I
+>dbname</I
+></TT
+></PRE
+><P>
+
+   where <TT
+CLASS="REPLACEABLE"
+><I
+>dbname</I
+></TT
+> is the name of the already-created
+   database to test in.  (You may also need <TT
+CLASS="OPTION"
+>-h</TT
+>,
+   <TT
+CLASS="OPTION"
+>-p</TT
+>, and/or <TT
+CLASS="OPTION"
+>-U</TT
+> options to specify how to
+   connect to the database server.)
+  </P
+><DIV
+CLASS="CAUTION"
+><P
+></P
+><TABLE
+CLASS="CAUTION"
+BORDER="1"
+WIDTH="100%"
+><TR
+><TD
+ALIGN="CENTER"
+><B
+>Caution</B
+></TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+><P
+>    <TT
+CLASS="LITERAL"
+>pgbench -i</TT
+> creates four tables <TT
+CLASS="STRUCTNAME"
+>pgbench_accounts</TT
+>,
+    <TT
+CLASS="STRUCTNAME"
+>pgbench_branches</TT
+>, <TT
+CLASS="STRUCTNAME"
+>pgbench_history</TT
+>, and
+    <TT
+CLASS="STRUCTNAME"
+>pgbench_tellers</TT
+>,
+    destroying any existing tables of these names.
+    Be very careful to use another database if you have tables having these
+    names!
+   </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>   At the default <SPAN
+CLASS="QUOTE"
+>"scale factor"</SPAN
+> of 1, the tables initially
+   contain this many rows:
+</P><PRE
+CLASS="SCREEN"
+>table                   # of rows
+---------------------------------
+pgbench_branches        1
+pgbench_tellers         10
+pgbench_accounts        100000
+pgbench_history         0</PRE
+><P>
+   You can (and, for most purposes, probably should) increase the number
+   of rows by using the <TT
+CLASS="OPTION"
+>-s</TT
+> (scale factor) option.  The
+   <TT
+CLASS="OPTION"
+>-F</TT
+> (fillfactor) option might also be used at this point.
+  </P
+><P
+>   Once you have done the necessary setup, you can run your benchmark
+   with a command that doesn't include <TT
+CLASS="OPTION"
+>-i</TT
+>, that is
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>pgbench [<SPAN
+CLASS="OPTIONAL"
+> <TT
+CLASS="REPLACEABLE"
+><I
+>options</I
+></TT
+> </SPAN
+>] <TT
+CLASS="REPLACEABLE"
+><I
+>dbname</I
+></TT
+></PRE
+><P>
+
+   In nearly all cases, you'll need some options to make a useful test.
+   The most important options are <TT
+CLASS="OPTION"
+>-c</TT
+> (number of clients),
+   <TT
+CLASS="OPTION"
+>-t</TT
+> (number of transactions), <TT
+CLASS="OPTION"
+>-T</TT
+> (time limit),
+   and <TT
+CLASS="OPTION"
+>-f</TT
+> (specify a custom script file).
+   See below for a full list.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN91345"
+></A
+><H2
+>Options</H2
+><P
+>   The following is divided into three subsections: Different options are used
+   during database initialization and while running benchmarks, some options
+   are useful in both cases.
+  </P
+><DIV
+CLASS="REFSECT2"
+><A
+NAME="PGBENCH-INIT-OPTIONS"
+></A
+><H3
+>Initialization Options</H3
+><P
+>    <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> accepts the following command-line
+    initialization arguments:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-i</TT
+><BR><TT
+CLASS="OPTION"
+>--initialize</TT
+></DT
+><DD
+><P
+>        Required to invoke initialization mode.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-F</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>fillfactor</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--fillfactor=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>fillfactor</I
+></TT
+></DT
+><DD
+><P
+>        Create the <TT
+CLASS="STRUCTNAME"
+>pgbench_accounts</TT
+>,
+        <TT
+CLASS="STRUCTNAME"
+>pgbench_tellers</TT
+> and
+        <TT
+CLASS="STRUCTNAME"
+>pgbench_branches</TT
+> tables with the given fillfactor.
+        Default is 100.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-n</TT
+><BR><TT
+CLASS="OPTION"
+>--no-vacuum</TT
+></DT
+><DD
+><P
+>        Perform no vacuuming after initialization.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-q</TT
+><BR><TT
+CLASS="OPTION"
+>--quiet</TT
+></DT
+><DD
+><P
+>        Switch logging to quiet mode, producing only one progress message per 5
+        seconds. The default logging prints one message each 100000 rows, which
+        often outputs many lines per second (especially on good hardware).
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-s</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>scale_factor</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--scale=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>scale_factor</I
+></TT
+></DT
+><DD
+><P
+>        Multiply the number of rows generated by the scale factor.
+        For example, <TT
+CLASS="LITERAL"
+>-s 100</TT
+> will create 10,000,000 rows
+        in the <TT
+CLASS="STRUCTNAME"
+>pgbench_accounts</TT
+> table. Default is 1.
+        When the scale is 20,000 or larger, the columns used to
+        hold account identifiers (<TT
+CLASS="STRUCTFIELD"
+>aid</TT
+> columns)
+        will switch to using larger integers (<TT
+CLASS="TYPE"
+>bigint</TT
+>),
+        in order to be big enough to hold the range of account
+        identifiers.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>--foreign-keys</TT
+></DT
+><DD
+><P
+>        Create foreign key constraints between the standard tables.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>--index-tablespace=<TT
+CLASS="REPLACEABLE"
+><I
+>index_tablespace</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Create indexes in the specified tablespace, rather than the default
+        tablespace.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>--tablespace=<TT
+CLASS="REPLACEABLE"
+><I
+>tablespace</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Create tables in the specified tablespace, rather than the default
+        tablespace.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>--unlogged-tables</TT
+></DT
+><DD
+><P
+>        Create all tables as unlogged tables, rather than permanent tables.
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+></DIV
+><DIV
+CLASS="REFSECT2"
+><A
+NAME="PGBENCH-RUN-OPTIONS"
+></A
+><H3
+>Benchmarking Options</H3
+><P
+>    <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> accepts the following command-line
+    benchmarking arguments:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-c</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>clients</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--client=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>clients</I
+></TT
+></DT
+><DD
+><P
+>        Number of clients simulated, that is, number of concurrent database
+        sessions.  Default is 1.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-C</TT
+><BR><TT
+CLASS="OPTION"
+>--connect</TT
+></DT
+><DD
+><P
+>        Establish a new connection for each transaction, rather than
+        doing it just once per client session.
+        This is useful to measure the connection overhead.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-d</TT
+><BR><TT
+CLASS="OPTION"
+>--debug</TT
+></DT
+><DD
+><P
+>        Print debugging output.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-D</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>varname</I
+></TT
+><TT
+CLASS="LITERAL"
+>=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--define=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>varname</I
+></TT
+><TT
+CLASS="LITERAL"
+>=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+></DT
+><DD
+><P
+>        Define a variable for use by a custom script (see below).
+        Multiple <TT
+CLASS="OPTION"
+>-D</TT
+> options are allowed.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-f</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>filename</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--file=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>filename</I
+></TT
+></DT
+><DD
+><P
+>        Read transaction script from <TT
+CLASS="REPLACEABLE"
+><I
+>filename</I
+></TT
+>.
+        See below for details.
+        <TT
+CLASS="OPTION"
+>-N</TT
+>, <TT
+CLASS="OPTION"
+>-S</TT
+>, and <TT
+CLASS="OPTION"
+>-f</TT
+>
+        are mutually exclusive.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-j</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>threads</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--jobs=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>threads</I
+></TT
+></DT
+><DD
+><P
+>        Number of worker threads within <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+>.
+        Using more than one thread can be helpful on multi-CPU machines.
+        The number of clients must be a multiple of the number of threads,
+        since each thread is given the same number of client sessions to manage.
+        Default is 1.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-l</TT
+><BR><TT
+CLASS="OPTION"
+>--log</TT
+></DT
+><DD
+><P
+>        Write the time taken by each transaction to a log file.
+        See below for details.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-L</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>limit</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--latency-limit=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>limit</I
+></TT
+></DT
+><DD
+><P
+>        Transaction which last more than <TT
+CLASS="REPLACEABLE"
+><I
+>limit</I
+></TT
+> milliseconds
+        are counted and reported separately, as <I
+CLASS="FIRSTTERM"
+>late</I
+>.
+       </P
+><P
+>        When throttling is used (<TT
+CLASS="OPTION"
+>--rate=...</TT
+>), transactions that
+        lag behind schedule by more than <TT
+CLASS="REPLACEABLE"
+><I
+>limit</I
+></TT
+> ms, and thus
+        have no hope of meeting the latency limit, are not sent to the server
+        at all. They are counted and reported separately as
+        <I
+CLASS="FIRSTTERM"
+>skipped</I
+>.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-M</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>querymode</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--protocol=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>querymode</I
+></TT
+></DT
+><DD
+><P
+>        Protocol to use for submitting queries to the server:
+          <P
+></P
+></P><UL
+><LI
+><P
+><TT
+CLASS="LITERAL"
+>simple</TT
+>: use simple query protocol.</P
+></LI
+><LI
+><P
+><TT
+CLASS="LITERAL"
+>extended</TT
+>: use extended query protocol.</P
+></LI
+><LI
+><P
+><TT
+CLASS="LITERAL"
+>prepared</TT
+>: use extended query protocol with prepared statements.</P
+></LI
+></UL
+><P>
+        The default is simple query protocol.  (See <A
+HREF="protocol.html"
+>Chapter 50</A
+>
+        for more information.)
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-n</TT
+><BR><TT
+CLASS="OPTION"
+>--no-vacuum</TT
+></DT
+><DD
+><P
+>        Perform no vacuuming before running the test.
+        This option is <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>necessary</I
+></SPAN
+>
+        if you are running a custom test scenario that does not include
+        the standard tables <TT
+CLASS="STRUCTNAME"
+>pgbench_accounts</TT
+>,
+        <TT
+CLASS="STRUCTNAME"
+>pgbench_branches</TT
+>, <TT
+CLASS="STRUCTNAME"
+>pgbench_history</TT
+>, and
+        <TT
+CLASS="STRUCTNAME"
+>pgbench_tellers</TT
+>.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-N</TT
+><BR><TT
+CLASS="OPTION"
+>--skip-some-updates</TT
+></DT
+><DD
+><P
+>        Do not update <TT
+CLASS="STRUCTNAME"
+>pgbench_tellers</TT
+> and
+        <TT
+CLASS="STRUCTNAME"
+>pgbench_branches</TT
+>.
+        This will avoid update contention on these tables, but
+        it makes the test case even less like TPC-B.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-P</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>sec</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--progress=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>sec</I
+></TT
+></DT
+><DD
+><P
+>        Show progress report every <TT
+CLASS="LITERAL"
+>sec</TT
+> seconds.  The report
+        includes the time since the beginning of the run, the tps since the
+        last report, and the transaction latency average and standard
+        deviation since the last report.  Under throttling (<TT
+CLASS="OPTION"
+>-R</TT
+>),
+        the latency is computed with respect to the transaction scheduled
+        start time, not the actual transaction beginning time, thus it also
+        includes the average schedule lag time.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-r</TT
+><BR><TT
+CLASS="OPTION"
+>--report-latencies</TT
+></DT
+><DD
+><P
+>        Report the average per-statement latency (execution time from the
+        perspective of the client) of each command after the benchmark
+        finishes.  See below for details.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-R</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>rate</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--rate=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>rate</I
+></TT
+></DT
+><DD
+><P
+>        Execute transactions targeting the specified rate instead of running
+        as fast as possible (the default).  The rate is given in transactions
+        per second.  If the targeted rate is above the maximum possible rate,
+        the rate limit won't impact the results.
+       </P
+><P
+>        The rate is targeted by starting transactions along a
+        Poisson-distributed schedule time line.  The expected start time
+        schedule moves forward based on when the client first started, not
+        when the previous transaction ended.  That approach means that when
+        transactions go past their original scheduled end time, it is
+        possible for later ones to catch up again.
+       </P
+><P
+>        When throttling is active, the transaction latency reported at the
+        end of the run is calculated from the scheduled start times, so it
+        includes the time each transaction had to wait for the previous
+        transaction to finish. The wait time is called the schedule lag time,
+        and its average and maximum are also reported separately. The
+        transaction latency with respect to the actual transaction start time,
+        i.e. the time spent executing the transaction in the database, can be
+        computed by subtracting the schedule lag time from the reported
+        latency.
+       </P
+><P
+>        If <TT
+CLASS="OPTION"
+>--latency-limit</TT
+> is used together with <TT
+CLASS="OPTION"
+>--rate</TT
+>,
+        a transaction can lag behind so much that it is already over the
+        latency limit when the previous transaction ends, because the latency
+        is calculated from the scheduled start time. Such transactions are
+        not sent to the server, but are skipped altogether and counted
+        separately.
+       </P
+><P
+>        A high schedule lag time is an indication that the system cannot
+        process transactions at the specified rate, with the chosen number of
+        clients and threads. When the average transaction execution time is
+        longer than the scheduled interval between each transaction, each
+        successive transaction will fall further behind, and the schedule lag
+        time will keep increasing the longer the test run is. When that
+        happens, you will have to reduce the specified transaction rate.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-s</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>scale_factor</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--scale=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>scale_factor</I
+></TT
+></DT
+><DD
+><P
+>        Report the specified scale factor in <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+>'s
+        output.  With the built-in tests, this is not necessary; the
+        correct scale factor will be detected by counting the number of
+        rows in the <TT
+CLASS="STRUCTNAME"
+>pgbench_branches</TT
+> table.  However, when testing
+        custom benchmarks (<TT
+CLASS="OPTION"
+>-f</TT
+> option), the scale factor
+        will be reported as 1 unless this option is used.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-S</TT
+><BR><TT
+CLASS="OPTION"
+>--select-only</TT
+></DT
+><DD
+><P
+>        Perform select-only transactions instead of TPC-B-like test.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-t</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>transactions</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--transactions=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>transactions</I
+></TT
+></DT
+><DD
+><P
+>        Number of transactions each client runs.  Default is 10.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-T</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>seconds</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--time=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>seconds</I
+></TT
+></DT
+><DD
+><P
+>        Run the test for this many seconds, rather than a fixed number of
+        transactions per client. <TT
+CLASS="OPTION"
+>-t</TT
+> and
+        <TT
+CLASS="OPTION"
+>-T</TT
+> are mutually exclusive.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-v</TT
+><BR><TT
+CLASS="OPTION"
+>--vacuum-all</TT
+></DT
+><DD
+><P
+>        Vacuum all four standard tables before running the test.
+        With neither <TT
+CLASS="OPTION"
+>-n</TT
+> nor <TT
+CLASS="OPTION"
+>-v</TT
+>, <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> will vacuum the
+        <TT
+CLASS="STRUCTNAME"
+>pgbench_tellers</TT
+> and <TT
+CLASS="STRUCTNAME"
+>pgbench_branches</TT
+>
+        tables, and will truncate <TT
+CLASS="STRUCTNAME"
+>pgbench_history</TT
+>.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>--aggregate-interval=<TT
+CLASS="REPLACEABLE"
+><I
+>seconds</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Length of aggregation interval (in seconds). May be used only together
+        with <SPAN
+CLASS="APPLICATION"
+>-l</SPAN
+> - with this option, the log contains
+        per-interval summary (number of transactions, min/max latency and two
+        additional fields useful for variance estimation).
+       </P
+><P
+>        This option is not currently supported on Windows.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>--sampling-rate=<TT
+CLASS="REPLACEABLE"
+><I
+>rate</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Sampling rate, used when writing data into the log, to reduce the
+        amount of log generated. If this option is given, only the specified
+        fraction of transactions are logged. 1.0 means all transactions will
+        be logged, 0.05 means only 5% of the transactions will be logged.
+       </P
+><P
+>        Remember to take the sampling rate into account when processing the
+        log file. For example, when computing tps values, you need to multiply
+        the numbers accordingly (e.g. with 0.01 sample rate, you'll only get
+        1/100 of the actual tps).
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+></DIV
+><DIV
+CLASS="REFSECT2"
+><A
+NAME="PGBENCH-COMMON-OPTIONS"
+></A
+><H3
+>Common Options</H3
+><P
+>    <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> accepts the following command-line
+    common arguments:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-h</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>hostname</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--host=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>hostname</I
+></TT
+></DT
+><DD
+><P
+>        The database server's host name
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-p</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>port</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--port=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>port</I
+></TT
+></DT
+><DD
+><P
+>        The database server's port number
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-U</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>login</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--username=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>login</I
+></TT
+></DT
+><DD
+><P
+>        The user name to connect as
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-V</TT
+><BR><TT
+CLASS="OPTION"
+>--version</TT
+></DT
+><DD
+><P
+>        Print the <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> version and exit.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-?</TT
+><BR><TT
+CLASS="OPTION"
+>--help</TT
+></DT
+><DD
+><P
+>        Show help about <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> command line
+        arguments, and exit.
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN91697"
+></A
+><H2
+>Notes</H2
+><DIV
+CLASS="REFSECT2"
+><A
+NAME="AEN91699"
+></A
+><H3
+>What is the <SPAN
+CLASS="QUOTE"
+>"Transaction"</SPAN
+> Actually Performed in <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+>?</H3
+><P
+>   The default transaction script issues seven commands per transaction:
+  </P
+><P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+><TT
+CLASS="LITERAL"
+>BEGIN;</TT
+></P
+></LI
+><LI
+><P
+><TT
+CLASS="LITERAL"
+>UPDATE pgbench_accounts SET abalance = abalance + :delta WHERE aid = :aid;</TT
+></P
+></LI
+><LI
+><P
+><TT
+CLASS="LITERAL"
+>SELECT abalance FROM pgbench_accounts WHERE aid = :aid;</TT
+></P
+></LI
+><LI
+><P
+><TT
+CLASS="LITERAL"
+>UPDATE pgbench_tellers SET tbalance = tbalance + :delta WHERE tid = :tid;</TT
+></P
+></LI
+><LI
+><P
+><TT
+CLASS="LITERAL"
+>UPDATE pgbench_branches SET bbalance = bbalance + :delta WHERE bid = :bid;</TT
+></P
+></LI
+><LI
+><P
+><TT
+CLASS="LITERAL"
+>INSERT INTO pgbench_history (tid, bid, aid, delta, mtime) VALUES (:tid, :bid, :aid, :delta, CURRENT_TIMESTAMP);</TT
+></P
+></LI
+><LI
+><P
+><TT
+CLASS="LITERAL"
+>END;</TT
+></P
+></LI
+></OL
+><P
+>   If you specify <TT
+CLASS="OPTION"
+>-N</TT
+>, steps 4 and 5 aren't included in the
+   transaction.  If you specify <TT
+CLASS="OPTION"
+>-S</TT
+>, only the <TT
+CLASS="COMMAND"
+>SELECT</TT
+> is
+   issued.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT2"
+><A
+NAME="AEN91730"
+></A
+><H3
+>Custom Scripts</H3
+><P
+>   <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> has support for running custom
+   benchmark scenarios by replacing the default transaction script
+   (described above) with a transaction script read from a file
+   (<TT
+CLASS="OPTION"
+>-f</TT
+> option).  In this case a <SPAN
+CLASS="QUOTE"
+>"transaction"</SPAN
+>
+   counts as one execution of a script file.  You can even specify
+   multiple scripts (multiple <TT
+CLASS="OPTION"
+>-f</TT
+> options), in which
+   case a random one of the scripts is chosen each time a client session
+   starts a new transaction.
+  </P
+><P
+>   The format of a script file is one SQL command per line; multiline
+   SQL commands are not supported.  Empty lines and lines beginning with
+   <TT
+CLASS="LITERAL"
+>--</TT
+> are ignored.  Script file lines can also be
+   <SPAN
+CLASS="QUOTE"
+>"meta commands"</SPAN
+>, which are interpreted by <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+>
+   itself, as described below.
+  </P
+><P
+>   There is a simple variable-substitution facility for script files.
+   Variables can be set by the command-line <TT
+CLASS="OPTION"
+>-D</TT
+> option,
+   explained above, or by the meta commands explained below.
+   In addition to any variables preset by <TT
+CLASS="OPTION"
+>-D</TT
+> command-line options,
+   there are a few variables that are preset automatically, listed in
+   <A
+HREF="pgbench.html#PGBENCH-AUTOMATIC-VARIABLES"
+>Table 1</A
+>. A value specified for these
+   variables using <TT
+CLASS="OPTION"
+>-D</TT
+> takes precedence over the automatic presets.
+   Once set, a variable's
+   value can be inserted into a SQL command by writing
+   <TT
+CLASS="LITERAL"
+>:</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>variablename</I
+></TT
+>.  When running more than
+   one client session, each session has its own set of variables.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="PGBENCH-AUTOMATIC-VARIABLES"
+></A
+><P
+><B
+>Table 1. Automatic variables</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>Variable</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>scale</TT
+> </TD
+><TD
+>current scale factor</TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>client_id</TT
+> </TD
+><TD
+>unique number identifying the client session (starts from zero)</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   Script file meta commands begin with a backslash (<TT
+CLASS="LITERAL"
+>\</TT
+>).
+   Arguments to a meta command are separated by white space.
+   These meta commands are supported:
+  </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>\set <TT
+CLASS="REPLACEABLE"
+><I
+>varname</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+></TT
+></DT
+><DD
+><P
+>      Sets variable <TT
+CLASS="REPLACEABLE"
+><I
+>varname</I
+></TT
+> to an integer value calculated
+      from <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>.
+      The expression may contain integer constants such as <TT
+CLASS="LITERAL"
+>5432</TT
+>,
+      references to variables <TT
+CLASS="LITERAL"
+>:</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>variablename</I
+></TT
+>,
+      and expressions composed of unary (<TT
+CLASS="LITERAL"
+>-</TT
+>) or binary operators
+      (<TT
+CLASS="LITERAL"
+>+</TT
+>, <TT
+CLASS="LITERAL"
+>-</TT
+>, <TT
+CLASS="LITERAL"
+>*</TT
+>, <TT
+CLASS="LITERAL"
+>/</TT
+>, <TT
+CLASS="LITERAL"
+>%</TT
+>)
+      with their usual associativity, and parentheses.
+     </P
+><P
+>      Examples:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>\set ntellers 10 * :scale
+\set aid (1021 * :aid) % (100000 * :scale) + 1</PRE
+><P></P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>\setrandom <TT
+CLASS="REPLACEABLE"
+><I
+>varname</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>min</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>max</I
+></TT
+> [ uniform | { gaussian | exponential } <TT
+CLASS="REPLACEABLE"
+><I
+>parameter</I
+></TT
+> ]</TT
+></DT
+><DD
+><P
+>      Sets variable <TT
+CLASS="REPLACEABLE"
+><I
+>varname</I
+></TT
+> to a random integer value
+      between the limits <TT
+CLASS="REPLACEABLE"
+><I
+>min</I
+></TT
+> and <TT
+CLASS="REPLACEABLE"
+><I
+>max</I
+></TT
+> inclusive.
+      Each limit can be either an integer constant or a
+      <TT
+CLASS="LITERAL"
+>:</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>variablename</I
+></TT
+> reference to a variable
+      having an integer value.
+     </P
+><P
+>      By default, or when <TT
+CLASS="LITERAL"
+>uniform</TT
+> is specified, all values in the
+      range are drawn with equal probability.  Specifying <TT
+CLASS="LITERAL"
+>gaussian</TT
+>
+      or  <TT
+CLASS="LITERAL"
+>exponential</TT
+> options modifies this behavior; each
+      requires a mandatory parameter which determines the precise shape of the
+      distribution.
+     </P
+><P
+>      For a Gaussian distribution, the interval is mapped onto a standard
+      normal distribution (the classical bell-shaped Gaussian curve) truncated
+      at <TT
+CLASS="LITERAL"
+>-parameter</TT
+> on the left and <TT
+CLASS="LITERAL"
+>+parameter</TT
+>
+      on the right.
+      Values in the middle of the interval are more likely to be drawn.
+      To be precise, if <TT
+CLASS="LITERAL"
+>PHI(x)</TT
+> is the cumulative distribution
+      function of the standard normal distribution, with mean <TT
+CLASS="LITERAL"
+>mu</TT
+>
+      defined as <TT
+CLASS="LITERAL"
+>(max + min) / 2.0</TT
+>, with
+<P
+CLASS="LITERALLAYOUT"
+>&nbsp;f(x)&nbsp;=&nbsp;PHI(2.0&nbsp;*&nbsp;parameter&nbsp;*&nbsp;(x&nbsp;-&nbsp;mu)&nbsp;/&nbsp;(max&nbsp;-&nbsp;min&nbsp;+&nbsp;1))&nbsp;/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(2.0&nbsp;*&nbsp;PHI(parameter)&nbsp;-&nbsp;1.0)</P
+>
+      then value <TT
+CLASS="REPLACEABLE"
+><I
+>i</I
+></TT
+> between <TT
+CLASS="REPLACEABLE"
+><I
+>min</I
+></TT
+> and
+      <TT
+CLASS="REPLACEABLE"
+><I
+>max</I
+></TT
+> inclusive is drawn with probability:
+      <TT
+CLASS="LITERAL"
+>f(i + 0.5) - f(i - 0.5)</TT
+>.
+      Intuitively, the larger <TT
+CLASS="REPLACEABLE"
+><I
+>parameter</I
+></TT
+>, the more
+      frequently values close to the middle of the interval are drawn, and the
+      less frequently values close to the <TT
+CLASS="REPLACEABLE"
+><I
+>min</I
+></TT
+> and
+      <TT
+CLASS="REPLACEABLE"
+><I
+>max</I
+></TT
+> bounds. About 67% of values are drawn from the
+      middle <TT
+CLASS="LITERAL"
+>1.0 / parameter</TT
+>, that is a relative
+      <TT
+CLASS="LITERAL"
+>0.5 / parameter</TT
+> around the mean, and 95% in the middle
+      <TT
+CLASS="LITERAL"
+>2.0 / parameter</TT
+>, that is a relative
+      <TT
+CLASS="LITERAL"
+>1.0 / parameter</TT
+> around the mean; for instance, if
+      <TT
+CLASS="REPLACEABLE"
+><I
+>parameter</I
+></TT
+> is 4.0, 67% of values are drawn from the
+      middle quarter (1.0 / 4.0) of the interval (i.e. from
+      <TT
+CLASS="LITERAL"
+>3.0 / 8.0</TT
+> to <TT
+CLASS="LITERAL"
+>5.0 / 8.0</TT
+>) and 95% from
+      the middle half (<TT
+CLASS="LITERAL"
+>2.0 / 4.0</TT
+>) of the interval (second and
+      third quartiles). The minimum <TT
+CLASS="REPLACEABLE"
+><I
+>parameter</I
+></TT
+> is 2.0 for
+      performance of the Box-Muller transform.
+     </P
+><P
+>      For an exponential distribution, <TT
+CLASS="REPLACEABLE"
+><I
+>parameter</I
+></TT
+>
+      controls the distribution by truncating a quickly-decreasing
+      exponential distribution at <TT
+CLASS="REPLACEABLE"
+><I
+>parameter</I
+></TT
+>, and then
+      projecting onto integers between the bounds.
+      To be precise, with
+<P
+CLASS="LITERALLAYOUT"
+>f(x)&nbsp;=&nbsp;exp(-parameter&nbsp;*&nbsp;(x&nbsp;-&nbsp;min)&nbsp;/&nbsp;(max&nbsp;-&nbsp;min&nbsp;+&nbsp;1))&nbsp;/&nbsp;(1.0&nbsp;-&nbsp;exp(-parameter))</P
+>
+      Then value <TT
+CLASS="REPLACEABLE"
+><I
+>i</I
+></TT
+> between <TT
+CLASS="REPLACEABLE"
+><I
+>min</I
+></TT
+> and
+      <TT
+CLASS="REPLACEABLE"
+><I
+>max</I
+></TT
+> inclusive is drawn with probability:
+      <TT
+CLASS="LITERAL"
+>f(x) - f(x + 1)</TT
+>.
+      Intuitively, the larger <TT
+CLASS="REPLACEABLE"
+><I
+>parameter</I
+></TT
+>, the more
+      frequently values close to <TT
+CLASS="REPLACEABLE"
+><I
+>min</I
+></TT
+> are accessed, and the
+      less frequently values close to <TT
+CLASS="REPLACEABLE"
+><I
+>max</I
+></TT
+> are accessed.
+      The closer to 0 <TT
+CLASS="REPLACEABLE"
+><I
+>parameter</I
+></TT
+>, the flatter (more uniform)
+      the access distribution.
+      A crude approximation of the distribution is that the most frequent 1%
+      values in the range, close to <TT
+CLASS="REPLACEABLE"
+><I
+>min</I
+></TT
+>, are drawn
+      <TT
+CLASS="REPLACEABLE"
+><I
+>parameter</I
+></TT
+>% of the time.
+      <TT
+CLASS="REPLACEABLE"
+><I
+>parameter</I
+></TT
+> value must be strictly positive.
+     </P
+><P
+>      Example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>\setrandom aid 1 :naccounts gaussian 5.0</PRE
+><P></P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>\sleep <TT
+CLASS="REPLACEABLE"
+><I
+>number</I
+></TT
+> [ us | ms | s ]</TT
+></DT
+><DD
+><P
+>      Causes script execution to sleep for the specified duration in
+      microseconds (<TT
+CLASS="LITERAL"
+>us</TT
+>), milliseconds (<TT
+CLASS="LITERAL"
+>ms</TT
+>) or seconds
+      (<TT
+CLASS="LITERAL"
+>s</TT
+>).  If the unit is omitted then seconds are the default.
+      <TT
+CLASS="REPLACEABLE"
+><I
+>number</I
+></TT
+> can be either an integer constant or a
+      <TT
+CLASS="LITERAL"
+>:</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>variablename</I
+></TT
+> reference to a variable
+      having an integer value.
+     </P
+><P
+>      Example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>\sleep 10 ms</PRE
+><P></P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>\setshell <TT
+CLASS="REPLACEABLE"
+><I
+>varname</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>command</I
+></TT
+> [ <TT
+CLASS="REPLACEABLE"
+><I
+>argument</I
+></TT
+> ... ]</TT
+></DT
+><DD
+><P
+>      Sets variable <TT
+CLASS="REPLACEABLE"
+><I
+>varname</I
+></TT
+> to the result of the shell command
+      <TT
+CLASS="REPLACEABLE"
+><I
+>command</I
+></TT
+>. The command must return an integer value
+      through its standard output.
+     </P
+><P
+><TT
+CLASS="REPLACEABLE"
+><I
+>argument</I
+></TT
+> can be either a text constant or a
+      <TT
+CLASS="LITERAL"
+>:</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>variablename</I
+></TT
+> reference to a variable of
+      any types. If you want to use <TT
+CLASS="REPLACEABLE"
+><I
+>argument</I
+></TT
+> starting with
+      colons, you need to add an additional colon at the beginning of
+      <TT
+CLASS="REPLACEABLE"
+><I
+>argument</I
+></TT
+>.
+     </P
+><P
+>      Example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>\setshell variable_to_be_assigned command literal_argument :variable ::literal_starting_with_colon</PRE
+><P></P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>\shell <TT
+CLASS="REPLACEABLE"
+><I
+>command</I
+></TT
+> [ <TT
+CLASS="REPLACEABLE"
+><I
+>argument</I
+></TT
+> ... ]</TT
+></DT
+><DD
+><P
+>      Same as <TT
+CLASS="LITERAL"
+>\setshell</TT
+>, but the result is ignored.
+     </P
+><P
+>      Example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>\shell command literal_argument :variable ::literal_starting_with_colon</PRE
+><P></P
+></DD
+></DL
+></DIV
+><P
+>   As an example, the full definition of the built-in TPC-B-like
+   transaction is:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>\set nbranches :scale
+\set ntellers 10 * :scale
+\set naccounts 100000 * :scale
+\setrandom aid 1 :naccounts
+\setrandom bid 1 :nbranches
+\setrandom tid 1 :ntellers
+\setrandom delta -5000 5000
+BEGIN;
+UPDATE pgbench_accounts SET abalance = abalance + :delta WHERE aid = :aid;
+SELECT abalance FROM pgbench_accounts WHERE aid = :aid;
+UPDATE pgbench_tellers SET tbalance = tbalance + :delta WHERE tid = :tid;
+UPDATE pgbench_branches SET bbalance = bbalance + :delta WHERE bid = :bid;
+INSERT INTO pgbench_history (tid, bid, aid, delta, mtime) VALUES (:tid, :bid, :aid, :delta, CURRENT_TIMESTAMP);
+END;</PRE
+><P>
+
+   This script allows each iteration of the transaction to reference
+   different, randomly-chosen rows.  (This example also shows why it's
+   important for each client session to have its own variables &mdash;
+   otherwise they'd not be independently touching different rows.)
+  </P
+></DIV
+><DIV
+CLASS="REFSECT2"
+><A
+NAME="AEN91889"
+></A
+><H3
+>Per-Transaction Logging</H3
+><P
+>   With the <TT
+CLASS="OPTION"
+>-l</TT
+> option but without the <TT
+CLASS="OPTION"
+>--aggregate-interval</TT
+>,
+   <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> writes the time taken by each transaction
+   to a log file.  The log file will be named
+   <TT
+CLASS="FILENAME"
+>pgbench_log.<TT
+CLASS="REPLACEABLE"
+><I
+>nnn</I
+></TT
+></TT
+>, where
+   <TT
+CLASS="REPLACEABLE"
+><I
+>nnn</I
+></TT
+> is the PID of the <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> process.
+   If the <TT
+CLASS="OPTION"
+>-j</TT
+> option is 2 or higher, creating multiple worker
+   threads, each will have its own log file. The first worker will use the
+   same name for its log file as in the standard single worker case.
+   The additional log files for the other workers will be named
+   <TT
+CLASS="FILENAME"
+>pgbench_log.<TT
+CLASS="REPLACEABLE"
+><I
+>nnn</I
+></TT
+>.<TT
+CLASS="REPLACEABLE"
+><I
+>mmm</I
+></TT
+></TT
+>,
+   where <TT
+CLASS="REPLACEABLE"
+><I
+>mmm</I
+></TT
+> is a sequential number for each worker starting
+   with 1.
+  </P
+><P
+>   The format of the log is:
+
+</P><PRE
+CLASS="SYNOPSIS"
+><TT
+CLASS="REPLACEABLE"
+><I
+>client_id</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>transaction_no</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>time</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>file_no</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>time_epoch</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>time_us</I
+></TT
+> [<SPAN
+CLASS="OPTIONAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>schedule_lag</I
+></TT
+></SPAN
+>]</PRE
+><P>
+
+   where <TT
+CLASS="REPLACEABLE"
+><I
+>time</I
+></TT
+> is the total elapsed transaction time in microseconds,
+   <TT
+CLASS="REPLACEABLE"
+><I
+>file_no</I
+></TT
+> identifies which script file was used
+   (useful when multiple scripts were specified with <TT
+CLASS="OPTION"
+>-f</TT
+>),
+   and <TT
+CLASS="REPLACEABLE"
+><I
+>time_epoch</I
+></TT
+>/<TT
+CLASS="REPLACEABLE"
+><I
+>time_us</I
+></TT
+> are a
+   Unix epoch format time stamp and an offset
+   in microseconds (suitable for creating an ISO 8601
+   time stamp with fractional seconds) showing when
+   the transaction completed.
+   Field <TT
+CLASS="REPLACEABLE"
+><I
+>schedule_lag</I
+></TT
+> is the difference between the
+   transaction's scheduled start time, and the time it actually started, in
+   microseconds. It is only present when the <TT
+CLASS="OPTION"
+>--rate</TT
+> option is used.
+   When both <TT
+CLASS="OPTION"
+>--rate</TT
+> and <TT
+CLASS="OPTION"
+>--latency-limit</TT
+> are used,
+   the <TT
+CLASS="REPLACEABLE"
+><I
+>time</I
+></TT
+> for a skipped transaction will be reported as
+   <TT
+CLASS="LITERAL"
+>skipped</TT
+>.
+  </P
+><P
+>   Here is a snippet of the log file generated:
+</P><PRE
+CLASS="SCREEN"
+> 0 199 2241 0 1175850568 995598
+ 0 200 2465 0 1175850568 998079
+ 0 201 2513 0 1175850569 608
+ 0 202 2038 0 1175850569 2663</PRE
+><P>
+
+   Another example with --rate=100 and --latency-limit=5 (note the additional
+   <TT
+CLASS="REPLACEABLE"
+><I
+>schedule_lag</I
+></TT
+> column):
+</P><PRE
+CLASS="SCREEN"
+> 0 81 4621 0 1412881037 912698 3005
+ 0 82 6173 0 1412881037 914578 4304
+ 0 83 skipped 0 1412881037 914578 5217
+ 0 83 skipped 0 1412881037 914578 5099
+ 0 83 4722 0 1412881037 916203 3108
+ 0 84 4142 0 1412881037 918023 2333
+ 0 85 2465 0 1412881037 919759 740</PRE
+><P>
+   In this example, transaction 82 was late, because its latency (6.173 ms) was
+   over the 5 ms limit. The next two transactions were skipped, because they
+   were already late before they were even started.
+  </P
+><P
+>   When running a long test on hardware that can handle a lot of transactions,
+   the log files can become very large.  The <TT
+CLASS="OPTION"
+>--sampling-rate</TT
+> option
+   can be used to log only a random sample of transactions.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT2"
+><A
+NAME="AEN91931"
+></A
+><H3
+>Aggregated Logging</H3
+><P
+>   With the <TT
+CLASS="OPTION"
+>--aggregate-interval</TT
+> option, the logs use a bit different format:
+
+</P><PRE
+CLASS="SYNOPSIS"
+><TT
+CLASS="REPLACEABLE"
+><I
+>interval_start</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>num_of_transactions</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>latency_sum</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>latency_2_sum</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>min_latency</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>max_latency</I
+></TT
+> [<SPAN
+CLASS="OPTIONAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>lag_sum</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>lag_2_sum</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>min_lag</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>max_lag</I
+></TT
+> [<SPAN
+CLASS="OPTIONAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>skipped_transactions</I
+></TT
+></SPAN
+>]</SPAN
+>]</PRE
+><P>
+
+   where <TT
+CLASS="REPLACEABLE"
+><I
+>interval_start</I
+></TT
+> is the start of the interval (Unix epoch
+   format time stamp), <TT
+CLASS="REPLACEABLE"
+><I
+>num_of_transactions</I
+></TT
+> is the number of transactions
+   within the interval, <TT
+CLASS="REPLACEABLE"
+><I
+>latency_sum</I
+></TT
+> is a sum of latencies
+   (so you can compute average latency easily). The following two fields are useful
+   for variance estimation - <TT
+CLASS="REPLACEABLE"
+><I
+>latency_sum</I
+></TT
+> is a sum of latencies and
+   <TT
+CLASS="REPLACEABLE"
+><I
+>latency_2_sum</I
+></TT
+> is a sum of 2nd powers of latencies. The next two
+   fields are <TT
+CLASS="REPLACEABLE"
+><I
+>min_latency</I
+></TT
+> - a minimum latency within the interval, and
+   <TT
+CLASS="REPLACEABLE"
+><I
+>max_latency</I
+></TT
+> - maximum latency within the interval. A transaction is
+   counted into the interval when it was committed. The fields in the end,
+   <TT
+CLASS="REPLACEABLE"
+><I
+>lag_sum</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>lag_2_sum</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>min_lag</I
+></TT
+>,
+   and <TT
+CLASS="REPLACEABLE"
+><I
+>max_lag</I
+></TT
+>, are only present if the <TT
+CLASS="OPTION"
+>--rate</TT
+>
+   option is used. The very last one, <TT
+CLASS="REPLACEABLE"
+><I
+>skipped_transactions</I
+></TT
+>,
+   is only present if the option <TT
+CLASS="OPTION"
+>--latency-limit</TT
+> is present, too.
+   They are calculated from the time each transaction had to wait for the
+   previous one to finish, i.e. the difference between each transaction's
+   scheduled start time and the time it actually started.
+  </P
+><P
+>   Here is example output:
+</P><PRE
+CLASS="SCREEN"
+>1345828501 5601 1542744 483552416 61 2573
+1345828503 7884 1979812 565806736 60 1479
+1345828505 7208 1979422 567277552 59 1391
+1345828507 7685 1980268 569784714 60 1398
+1345828509 7073 1979779 573489941 236 1411</PRE
+><P></P
+><P
+>   Notice that while the plain (unaggregated) log file contains a reference
+   to the custom script files, the aggregated log does not. Therefore if
+   you need per script data, you need to aggregate the data on your own.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT2"
+><A
+NAME="AEN91966"
+></A
+><H3
+>Per-Statement Latencies</H3
+><P
+>   With the <TT
+CLASS="OPTION"
+>-r</TT
+> option, <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> collects
+   the elapsed transaction time of each statement executed by every
+   client.  It then reports an average of those values, referred to
+   as the latency for each statement, after the benchmark has finished.
+  </P
+><P
+>   For the default script, the output will look similar to this:
+</P><PRE
+CLASS="SCREEN"
+>starting vacuum...end.
+transaction type: TPC-B (sort of)
+scaling factor: 1
+query mode: simple
+number of clients: 10
+number of threads: 1
+number of transactions per client: 1000
+number of transactions actually processed: 10000/10000
+tps = 618.764555 (including connections establishing)
+tps = 622.977698 (excluding connections establishing)
+statement latencies in milliseconds:
+        0.004386        \set nbranches 1 * :scale
+        0.001343        \set ntellers 10 * :scale
+        0.001212        \set naccounts 100000 * :scale
+        0.001310        \setrandom aid 1 :naccounts
+        0.001073        \setrandom bid 1 :nbranches
+        0.001005        \setrandom tid 1 :ntellers
+        0.001078        \setrandom delta -5000 5000
+        0.326152        BEGIN;
+        0.603376        UPDATE pgbench_accounts SET abalance = abalance + :delta WHERE aid = :aid;
+        0.454643        SELECT abalance FROM pgbench_accounts WHERE aid = :aid;
+        5.528491        UPDATE pgbench_tellers SET tbalance = tbalance + :delta WHERE tid = :tid;
+        7.335435        UPDATE pgbench_branches SET bbalance = bbalance + :delta WHERE bid = :bid;
+        0.371851        INSERT INTO pgbench_history (tid, bid, aid, delta, mtime) VALUES (:tid, :bid, :aid, :delta, CURRENT_TIMESTAMP);
+        1.212976        END;</PRE
+><P>
+  </P
+><P
+>   If multiple script files are specified, the averages are reported
+   separately for each script file.
+  </P
+><P
+>   Note that collecting the additional timing information needed for
+   per-statement latency computation adds some overhead.  This will slow
+   average execution speed and lower the computed TPS.  The amount
+   of slowdown varies significantly depending on platform and hardware.
+   Comparing average TPS values with and without latency reporting enabled
+   is a good way to measure if the timing overhead is significant.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT2"
+><A
+NAME="AEN91975"
+></A
+><H3
+>Good Practices</H3
+><P
+>   It is very easy to use <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> to produce completely
+   meaningless numbers.  Here are some guidelines to help you get useful
+   results.
+  </P
+><P
+>   In the first place, <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>never</I
+></SPAN
+> believe any test that runs
+   for only a few seconds.  Use the <TT
+CLASS="OPTION"
+>-t</TT
+> or <TT
+CLASS="OPTION"
+>-T</TT
+> option
+   to make the run last at least a few minutes, so as to average out noise.
+   In some cases you could need hours to get numbers that are reproducible.
+   It's a good idea to try the test run a few times, to find out if your
+   numbers are reproducible or not.
+  </P
+><P
+>   For the default TPC-B-like test scenario, the initialization scale factor
+   (<TT
+CLASS="OPTION"
+>-s</TT
+>) should be at least as large as the largest number of
+   clients you intend to test (<TT
+CLASS="OPTION"
+>-c</TT
+>); else you'll mostly be
+   measuring update contention.  There are only <TT
+CLASS="OPTION"
+>-s</TT
+> rows in
+   the <TT
+CLASS="STRUCTNAME"
+>pgbench_branches</TT
+> table, and every transaction wants to
+   update one of them, so <TT
+CLASS="OPTION"
+>-c</TT
+> values in excess of <TT
+CLASS="OPTION"
+>-s</TT
+>
+   will undoubtedly result in lots of transactions blocked waiting for
+   other transactions.
+  </P
+><P
+>   The default test scenario is also quite sensitive to how long it's been
+   since the tables were initialized: accumulation of dead rows and dead space
+   in the tables changes the results.  To understand the results you must keep
+   track of the total number of updates and when vacuuming happens.  If
+   autovacuum is enabled it can result in unpredictable changes in measured
+   performance.
+  </P
+><P
+>   A limitation of <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> is that it can itself become
+   the bottleneck when trying to test a large number of client sessions.
+   This can be alleviated by running <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+> on a different
+   machine from the database server, although low network latency will be
+   essential.  It might even be useful to run several <SPAN
+CLASS="APPLICATION"
+>pgbench</SPAN
+>
+   instances concurrently, on several client machines, against the same
+   database server.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="app-pgbasebackup.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="app-pgconfig.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>pg_basebackup</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="reference-client.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>pg_config</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

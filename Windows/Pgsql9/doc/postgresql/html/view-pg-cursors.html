@@ -1,0 +1,395 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_cursors</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="System Catalogs"
+HREF="catalogs.html"><LINK
+REL="PREVIOUS"
+TITLE="pg_available_extension_versions"
+HREF="view-pg-available-extension-versions.html"><LINK
+REL="NEXT"
+TITLE="pg_file_settings"
+HREF="view-pg-file-settings.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pg_available_extension_versions"
+HREF="view-pg-available-extension-versions.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="catalogs.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 49. System Catalogs</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pg_file_settings"
+HREF="view-pg-file-settings.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="VIEW-PG-CURSORS"
+>49.59. <TT
+CLASS="STRUCTNAME"
+>pg_cursors</TT
+></A
+></H1
+><P
+>   The <TT
+CLASS="STRUCTNAME"
+>pg_cursors</TT
+> view lists the cursors that
+   are currently available. Cursors can be defined in several ways:
+   <P
+></P
+></P><UL
+><LI
+><P
+>      via the <A
+HREF="sql-declare.html"
+>DECLARE</A
+>
+      statement in SQL
+     </P
+></LI
+><LI
+><P
+>      via the Bind message in the frontend/backend protocol, as
+      described in <A
+HREF="protocol-flow.html#PROTOCOL-FLOW-EXT-QUERY"
+>Section 50.2.3</A
+>
+     </P
+></LI
+><LI
+><P
+>      via the Server Programming Interface (SPI), as described in
+      <A
+HREF="spi-interface.html"
+>Section 44.1</A
+>
+     </P
+></LI
+></UL
+><P>
+
+   The <TT
+CLASS="STRUCTNAME"
+>pg_cursors</TT
+> view displays cursors
+   created by any of these means. Cursors only exist for the duration
+   of the transaction that defines them, unless they have been
+   declared <TT
+CLASS="LITERAL"
+>WITH HOLD</TT
+>. Therefore non-holdable
+   cursors are only present in the view until the end of their
+   creating transaction.
+
+   </P><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>     Cursors are used internally to implement some of the components
+     of <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>, such as procedural languages.
+     Therefore, the <TT
+CLASS="STRUCTNAME"
+>pg_cursors</TT
+> view might include cursors
+     that have not been explicitly created by the user.
+    </P
+></BLOCKQUOTE
+></DIV
+><P>
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="AEN106698"
+></A
+><P
+><B
+>Table 49-60. <TT
+CLASS="STRUCTNAME"
+>pg_cursors</TT
+> Columns</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>name</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>The name of the cursor</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>statement</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>The verbatim query string submitted to declare this cursor</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>is_holdable</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>       <TT
+CLASS="LITERAL"
+>true</TT
+> if the cursor is holdable (that is, it
+       can be accessed after the transaction that declared the cursor
+       has committed); <TT
+CLASS="LITERAL"
+>false</TT
+> otherwise
+       </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>is_binary</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>       <TT
+CLASS="LITERAL"
+>true</TT
+> if the cursor was declared
+       <TT
+CLASS="LITERAL"
+>BINARY</TT
+>; <TT
+CLASS="LITERAL"
+>false</TT
+>
+       otherwise
+       </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>is_scrollable</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>       <TT
+CLASS="LITERAL"
+>true</TT
+> if the cursor is scrollable (that is, it
+       allows rows to be retrieved in a nonsequential manner);
+       <TT
+CLASS="LITERAL"
+>false</TT
+> otherwise
+       </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>creation_time</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamptz</TT
+></TD
+><TD
+>The time at which the cursor was declared</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   The <TT
+CLASS="STRUCTNAME"
+>pg_cursors</TT
+> view is read only.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="view-pg-available-extension-versions.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="view-pg-file-settings.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><TT
+CLASS="STRUCTNAME"
+>pg_available_extension_versions</TT
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="catalogs.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><TT
+CLASS="STRUCTNAME"
+>pg_file_settings</TT
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

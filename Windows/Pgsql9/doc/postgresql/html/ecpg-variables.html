@@ -1,0 +1,2002 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Using Host Variables</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="ECPG - Embedded SQL in C"
+HREF="ecpg.html"><LINK
+REL="PREVIOUS"
+TITLE="Running SQL Commands"
+HREF="ecpg-commands.html"><LINK
+REL="NEXT"
+TITLE="Dynamic SQL"
+HREF="ecpg-dynamic.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Running SQL Commands"
+HREF="ecpg-commands.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ecpg.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 33. <SPAN
+CLASS="APPLICATION"
+>ECPG</SPAN
+> - Embedded <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> in C</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Dynamic SQL"
+HREF="ecpg-dynamic.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="ECPG-VARIABLES"
+>33.4. Using Host Variables</A
+></H1
+><P
+>   In <A
+HREF="ecpg-commands.html"
+>Section 33.3</A
+> you saw how you can execute SQL
+   statements from an embedded SQL program.  Some of those statements
+   only used fixed values and did not provide a way to insert
+   user-supplied values into statements or have the program process
+   the values returned by the query.  Those kinds of statements are
+   not really useful in real applications.  This section explains in
+   detail how you can pass data between your C program and the
+   embedded SQL statements using a simple mechanism called
+   <I
+CLASS="FIRSTTERM"
+>host variables</I
+>. In an embedded SQL program  we
+   consider the SQL statements to be <I
+CLASS="FIRSTTERM"
+>guests</I
+> in the C
+   program code which is the <I
+CLASS="FIRSTTERM"
+>host language</I
+>. Therefore
+   the variables of the C program are called <I
+CLASS="FIRSTTERM"
+>host
+   variables</I
+>.
+  </P
+><P
+>   Another way to exchange values between PostgreSQL backends and ECPG
+   applications is the use of SQL descriptors, described
+   in <A
+HREF="ecpg-descriptors.html"
+>Section 33.7</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="ECPG-VARIABLES-OVERVIEW"
+>33.4.1. Overview</A
+></H2
+><P
+>    Passing data between the C program and the SQL statements is
+    particularly simple in embedded SQL.  Instead of having the
+    program paste the data into the statement, which entails various
+    complications, such as properly quoting the value, you can simply
+    write the name of a C variable into the SQL statement, prefixed by
+    a colon.  For example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL INSERT INTO sometable VALUES (:v1, 'foo', :v2);</PRE
+><P>
+    This statement refers to two C variables named
+    <TT
+CLASS="VARNAME"
+>v1</TT
+> and <TT
+CLASS="VARNAME"
+>v2</TT
+> and also uses a
+    regular SQL string literal, to illustrate that you are not
+    restricted to use one kind of data or the other.
+   </P
+><P
+>    This style of inserting C variables in SQL statements works
+    anywhere a value expression is expected in an SQL statement.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="ECPG-DECLARE-SECTIONS"
+>33.4.2. Declare Sections</A
+></H2
+><P
+>    To pass data from the program to the database, for example as
+    parameters in a query, or to pass data from the database back to
+    the program, the C variables that are intended to contain this
+    data need to be declared in specially marked sections, so the
+    embedded SQL preprocessor is made aware of them.
+   </P
+><P
+>    This section starts with:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL BEGIN DECLARE SECTION;</PRE
+><P>
+    and ends with:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL END DECLARE SECTION;</PRE
+><P>
+    Between those lines, there must be normal C variable declarations,
+    such as:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>int   x = 4;
+char  foo[16], bar[16];</PRE
+><P>
+    As you can see, you can optionally assign an initial value to the variable.
+    The variable's scope is determined by the location of its declaring
+    section within the program.
+    You can also declare variables with the following syntax which implicitly
+    creates a declare section:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL int i = 4;</PRE
+><P>
+    You can have as many declare sections in a program as you like.
+   </P
+><P
+>    The declarations are also echoed to the output file as normal C
+    variables, so there's no need to declare them again.  Variables
+    that are not intended to be used in SQL commands can be declared
+    normally outside these special sections.
+   </P
+><P
+>    The definition of a structure or union also must be listed inside
+    a <TT
+CLASS="LITERAL"
+>DECLARE</TT
+> section. Otherwise the preprocessor cannot
+    handle these types since it does not know the definition.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="ECPG-RETRIEVING"
+>33.4.3. Retrieving Query Results</A
+></H2
+><P
+>    Now you should be able to pass data generated by your program into
+    an SQL command.  But how do you retrieve the results of a query?
+    For that purpose, embedded SQL provides special variants of the
+    usual commands <TT
+CLASS="COMMAND"
+>SELECT</TT
+> and
+    <TT
+CLASS="COMMAND"
+>FETCH</TT
+>.  These commands have a special
+    <TT
+CLASS="LITERAL"
+>INTO</TT
+> clause that specifies which host variables
+    the retrieved values are to be stored in.
+    <TT
+CLASS="COMMAND"
+>SELECT</TT
+> is used for a query that returns only
+    single row, and <TT
+CLASS="COMMAND"
+>FETCH</TT
+> is used for a query that
+    returns multiple rows, using a cursor.
+   </P
+><P
+>    Here is an example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>/*
+ * assume this table:
+ * CREATE TABLE test1 (a int, b varchar(50));
+ */
+
+EXEC SQL BEGIN DECLARE SECTION;
+int v1;
+VARCHAR v2;
+EXEC SQL END DECLARE SECTION;
+
+ ...
+
+EXEC SQL SELECT a, b INTO :v1, :v2 FROM test;</PRE
+><P>
+    So the <TT
+CLASS="LITERAL"
+>INTO</TT
+> clause appears between the select
+    list and the <TT
+CLASS="LITERAL"
+>FROM</TT
+> clause.  The number of
+    elements in the select list and the list after
+    <TT
+CLASS="LITERAL"
+>INTO</TT
+> (also called the target list) must be
+    equal.
+   </P
+><P
+>    Here is an example using the command <TT
+CLASS="COMMAND"
+>FETCH</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL BEGIN DECLARE SECTION;
+int v1;
+VARCHAR v2;
+EXEC SQL END DECLARE SECTION;
+
+ ...
+
+EXEC SQL DECLARE foo CURSOR FOR SELECT a, b FROM test;
+
+ ...
+
+do
+{
+    ...
+    EXEC SQL FETCH NEXT FROM foo INTO :v1, :v2;
+    ...
+} while (...);</PRE
+><P>
+    Here the <TT
+CLASS="LITERAL"
+>INTO</TT
+> clause appears after all the
+    normal clauses.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="ECPG-VARIABLES-TYPE-MAPPING"
+>33.4.4. Type Mapping</A
+></H2
+><P
+>    When ECPG applications exchange values between the PostgreSQL
+    server and the C application, such as when retrieving query
+    results from the server or executing SQL statements with input
+    parameters, the values need to be converted between PostgreSQL
+    data types and host language variable types (C language data
+    types, concretely).  One of the main points of ECPG is that it
+    takes care of this automatically in most cases.
+   </P
+><P
+>    In this respect, there are two kinds of data types: Some simple
+    PostgreSQL data types, such as <TT
+CLASS="TYPE"
+>integer</TT
+>
+    and <TT
+CLASS="TYPE"
+>text</TT
+>, can be read and written by the application
+    directly.  Other PostgreSQL data types, such
+    as <TT
+CLASS="TYPE"
+>timestamp</TT
+> and <TT
+CLASS="TYPE"
+>numeric</TT
+> can only be
+    accessed through special library functions; see
+    <A
+HREF="ecpg-variables.html#ECPG-SPECIAL-TYPES"
+>Section 33.4.4.2</A
+>.
+   </P
+><P
+>    <A
+HREF="ecpg-variables.html#ECPG-DATATYPE-HOSTVARS-TABLE"
+>Table 33-1</A
+> shows which PostgreSQL
+    data types correspond to which C data types.  When you wish to
+    send or receive a value of a given PostgreSQL data type, you
+    should declare a C variable of the corresponding C data type in
+    the declare section.
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="ECPG-DATATYPE-HOSTVARS-TABLE"
+></A
+><P
+><B
+>Table 33-1. Mapping Between PostgreSQL Data Types and C Variable Types</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>PostgreSQL data type</TH
+><TH
+>Host variable type</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>smallint</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>short</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>long long int</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>decimal</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>decimal</TT
+><A
+NAME="ECPG-DATATYPE-TABLE-FN"
+HREF="#FTN.ECPG-DATATYPE-TABLE-FN"
+><SPAN
+CLASS="footnote"
+>[a]</SPAN
+></A
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>numeric</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>numeric</TT
+><A
+HREF="ecpg-variables.html#FTN.ECPG-DATATYPE-TABLE-FN"
+><SPAN
+CLASS="footnote"
+>[a]</SPAN
+></A
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>real</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>double precision</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>double</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>smallserial</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>short</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>serial</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>bigserial</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>long long int</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>unsigned int</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>character(<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>)</TT
+>, <TT
+CLASS="TYPE"
+>varchar(<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>)</TT
+>, <TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>char[<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>+1]</TT
+>, <TT
+CLASS="TYPE"
+>VARCHAR[<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>+1]</TT
+><A
+NAME="AEN46837"
+HREF="#FTN.AEN46837"
+><SPAN
+CLASS="footnote"
+>[b]</SPAN
+></A
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>char[NAMEDATALEN]</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>timestamp</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp</TT
+><A
+HREF="ecpg-variables.html#FTN.ECPG-DATATYPE-TABLE-FN"
+><SPAN
+CLASS="footnote"
+>[a]</SPAN
+></A
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>interval</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>interval</TT
+><A
+HREF="ecpg-variables.html#FTN.ECPG-DATATYPE-TABLE-FN"
+><SPAN
+CLASS="footnote"
+>[a]</SPAN
+></A
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>date</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>date</TT
+><A
+HREF="ecpg-variables.html#FTN.ECPG-DATATYPE-TABLE-FN"
+><SPAN
+CLASS="footnote"
+>[a]</SPAN
+></A
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bool</TT
+><A
+NAME="AEN46868"
+HREF="#FTN.AEN46868"
+><SPAN
+CLASS="footnote"
+>[c]</SPAN
+></A
+></TD
+></TR
+></TBODY
+><TR
+><TD
+COLSPAN="2"
+>Notes:<BR><A
+NAME="FTN.ECPG-DATATYPE-TABLE-FN"
+>a. </A
+>This type can only be accessed through special library functions; see <A
+HREF="ecpg-variables.html#ECPG-SPECIAL-TYPES"
+>Section 33.4.4.2</A
+>.<BR><A
+NAME="FTN.AEN46837"
+>b. </A
+>declared in <TT
+CLASS="FILENAME"
+>ecpglib.h</TT
+><BR><A
+NAME="FTN.AEN46868"
+>c. </A
+>declared in <TT
+CLASS="FILENAME"
+>ecpglib.h</TT
+> if not native<BR></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="ECPG-CHAR"
+>33.4.4.1. Handling Character Strings</A
+></H3
+><P
+>     To handle SQL character string data types, such
+     as <TT
+CLASS="TYPE"
+>varchar</TT
+> and <TT
+CLASS="TYPE"
+>text</TT
+>, there are two
+     possible ways to declare the host variables.
+    </P
+><P
+>     One way is using <TT
+CLASS="TYPE"
+>char[]</TT
+>, an array
+     of <TT
+CLASS="TYPE"
+>char</TT
+>, which is the most common way to handle
+     character data in C.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL BEGIN DECLARE SECTION;
+    char str[50];
+EXEC SQL END DECLARE SECTION;</PRE
+><P>
+     Note that you have to take care of the length yourself.  If you
+     use this host variable as the target variable of a query which
+     returns a string with more than 49 characters, a buffer overflow
+     occurs.
+    </P
+><P
+>     The other way is using the <TT
+CLASS="TYPE"
+>VARCHAR</TT
+> type, which is a
+     special type provided by ECPG.  The definition on an array of
+     type <TT
+CLASS="TYPE"
+>VARCHAR</TT
+> is converted into a
+     named <TT
+CLASS="TYPE"
+>struct</TT
+> for every variable. A declaration like:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>VARCHAR var[180];</PRE
+><P>
+     is converted into:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>struct varchar_var { int len; char arr[180]; } var;</PRE
+><P>
+     The member <TT
+CLASS="STRUCTFIELD"
+>arr</TT
+> hosts the string
+     including a terminating zero byte.  Thus, to store a string in
+     a <TT
+CLASS="TYPE"
+>VARCHAR</TT
+> host variable, the host variable has to be
+     declared with the length including the zero byte terminator.  The
+     member <TT
+CLASS="STRUCTFIELD"
+>len</TT
+> holds the length of the
+     string stored in the <TT
+CLASS="STRUCTFIELD"
+>arr</TT
+> without the
+     terminating zero byte.  When a host variable is used as input for
+     a query, if <TT
+CLASS="LITERAL"
+>strlen(arr)</TT
+>
+     and <TT
+CLASS="STRUCTFIELD"
+>len</TT
+> are different, the shorter one
+     is used.
+    </P
+><P
+>     <TT
+CLASS="TYPE"
+>VARCHAR</TT
+> can be written in upper or lower case, but
+     not in mixed case.
+    </P
+><P
+>     <TT
+CLASS="TYPE"
+>char</TT
+> and <TT
+CLASS="TYPE"
+>VARCHAR</TT
+> host variables can
+     also hold values of other SQL types, which will be stored in
+     their string forms.
+    </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="ECPG-SPECIAL-TYPES"
+>33.4.4.2. Accessing Special Data Types</A
+></H3
+><P
+>     ECPG contains some special types that help you to interact easily
+     with some special data types from the PostgreSQL server. In
+     particular, it has implemented support for the
+     <TT
+CLASS="TYPE"
+>numeric</TT
+>, <TT
+CLASS="TYPE"
+>decimal</TT
+>, <TT
+CLASS="TYPE"
+>date</TT
+>, <TT
+CLASS="TYPE"
+>timestamp</TT
+>,
+     and <TT
+CLASS="TYPE"
+>interval</TT
+> types.  These data types cannot usefully be
+     mapped to primitive host variable types (such
+     as <TT
+CLASS="TYPE"
+>int</TT
+>, <TT
+CLASS="TYPE"
+>long long int</TT
+>,
+     or <TT
+CLASS="TYPE"
+>char[]</TT
+>), because they have a complex internal
+     structure.  Applications deal with these types by declaring host
+     variables in special types and accessing them using functions in
+     the pgtypes library.  The pgtypes library, described in detail
+     in <A
+HREF="ecpg-pgtypes.html"
+>Section 33.6</A
+> contains basic functions to deal
+     with those types, such that you do not need to send a query to
+     the SQL server just for adding an interval to a time stamp for
+     example.
+    </P
+><P
+>     The follow subsections describe these special data types. For
+     more details about pgtypes library functions,
+     see <A
+HREF="ecpg-pgtypes.html"
+>Section 33.6</A
+>.
+    </P
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN46911"
+>33.4.4.2.1. timestamp, date</A
+></H4
+><P
+>      Here is a pattern for handling <TT
+CLASS="TYPE"
+>timestamp</TT
+> variables
+      in the ECPG host application.
+     </P
+><P
+>      First, the program has to include the header file for the
+      <TT
+CLASS="TYPE"
+>timestamp</TT
+> type:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>#include &lt;pgtypes_timestamp.h&#62;</PRE
+><P>
+     </P
+><P
+>      Next, declare a host variable as type <TT
+CLASS="TYPE"
+>timestamp</TT
+> in
+      the declare section:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL BEGIN DECLARE SECTION;
+timestamp ts;
+EXEC SQL END DECLARE SECTION;</PRE
+><P>
+     </P
+><P
+>      And after reading a value into the host variable, process it
+      using pgtypes library functions. In following example, the
+      <TT
+CLASS="TYPE"
+>timestamp</TT
+> value is converted into text (ASCII) form
+      with the <CODE
+CLASS="FUNCTION"
+>PGTYPEStimestamp_to_asc()</CODE
+>
+      function:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL SELECT now()::timestamp INTO :ts;
+
+printf("ts = %s\n", PGTYPEStimestamp_to_asc(ts));</PRE
+><P>
+      This example will show some result like following:
+</P><PRE
+CLASS="SCREEN"
+>ts = 2010-06-27 18:03:56.949343</PRE
+><P>
+     </P
+><P
+>      In addition, the DATE type can be handled in the same way. The
+      program has to include <TT
+CLASS="FILENAME"
+>pgtypes_date.h</TT
+>, declare a host variable
+      as the date type and convert a DATE value into a text form using
+      <CODE
+CLASS="FUNCTION"
+>PGTYPESdate_to_asc()</CODE
+> function. For more details about the
+      pgtypes library functions, see <A
+HREF="ecpg-pgtypes.html"
+>Section 33.6</A
+>.
+     </P
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="ECPG-TYPE-INTERVAL"
+>33.4.4.2.2. interval</A
+></H4
+><P
+>      The handling of the <TT
+CLASS="TYPE"
+>interval</TT
+> type is also similar
+      to the <TT
+CLASS="TYPE"
+>timestamp</TT
+> and <TT
+CLASS="TYPE"
+>date</TT
+> types.  It
+      is required, however, to allocate memory for
+      an <TT
+CLASS="TYPE"
+>interval</TT
+> type value explicitly.  In other words,
+      the memory space for the variable has to be allocated in the
+      heap memory, not in the stack memory.
+     </P
+><P
+>      Here is an example program:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>#include &lt;stdio.h&#62;
+#include &lt;stdlib.h&#62;
+#include &lt;pgtypes_interval.h&#62;
+
+int
+main(void)
+{
+EXEC SQL BEGIN DECLARE SECTION;
+    interval *in;
+EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL CONNECT TO testdb;
+
+    in = PGTYPESinterval_new();
+    EXEC SQL SELECT '1 min'::interval INTO :in;
+    printf("interval = %s\n", PGTYPESinterval_to_asc(in));
+    PGTYPESinterval_free(in);
+
+    EXEC SQL COMMIT;
+    EXEC SQL DISCONNECT ALL;
+    return 0;
+}</PRE
+><P>
+     </P
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="ECPG-TYPE-NUMERIC-DECIMAL"
+>33.4.4.2.3. numeric, decimal</A
+></H4
+><P
+>      The handling of the <TT
+CLASS="TYPE"
+>numeric</TT
+>
+      and <TT
+CLASS="TYPE"
+>decimal</TT
+> types is similar to the
+      <TT
+CLASS="TYPE"
+>interval</TT
+> type: It requires defining a pointer,
+      allocating some memory space on the heap, and accessing the
+      variable using the pgtypes library functions.  For more details
+      about the pgtypes library functions,
+      see <A
+HREF="ecpg-pgtypes.html"
+>Section 33.6</A
+>.
+     </P
+><P
+>      No functions are provided specifically for
+      the <TT
+CLASS="TYPE"
+>decimal</TT
+> type.  An application has to convert it
+      to a <TT
+CLASS="TYPE"
+>numeric</TT
+> variable using a pgtypes library
+      function to do further processing.
+     </P
+><P
+>      Here is an example program handling <TT
+CLASS="TYPE"
+>numeric</TT
+>
+      and <TT
+CLASS="TYPE"
+>decimal</TT
+> type variables.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>#include &lt;stdio.h&#62;
+#include &lt;stdlib.h&#62;
+#include &lt;pgtypes_numeric.h&#62;
+
+EXEC SQL WHENEVER SQLERROR STOP;
+
+int
+main(void)
+{
+EXEC SQL BEGIN DECLARE SECTION;
+    numeric *num;
+    numeric *num2;
+    decimal *dec;
+EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL CONNECT TO testdb;
+
+    num = PGTYPESnumeric_new();
+    dec = PGTYPESdecimal_new();
+
+    EXEC SQL SELECT 12.345::numeric(4,2), 23.456::decimal(4,2) INTO :num, :dec;
+
+    printf("numeric = %s\n", PGTYPESnumeric_to_asc(num, 0));
+    printf("numeric = %s\n", PGTYPESnumeric_to_asc(num, 1));
+    printf("numeric = %s\n", PGTYPESnumeric_to_asc(num, 2));
+
+    /* Convert decimal to numeric to show a decimal value. */
+    num2 = PGTYPESnumeric_new();
+    PGTYPESnumeric_from_decimal(dec, num2);
+
+    printf("decimal = %s\n", PGTYPESnumeric_to_asc(num2, 0));
+    printf("decimal = %s\n", PGTYPESnumeric_to_asc(num2, 1));
+    printf("decimal = %s\n", PGTYPESnumeric_to_asc(num2, 2));
+
+    PGTYPESnumeric_free(num2);
+    PGTYPESdecimal_free(dec);
+    PGTYPESnumeric_free(num);
+
+    EXEC SQL COMMIT;
+    EXEC SQL DISCONNECT ALL;
+    return 0;
+}</PRE
+><P>
+     </P
+></DIV
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="ECPG-VARIABLES-NONPRIMITIVE-C"
+>33.4.4.3. Host Variables with Nonprimitive Types</A
+></H3
+><P
+>     As a host variable you can also use arrays, typedefs, structs, and
+     pointers.
+    </P
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="ECPG-VARIABLES-ARRAYS"
+>33.4.4.3.1. Arrays</A
+></H4
+><P
+>      There are two use cases for arrays as host variables.  The first
+      is a way to store some text string in <TT
+CLASS="TYPE"
+>char[]</TT
+>
+      or <TT
+CLASS="TYPE"
+>VARCHAR[]</TT
+>, as
+      explained <A
+HREF="ecpg-variables.html#ECPG-CHAR"
+>Section 33.4.4.1</A
+>.  The second use case is to
+      retrieve multiple rows from a query result without using a
+      cursor.  Without an array, to process a query result consisting
+      of multiple rows, it is required to use a cursor and
+      the <TT
+CLASS="COMMAND"
+>FETCH</TT
+> command.  But with array host
+      variables, multiple rows can be received at once.  The length of
+      the array has to be defined to be able to accommodate all rows,
+      otherwise a buffer overflow will likely occur.
+     </P
+><P
+>      Following example scans the <TT
+CLASS="LITERAL"
+>pg_database</TT
+>
+      system table and shows all OIDs and names of the available
+      databases:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>int
+main(void)
+{
+EXEC SQL BEGIN DECLARE SECTION;
+    int dbid[8];
+    char dbname[8][16];
+    int i;
+EXEC SQL END DECLARE SECTION;
+
+    memset(dbname, 0, sizeof(char)* 16 * 8);
+    memset(dbid, 0, sizeof(int) * 8);
+
+    EXEC SQL CONNECT TO testdb;
+
+    /* Retrieve multiple rows into arrays at once. */
+    EXEC SQL SELECT oid,datname INTO :dbid, :dbname FROM pg_database;
+
+    for (i = 0; i &lt; 8; i++)
+        printf("oid=%d, dbname=%s\n", dbid[i], dbname[i]);
+
+    EXEC SQL COMMIT;
+    EXEC SQL DISCONNECT ALL;
+    return 0;
+}</PRE
+><P>
+
+    This example shows following result. (The exact values depend on
+    local circumstances.)
+</P><PRE
+CLASS="SCREEN"
+>oid=1, dbname=template1
+oid=11510, dbname=template0
+oid=11511, dbname=postgres
+oid=313780, dbname=testdb
+oid=0, dbname=
+oid=0, dbname=
+oid=0, dbname=</PRE
+><P>
+     </P
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="ECPG-VARIABLES-STRUCT"
+>33.4.4.3.2. Structures</A
+></H4
+><P
+>      A structure whose member names match the column names of a query
+      result, can be used to retrieve multiple columns at once.  The
+      structure enables handling multiple column values in a single
+      host variable.
+     </P
+><P
+>      The following example retrieves OIDs, names, and sizes of the
+      available databases from the <TT
+CLASS="LITERAL"
+>pg_database</TT
+>
+      system table and using
+      the <CODE
+CLASS="FUNCTION"
+>pg_database_size()</CODE
+> function.  In this
+      example, a structure variable <TT
+CLASS="VARNAME"
+>dbinfo_t</TT
+> with
+      members whose names match each column in
+      the <TT
+CLASS="LITERAL"
+>SELECT</TT
+> result is used to retrieve one
+      result row without putting multiple host variables in
+      the <TT
+CLASS="LITERAL"
+>FETCH</TT
+> statement.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL BEGIN DECLARE SECTION;
+    typedef struct
+    {
+       int oid;
+       char datname[65];
+       long long int size;
+    } dbinfo_t;
+
+    dbinfo_t dbval;
+EXEC SQL END DECLARE SECTION;
+
+    memset(&amp;dbval, 0, sizeof(dbinfo_t));
+
+    EXEC SQL DECLARE cur1 CURSOR FOR SELECT oid, datname, pg_database_size(oid) AS size FROM pg_database;
+    EXEC SQL OPEN cur1;
+
+    /* when end of result set reached, break out of while loop */
+    EXEC SQL WHENEVER NOT FOUND DO BREAK;
+
+    while (1)
+    {
+        /* Fetch multiple columns into one structure. */
+        EXEC SQL FETCH FROM cur1 INTO :dbval;
+
+        /* Print members of the structure. */
+        printf("oid=%d, datname=%s, size=%lld\n", dbval.oid, dbval.datname, dbval.size);
+    }
+
+    EXEC SQL CLOSE cur1;</PRE
+><P>
+     </P
+><P
+>      This example shows following result. (The exact values depend on
+      local circumstances.)
+</P><PRE
+CLASS="SCREEN"
+>oid=1, datname=template1, size=4324580
+oid=11510, datname=template0, size=4243460
+oid=11511, datname=postgres, size=4324580
+oid=313780, datname=testdb, size=8183012</PRE
+><P>
+     </P
+><P
+>      Structure host variables <SPAN
+CLASS="QUOTE"
+>"absorb"</SPAN
+> as many columns
+      as the structure as fields.  Additional columns can be assigned
+      to other host variables. For example, the above program could
+      also be restructured like this, with the <TT
+CLASS="VARNAME"
+>size</TT
+>
+      variable outside the structure:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL BEGIN DECLARE SECTION;
+    typedef struct
+    {
+       int oid;
+       char datname[65];
+    } dbinfo_t;
+
+    dbinfo_t dbval;
+    long long int size;
+EXEC SQL END DECLARE SECTION;
+
+    memset(&amp;dbval, 0, sizeof(dbinfo_t));
+
+    EXEC SQL DECLARE cur1 CURSOR FOR SELECT oid, datname, pg_database_size(oid) AS size FROM pg_database;
+    EXEC SQL OPEN cur1;
+
+    /* when end of result set reached, break out of while loop */
+    EXEC SQL WHENEVER NOT FOUND DO BREAK;
+
+    while (1)
+    {
+        /* Fetch multiple columns into one structure. */
+        EXEC SQL FETCH FROM cur1 INTO :dbval, :size;
+
+        /* Print members of the structure. */
+        printf("oid=%d, datname=%s, size=%lld\n", dbval.oid, dbval.datname, size);
+    }
+
+    EXEC SQL CLOSE cur1;</PRE
+><P>
+     </P
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN46983"
+>33.4.4.3.3. Typedefs</A
+></H4
+><P
+>      Use the <TT
+CLASS="LITERAL"
+>typedef</TT
+> keyword to map new types to already
+      existing types.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL BEGIN DECLARE SECTION;
+    typedef char mychartype[40];
+    typedef long serial_t;
+EXEC SQL END DECLARE SECTION;</PRE
+><P>
+      Note that you could also use:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL TYPE serial_t IS long;</PRE
+><P>
+      This declaration does not need to be part of a declare section.
+     </P
+></DIV
+><DIV
+CLASS="SECT4"
+><H4
+CLASS="SECT4"
+><A
+NAME="AEN46989"
+>33.4.4.3.4. Pointers</A
+></H4
+><P
+>      You can declare pointers to the most common types. Note however
+      that you cannot use pointers as target variables of queries
+      without auto-allocation. See <A
+HREF="ecpg-descriptors.html"
+>Section 33.7</A
+>
+      for more information on auto-allocation.
+     </P
+><P
+></P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL BEGIN DECLARE SECTION;
+    int   *intp;
+    char **charp;
+EXEC SQL END DECLARE SECTION;</PRE
+><P>
+     </P
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="ECPG-VARIABLES-NONPRIMITIVE-SQL"
+>33.4.5. Handling Nonprimitive SQL Data Types</A
+></H2
+><P
+>    This section contains information on how to handle nonscalar and
+    user-defined SQL-level data types in ECPG applications.  Note that
+    this is distinct from the handling of host variables of
+    nonprimitive types, described in the previous section.
+   </P
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN46998"
+>33.4.5.1. Arrays</A
+></H3
+><P
+>     Multi-dimensional SQL-level arrays are not directly supported in ECPG.
+     One-dimensional SQL-level arrays can be mapped into C array host
+     variables and vice-versa.  However, when creating a statement ecpg does
+     not know the types of the columns, so that it cannot check if a C array
+     is input into a corresponding SQL-level array.  When processing the
+     output of a SQL statement, ecpg has the necessary information and thus
+     checks if both are arrays.
+    </P
+><P
+>     If a query accesses <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>elements</I
+></SPAN
+> of an array
+     separately, then this avoids the use of arrays in ECPG.  Then, a
+     host variable with a type that can be mapped to the element type
+     should be used.  For example, if a column type is array of
+     <TT
+CLASS="TYPE"
+>integer</TT
+>, a host variable of type <TT
+CLASS="TYPE"
+>int</TT
+>
+     can be used.  Also if the element type is <TT
+CLASS="TYPE"
+>varchar</TT
+>
+     or <TT
+CLASS="TYPE"
+>text</TT
+>, a host variable of type <TT
+CLASS="TYPE"
+>char[]</TT
+>
+     or <TT
+CLASS="TYPE"
+>VARCHAR[]</TT
+> can be used.
+    </P
+><P
+>     Here is an example.  Assume the following table:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE t3 (
+    ii integer[]
+);
+
+testdb=&#62; SELECT * FROM t3;
+     ii
+-------------
+ {1,2,3,4,5}
+(1 row)</PRE
+><P>
+
+     The following example program retrieves the 4th element of the
+     array and stores it into a host variable of
+     type <TT
+CLASS="TYPE"
+>int</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL BEGIN DECLARE SECTION;
+int ii;
+EXEC SQL END DECLARE SECTION;
+
+EXEC SQL DECLARE cur1 CURSOR FOR SELECT ii[4] FROM t3;
+EXEC SQL OPEN cur1;
+
+EXEC SQL WHENEVER NOT FOUND DO BREAK;
+
+while (1)
+{
+    EXEC SQL FETCH FROM cur1 INTO :ii ;
+    printf("ii=%d\n", ii);
+}
+
+EXEC SQL CLOSE cur1;</PRE
+><P>
+
+     This example shows the following result:
+</P><PRE
+CLASS="SCREEN"
+>ii=4</PRE
+><P>
+    </P
+><P
+>     To map multiple array elements to the multiple elements in an
+     array type host variables each element of array column and each
+     element of the host variable array have to be managed separately,
+     for example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL BEGIN DECLARE SECTION;
+int ii_a[8];
+EXEC SQL END DECLARE SECTION;
+
+EXEC SQL DECLARE cur1 CURSOR FOR SELECT ii[1], ii[2], ii[3], ii[4] FROM t3;
+EXEC SQL OPEN cur1;
+
+EXEC SQL WHENEVER NOT FOUND DO BREAK;
+
+while (1)
+{
+    EXEC SQL FETCH FROM cur1 INTO :ii_a[0], :ii_a[1], :ii_a[2], :ii_a[3];
+    ...
+}</PRE
+><P>
+    </P
+><P
+>     Note again that
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL BEGIN DECLARE SECTION;
+int ii_a[8];
+EXEC SQL END DECLARE SECTION;
+
+EXEC SQL DECLARE cur1 CURSOR FOR SELECT ii FROM t3;
+EXEC SQL OPEN cur1;
+
+EXEC SQL WHENEVER NOT FOUND DO BREAK;
+
+while (1)
+{
+    /* WRONG */
+    EXEC SQL FETCH FROM cur1 INTO :ii_a;
+    ...
+}</PRE
+><P>
+     would not work correctly in this case, because you cannot map an
+     array type column to an array host variable directly.
+    </P
+><P
+>     Another workaround is to store arrays in their external string
+     representation in host variables of type <TT
+CLASS="TYPE"
+>char[]</TT
+>
+     or <TT
+CLASS="TYPE"
+>VARCHAR[]</TT
+>.  For more details about this
+     representation, see <A
+HREF="arrays.html#ARRAYS-INPUT"
+>Section 8.15.2</A
+>.  Note that
+     this means that the array cannot be accessed naturally as an
+     array in the host program (without further processing that parses
+     the text representation).
+    </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN47022"
+>33.4.5.2. Composite Types</A
+></H3
+><P
+>     Composite types are not directly supported in ECPG, but an easy workaround is possible.
+  The
+     available workarounds are similar to the ones described for
+     arrays above: Either access each attribute separately or use the
+     external string representation.
+    </P
+><P
+>     For the following examples, assume the following type and table:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TYPE comp_t AS (intval integer, textval varchar(32));
+CREATE TABLE t4 (compval comp_t);
+INSERT INTO t4 VALUES ( (256, 'PostgreSQL') );</PRE
+><P>
+
+     The most obvious solution is to access each attribute separately.
+     The following program retrieves data from the example table by
+     selecting each attribute of the type <TT
+CLASS="TYPE"
+>comp_t</TT
+>
+     separately:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL BEGIN DECLARE SECTION;
+int intval;
+varchar textval[33];
+EXEC SQL END DECLARE SECTION;
+
+/* Put each element of the composite type column in the SELECT list. */
+EXEC SQL DECLARE cur1 CURSOR FOR SELECT (compval).intval, (compval).textval FROM t4;
+EXEC SQL OPEN cur1;
+
+EXEC SQL WHENEVER NOT FOUND DO BREAK;
+
+while (1)
+{
+    /* Fetch each element of the composite type column into host variables. */
+    EXEC SQL FETCH FROM cur1 INTO :intval, :textval;
+
+    printf("intval=%d, textval=%s\n", intval, textval.arr);
+}
+
+EXEC SQL CLOSE cur1;</PRE
+><P>
+    </P
+><P
+>     To enhance this example, the host variables to store values in
+     the <TT
+CLASS="COMMAND"
+>FETCH</TT
+> command can be gathered into one
+     structure.  For more details about the host variable in the
+     structure form, see <A
+HREF="ecpg-variables.html#ECPG-VARIABLES-STRUCT"
+>Section 33.4.4.3.2</A
+>.
+     To switch to the structure, the example can be modified as below.
+     The two host variables, <TT
+CLASS="VARNAME"
+>intval</TT
+>
+     and <TT
+CLASS="VARNAME"
+>textval</TT
+>, become members of
+     the <TT
+CLASS="STRUCTNAME"
+>comp_t</TT
+> structure, and the structure
+     is specified on the <TT
+CLASS="COMMAND"
+>FETCH</TT
+> command.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL BEGIN DECLARE SECTION;
+typedef struct
+{
+    int intval;
+    varchar textval[33];
+} comp_t;
+
+comp_t compval;
+EXEC SQL END DECLARE SECTION;
+
+/* Put each element of the composite type column in the SELECT list. */
+EXEC SQL DECLARE cur1 CURSOR FOR SELECT (compval).intval, (compval).textval FROM t4;
+EXEC SQL OPEN cur1;
+
+EXEC SQL WHENEVER NOT FOUND DO BREAK;
+
+while (1)
+{
+    /* Put all values in the SELECT list into one structure. */
+    EXEC SQL FETCH FROM cur1 INTO :compval;
+
+    printf("intval=%d, textval=%s\n", compval.intval, compval.textval.arr);
+}
+
+EXEC SQL CLOSE cur1;</PRE
+><P>
+
+     Although a structure is used in the <TT
+CLASS="COMMAND"
+>FETCH</TT
+>
+     command, the attribute names in the <TT
+CLASS="COMMAND"
+>SELECT</TT
+>
+     clause are specified one by one.  This can be enhanced by using
+     a <TT
+CLASS="LITERAL"
+>*</TT
+> to ask for all attributes of the composite
+     type value.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>...
+EXEC SQL DECLARE cur1 CURSOR FOR SELECT (compval).* FROM t4;
+EXEC SQL OPEN cur1;
+
+EXEC SQL WHENEVER NOT FOUND DO BREAK;
+
+while (1)
+{
+    /* Put all values in the SELECT list into one structure. */
+    EXEC SQL FETCH FROM cur1 INTO :compval;
+
+    printf("intval=%d, textval=%s\n", compval.intval, compval.textval.arr);
+}
+...</PRE
+><P>
+     This way, composite types can be mapped into structures almost
+     seamlessly, even though ECPG does not understand the composite
+     type itself.
+    </P
+><P
+>     Finally, it is also possible to store composite type values in
+     their external string representation in host variables of
+     type <TT
+CLASS="TYPE"
+>char[]</TT
+> or <TT
+CLASS="TYPE"
+>VARCHAR[]</TT
+>.  But that
+     way, it is not easily possible to access the fields of the value
+     from the host program.
+    </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN47044"
+>33.4.5.3. User-defined Base Types</A
+></H3
+><P
+>     New user-defined base types are not directly supported by ECPG.
+     You can use the external string representation and host variables
+     of type <TT
+CLASS="TYPE"
+>char[]</TT
+> or <TT
+CLASS="TYPE"
+>VARCHAR[]</TT
+>, and this
+     solution is indeed appropriate and sufficient for many types.
+    </P
+><P
+>     Here is an example using the data type <TT
+CLASS="TYPE"
+>complex</TT
+> from
+     the example in <A
+HREF="xtypes.html"
+>Section 35.11</A
+>.  The external string
+     representation of that type is <TT
+CLASS="LITERAL"
+>(%lf,%lf)</TT
+>,
+     which is defined in the
+     functions <CODE
+CLASS="FUNCTION"
+>complex_in()</CODE
+>
+     and <CODE
+CLASS="FUNCTION"
+>complex_out()</CODE
+> functions
+     in <A
+HREF="xtypes.html"
+>Section 35.11</A
+>.  The following example inserts the
+     complex type values <TT
+CLASS="LITERAL"
+>(1,1)</TT
+>
+     and <TT
+CLASS="LITERAL"
+>(3,3)</TT
+> into the
+     columns <TT
+CLASS="LITERAL"
+>a</TT
+> and <TT
+CLASS="LITERAL"
+>b</TT
+>, and select
+     them from the table after that.
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL BEGIN DECLARE SECTION;
+    varchar a[64];
+    varchar b[64];
+EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL INSERT INTO test_complex VALUES ('(1,1)', '(3,3)');
+
+    EXEC SQL DECLARE cur1 CURSOR FOR SELECT a, b FROM test_complex;
+    EXEC SQL OPEN cur1;
+
+    EXEC SQL WHENEVER NOT FOUND DO BREAK;
+
+    while (1)
+    {
+        EXEC SQL FETCH FROM cur1 INTO :a, :b;
+        printf("a=%s, b=%s\n", a.arr, b.arr);
+    }
+
+    EXEC SQL CLOSE cur1;</PRE
+><P>
+
+     This example shows following result:
+</P><PRE
+CLASS="SCREEN"
+>a=(1,1), b=(3,3)</PRE
+><P>
+   </P
+><P
+>     Another workaround is avoiding the direct use of the user-defined
+     types in ECPG and instead create a function or cast that converts
+     between the user-defined type and a primitive type that ECPG can
+     handle.  Note, however, that type casts, especially implicit
+     ones, should be introduced into the type system very carefully.
+    </P
+><P
+>     For example,
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION create_complex(r double, i double) RETURNS complex
+LANGUAGE SQL
+IMMUTABLE
+AS $$ SELECT $1 * complex '(1,0')' + $2 * complex '(0,1)' $$;</PRE
+><P>
+    After this definition, the following
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL BEGIN DECLARE SECTION;
+double a, b, c, d;
+EXEC SQL END DECLARE SECTION;
+
+a = 1;
+b = 2;
+c = 3;
+d = 4;
+
+EXEC SQL INSERT INTO test_complex VALUES (create_complex(:a, :b), create_complex(:c, :d));</PRE
+><P>
+    has the same effect as
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL INSERT INTO test_complex VALUES ('(1,2)', '(3,4)');</PRE
+><P>
+    </P
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="ECPG-INDICATORS"
+>33.4.6. Indicators</A
+></H2
+><P
+>    The examples above do not handle null values.  In fact, the
+    retrieval examples will raise an error if they fetch a null value
+    from the database.  To be able to pass null values to the database
+    or retrieve null values from the database, you need to append a
+    second host variable specification to each host variable that
+    contains data.  This second host variable is called the
+    <I
+CLASS="FIRSTTERM"
+>indicator</I
+> and contains a flag that tells
+    whether the datum is null, in which case the value of the real
+    host variable is ignored.  Here is an example that handles the
+    retrieval of null values correctly:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL BEGIN DECLARE SECTION;
+VARCHAR val;
+int val_ind;
+EXEC SQL END DECLARE SECTION:
+
+ ...
+
+EXEC SQL SELECT b INTO :val :val_ind FROM test1;</PRE
+><P>
+    The indicator variable <TT
+CLASS="VARNAME"
+>val_ind</TT
+> will be zero if
+    the value was not null, and it will be negative if the value was
+    null.
+   </P
+><P
+>    The indicator has another function: if the indicator value is
+    positive, it means that the value is not null, but it was
+    truncated when it was stored in the host variable.
+   </P
+><P
+>    If the argument <TT
+CLASS="LITERAL"
+>-r no_indicator</TT
+> is passed to
+    the preprocessor <TT
+CLASS="COMMAND"
+>ecpg</TT
+>, it works in
+    <SPAN
+CLASS="QUOTE"
+>"no-indicator"</SPAN
+> mode. In no-indicator mode, if no
+    indicator variable is specified, null values are signaled (on
+    input and output) for character string types as empty string and
+    for integer types as the lowest possible value for type (for
+    example, <TT
+CLASS="SYMBOL"
+>INT_MIN</TT
+> for <TT
+CLASS="TYPE"
+>int</TT
+>).
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ecpg-commands.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="ecpg-dynamic.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Running SQL Commands</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="ecpg.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Dynamic SQL</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

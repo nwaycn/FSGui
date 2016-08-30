@@ -1,0 +1,567 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>ALTER INDEX</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="ALTER GROUP"
+HREF="sql-altergroup.html"><LINK
+REL="NEXT"
+TITLE="ALTER LANGUAGE"
+HREF="sql-alterlanguage.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="ALTER GROUP"
+HREF="sql-altergroup.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="ALTER LANGUAGE"
+HREF="sql-alterlanguage.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-ALTERINDEX"
+></A
+>ALTER INDEX</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN70574"
+></A
+><H2
+>Name</H2
+>ALTER INDEX&nbsp;--&nbsp;change the definition of an index</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN70577"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>ALTER INDEX [ IF EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> RENAME TO <TT
+CLASS="REPLACEABLE"
+><I
+>new_name</I
+></TT
+>
+ALTER INDEX [ IF EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> SET TABLESPACE <TT
+CLASS="REPLACEABLE"
+><I
+>tablespace_name</I
+></TT
+>
+ALTER INDEX [ IF EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> SET ( <TT
+CLASS="REPLACEABLE"
+><I
+>storage_parameter</I
+></TT
+> = <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> [, ... ] )
+ALTER INDEX [ IF EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> RESET ( <TT
+CLASS="REPLACEABLE"
+><I
+>storage_parameter</I
+></TT
+> [, ... ] )
+ALTER INDEX ALL IN TABLESPACE <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> [ OWNED BY <TT
+CLASS="REPLACEABLE"
+><I
+>role_name</I
+></TT
+> [, ... ] ]
+    SET TABLESPACE <TT
+CLASS="REPLACEABLE"
+><I
+>new_tablespace</I
+></TT
+> [ NOWAIT ]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN70591"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>ALTER INDEX</TT
+> changes the definition of an existing index.
+   There are several subforms:
+
+  <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>RENAME</TT
+></DT
+><DD
+><P
+>      The <TT
+CLASS="LITERAL"
+>RENAME</TT
+> form changes the name of the index.
+      There is no effect on the stored data.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET TABLESPACE</TT
+></DT
+><DD
+><P
+>      This form changes the index's tablespace to the specified tablespace and
+      moves the data file(s) associated with the index to the new tablespace.
+      To change the tablespace of an index, you must own the index and have
+      <TT
+CLASS="LITERAL"
+>CREATE</TT
+> privilege on the new tablespace.
+      All indexes in the current database in a tablespace can be moved by using
+      the <TT
+CLASS="LITERAL"
+>ALL IN TABLESPACE</TT
+> form, which will lock all
+      indexes to be moved and then move each one.  This form also supports
+      <TT
+CLASS="LITERAL"
+>OWNED BY</TT
+>, which will only move indexes owned by the
+      roles specified.  If the <TT
+CLASS="LITERAL"
+>NOWAIT</TT
+> option is specified
+      then the command will fail if it is unable to acquire all of the locks
+      required immediately.  Note that system catalogs will not be moved by
+      this command, use <TT
+CLASS="COMMAND"
+>ALTER DATABASE</TT
+> or explicit
+      <TT
+CLASS="COMMAND"
+>ALTER INDEX</TT
+> invocations instead if desired.
+      See also
+      <A
+HREF="sql-createtablespace.html"
+>CREATE TABLESPACE</A
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET ( <TT
+CLASS="REPLACEABLE"
+><I
+>storage_parameter</I
+></TT
+> = <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> [, ... ] )</TT
+></DT
+><DD
+><P
+>      This form changes one or more index-method-specific storage parameters
+      for the index.  See
+      <A
+HREF="sql-createindex.html"
+>CREATE INDEX</A
+>
+      for details on the available parameters.  Note that the index contents
+      will not be modified immediately by this command; depending on the
+      parameter you might need to rebuild the index with
+      <A
+HREF="sql-reindex.html"
+>REINDEX</A
+>
+      to get the desired effects.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>RESET ( <TT
+CLASS="REPLACEABLE"
+><I
+>storage_parameter</I
+></TT
+> [, ... ] )</TT
+></DT
+><DD
+><P
+>      This form resets one or more index-method-specific storage parameters to
+      their defaults.  As with <TT
+CLASS="LITERAL"
+>SET</TT
+>, a <TT
+CLASS="LITERAL"
+>REINDEX</TT
+>
+      might be needed to update the index entirely.
+     </P
+></DD
+></DL
+></DIV
+><P>
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN70631"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>IF EXISTS</TT
+></DT
+><DD
+><P
+>        Do not throw an error if the index does not exist. A notice is issued
+        in this case.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></DT
+><DD
+><P
+>        The name (possibly schema-qualified) of an existing index to
+        alter.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_name</I
+></TT
+></DT
+><DD
+><P
+>        The new name for the index.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>tablespace_name</I
+></TT
+></DT
+><DD
+><P
+>        The tablespace to which the index will be moved.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>storage_parameter</I
+></TT
+></DT
+><DD
+><P
+>        The name of an index-method-specific storage parameter.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+></DT
+><DD
+><P
+>        The new value for an index-method-specific storage parameter.
+        This might be a number or a word depending on the parameter.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN70664"
+></A
+><H2
+>Notes</H2
+><P
+>    These operations are also possible using
+    <A
+HREF="sql-altertable.html"
+>ALTER TABLE</A
+>.
+    <TT
+CLASS="COMMAND"
+>ALTER INDEX</TT
+> is in fact just an alias for the forms
+    of <TT
+CLASS="COMMAND"
+>ALTER TABLE</TT
+> that apply to indexes.
+   </P
+><P
+>    There was formerly an <TT
+CLASS="COMMAND"
+>ALTER INDEX OWNER</TT
+> variant, but
+    this is now ignored (with a warning).  An index cannot have an owner
+    different from its table's owner.  Changing the table's owner
+    automatically changes the index as well.
+   </P
+><P
+>    Changing any part of a system catalog index is not permitted.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN70673"
+></A
+><H2
+>Examples</H2
+><P
+>   To rename an existing index:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER INDEX distributors RENAME TO suppliers;</PRE
+><P>
+  </P
+><P
+>   To move an index to a different tablespace:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER INDEX distributors SET TABLESPACE fasttablespace;</PRE
+><P>
+  </P
+><P
+>   To change an index's fill factor (assuming that the index method
+   supports it):
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER INDEX distributors SET (fillfactor = 75);
+REINDEX INDEX distributors;</PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN70681"
+></A
+><H2
+>Compatibility</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>ALTER INDEX</TT
+> is a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+   extension.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN70686"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-createindex.html"
+>CREATE INDEX</A
+>, <A
+HREF="sql-reindex.html"
+>REINDEX</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-altergroup.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-alterlanguage.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>ALTER GROUP</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>ALTER LANGUAGE</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

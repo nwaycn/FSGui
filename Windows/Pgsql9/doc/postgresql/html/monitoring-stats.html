@@ -1,0 +1,4216 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>The Statistics Collector</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Monitoring Database Activity"
+HREF="monitoring.html"><LINK
+REL="PREVIOUS"
+TITLE="Standard Unix Tools"
+HREF="monitoring-ps.html"><LINK
+REL="NEXT"
+TITLE="Viewing Locks"
+HREF="monitoring-locks.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Standard Unix Tools"
+HREF="monitoring-ps.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="monitoring.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 27. Monitoring Database Activity</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Viewing Locks"
+HREF="monitoring-locks.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="MONITORING-STATS"
+>27.2. The Statistics Collector</A
+></H1
+><P
+>   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>'s <I
+CLASS="FIRSTTERM"
+>statistics collector</I
+>
+   is a subsystem that supports collection and reporting of information about
+   server activity.  Presently, the collector can count accesses to tables
+   and indexes in both disk-block and individual-row terms.  It also tracks
+   the total number of rows in each table, and information about vacuum and
+   analyze actions for each table.  It can also count calls to user-defined
+   functions and the total time spent in each one.
+  </P
+><P
+>   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> also supports reporting dynamic
+   information about exactly what is going on in the system right now, such as
+   the exact command currently being executed by other server processes, and
+   which other connections exist in the system.  This facility is independent
+   of the collector process.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="MONITORING-STATS-SETUP"
+>27.2.1. Statistics Collection Configuration</A
+></H2
+><P
+>   Since collection of statistics adds some overhead to query execution,
+   the system can be configured to collect or not collect information.
+   This is controlled by configuration parameters that are normally set in
+   <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>.  (See <A
+HREF="runtime-config.html"
+>Chapter 18</A
+> for
+   details about setting configuration parameters.)
+  </P
+><P
+>   The parameter <A
+HREF="runtime-config-statistics.html#GUC-TRACK-ACTIVITIES"
+>track_activities</A
+> enables monitoring
+   of the current command being executed by any server process.
+  </P
+><P
+>   The parameter <A
+HREF="runtime-config-statistics.html#GUC-TRACK-COUNTS"
+>track_counts</A
+> controls whether
+   statistics are collected about table and index accesses.
+  </P
+><P
+>   The parameter <A
+HREF="runtime-config-statistics.html#GUC-TRACK-FUNCTIONS"
+>track_functions</A
+> enables tracking of
+   usage of user-defined functions.
+  </P
+><P
+>   The parameter <A
+HREF="runtime-config-statistics.html#GUC-TRACK-IO-TIMING"
+>track_io_timing</A
+> enables monitoring
+   of block read and write times.
+  </P
+><P
+>   Normally these parameters are set in <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> so
+   that they apply to all server processes, but it is possible to turn
+   them on or off in individual sessions using the <A
+HREF="sql-set.html"
+>SET</A
+> command. (To prevent
+   ordinary users from hiding their activity from the administrator,
+   only superusers are allowed to change these parameters with
+   <TT
+CLASS="COMMAND"
+>SET</TT
+>.)
+  </P
+><P
+>   The statistics collector transmits the collected information to other
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> processes through temporary files.
+   These files are stored in the directory named by the
+   <A
+HREF="runtime-config-statistics.html#GUC-STATS-TEMP-DIRECTORY"
+>stats_temp_directory</A
+> parameter,
+   <TT
+CLASS="FILENAME"
+>pg_stat_tmp</TT
+> by default.
+   For better performance, <TT
+CLASS="VARNAME"
+>stats_temp_directory</TT
+> can be
+   pointed at a RAM-based file system, decreasing physical I/O requirements.
+   When the server shuts down cleanly, a permanent copy of the statistics
+   data is stored in the <TT
+CLASS="FILENAME"
+>pg_stat</TT
+> subdirectory, so that
+   statistics can be retained across server restarts.  When recovery is
+   performed at server start (e.g. after immediate shutdown, server crash,
+   and point-in-time recovery), all statistics counters are reset.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="MONITORING-STATS-VIEWS"
+>27.2.2. Viewing Statistics</A
+></H2
+><P
+>   Several predefined views, listed in <A
+HREF="monitoring-stats.html#MONITORING-STATS-DYNAMIC-VIEWS-TABLE"
+>Table 27-1</A
+>, are available to show
+   the current state of the system. There are also several other
+   views, listed in <A
+HREF="monitoring-stats.html#MONITORING-STATS-VIEWS-TABLE"
+>Table 27-2</A
+>, available to show the results
+   of statistics collection.  Alternatively, one can
+   build custom views using the underlying statistics functions, as discussed
+   in <A
+HREF="monitoring-stats.html#MONITORING-STATS-FUNCTIONS"
+>Section 27.2.3</A
+>.
+  </P
+><P
+>   When using the statistics to monitor collected data, it is important
+   to realize that the information does not update instantaneously.
+   Each individual server process transmits new statistical counts to
+   the collector just before going idle; so a query or transaction still in
+   progress does not affect the displayed totals.  Also, the collector itself
+   emits a new report at most once per <TT
+CLASS="VARNAME"
+>PGSTAT_STAT_INTERVAL</TT
+>
+   milliseconds (500 ms unless altered while building the server).  So the
+   displayed information lags behind actual activity.  However, current-query
+   information collected by <TT
+CLASS="VARNAME"
+>track_activities</TT
+> is
+   always up-to-date.
+  </P
+><P
+>   Another important point is that when a server process is asked to display
+   any of these statistics, it first fetches the most recent report emitted by
+   the collector process and then continues to use this snapshot for all
+   statistical views and functions until the end of its current transaction.
+   So the statistics will show static information as long as you continue the
+   current transaction.  Similarly, information about the current queries of
+   all sessions is collected when any such information is first requested
+   within a transaction, and the same information will be displayed throughout
+   the transaction.
+   This is a feature, not a bug, because it allows you to perform several
+   queries on the statistics and correlate the results without worrying that
+   the numbers are changing underneath you.  But if you want to see new
+   results with each query, be sure to do the queries outside any transaction
+   block.  Alternatively, you can invoke
+   <CODE
+CLASS="FUNCTION"
+>pg_stat_clear_snapshot</CODE
+>(), which will discard the
+   current transaction's statistics snapshot (if any).  The next use of
+   statistical information will cause a new snapshot to be fetched.
+  </P
+><P
+>   A transaction can also see its own statistics (as yet untransmitted to the
+   collector) in the views <TT
+CLASS="STRUCTNAME"
+>pg_stat_xact_all_tables</TT
+>,
+   <TT
+CLASS="STRUCTNAME"
+>pg_stat_xact_sys_tables</TT
+>,
+   <TT
+CLASS="STRUCTNAME"
+>pg_stat_xact_user_tables</TT
+>, and
+   <TT
+CLASS="STRUCTNAME"
+>pg_stat_xact_user_functions</TT
+>.  These numbers do not act as
+   stated above; instead they update continuously throughout the transaction.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="MONITORING-STATS-DYNAMIC-VIEWS-TABLE"
+></A
+><P
+><B
+>Table 27-1. Dynamic Statistics Views</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>View Name</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>       <TT
+CLASS="STRUCTNAME"
+>pg_stat_activity</TT
+>
+       
+      </TD
+><TD
+>       One row per server process, showing information related to
+       the current activity of that process, such as state and current query.
+       See <A
+HREF="monitoring-stats.html#PG-STAT-ACTIVITY-VIEW"
+>pg_stat_activity</A
+> for details.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_stat_replication</TT
+></TD
+><TD
+>One row per WAL sender process, showing statistics about
+       replication to that sender's connected standby server.
+       See <A
+HREF="monitoring-stats.html#PG-STAT-REPLICATION-VIEW"
+>pg_stat_replication</A
+> for details.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_stat_ssl</TT
+></TD
+><TD
+>One row per connection (regular and replication), showing information about
+       SSL used on this connection.
+       See <A
+HREF="monitoring-stats.html#PG-STAT-SSL-VIEW"
+>pg_stat_ssl</A
+> for details.
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><DIV
+CLASS="TABLE"
+><A
+NAME="MONITORING-STATS-VIEWS-TABLE"
+></A
+><P
+><B
+>Table 27-2. Collected Statistics Views</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>View Name</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_stat_archiver</TT
+></TD
+><TD
+>One row only, showing statistics about the
+       WAL archiver process's activity. See
+       <A
+HREF="monitoring-stats.html#PG-STAT-ARCHIVER-VIEW"
+>pg_stat_archiver</A
+> for details.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_stat_bgwriter</TT
+></TD
+><TD
+>One row only, showing statistics about the
+       background writer process's activity. See
+       <A
+HREF="monitoring-stats.html#PG-STAT-BGWRITER-VIEW"
+>pg_stat_bgwriter</A
+> for details.
+     </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_stat_database</TT
+></TD
+><TD
+>One row per database, showing database-wide statistics. See
+       <A
+HREF="monitoring-stats.html#PG-STAT-DATABASE-VIEW"
+>pg_stat_database</A
+> for details.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_stat_database_conflicts</TT
+></TD
+><TD
+>       One row per database, showing database-wide statistics about
+       query cancels due to conflict with recovery on standby servers.
+       See <A
+HREF="monitoring-stats.html#PG-STAT-DATABASE-CONFLICTS-VIEW"
+>pg_stat_database_conflicts</A
+> for details.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_stat_all_tables</TT
+></TD
+><TD
+>       One row for each table in the current database, showing statistics
+       about accesses to that specific table.
+       See <A
+HREF="monitoring-stats.html#PG-STAT-ALL-TABLES-VIEW"
+>pg_stat_all_tables</A
+> for details.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_stat_sys_tables</TT
+></TD
+><TD
+>Same as <TT
+CLASS="STRUCTNAME"
+>pg_stat_all_tables</TT
+>, except that only
+      system tables are shown.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_stat_user_tables</TT
+></TD
+><TD
+>Same as <TT
+CLASS="STRUCTNAME"
+>pg_stat_all_tables</TT
+>, except that only user
+      tables are shown.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_stat_xact_all_tables</TT
+></TD
+><TD
+>Similar to <TT
+CLASS="STRUCTNAME"
+>pg_stat_all_tables</TT
+>, but counts actions
+      taken so far within the current transaction (which are <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+>
+      yet included in <TT
+CLASS="STRUCTNAME"
+>pg_stat_all_tables</TT
+> and related views).
+      The columns for numbers of live and dead rows and vacuum and
+      analyze actions are not present in this view.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_stat_xact_sys_tables</TT
+></TD
+><TD
+>Same as <TT
+CLASS="STRUCTNAME"
+>pg_stat_xact_all_tables</TT
+>, except that only
+      system tables are shown.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_stat_xact_user_tables</TT
+></TD
+><TD
+>Same as <TT
+CLASS="STRUCTNAME"
+>pg_stat_xact_all_tables</TT
+>, except that only
+      user tables are shown.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_stat_all_indexes</TT
+></TD
+><TD
+>       One row for each index in the current database, showing statistics
+       about accesses to that specific index.
+       See <A
+HREF="monitoring-stats.html#PG-STAT-ALL-INDEXES-VIEW"
+>pg_stat_all_indexes</A
+> for details.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_stat_sys_indexes</TT
+></TD
+><TD
+>Same as <TT
+CLASS="STRUCTNAME"
+>pg_stat_all_indexes</TT
+>, except that only
+      indexes on system tables are shown.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_stat_user_indexes</TT
+></TD
+><TD
+>Same as <TT
+CLASS="STRUCTNAME"
+>pg_stat_all_indexes</TT
+>, except that only
+      indexes on user tables are shown.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_statio_all_tables</TT
+></TD
+><TD
+>       One row for each table in the current database, showing statistics
+       about I/O on that specific table.
+       See <A
+HREF="monitoring-stats.html#PG-STATIO-ALL-TABLES-VIEW"
+>pg_statio_all_tables</A
+> for details.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_statio_sys_tables</TT
+></TD
+><TD
+>Same as <TT
+CLASS="STRUCTNAME"
+>pg_statio_all_tables</TT
+>, except that only
+      system tables are shown.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_statio_user_tables</TT
+></TD
+><TD
+>Same as <TT
+CLASS="STRUCTNAME"
+>pg_statio_all_tables</TT
+>, except that only
+      user tables are shown.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_statio_all_indexes</TT
+></TD
+><TD
+>       One row for each index in the current database,
+       showing statistics about I/O on that specific index.
+       See <A
+HREF="monitoring-stats.html#PG-STATIO-ALL-INDEXES-VIEW"
+>pg_statio_all_indexes</A
+> for details.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_statio_sys_indexes</TT
+></TD
+><TD
+>Same as <TT
+CLASS="STRUCTNAME"
+>pg_statio_all_indexes</TT
+>, except that only
+      indexes on system tables are shown.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_statio_user_indexes</TT
+></TD
+><TD
+>Same as <TT
+CLASS="STRUCTNAME"
+>pg_statio_all_indexes</TT
+>, except that only
+      indexes on user tables are shown.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_statio_all_sequences</TT
+></TD
+><TD
+>       One row for each sequence in the current database,
+       showing statistics about I/O on that specific sequence.
+       See <A
+HREF="monitoring-stats.html#PG-STATIO-ALL-SEQUENCES-VIEW"
+>pg_statio_all_sequences</A
+> for details.
+     </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_statio_sys_sequences</TT
+></TD
+><TD
+>Same as <TT
+CLASS="STRUCTNAME"
+>pg_statio_all_sequences</TT
+>, except that only
+      system sequences are shown.  (Presently, no system sequences are defined,
+      so this view is always empty.)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_statio_user_sequences</TT
+></TD
+><TD
+>Same as <TT
+CLASS="STRUCTNAME"
+>pg_statio_all_sequences</TT
+>, except that only
+      user sequences are shown.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_stat_user_functions</TT
+></TD
+><TD
+>       One row for each tracked function, showing statistics
+       about executions of that function. See
+       <A
+HREF="monitoring-stats.html#PG-STAT-USER-FUNCTIONS-VIEW"
+>pg_stat_user_functions</A
+> for details.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_stat_xact_user_functions</TT
+></TD
+><TD
+>Similar to <TT
+CLASS="STRUCTNAME"
+>pg_stat_user_functions</TT
+>, but counts only
+      calls during the current transaction (which are <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+>
+      yet included in <TT
+CLASS="STRUCTNAME"
+>pg_stat_user_functions</TT
+>).</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   The per-index statistics are particularly useful to determine which
+   indexes are being used and how effective they are.
+  </P
+><P
+>   The <TT
+CLASS="STRUCTNAME"
+>pg_statio_</TT
+> views are primarily useful to
+   determine the effectiveness of the buffer cache.  When the number
+   of actual disk reads is much smaller than the number of buffer
+   hits, then the cache is satisfying most read requests without
+   invoking a kernel call. However, these statistics do not give the
+   entire story: due to the way in which <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+   handles disk I/O, data that is not in the
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> buffer cache might still reside in the
+   kernel's I/O cache, and might therefore still be fetched without
+   requiring a physical read. Users interested in obtaining more
+   detailed information on <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> I/O behavior are
+   advised to use the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> statistics collector
+   in combination with operating system utilities that allow insight
+   into the kernel's handling of I/O.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="PG-STAT-ACTIVITY-VIEW"
+></A
+><P
+><B
+>Table 27-3. <TT
+CLASS="STRUCTNAME"
+>pg_stat_activity</TT
+> View</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Column</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>datid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>OID of the database this backend is connected to</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>datname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>Name of the database this backend is connected to</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>pid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>Process ID of this backend</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>usesysid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>OID of the user logged into this backend</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>usename</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>Name of the user logged into this backend</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>application_name</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Name of the application that is connected
+      to this backend</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>client_addr</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>inet</TT
+></TD
+><TD
+>IP address of the client connected to this backend.
+      If this field is null, it indicates either that the client is
+      connected via a Unix socket on the server machine or that this is an
+      internal process such as autovacuum.
+     </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>client_hostname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Host name of the connected client, as reported by a
+      reverse DNS lookup of <TT
+CLASS="STRUCTFIELD"
+>client_addr</TT
+>. This field will
+      only be non-null for IP connections, and only when <A
+HREF="runtime-config-logging.html#GUC-LOG-HOSTNAME"
+>log_hostname</A
+> is enabled.
+     </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>client_port</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>TCP port number that the client is using for communication
+      with this backend, or <TT
+CLASS="LITERAL"
+>-1</TT
+> if a Unix socket is used
+     </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>backend_start</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>Time when this process was started, i.e., when the
+      client connected to the server
+     </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>xact_start</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>Time when this process' current transaction was started, or null
+      if no transaction is active. If the current
+      query is the first of its transaction, this column is equal to the
+      <TT
+CLASS="STRUCTFIELD"
+>query_start</TT
+> column.
+     </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>query_start</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>Time when the currently active query was started, or if
+      <TT
+CLASS="STRUCTFIELD"
+>state</TT
+> is not <TT
+CLASS="LITERAL"
+>active</TT
+>, when the last query
+      was started
+     </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>state_change</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>Time when the <TT
+CLASS="STRUCTFIELD"
+>state</TT
+> was last changed</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>waiting</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>True if this backend is currently waiting on a lock</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>state</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Current overall state of this backend.
+       Possible values are:
+       <P
+></P
+><UL
+><LI
+><P
+>           <TT
+CLASS="LITERAL"
+>active</TT
+>: The backend is executing a query.
+          </P
+></LI
+><LI
+><P
+>           <TT
+CLASS="LITERAL"
+>idle</TT
+>: The backend is waiting for a new client command.
+          </P
+></LI
+><LI
+><P
+>           <TT
+CLASS="LITERAL"
+>idle in transaction</TT
+>: The backend is in a transaction,
+           but is not currently executing a query.
+          </P
+></LI
+><LI
+><P
+>           <TT
+CLASS="LITERAL"
+>idle in transaction (aborted)</TT
+>: This state is similar to
+           <TT
+CLASS="LITERAL"
+>idle in transaction</TT
+>, except one of the statements in
+           the transaction caused an error.
+          </P
+></LI
+><LI
+><P
+>           <TT
+CLASS="LITERAL"
+>fastpath function call</TT
+>: The backend is executing a
+           fast-path function.
+          </P
+></LI
+><LI
+><P
+>           <TT
+CLASS="LITERAL"
+>disabled</TT
+>: This state is reported if <A
+HREF="runtime-config-statistics.html#GUC-TRACK-ACTIVITIES"
+>track_activities</A
+> is disabled in this backend.
+          </P
+></LI
+></UL
+>
+     </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>backend_xid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>xid</TT
+></TD
+><TD
+>Top-level transaction identifier of this backend, if any.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>backend_xmin</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>xid</TT
+></TD
+><TD
+>The current backend's <TT
+CLASS="LITERAL"
+>xmin</TT
+> horizon.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>query</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Text of this backend's most recent query. If
+      <TT
+CLASS="STRUCTFIELD"
+>state</TT
+> is <TT
+CLASS="LITERAL"
+>active</TT
+> this field shows the
+      currently executing query. In all other states, it shows the last query
+      that was executed.
+     </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   The <TT
+CLASS="STRUCTNAME"
+>pg_stat_activity</TT
+> view will have one row
+   per server process, showing information related to
+   the current activity of that process.
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    The <TT
+CLASS="STRUCTFIELD"
+>waiting</TT
+> and <TT
+CLASS="STRUCTFIELD"
+>state</TT
+> columns are
+    independent.  If a backend is in the <TT
+CLASS="LITERAL"
+>active</TT
+> state,
+    it may or may not be <TT
+CLASS="LITERAL"
+>waiting</TT
+>.  If the state is
+    <TT
+CLASS="LITERAL"
+>active</TT
+> and <TT
+CLASS="STRUCTFIELD"
+>waiting</TT
+> is true, it means
+    that a query is being executed, but is being blocked by a lock
+    somewhere in the system.
+   </P
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="TABLE"
+><A
+NAME="PG-STAT-REPLICATION-VIEW"
+></A
+><P
+><B
+>Table 27-4. <TT
+CLASS="STRUCTNAME"
+>pg_stat_replication</TT
+> View</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Column</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>pid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>Process ID of a WAL sender process</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>usesysid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>OID of the user logged into this WAL sender process</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>usename</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>Name of the user logged into this WAL sender process</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>application_name</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Name of the application that is connected
+      to this WAL sender</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>client_addr</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>inet</TT
+></TD
+><TD
+>IP address of the client connected to this WAL sender.
+      If this field is null, it indicates that the client is
+      connected via a Unix socket on the server machine.
+     </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>client_hostname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Host name of the connected client, as reported by a
+      reverse DNS lookup of <TT
+CLASS="STRUCTFIELD"
+>client_addr</TT
+>. This field will
+      only be non-null for IP connections, and only when <A
+HREF="runtime-config-logging.html#GUC-LOG-HOSTNAME"
+>log_hostname</A
+> is enabled.
+     </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>client_port</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>TCP port number that the client is using for communication
+      with this WAL sender, or <TT
+CLASS="LITERAL"
+>-1</TT
+> if a Unix socket is used
+     </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>backend_start</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>Time when this process was started, i.e., when the
+      client connected to this WAL sender
+     </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>backend_xmin</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>xid</TT
+></TD
+><TD
+>This standby's <TT
+CLASS="LITERAL"
+>xmin</TT
+> horizon reported
+     by <A
+HREF="runtime-config-replication.html#GUC-HOT-STANDBY-FEEDBACK"
+>hot_standby_feedback</A
+>.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>state</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Current WAL sender state</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>sent_location</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>pg_lsn</TT
+></TD
+><TD
+>Last transaction log position sent on this connection</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>write_location</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>pg_lsn</TT
+></TD
+><TD
+>Last transaction log position written to disk by this standby
+      server</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>flush_location</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>pg_lsn</TT
+></TD
+><TD
+>Last transaction log position flushed to disk by this standby
+      server</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>replay_location</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>pg_lsn</TT
+></TD
+><TD
+>Last transaction log position replayed into the database on this
+      standby server</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>sync_priority</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>Priority of this standby server for being chosen as the
+      synchronous standby</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>sync_state</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Synchronous state of this standby server</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   The <TT
+CLASS="STRUCTNAME"
+>pg_stat_replication</TT
+> view will contain one row
+   per WAL sender process, showing statistics about replication to that
+   sender's connected standby server.  Only directly connected standbys are
+   listed; no information is available about downstream standby servers.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="PG-STAT-SSL-VIEW"
+></A
+><P
+><B
+>Table 27-5. <TT
+CLASS="STRUCTNAME"
+>pg_stat_ssl</TT
+> View</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Column</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>pid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>Process ID of a backend or WAL sender process</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>ssl</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>True if SSL is used on this connection</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>version</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Version of SSL in use, or NULL if SSL is not in use
+      on this connection</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>cipher</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Name of SSL cipher in use, or NULL if SSL is not in use
+      on this connection</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>bits</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>Number of bits in the encryption algorithm used, or NULL
+     if SSL is not used on this connection</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>compression</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>True if SSL compression is in use, false if not,
+      or NULL if SSL is not in use on this connection</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>clientdn</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Distinguished Name (DN) field from the client certificate
+      used, or NULL if no client certificate was supplied or if SSL
+      is not in use on this connection. This field is truncated if the
+      DN field is longer than <TT
+CLASS="SYMBOL"
+>NAMEDATALEN</TT
+> (64 characters
+      in a standard build)
+     </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   The <TT
+CLASS="STRUCTNAME"
+>pg_stat_ssl</TT
+> view will contain one row per
+   backend or WAL sender process, showing statistics about SSL usage on
+   this connection. It can be joined to <TT
+CLASS="STRUCTNAME"
+>pg_stat_activity</TT
+>
+   or <TT
+CLASS="STRUCTNAME"
+>pg_stat_replication</TT
+> on the
+   <TT
+CLASS="STRUCTFIELD"
+>pid</TT
+> column to get more details about the
+   connection.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="PG-STAT-ARCHIVER-VIEW"
+></A
+><P
+><B
+>Table 27-6. <TT
+CLASS="STRUCTNAME"
+>pg_stat_archiver</TT
+> View</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Column</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>archived_count</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of WAL files that have been successfully archived</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>last_archived_wal</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Name of the last WAL file successfully archived</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>last_archived_time</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>Time of the last successful archive operation</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>failed_count</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of failed attempts for archiving WAL files</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>last_failed_wal</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Name of the WAL file of the last failed archival operation</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>last_failed_time</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>Time of the last failed archival operation</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>stats_reset</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>Time at which these statistics were last reset</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   The <TT
+CLASS="STRUCTNAME"
+>pg_stat_archiver</TT
+> view will always have a
+   single row, containing data about the archiver process of the cluster.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="PG-STAT-BGWRITER-VIEW"
+></A
+><P
+><B
+>Table 27-7. <TT
+CLASS="STRUCTNAME"
+>pg_stat_bgwriter</TT
+> View</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Column</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>checkpoints_timed</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of scheduled checkpoints that have been performed</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>checkpoints_req</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of requested checkpoints that have been performed</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>checkpoint_write_time</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>double precision</TT
+></TD
+><TD
+>        Total amount of time that has been spent in the portion of
+        checkpoint processing where files are written to disk, in milliseconds
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>checkpoint_sync_time</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>double precision</TT
+></TD
+><TD
+>        Total amount of time that has been spent in the portion of
+        checkpoint processing where files are synchronized to disk, in
+        milliseconds
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>buffers_checkpoint</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of buffers written during checkpoints</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>buffers_clean</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of buffers written by the background writer</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>maxwritten_clean</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of times the background writer stopped a cleaning
+       scan because it had written too many buffers</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>buffers_backend</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of buffers written directly by a backend</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>buffers_backend_fsync</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of times a backend had to execute its own
+       <CODE
+CLASS="FUNCTION"
+>fsync</CODE
+> call (normally the background writer handles those
+       even when the backend does its own write)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>buffers_alloc</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of buffers allocated</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>stats_reset</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>Time at which these statistics were last reset</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   The <TT
+CLASS="STRUCTNAME"
+>pg_stat_bgwriter</TT
+> view will always have a
+   single row, containing global data for the cluster.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="PG-STAT-DATABASE-VIEW"
+></A
+><P
+><B
+>Table 27-8. <TT
+CLASS="STRUCTNAME"
+>pg_stat_database</TT
+> View</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Column</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>datid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>OID of a database</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>datname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>Name of this database</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>numbackends</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>Number of backends currently connected to this database.
+     This is the only column in this view that returns a value reflecting
+     current state; all other columns return the accumulated values since
+     the last reset.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>xact_commit</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of transactions in this database that have been
+      committed</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>xact_rollback</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of transactions in this database that have been
+      rolled back</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>blks_read</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of disk blocks read in this database</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>blks_hit</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of times disk blocks were found already in the buffer
+      cache, so that a read was not necessary (this only includes hits in the
+      PostgreSQL buffer cache, not the operating system's file system cache)
+     </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tup_returned</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of rows returned by queries in this database</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tup_fetched</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of rows fetched by queries in this database</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tup_inserted</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of rows inserted by queries in this database</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tup_updated</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of rows updated by queries in this database</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tup_deleted</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of rows deleted by queries in this database</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>conflicts</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of queries canceled due to conflicts with recovery
+      in this database. (Conflicts occur only on standby servers; see
+      <A
+HREF="monitoring-stats.html#PG-STAT-DATABASE-CONFLICTS-VIEW"
+>pg_stat_database_conflicts</A
+> for details.)
+     </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>temp_files</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of temporary files created by queries in this database.
+      All temporary files are counted, regardless of why the temporary file
+      was created (e.g., sorting or hashing), and regardless of the
+      <A
+HREF="runtime-config-logging.html#GUC-LOG-TEMP-FILES"
+>log_temp_files</A
+> setting.
+     </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>temp_bytes</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Total amount of data written to temporary files by queries in
+      this database. All temporary files are counted, regardless of why
+      the temporary file was created, and
+      regardless of the <A
+HREF="runtime-config-logging.html#GUC-LOG-TEMP-FILES"
+>log_temp_files</A
+> setting.
+     </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>deadlocks</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of deadlocks detected in this database</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>blk_read_time</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>double precision</TT
+></TD
+><TD
+>Time spent reading data file blocks by backends in this database,
+      in milliseconds</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>blk_write_time</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>double precision</TT
+></TD
+><TD
+>Time spent writing data file blocks by backends in this database,
+      in milliseconds</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>stats_reset</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>Time at which these statistics were last reset</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   The <TT
+CLASS="STRUCTNAME"
+>pg_stat_database</TT
+> view will contain one row
+   for each database in the cluster, showing database-wide statistics.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="PG-STAT-DATABASE-CONFLICTS-VIEW"
+></A
+><P
+><B
+>Table 27-9. <TT
+CLASS="STRUCTNAME"
+>pg_stat_database_conflicts</TT
+> View</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Column</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>datid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>OID of a database</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>datname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>Name of this database</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>confl_tablespace</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of queries in this database that have been canceled due to
+      dropped tablespaces</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>confl_lock</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of queries in this database that have been canceled due to
+      lock timeouts</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>confl_snapshot</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of queries in this database that have been canceled due to
+      old snapshots</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>confl_bufferpin</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of queries in this database that have been canceled due to
+      pinned buffers</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>confl_deadlock</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of queries in this database that have been canceled due to
+      deadlocks</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   The <TT
+CLASS="STRUCTNAME"
+>pg_stat_database_conflicts</TT
+> view will contain
+   one row per database, showing database-wide statistics about
+   query cancels occurring due to conflicts with recovery on standby servers.
+   This view will only contain information on standby servers, since
+   conflicts do not occur on master servers.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="PG-STAT-ALL-TABLES-VIEW"
+></A
+><P
+><B
+>Table 27-10. <TT
+CLASS="STRUCTNAME"
+>pg_stat_all_tables</TT
+> View</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Column</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>relid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>OID of a table</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>schemaname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>Name of the schema that this table is in</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>relname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>Name of this table</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>seq_scan</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of sequential scans initiated on this table</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>seq_tup_read</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of live rows fetched by sequential scans</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>idx_scan</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of index scans initiated on this table</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>idx_tup_fetch</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of live rows fetched by index scans</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>n_tup_ins</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of rows inserted</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>n_tup_upd</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of rows updated (includes HOT updated rows)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>n_tup_del</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of rows deleted</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>n_tup_hot_upd</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of rows HOT updated (i.e., with no separate index
+      update required)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>n_live_tup</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Estimated number of live rows</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>n_dead_tup</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Estimated number of dead rows</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>n_mod_since_analyze</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Estimated number of rows modified since this table was last analyzed</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>last_vacuum</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>Last time at which this table was manually vacuumed
+      (not counting <TT
+CLASS="COMMAND"
+>VACUUM FULL</TT
+>)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>last_autovacuum</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>Last time at which this table was vacuumed by the autovacuum
+      daemon</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>last_analyze</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>Last time at which this table was manually analyzed</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>last_autoanalyze</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>Last time at which this table was analyzed by the autovacuum
+      daemon</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>vacuum_count</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of times this table has been manually vacuumed
+      (not counting <TT
+CLASS="COMMAND"
+>VACUUM FULL</TT
+>)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>autovacuum_count</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of times this table has been vacuumed by the autovacuum
+      daemon</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>analyze_count</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of times this table has been manually analyzed</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>autoanalyze_count</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of times this table has been analyzed by the autovacuum
+      daemon</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   The <TT
+CLASS="STRUCTNAME"
+>pg_stat_all_tables</TT
+> view will contain
+   one row for each table in the current database (including TOAST
+   tables), showing statistics about accesses to that specific table. The
+   <TT
+CLASS="STRUCTNAME"
+>pg_stat_user_tables</TT
+> and
+   <TT
+CLASS="STRUCTNAME"
+>pg_stat_sys_tables</TT
+> views
+   contain the same information,
+   but filtered to only show user and system tables respectively.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="PG-STAT-ALL-INDEXES-VIEW"
+></A
+><P
+><B
+>Table 27-11. <TT
+CLASS="STRUCTNAME"
+>pg_stat_all_indexes</TT
+> View</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Column</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>relid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>OID of the table for this index</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>indexrelid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>OID of this index</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>schemaname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>Name of the schema this index is in</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>relname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>Name of the table for this index</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>indexrelname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>Name of this index</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>idx_scan</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of index scans initiated on this index</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>idx_tup_read</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of index entries returned by scans on this index</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>idx_tup_fetch</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of live table rows fetched by simple index scans using this
+      index</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   The <TT
+CLASS="STRUCTNAME"
+>pg_stat_all_indexes</TT
+> view will contain
+   one row for each index in the current database,
+   showing statistics about accesses to that specific index. The
+   <TT
+CLASS="STRUCTNAME"
+>pg_stat_user_indexes</TT
+> and
+   <TT
+CLASS="STRUCTNAME"
+>pg_stat_sys_indexes</TT
+> views
+   contain the same information,
+   but filtered to only show user and system indexes respectively.
+  </P
+><P
+>   Indexes can be used by simple index scans, <SPAN
+CLASS="QUOTE"
+>"bitmap"</SPAN
+> index scans,
+   and the optimizer.  In a bitmap scan
+   the output of several indexes can be combined via AND or OR rules,
+   so it is difficult to associate individual heap row fetches
+   with specific indexes when a bitmap scan is used.  Therefore, a bitmap
+   scan increments the
+   <TT
+CLASS="STRUCTNAME"
+>pg_stat_all_indexes</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>idx_tup_read</TT
+>
+   count(s) for the index(es) it uses, and it increments the
+   <TT
+CLASS="STRUCTNAME"
+>pg_stat_all_tables</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>idx_tup_fetch</TT
+>
+   count for the table, but it does not affect
+   <TT
+CLASS="STRUCTNAME"
+>pg_stat_all_indexes</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>idx_tup_fetch</TT
+>.
+   The optimizer also accesses indexes to check for supplied constants
+   whose values are outside the recorded range of the optimizer statistics
+   because the optimizer statistics might be stale.
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    The <TT
+CLASS="STRUCTFIELD"
+>idx_tup_read</TT
+> and <TT
+CLASS="STRUCTFIELD"
+>idx_tup_fetch</TT
+> counts
+    can be different even without any use of bitmap scans,
+    because <TT
+CLASS="STRUCTFIELD"
+>idx_tup_read</TT
+> counts
+    index entries retrieved from the index while <TT
+CLASS="STRUCTFIELD"
+>idx_tup_fetch</TT
+>
+    counts live rows fetched from the table.  The latter will be less if any
+    dead or not-yet-committed rows are fetched using the index, or if any
+    heap fetches are avoided by means of an index-only scan.
+   </P
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="TABLE"
+><A
+NAME="PG-STATIO-ALL-TABLES-VIEW"
+></A
+><P
+><B
+>Table 27-12. <TT
+CLASS="STRUCTNAME"
+>pg_statio_all_tables</TT
+> View</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Column</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>relid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>OID of a table</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>schemaname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>Name of the schema that this table is in</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>relname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>Name of this table</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>heap_blks_read</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of disk blocks read from this table</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>heap_blks_hit</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of buffer hits in this table</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>idx_blks_read</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of disk blocks read from all indexes on this table</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>idx_blks_hit</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of buffer hits in all indexes on this table</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>toast_blks_read</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of disk blocks read from this table's TOAST table (if any)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>toast_blks_hit</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of buffer hits in this table's TOAST table (if any)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tidx_blks_read</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of disk blocks read from this table's TOAST table indexes (if any)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>tidx_blks_hit</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of buffer hits in this table's TOAST table indexes (if any)</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   The <TT
+CLASS="STRUCTNAME"
+>pg_statio_all_tables</TT
+> view will contain
+   one row for each table in the current database (including TOAST
+   tables), showing statistics about I/O on that specific table. The
+   <TT
+CLASS="STRUCTNAME"
+>pg_statio_user_tables</TT
+> and
+   <TT
+CLASS="STRUCTNAME"
+>pg_statio_sys_tables</TT
+> views
+   contain the same information,
+   but filtered to only show user and system tables respectively.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="PG-STATIO-ALL-INDEXES-VIEW"
+></A
+><P
+><B
+>Table 27-13. <TT
+CLASS="STRUCTNAME"
+>pg_statio_all_indexes</TT
+> View</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Column</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>relid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>OID of the table for this index</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>indexrelid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>OID of this index</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>schemaname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>Name of the schema this index is in</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>relname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>Name of the table for this index</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>indexrelname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>Name of this index</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>idx_blks_read</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of disk blocks read from this index</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>idx_blks_hit</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of buffer hits in this index</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   The <TT
+CLASS="STRUCTNAME"
+>pg_statio_all_indexes</TT
+> view will contain
+   one row for each index in the current database,
+   showing statistics about I/O on that specific index. The
+   <TT
+CLASS="STRUCTNAME"
+>pg_statio_user_indexes</TT
+> and
+   <TT
+CLASS="STRUCTNAME"
+>pg_statio_sys_indexes</TT
+> views
+   contain the same information,
+   but filtered to only show user and system indexes respectively.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="PG-STATIO-ALL-SEQUENCES-VIEW"
+></A
+><P
+><B
+>Table 27-14. <TT
+CLASS="STRUCTNAME"
+>pg_statio_all_sequences</TT
+> View</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Column</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>relid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>OID of a sequence</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>schemaname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>Name of the schema this sequence is in</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>relname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>Name of this sequence</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>blks_read</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of disk blocks read from this sequence</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>blks_hit</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of buffer hits in this sequence</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   The <TT
+CLASS="STRUCTNAME"
+>pg_statio_all_sequences</TT
+> view will contain
+   one row for each sequence in the current database,
+   showing statistics about I/O on that specific sequence.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="PG-STAT-USER-FUNCTIONS-VIEW"
+></A
+><P
+><B
+>Table 27-15. <TT
+CLASS="STRUCTNAME"
+>pg_stat_user_functions</TT
+> View</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Column</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>funcid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>OID of a function</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>schemaname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>Name of the schema this function is in</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>funcname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>Name of this function</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>calls</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>Number of times this function has been called</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>total_time</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>double precision</TT
+></TD
+><TD
+>Total time spent in this function and all other functions
+     called by it, in milliseconds</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>self_time</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>double precision</TT
+></TD
+><TD
+>Total time spent in this function itself, not including
+     other functions called by it, in milliseconds</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   The <TT
+CLASS="STRUCTNAME"
+>pg_stat_user_functions</TT
+> view will contain
+   one row for each tracked function, showing statistics about executions of
+   that function.  The <A
+HREF="runtime-config-statistics.html#GUC-TRACK-FUNCTIONS"
+>track_functions</A
+> parameter
+   controls exactly which functions are tracked.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="MONITORING-STATS-FUNCTIONS"
+>27.2.3. Statistics Functions</A
+></H2
+><P
+>   Other ways of looking at the statistics can be set up by writing
+   queries that use the same underlying statistics access functions used by
+   the standard views shown above.  For details such as the functions' names,
+   consult the definitions of the standard views.  (For example, in
+   <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> you could issue <TT
+CLASS="LITERAL"
+>\d+ pg_stat_activity</TT
+>.)
+   The access functions for per-database statistics take a database OID as an
+   argument to identify which database to report on.
+   The per-table and per-index functions take a table or index OID.
+   The functions for per-function statistics take a function OID.
+   Note that only tables, indexes, and functions in the current database
+   can be seen with these functions.
+  </P
+><P
+>   Additional functions related to statistics collection are listed in <A
+HREF="monitoring-stats.html#MONITORING-STATS-FUNCS-TABLE"
+>Table 27-16</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="MONITORING-STATS-FUNCS-TABLE"
+></A
+><P
+><B
+>Table 27-16. Additional Statistics Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_backend_pid()</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>       Process ID of the server process handling the current session
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stat_get_activity</CODE
+>(<TT
+CLASS="TYPE"
+>integer</TT
+>)</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>setof record</TT
+></TD
+><TD
+>       Returns a record of information about the backend with the specified PID, or
+       one record for each active backend in the system if <TT
+CLASS="SYMBOL"
+>NULL</TT
+> is
+       specified. The fields returned are a subset of those in the
+       <TT
+CLASS="STRUCTNAME"
+>pg_stat_activity</TT
+> view.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stat_get_snapshot_timestamp()</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>       Returns the timestamp of the current statistics snapshot
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stat_clear_snapshot()</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>void</TT
+></TD
+><TD
+>       Discard the current statistics snapshot
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stat_reset()</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>void</TT
+></TD
+><TD
+>       Reset all statistics counters for the current database to zero
+       (requires superuser privileges)
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stat_reset_shared</CODE
+>(text)</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>void</TT
+></TD
+><TD
+>       Reset some cluster-wide statistics counters to zero, depending on the
+       argument (requires superuser privileges).
+       Calling <TT
+CLASS="LITERAL"
+>pg_stat_reset_shared('bgwriter')</TT
+> will zero all the
+       counters shown in the <TT
+CLASS="STRUCTNAME"
+>pg_stat_bgwriter</TT
+> view.
+       Calling <TT
+CLASS="LITERAL"
+>pg_stat_reset_shared('archiver')</TT
+> will zero all the
+       counters shown in the <TT
+CLASS="STRUCTNAME"
+>pg_stat_archiver</TT
+> view.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stat_reset_single_table_counters</CODE
+>(oid)</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>void</TT
+></TD
+><TD
+>       Reset statistics for a single table or index in the current database to
+       zero (requires superuser privileges)
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stat_reset_single_function_counters</CODE
+>(oid)</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>void</TT
+></TD
+><TD
+>       Reset statistics for a single function in the current database to
+       zero (requires superuser privileges)
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   <CODE
+CLASS="FUNCTION"
+>pg_stat_get_activity</CODE
+>, the underlying function of
+   the <TT
+CLASS="STRUCTNAME"
+>pg_stat_activity</TT
+> view, returns a set of records
+   containing all the available information about each backend process.
+   Sometimes it may be more convenient to obtain just a subset of this
+   information.  In such cases, an older set of per-backend statistics
+   access functions can be used; these are shown in <A
+HREF="monitoring-stats.html#MONITORING-STATS-BACKEND-FUNCS-TABLE"
+>Table 27-17</A
+>.
+   These access functions use a backend ID number, which ranges from one
+   to the number of currently active backends.
+   The function <CODE
+CLASS="FUNCTION"
+>pg_stat_get_backend_idset</CODE
+> provides a
+   convenient way to generate one row for each active backend for
+   invoking these functions.  For example, to show the <ACRONYM
+CLASS="ACRONYM"
+>PID</ACRONYM
+>s and
+   current queries of all backends:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT pg_stat_get_backend_pid(s.backendid) AS pid,
+       pg_stat_get_backend_activity(s.backendid) AS query
+    FROM (SELECT pg_stat_get_backend_idset() AS backendid) AS s;</PRE
+><P>
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="MONITORING-STATS-BACKEND-FUNCS-TABLE"
+></A
+><P
+><B
+>Table 27-17. Per-Backend Statistics Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stat_get_backend_idset()</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>setof integer</TT
+></TD
+><TD
+>Set of currently active backend ID numbers (from 1 to the
+       number of active backends)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stat_get_backend_activity(integer)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Text of this backend's most recent query</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stat_get_backend_activity_start(integer)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>Time when the most recent query was started</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stat_get_backend_client_addr(integer)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>inet</TT
+></TD
+><TD
+>IP address of the client connected to this backend</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stat_get_backend_client_port(integer)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>TCP port number that the client is using for communication</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stat_get_backend_dbid(integer)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>OID of the database this backend is connected to</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stat_get_backend_pid(integer)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>Process ID of this backend</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stat_get_backend_start(integer)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>Time when this process was started</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stat_get_backend_userid(integer)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>OID of the user logged into this backend</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stat_get_backend_waiting(integer)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>True if this backend is currently waiting on a lock</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_stat_get_backend_xact_start(integer)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+></TD
+><TD
+>Time when the current transaction was started</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="monitoring-ps.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="monitoring-locks.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Standard Unix Tools</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="monitoring.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Viewing Locks</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

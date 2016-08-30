@@ -1,0 +1,786 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.2.9</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.2.10"
+HREF="release-9-2-10.html"><LINK
+REL="NEXT"
+TITLE="Release 9.2.8"
+HREF="release-9-2-8.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.2.10"
+HREF="release-9-2-10.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.2.8"
+HREF="release-9-2-8.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-2-9"
+>E.40. Release 9.2.9</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2014-07-24</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 9.2.8.
+   For information about new features in the 9.2 major release, see
+   <A
+HREF="release-9-2.html"
+>Section E.49</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN135487"
+>E.40.1. Migration to Version 9.2.9</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.2.X.
+   </P
+><P
+>    However, this release corrects an index corruption problem in some GiST
+    indexes.  See the first changelog entry below to find out whether your
+    installation has been affected and what steps you should take if so.
+   </P
+><P
+>    Also, if you are upgrading from a version earlier than 9.2.6,
+    see <A
+HREF="release-9-2-6.html"
+>Section E.43</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN135493"
+>E.40.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Correctly initialize padding bytes in <TT
+CLASS="FILENAME"
+>contrib/btree_gist</TT
+>
+      indexes on <TT
+CLASS="TYPE"
+>bit</TT
+> columns (Heikki Linnakangas)
+     </P
+><P
+>      This error could result in incorrect query results due to values that
+      should compare equal not being seen as equal.
+      Users with GiST indexes on <TT
+CLASS="TYPE"
+>bit</TT
+> or <TT
+CLASS="TYPE"
+>bit varying</TT
+>
+      columns should <TT
+CLASS="COMMAND"
+>REINDEX</TT
+> those indexes after installing this
+      update.
+     </P
+></LI
+><LI
+><P
+>      Protect against torn pages when deleting GIN list pages (Heikki
+      Linnakangas)
+     </P
+><P
+>      This fix prevents possible index corruption if a system crash occurs
+      while the page update is being written to disk.
+     </P
+></LI
+><LI
+><P
+>      Don't clear the right-link of a GiST index page while replaying
+      updates from WAL (Heikki Linnakangas)
+     </P
+><P
+>      This error could lead to transiently wrong answers from GiST index
+      scans performed in Hot Standby.
+     </P
+></LI
+><LI
+><P
+>      Fix corner-case infinite loop during insertion into an SP-GiST text
+      index (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix feedback status when <A
+HREF="runtime-config-replication.html#GUC-HOT-STANDBY-FEEDBACK"
+>hot_standby_feedback</A
+> is
+      turned off on-the-fly (Simon Riggs)
+     </P
+></LI
+><LI
+><P
+>      Fix possibly-incorrect cache invalidation during nested calls
+      to <CODE
+CLASS="FUNCTION"
+>ReceiveSharedInvalidMessages</CODE
+> (Andres Freund)
+     </P
+></LI
+><LI
+><P
+>      Fix planner's mishandling of nested PlaceHolderVars generated in
+      nested-nestloop plans (Tom Lane)
+     </P
+><P
+>      This oversight could result in <SPAN
+CLASS="QUOTE"
+>"variable not found in subplan
+      target lists"</SPAN
+> errors, or in silently wrong query results.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="QUOTE"
+>"could not find pathkey item to sort"</SPAN
+> planner failures
+      with <TT
+CLASS="LITERAL"
+>UNION ALL</TT
+> over subqueries reading from tables with
+      inheritance children (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Don't assume a subquery's output is unique if there's a set-returning
+      function in its targetlist (David Rowley)
+     </P
+><P
+>      This oversight could lead to misoptimization of constructs
+      like <TT
+CLASS="LITERAL"
+>WHERE x IN (SELECT y, generate_series(1,10) FROM t GROUP
+      BY y)</TT
+>.
+     </P
+></LI
+><LI
+><P
+>      Improve planner to drop constant-NULL inputs
+      of <TT
+CLASS="LITERAL"
+>AND</TT
+>/<TT
+CLASS="LITERAL"
+>OR</TT
+> when possible (Tom Lane)
+     </P
+><P
+>      This change fixes some cases where the more aggressive parameter
+      substitution done by 9.2 and later can lead to a worse plan than
+      older versions produced.
+     </P
+></LI
+><LI
+><P
+>      Fix identification of input type category in <CODE
+CLASS="FUNCTION"
+>to_json()</CODE
+>
+      and friends (Tom Lane)
+     </P
+><P
+>      This is known to have led to inadequate quoting of <TT
+CLASS="TYPE"
+>money</TT
+>
+      fields in the <TT
+CLASS="TYPE"
+>JSON</TT
+> result, and there may have been wrong
+      results for other data types as well.
+     </P
+></LI
+><LI
+><P
+>      Fix failure to detoast fields in composite elements of structured
+      types (Tom Lane)
+     </P
+><P
+>      This corrects cases where TOAST pointers could be copied into other
+      tables without being dereferenced.  If the original data is later
+      deleted, it would lead to errors like <SPAN
+CLASS="QUOTE"
+>"missing chunk number 0
+      for toast value ..."</SPAN
+> when the now-dangling pointer is used.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="QUOTE"
+>"record type has not been registered"</SPAN
+> failures with
+      whole-row references to the output of Append plan nodes (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix possible crash when invoking a user-defined function while
+      rewinding a cursor (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix query-lifespan memory leak while evaluating the arguments for a
+      function in <TT
+CLASS="LITERAL"
+>FROM</TT
+> (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix session-lifespan memory leaks in regular-expression processing
+      (Tom Lane, Arthur O'Dwyer, Greg Stark)
+     </P
+></LI
+><LI
+><P
+>      Fix data encoding error in <TT
+CLASS="FILENAME"
+>hungarian.stop</TT
+> (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Prevent foreign tables from being created with OIDS
+      when <A
+HREF="runtime-config-compatible.html#GUC-DEFAULT-WITH-OIDS"
+>default_with_oids</A
+> is true
+      (Etsuro Fujita)
+     </P
+></LI
+><LI
+><P
+>      Fix liveness checks for rows that were inserted in the current
+      transaction and then deleted by a now-rolled-back subtransaction
+      (Andres Freund)
+     </P
+><P
+>      This could cause problems (at least spurious warnings, and at worst an
+      infinite loop) if <TT
+CLASS="COMMAND"
+>CREATE INDEX</TT
+> or <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+> were
+      done later in the same transaction.
+     </P
+></LI
+><LI
+><P
+>      Clear <TT
+CLASS="STRUCTNAME"
+>pg_stat_activity</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>xact_start</TT
+>
+      during <TT
+CLASS="COMMAND"
+>PREPARE TRANSACTION</TT
+> (Andres Freund)
+     </P
+><P
+>      After the <TT
+CLASS="COMMAND"
+>PREPARE</TT
+>, the originating session is no longer in
+      a transaction, so it should not continue to display a transaction
+      start time.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>REASSIGN OWNED</TT
+> to not fail for text search objects
+      (&Aacute;lvaro Herrera)
+     </P
+></LI
+><LI
+><P
+>      Block signals during postmaster startup (Tom Lane)
+     </P
+><P
+>      This ensures that the postmaster will properly clean up after itself
+      if, for example, it receives <SPAN
+CLASS="SYSTEMITEM"
+>SIGINT</SPAN
+> while still
+      starting up.
+     </P
+></LI
+><LI
+><P
+>      Fix client host name lookup when processing <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+>
+      entries that specify host names instead of IP addresses (Tom Lane)
+     </P
+><P
+>      Ensure that reverse-DNS lookup failures are reported, instead of just
+      silently not matching such entries.  Also ensure that we make only
+      one reverse-DNS lookup attempt per connection, not one per host name
+      entry, which is what previously happened if the lookup attempts failed.
+     </P
+></LI
+><LI
+><P
+>      Allow the root user to use <TT
+CLASS="LITERAL"
+>postgres -C variable</TT
+> and
+      <TT
+CLASS="LITERAL"
+>postgres --describe-config</TT
+> (MauMau)
+     </P
+><P
+>      The prohibition on starting the server as root does not need to extend
+      to these operations, and relaxing it prevents failure
+      of <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> in some scenarios.
+     </P
+></LI
+><LI
+><P
+>      Secure Unix-domain sockets of temporary postmasters started during
+      <TT
+CLASS="LITERAL"
+>make check</TT
+> (Noah Misch)
+     </P
+><P
+>      Any local user able to access the socket file could connect as the
+      server's bootstrap superuser, then proceed to execute arbitrary code as
+      the operating-system user running the test, as we previously noted in
+      CVE-2014-0067.  This change defends against that risk by placing the
+      server's socket in a temporary, mode 0700 subdirectory
+      of <TT
+CLASS="FILENAME"
+>/tmp</TT
+>.  The hazard remains however on platforms where
+      Unix sockets are not supported, notably Windows, because then the
+      temporary postmaster must accept local TCP connections.
+     </P
+><P
+>      A useful side effect of this change is to simplify
+      <TT
+CLASS="LITERAL"
+>make check</TT
+> testing in builds that
+      override <TT
+CLASS="LITERAL"
+>DEFAULT_PGSOCKET_DIR</TT
+>.  Popular non-default values
+      like <TT
+CLASS="FILENAME"
+>/var/run/postgresql</TT
+> are often not writable by the
+      build user, requiring workarounds that will no longer be necessary.
+     </P
+></LI
+><LI
+><P
+>      Fix tablespace creation WAL replay to work on Windows (MauMau)
+     </P
+></LI
+><LI
+><P
+>      Fix detection of socket creation failures on Windows (Bruce Momjian)
+     </P
+></LI
+><LI
+><P
+>      On Windows, allow new sessions to absorb values of PGC_BACKEND
+      parameters (such as <A
+HREF="runtime-config-logging.html#GUC-LOG-CONNECTIONS"
+>log_connections</A
+>) from the
+      configuration file (Amit Kapila)
+     </P
+><P
+>      Previously, if such a parameter were changed in the file post-startup,
+      the change would have no effect.
+     </P
+></LI
+><LI
+><P
+>      Properly quote executable path names on Windows (Nikhil Deshpande)
+     </P
+><P
+>      This oversight could cause <SPAN
+CLASS="APPLICATION"
+>initdb</SPAN
+>
+      and <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> to fail on Windows, if the installation
+      path contained both spaces and <TT
+CLASS="LITERAL"
+>@</TT
+> signs.
+     </P
+></LI
+><LI
+><P
+>      Fix linking of <SPAN
+CLASS="APPLICATION"
+>libpython</SPAN
+> on OS X (Tom Lane)
+     </P
+><P
+>      The method we previously used can fail with the Python library
+      supplied by Xcode 5.0 and later.
+     </P
+></LI
+><LI
+><P
+>      Avoid buffer bloat in <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> when the server
+      consistently sends data faster than the client can absorb it
+      (Shin-ichi Morita, Tom Lane)
+     </P
+><P
+>      <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> could be coerced into enlarging its input buffer
+      until it runs out of memory (which would be reported misleadingly
+      as <SPAN
+CLASS="QUOTE"
+>"lost synchronization with server"</SPAN
+>).  Under ordinary
+      circumstances it's quite far-fetched that data could be continuously
+      transmitted more quickly than the <CODE
+CLASS="FUNCTION"
+>recv()</CODE
+> loop can
+      absorb it, but this has been observed when the client is artificially
+      slowed by scheduler constraints.
+     </P
+></LI
+><LI
+><P
+>      Ensure that LDAP lookup attempts in <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> time out as
+      intended (Laurenz Albe)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+> to do the right thing when an array
+      of <TT
+CLASS="TYPE"
+>char *</TT
+> is the target for a FETCH statement returning more
+      than one row, as well as some other array-handling fixes
+      (Ashutosh Bapat)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+>'s processing of old-style large object
+      comments (Tom Lane)
+     </P
+><P
+>      A direct-to-database restore from an archive file generated by a
+      pre-9.0 version of <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> would usually fail if the
+      archive contained more than a few comments for large objects.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> for cases where the new server creates
+      a TOAST table but the old version did not (Bruce Momjian)
+     </P
+><P
+>      This rare situation would manifest as <SPAN
+CLASS="QUOTE"
+>"relation OID mismatch"</SPAN
+>
+      errors.
+     </P
+></LI
+><LI
+><P
+>      Prevent <TT
+CLASS="FILENAME"
+>contrib/auto_explain</TT
+> from changing the output of
+      a user's <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+> (Tom Lane)
+     </P
+><P
+>      If <TT
+CLASS="FILENAME"
+>auto_explain</TT
+> is active, it could cause
+      an <TT
+CLASS="LITERAL"
+>EXPLAIN (ANALYZE, TIMING OFF)</TT
+> command to nonetheless
+      print timing information.
+     </P
+></LI
+><LI
+><P
+>      Fix query-lifespan memory leak in <TT
+CLASS="FILENAME"
+>contrib/dblink</TT
+>
+      (MauMau, Joe Conway)
+     </P
+></LI
+><LI
+><P
+>      In <TT
+CLASS="FILENAME"
+>contrib/pgcrypto</TT
+> functions, ensure sensitive
+      information is cleared from stack variables before returning
+      (Marko Kreen)
+     </P
+></LI
+><LI
+><P
+>      Prevent use of already-freed memory in
+      <TT
+CLASS="FILENAME"
+>contrib/pgstattuple</TT
+>'s <CODE
+CLASS="FUNCTION"
+>pgstat_heap()</CODE
+>
+      (Noah Misch)
+     </P
+></LI
+><LI
+><P
+>      In <TT
+CLASS="FILENAME"
+>contrib/uuid-ossp</TT
+>, cache the state of the OSSP UUID
+      library across calls (Tom Lane)
+     </P
+><P
+>      This improves the efficiency of UUID generation and reduces the amount
+      of entropy drawn from <TT
+CLASS="FILENAME"
+>/dev/urandom</TT
+>, on platforms that
+      have that.
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2014e
+      for DST law changes in Crimea, Egypt, and Morocco.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-2-10.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-2-8.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.2.10</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.2.8</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

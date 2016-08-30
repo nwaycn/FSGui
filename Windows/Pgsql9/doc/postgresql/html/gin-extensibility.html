@@ -1,0 +1,782 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Extensibility</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="GIN Indexes"
+HREF="gin.html"><LINK
+REL="PREVIOUS"
+TITLE="Built-in Operator Classes"
+HREF="gin-builtin-opclasses.html"><LINK
+REL="NEXT"
+TITLE="Implementation"
+HREF="gin-implementation.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Built-in Operator Classes"
+HREF="gin-builtin-opclasses.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="gin.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 61. GIN Indexes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Implementation"
+HREF="gin-implementation.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="GIN-EXTENSIBILITY"
+>61.3. Extensibility</A
+></H1
+><P
+>   The <ACRONYM
+CLASS="ACRONYM"
+>GIN</ACRONYM
+> interface has a high level of abstraction,
+   requiring the access method implementer only to implement the semantics of
+   the data type being accessed.  The <ACRONYM
+CLASS="ACRONYM"
+>GIN</ACRONYM
+> layer itself
+   takes care of concurrency, logging and searching the tree structure.
+ </P
+><P
+>   All it takes to get a <ACRONYM
+CLASS="ACRONYM"
+>GIN</ACRONYM
+> access method working is to
+   implement a few user-defined methods, which define the behavior of
+   keys in the tree and the relationships between keys, indexed items,
+   and indexable queries. In short, <ACRONYM
+CLASS="ACRONYM"
+>GIN</ACRONYM
+> combines
+   extensibility with generality, code reuse, and a clean interface.
+ </P
+><P
+>   There are three methods that an operator class for
+   <ACRONYM
+CLASS="ACRONYM"
+>GIN</ACRONYM
+> must provide:
+
+ <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><CODE
+CLASS="FUNCTION"
+>int compare(Datum a, Datum b)</CODE
+></DT
+><DD
+><P
+>       Compares two keys (not indexed items!) and returns an integer less than
+       zero, zero, or greater than zero, indicating whether the first key is
+       less than, equal to, or greater than the second.  Null keys are never
+       passed to this function.
+      </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>Datum *extractValue(Datum itemValue, int32 *nkeys,
+        bool **nullFlags)</CODE
+></DT
+><DD
+><P
+>       Returns a palloc'd array of keys given an item to be indexed.  The
+       number of returned keys must be stored into <TT
+CLASS="LITERAL"
+>*nkeys</TT
+>.
+       If any of the keys can be null, also palloc an array of
+       <TT
+CLASS="LITERAL"
+>*nkeys</TT
+> <TT
+CLASS="TYPE"
+>bool</TT
+> fields, store its address at
+       <TT
+CLASS="LITERAL"
+>*nullFlags</TT
+>, and set these null flags as needed.
+       <TT
+CLASS="LITERAL"
+>*nullFlags</TT
+> can be left <TT
+CLASS="SYMBOL"
+>NULL</TT
+> (its initial value)
+       if all keys are non-null.
+       The return value can be <TT
+CLASS="SYMBOL"
+>NULL</TT
+> if the item contains no keys.
+      </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>Datum *extractQuery(Datum query, int32 *nkeys,
+        StrategyNumber n, bool **pmatch, Pointer **extra_data,
+        bool **nullFlags, int32 *searchMode)</CODE
+></DT
+><DD
+><P
+>       Returns a palloc'd array of keys given a value to be queried; that is,
+       <TT
+CLASS="LITERAL"
+>query</TT
+> is the value on the right-hand side of an
+       indexable operator whose left-hand side is the indexed column.
+       <TT
+CLASS="LITERAL"
+>n</TT
+> is the strategy number of the operator within the
+       operator class (see <A
+HREF="xindex.html#XINDEX-STRATEGIES"
+>Section 35.14.2</A
+>).
+       Often, <CODE
+CLASS="FUNCTION"
+>extractQuery</CODE
+> will need
+       to consult <TT
+CLASS="LITERAL"
+>n</TT
+> to determine the data type of
+       <TT
+CLASS="LITERAL"
+>query</TT
+> and the method it should use to extract key values.
+       The number of returned keys must be stored into <TT
+CLASS="LITERAL"
+>*nkeys</TT
+>.
+       If any of the keys can be null, also palloc an array of
+       <TT
+CLASS="LITERAL"
+>*nkeys</TT
+> <TT
+CLASS="TYPE"
+>bool</TT
+> fields, store its address at
+       <TT
+CLASS="LITERAL"
+>*nullFlags</TT
+>, and set these null flags as needed.
+       <TT
+CLASS="LITERAL"
+>*nullFlags</TT
+> can be left <TT
+CLASS="SYMBOL"
+>NULL</TT
+> (its initial value)
+       if all keys are non-null.
+       The return value can be <TT
+CLASS="SYMBOL"
+>NULL</TT
+> if the <TT
+CLASS="LITERAL"
+>query</TT
+> contains no keys.
+      </P
+><P
+>       <TT
+CLASS="LITERAL"
+>searchMode</TT
+> is an output argument that allows
+       <CODE
+CLASS="FUNCTION"
+>extractQuery</CODE
+> to specify details about how the search
+       will be done.
+       If <TT
+CLASS="LITERAL"
+>*searchMode</TT
+> is set to
+       <TT
+CLASS="LITERAL"
+>GIN_SEARCH_MODE_DEFAULT</TT
+> (which is the value it is
+       initialized to before call), only items that match at least one of
+       the returned keys are considered candidate matches.
+       If <TT
+CLASS="LITERAL"
+>*searchMode</TT
+> is set to
+       <TT
+CLASS="LITERAL"
+>GIN_SEARCH_MODE_INCLUDE_EMPTY</TT
+>, then in addition to items
+       containing at least one matching key, items that contain no keys at
+       all are considered candidate matches.  (This mode is useful for
+       implementing is-subset-of operators, for example.)
+       If <TT
+CLASS="LITERAL"
+>*searchMode</TT
+> is set to <TT
+CLASS="LITERAL"
+>GIN_SEARCH_MODE_ALL</TT
+>,
+       then all non-null items in the index are considered candidate
+       matches, whether they match any of the returned keys or not.  (This
+       mode is much slower than the other two choices, since it requires
+       scanning essentially the entire index, but it may be necessary to
+       implement corner cases correctly.  An operator that needs this mode
+       in most cases is probably not a good candidate for a GIN operator
+       class.)
+       The symbols to use for setting this mode are defined in
+       <TT
+CLASS="FILENAME"
+>access/gin.h</TT
+>.
+      </P
+><P
+>       <TT
+CLASS="LITERAL"
+>pmatch</TT
+> is an output argument for use when partial match
+       is supported.  To use it, <CODE
+CLASS="FUNCTION"
+>extractQuery</CODE
+> must allocate
+       an array of <TT
+CLASS="LITERAL"
+>*nkeys</TT
+> booleans and store its address at
+       <TT
+CLASS="LITERAL"
+>*pmatch</TT
+>.  Each element of the array should be set to TRUE
+       if the corresponding key requires partial match, FALSE if not.
+       If <TT
+CLASS="LITERAL"
+>*pmatch</TT
+> is set to <TT
+CLASS="SYMBOL"
+>NULL</TT
+> then GIN assumes partial match
+       is not required.  The variable is initialized to <TT
+CLASS="SYMBOL"
+>NULL</TT
+> before call,
+       so this argument can simply be ignored by operator classes that do
+       not support partial match.
+      </P
+><P
+>       <TT
+CLASS="LITERAL"
+>extra_data</TT
+> is an output argument that allows
+       <CODE
+CLASS="FUNCTION"
+>extractQuery</CODE
+> to pass additional data to the
+       <CODE
+CLASS="FUNCTION"
+>consistent</CODE
+> and <CODE
+CLASS="FUNCTION"
+>comparePartial</CODE
+> methods.
+       To use it, <CODE
+CLASS="FUNCTION"
+>extractQuery</CODE
+> must allocate
+       an array of <TT
+CLASS="LITERAL"
+>*nkeys</TT
+> pointers and store its address at
+       <TT
+CLASS="LITERAL"
+>*extra_data</TT
+>, then store whatever it wants to into the
+       individual pointers.  The variable is initialized to <TT
+CLASS="SYMBOL"
+>NULL</TT
+> before
+       call, so this argument can simply be ignored by operator classes that
+       do not require extra data.  If <TT
+CLASS="LITERAL"
+>*extra_data</TT
+> is set, the
+       whole array is passed to the <CODE
+CLASS="FUNCTION"
+>consistent</CODE
+> method, and
+       the appropriate element to the <CODE
+CLASS="FUNCTION"
+>comparePartial</CODE
+> method.
+      </P
+></DD
+></DL
+></DIV
+><P>
+
+  An operator class must also provide a function to check if an indexed item
+  matches the query. It comes in two flavors, a boolean <CODE
+CLASS="FUNCTION"
+>consistent</CODE
+>
+  function, and a ternary <CODE
+CLASS="FUNCTION"
+>triConsistent</CODE
+> function.
+  <CODE
+CLASS="FUNCTION"
+>triConsistent</CODE
+> covers the functionality of both, so providing
+  triConsistent alone is sufficient. However, if the boolean variant is
+  significantly cheaper to calculate, it can be advantageous to provide both.
+  If only the boolean variant is provided, some optimizations that depend on
+  refuting index items before fetching all the keys are disabled.
+
+  <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><CODE
+CLASS="FUNCTION"
+>bool consistent(bool check[], StrategyNumber n, Datum query,
+        int32 nkeys, Pointer extra_data[], bool *recheck,
+        Datum queryKeys[], bool nullFlags[])</CODE
+></DT
+><DD
+><P
+>       Returns TRUE if an indexed item satisfies the query operator with
+       strategy number <TT
+CLASS="LITERAL"
+>n</TT
+> (or might satisfy it, if the recheck
+       indication is returned).  This function does not have direct access
+       to the indexed item's value, since <ACRONYM
+CLASS="ACRONYM"
+>GIN</ACRONYM
+> does not
+       store items explicitly.  Rather, what is available is knowledge
+       about which key values extracted from the query appear in a given
+       indexed item.  The <TT
+CLASS="LITERAL"
+>check</TT
+> array has length
+       <TT
+CLASS="LITERAL"
+>nkeys</TT
+>, which is the same as the number of keys previously
+       returned by <CODE
+CLASS="FUNCTION"
+>extractQuery</CODE
+> for this <TT
+CLASS="LITERAL"
+>query</TT
+> datum.
+       Each element of the
+       <TT
+CLASS="LITERAL"
+>check</TT
+> array is TRUE if the indexed item contains the
+       corresponding query key, i.e., if (check[i] == TRUE) the i-th key of the
+       <CODE
+CLASS="FUNCTION"
+>extractQuery</CODE
+> result array is present in the indexed item.
+       The original <TT
+CLASS="LITERAL"
+>query</TT
+> datum is
+       passed in case the <CODE
+CLASS="FUNCTION"
+>consistent</CODE
+> method needs to consult it,
+       and so are the <TT
+CLASS="LITERAL"
+>queryKeys[]</TT
+> and <TT
+CLASS="LITERAL"
+>nullFlags[]</TT
+>
+       arrays previously returned by <CODE
+CLASS="FUNCTION"
+>extractQuery</CODE
+>.
+       <TT
+CLASS="LITERAL"
+>extra_data</TT
+> is the extra-data array returned by
+       <CODE
+CLASS="FUNCTION"
+>extractQuery</CODE
+>, or <TT
+CLASS="SYMBOL"
+>NULL</TT
+> if none.
+      </P
+><P
+>       When <CODE
+CLASS="FUNCTION"
+>extractQuery</CODE
+> returns a null key in
+       <TT
+CLASS="LITERAL"
+>queryKeys[]</TT
+>, the corresponding <TT
+CLASS="LITERAL"
+>check[]</TT
+> element
+       is TRUE if the indexed item contains a null key; that is, the
+       semantics of <TT
+CLASS="LITERAL"
+>check[]</TT
+> are like <TT
+CLASS="LITERAL"
+>IS NOT DISTINCT
+       FROM</TT
+>.  The <CODE
+CLASS="FUNCTION"
+>consistent</CODE
+> function can examine the
+       corresponding <TT
+CLASS="LITERAL"
+>nullFlags[]</TT
+> element if it needs to tell
+       the difference between a regular value match and a null match.
+      </P
+><P
+>       On success, <TT
+CLASS="LITERAL"
+>*recheck</TT
+> should be set to TRUE if the heap
+       tuple needs to be rechecked against the query operator, or FALSE if
+       the index test is exact.  That is, a FALSE return value guarantees
+       that the heap tuple does not match the query; a TRUE return value with
+       <TT
+CLASS="LITERAL"
+>*recheck</TT
+> set to FALSE guarantees that the heap tuple does
+       match the query; and a TRUE return value with
+       <TT
+CLASS="LITERAL"
+>*recheck</TT
+> set to TRUE means that the heap tuple might match
+       the query, so it needs to be fetched and rechecked by evaluating the
+       query operator directly against the originally indexed item.
+      </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>GinTernaryValue triConsistent(GinTernaryValue check[], StrategyNumber n, Datum query,
+        int32 nkeys, Pointer extra_data[],
+        Datum queryKeys[], bool nullFlags[])</CODE
+></DT
+><DD
+><P
+>       <CODE
+CLASS="FUNCTION"
+>triConsistent</CODE
+> is similar to <CODE
+CLASS="FUNCTION"
+>consistent</CODE
+>,
+       but instead of a boolean <TT
+CLASS="LITERAL"
+>check[]</TT
+>, there are three possible
+       values for each key: <TT
+CLASS="LITERAL"
+>GIN_TRUE</TT
+>, <TT
+CLASS="LITERAL"
+>GIN_FALSE</TT
+> and
+       <TT
+CLASS="LITERAL"
+>GIN_MAYBE</TT
+>. <TT
+CLASS="LITERAL"
+>GIN_FALSE</TT
+> and <TT
+CLASS="LITERAL"
+>GIN_TRUE</TT
+>
+       have the same meaning as regular boolean values.
+       <TT
+CLASS="LITERAL"
+>GIN_MAYBE</TT
+> means that the presence of that key is not known.
+       When <TT
+CLASS="LITERAL"
+>GIN_MAYBE</TT
+> values are present, the function should only
+       return GIN_TRUE if the item matches whether or not the index item
+       contains the corresponding query keys. Likewise, the function must
+       return GIN_FALSE only if the item does not match, whether or not it
+       contains the GIN_MAYBE keys. If the result depends on the GIN_MAYBE
+       entries, i.e. the match cannot be confirmed or refuted based on the
+       known query keys, the function must return GIN_MAYBE.
+      </P
+><P
+>       When there are no GIN_MAYBE values in the <TT
+CLASS="LITERAL"
+>check</TT
+> vector,
+       <TT
+CLASS="LITERAL"
+>GIN_MAYBE</TT
+> return value is equivalent of setting
+       <TT
+CLASS="LITERAL"
+>recheck</TT
+> flag in the boolean <CODE
+CLASS="FUNCTION"
+>consistent</CODE
+> function.
+      </P
+></DD
+></DL
+></DIV
+><P>
+
+  Optionally, an operator class for <ACRONYM
+CLASS="ACRONYM"
+>GIN</ACRONYM
+> can supply the
+  following method:
+
+  <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><CODE
+CLASS="FUNCTION"
+>int comparePartial(Datum partial_key, Datum key, StrategyNumber n,
+                              Pointer extra_data)</CODE
+></DT
+><DD
+><P
+>       Compare a partial-match query key to an index key.  Returns an integer
+       whose sign indicates the result: less than zero means the index key
+       does not match the query, but the index scan should continue; zero
+       means that the index key does match the query; greater than zero
+       indicates that the index scan should stop because no more matches
+       are possible.  The strategy number <TT
+CLASS="LITERAL"
+>n</TT
+> of the operator
+       that generated the partial match query is provided, in case its
+       semantics are needed to determine when to end the scan.  Also,
+       <TT
+CLASS="LITERAL"
+>extra_data</TT
+> is the corresponding element of the extra-data
+       array made by <CODE
+CLASS="FUNCTION"
+>extractQuery</CODE
+>, or <TT
+CLASS="SYMBOL"
+>NULL</TT
+> if none.
+       Null keys are never passed to this function.
+      </P
+></DD
+></DL
+></DIV
+><P>
+ </P
+><P
+>  To support <SPAN
+CLASS="QUOTE"
+>"partial match"</SPAN
+> queries, an operator class must
+  provide the <CODE
+CLASS="FUNCTION"
+>comparePartial</CODE
+> method, and its
+  <CODE
+CLASS="FUNCTION"
+>extractQuery</CODE
+> method must set the <TT
+CLASS="LITERAL"
+>pmatch</TT
+>
+  parameter when a partial-match query is encountered.  See
+  <A
+HREF="gin-implementation.html#GIN-PARTIAL-MATCH"
+>Section 61.4.2</A
+> for details.
+ </P
+><P
+>  The actual data types of the various <TT
+CLASS="LITERAL"
+>Datum</TT
+> values mentioned
+  above vary depending on the operator class.  The item values passed to
+  <CODE
+CLASS="FUNCTION"
+>extractValue</CODE
+> are always of the operator class's input type, and
+  all key values must be of the class's <TT
+CLASS="LITERAL"
+>STORAGE</TT
+> type.  The type of
+  the <TT
+CLASS="LITERAL"
+>query</TT
+> argument passed to <CODE
+CLASS="FUNCTION"
+>extractQuery</CODE
+>,
+  <CODE
+CLASS="FUNCTION"
+>consistent</CODE
+> and <CODE
+CLASS="FUNCTION"
+>triConsistent</CODE
+> is whatever is
+  specified as the right-hand input
+  type of the class member operator identified by the strategy number.
+  This need not be the same as the item type, so long as key values of the
+  correct type can be extracted from it.
+ </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="gin-builtin-opclasses.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="gin-implementation.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Built-in Operator Classes</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="gin.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Implementation</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

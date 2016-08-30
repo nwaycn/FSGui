@@ -1,0 +1,876 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_constraint</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="System Catalogs"
+HREF="catalogs.html"><LINK
+REL="PREVIOUS"
+TITLE="pg_collation"
+HREF="catalog-pg-collation.html"><LINK
+REL="NEXT"
+TITLE="pg_conversion"
+HREF="catalog-pg-conversion.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pg_collation"
+HREF="catalog-pg-collation.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="catalogs.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 49. System Catalogs</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pg_conversion"
+HREF="catalog-pg-conversion.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="CATALOG-PG-CONSTRAINT"
+>49.13. <TT
+CLASS="STRUCTNAME"
+>pg_constraint</TT
+></A
+></H1
+><P
+>   The catalog <TT
+CLASS="STRUCTNAME"
+>pg_constraint</TT
+> stores check, primary
+   key, unique, foreign key, and exclusion constraints on tables.
+   (Column constraints are not treated specially.  Every column constraint is
+   equivalent to some table constraint.)
+   Not-null constraints are represented in the <TT
+CLASS="STRUCTNAME"
+>pg_attribute</TT
+>
+   catalog, not here.
+  </P
+><P
+>   User-defined constraint triggers (created with <TT
+CLASS="COMMAND"
+>CREATE CONSTRAINT
+   TRIGGER</TT
+>) also give rise to an entry in this table.
+  </P
+><P
+>   Check constraints on domains are stored here, too.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="AEN102077"
+></A
+><P
+><B
+>Table 49-13. <TT
+CLASS="STRUCTNAME"
+>pg_constraint</TT
+> Columns</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Type</TH
+><TH
+>References</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Row identifier (hidden attribute; must be explicitly selected)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>conname</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Constraint name (not necessarily unique!)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>connamespace</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-namespace.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_namespace</TT
+></A
+>.oid</TT
+></TD
+><TD
+>       The OID of the namespace that contains this constraint
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>contype</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>char</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>        <TT
+CLASS="LITERAL"
+>c</TT
+> = check constraint,
+        <TT
+CLASS="LITERAL"
+>f</TT
+> = foreign key constraint,
+        <TT
+CLASS="LITERAL"
+>p</TT
+> = primary key constraint,
+        <TT
+CLASS="LITERAL"
+>u</TT
+> = unique constraint,
+        <TT
+CLASS="LITERAL"
+>t</TT
+> = constraint trigger,
+        <TT
+CLASS="LITERAL"
+>x</TT
+> = exclusion constraint
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>condeferrable</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bool</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Is the constraint deferrable?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>condeferred</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bool</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Is the constraint deferred by default?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>convalidated</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bool</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Has the constraint been validated?
+       Currently, can only be false for foreign keys and CHECK constraints</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>conrelid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-class.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+></A
+>.oid</TT
+></TD
+><TD
+>The table this constraint is on; 0 if not a table constraint</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>contypid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-type.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_type</TT
+></A
+>.oid</TT
+></TD
+><TD
+>The domain this constraint is on; 0 if not a domain constraint</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>conindid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-class.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+></A
+>.oid</TT
+></TD
+><TD
+>The index supporting this constraint, if it's a unique, primary
+       key, foreign key, or exclusion constraint; else 0</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>confrelid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-class.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+></A
+>.oid</TT
+></TD
+><TD
+>If a foreign key, the referenced table; else 0</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>confupdtype</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>char</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Foreign key update action code:
+            <TT
+CLASS="LITERAL"
+>a</TT
+> = no action,
+            <TT
+CLASS="LITERAL"
+>r</TT
+> = restrict,
+            <TT
+CLASS="LITERAL"
+>c</TT
+> = cascade,
+            <TT
+CLASS="LITERAL"
+>n</TT
+> = set null,
+            <TT
+CLASS="LITERAL"
+>d</TT
+> = set default
+          </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>confdeltype</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>char</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Foreign key deletion action code:
+            <TT
+CLASS="LITERAL"
+>a</TT
+> = no action,
+            <TT
+CLASS="LITERAL"
+>r</TT
+> = restrict,
+            <TT
+CLASS="LITERAL"
+>c</TT
+> = cascade,
+            <TT
+CLASS="LITERAL"
+>n</TT
+> = set null,
+            <TT
+CLASS="LITERAL"
+>d</TT
+> = set default
+          </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>confmatchtype</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>char</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Foreign key match type:
+            <TT
+CLASS="LITERAL"
+>f</TT
+> = full,
+            <TT
+CLASS="LITERAL"
+>p</TT
+> = partial,
+            <TT
+CLASS="LITERAL"
+>s</TT
+> = simple
+          </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>conislocal</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bool</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>       This constraint is defined locally for the relation.  Note that a
+       constraint can be locally defined and inherited simultaneously.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>coninhcount</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int4</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>       The number of direct inheritance ancestors this constraint has.
+       A constraint with
+       a nonzero number of ancestors cannot be dropped nor renamed.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>connoinherit</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bool</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>       This constraint is defined locally for the relation.  It is a
+       non-inheritable constraint.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>conkey</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int2[]</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-attribute.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_attribute</TT
+></A
+>.attnum</TT
+></TD
+><TD
+>If a table constraint (including foreign keys, but not constraint
+       triggers), list of the constrained columns</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>confkey</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int2[]</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-attribute.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_attribute</TT
+></A
+>.attnum</TT
+></TD
+><TD
+>If a foreign key, list of the referenced columns</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>conpfeqop</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid[]</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-operator.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_operator</TT
+></A
+>.oid</TT
+></TD
+><TD
+>If a foreign key, list of the equality operators for PK = FK comparisons</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>conppeqop</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid[]</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-operator.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_operator</TT
+></A
+>.oid</TT
+></TD
+><TD
+>If a foreign key, list of the equality operators for PK = PK comparisons</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>conffeqop</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid[]</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-operator.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_operator</TT
+></A
+>.oid</TT
+></TD
+><TD
+>If a foreign key, list of the equality operators for FK = FK comparisons</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>conexclop</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid[]</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-operator.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_operator</TT
+></A
+>.oid</TT
+></TD
+><TD
+>If an exclusion constraint, list of the per-column exclusion operators</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>conbin</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>pg_node_tree</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>If a check constraint, an internal representation of the expression</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>consrc</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>If a check constraint, a human-readable representation of the expression</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   In the case of an exclusion constraint, <TT
+CLASS="STRUCTFIELD"
+>conkey</TT
+>
+   is only useful for constraint elements that are simple column references.
+   For other cases, a zero appears in <TT
+CLASS="STRUCTFIELD"
+>conkey</TT
+>
+   and the associated index must be consulted to discover the expression
+   that is constrained.  (<TT
+CLASS="STRUCTFIELD"
+>conkey</TT
+> thus has the
+   same contents as <TT
+CLASS="STRUCTNAME"
+>pg_index</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>indkey</TT
+> for the
+   index.)
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    <TT
+CLASS="STRUCTFIELD"
+>consrc</TT
+> is not updated when referenced objects
+    change; for example, it won't track renaming of columns.  Rather than
+    relying on this field, it's best to use <CODE
+CLASS="FUNCTION"
+>pg_get_constraintdef()</CODE
+>
+    to extract the definition of a check constraint.
+   </P
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    <TT
+CLASS="LITERAL"
+>pg_class.relchecks</TT
+> needs to agree with the
+    number of check-constraint entries found in this table for each
+    relation.
+   </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="catalog-pg-collation.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="catalog-pg-conversion.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><TT
+CLASS="STRUCTNAME"
+>pg_collation</TT
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="catalogs.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><TT
+CLASS="STRUCTNAME"
+>pg_conversion</TT
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

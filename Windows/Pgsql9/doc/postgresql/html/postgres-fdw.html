@@ -1,0 +1,1181 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>postgres_fdw</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="pg_trgm"
+HREF="pgtrgm.html"><LINK
+REL="NEXT"
+TITLE="seg"
+HREF="seg.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pg_trgm"
+HREF="pgtrgm.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="seg"
+HREF="seg.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="POSTGRES-FDW"
+>F.31. postgres_fdw</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> module provides the foreign-data wrapper
+  <TT
+CLASS="LITERAL"
+>postgres_fdw</TT
+>, which can be used to access data
+  stored in external <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> servers.
+ </P
+><P
+>  The functionality provided by this module overlaps substantially
+  with the functionality of the older <A
+HREF="dblink.html"
+>dblink</A
+> module.
+  But <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> provides more transparent and
+  standards-compliant syntax for accessing remote tables, and can give
+  better performance in many cases.
+ </P
+><P
+>  To prepare for remote access using <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+>:
+  <P
+></P
+></P><OL
+COMPACT="COMPACT"
+TYPE="1"
+><LI
+><P
+>     Install the  <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> extension using <A
+HREF="sql-createextension.html"
+>CREATE EXTENSION</A
+>.
+    </P
+></LI
+><LI
+><P
+>     Create a foreign server object, using <A
+HREF="sql-createserver.html"
+>CREATE SERVER</A
+>,
+     to represent each remote database you want to connect to.
+     Specify connection information, except <TT
+CLASS="LITERAL"
+>user</TT
+> and
+     <TT
+CLASS="LITERAL"
+>password</TT
+>, as options of the server object.
+    </P
+></LI
+><LI
+><P
+>     Create a user mapping, using <A
+HREF="sql-createusermapping.html"
+>CREATE USER MAPPING</A
+>, for
+     each database user you want to allow to access each foreign server.
+     Specify the remote user name and password to use as
+     <TT
+CLASS="LITERAL"
+>user</TT
+> and <TT
+CLASS="LITERAL"
+>password</TT
+> options of the
+     user mapping.
+    </P
+></LI
+><LI
+><P
+>     Create a foreign table, using <A
+HREF="sql-createforeigntable.html"
+>CREATE FOREIGN TABLE</A
+>
+     or <A
+HREF="sql-importforeignschema.html"
+>IMPORT FOREIGN SCHEMA</A
+>,
+     for each remote table you want to access.  The columns of the foreign
+     table must match the referenced remote table.  You can, however, use
+     table and/or column names different from the remote table's, if you
+     specify the correct remote names as options of the foreign table object.
+    </P
+></LI
+></OL
+><P>
+ </P
+><P
+>  Now you need only <TT
+CLASS="COMMAND"
+>SELECT</TT
+> from a foreign table to access
+  the data stored in its underlying remote table.  You can also modify
+  the remote table using <TT
+CLASS="COMMAND"
+>INSERT</TT
+>, <TT
+CLASS="COMMAND"
+>UPDATE</TT
+>, or
+  <TT
+CLASS="COMMAND"
+>DELETE</TT
+>.  (Of course, the remote user you have specified
+  in your user mapping must have privileges to do these things.)
+ </P
+><P
+>  Note that <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> currently lacks support for
+  <TT
+CLASS="COMMAND"
+>INSERT</TT
+> statements with an <TT
+CLASS="LITERAL"
+>ON CONFLICT DO
+  UPDATE</TT
+> clause.  However, the <TT
+CLASS="LITERAL"
+>ON CONFLICT DO NOTHING</TT
+>
+  clause is supported, provided a unique index inference specification
+  is omitted.
+ </P
+><P
+>  It is generally recommended that the columns of a foreign table be declared
+  with exactly the same data types, and collations if applicable, as the
+  referenced columns of the remote table.  Although <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+>
+  is currently rather forgiving about performing data type conversions at
+  need, surprising semantic anomalies may arise when types or collations do
+  not match, due to the remote server interpreting <TT
+CLASS="LITERAL"
+>WHERE</TT
+> clauses
+  slightly differently from the local server.
+ </P
+><P
+>  Note that a foreign table can be declared with fewer columns, or with a
+  different column order, than its underlying remote table has.  Matching
+  of columns to the remote table is by name, not position.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174711"
+>F.31.1. FDW Options of postgres_fdw</A
+></H2
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN174713"
+>F.31.1.1. Connection Options</A
+></H3
+><P
+>    A foreign server using the <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> foreign data wrapper
+    can have the same options that <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> accepts in
+    connection strings, as described in <A
+HREF="libpq-connect.html#LIBPQ-PARAMKEYWORDS"
+>Section 31.1.2</A
+>,
+    except that these options are not allowed:
+
+    <P
+></P
+></P><UL
+COMPACT="COMPACT"
+><LI
+><P
+>       <TT
+CLASS="LITERAL"
+>user</TT
+> and <TT
+CLASS="LITERAL"
+>password</TT
+> (specify these
+       in a user mapping, instead)
+      </P
+></LI
+><LI
+><P
+>       <TT
+CLASS="LITERAL"
+>client_encoding</TT
+> (this is automatically set from the local
+       server encoding)
+      </P
+></LI
+><LI
+><P
+>       <TT
+CLASS="LITERAL"
+>fallback_application_name</TT
+> (always set to
+       <TT
+CLASS="LITERAL"
+>postgres_fdw</TT
+>)
+      </P
+></LI
+></UL
+><P>
+   </P
+><P
+>    Only superusers may connect to foreign servers without password
+    authentication, so always specify the <TT
+CLASS="LITERAL"
+>password</TT
+> option
+    for user mappings belonging to non-superusers.
+   </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN174733"
+>F.31.1.2. Object Name Options</A
+></H3
+><P
+>    These options can be used to control the names used in SQL statements
+    sent to the remote <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> server.  These
+    options are needed when a foreign table is created with names different
+    from the underlying remote table's names.
+   </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>schema_name</TT
+></DT
+><DD
+><P
+>       This option, which can be specified for a foreign table, gives the
+       schema name to use for the foreign table on the remote server.  If this
+       option is omitted, the name of the foreign table's schema is used.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>table_name</TT
+></DT
+><DD
+><P
+>       This option, which can be specified for a foreign table, gives the
+       table name to use for the foreign table on the remote server.  If this
+       option is omitted, the foreign table's name is used.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>column_name</TT
+></DT
+><DD
+><P
+>       This option, which can be specified for a column of a foreign table,
+       gives the column name to use for the column on the remote server.
+       If this option is omitted, the column's name is used.
+      </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN174753"
+>F.31.1.3. Cost Estimation Options</A
+></H3
+><P
+>    <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> retrieves remote data by executing queries
+    against remote servers, so ideally the estimated cost of scanning a
+    foreign table should be whatever it costs to be done on the remote
+    server, plus some overhead for communication.  The most reliable way to
+    get such an estimate is to ask the remote server and then add something
+    for overhead &mdash; but for simple queries, it may not be worth the cost
+    of an additional remote query to get a cost estimate.
+    So <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> provides the following options to control
+    how cost estimation is done:
+   </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>use_remote_estimate</TT
+></DT
+><DD
+><P
+>       This option, which can be specified for a foreign table or a foreign
+       server, controls whether <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> issues remote
+       <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+> commands to obtain cost estimates.
+       A setting for a foreign table overrides any setting for its server,
+       but only for that table.
+       The default is <TT
+CLASS="LITERAL"
+>false</TT
+>.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>fdw_startup_cost</TT
+></DT
+><DD
+><P
+>       This option, which can be specified for a foreign server, is a numeric
+       value that is added to the estimated startup cost of any foreign-table
+       scan on that server.  This represents the additional overhead of
+       establishing a connection, parsing and planning the query on the
+       remote side, etc.
+       The default value is <TT
+CLASS="LITERAL"
+>100</TT
+>.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>fdw_tuple_cost</TT
+></DT
+><DD
+><P
+>       This option, which can be specified for a foreign server, is a numeric
+       value that is used as extra cost per-tuple for foreign-table
+       scans on that server.  This represents the additional overhead of
+       data transfer between servers.  You might increase or decrease this
+       number to reflect higher or lower network delay to the remote server.
+       The default value is <TT
+CLASS="LITERAL"
+>0.01</TT
+>.
+      </P
+></DD
+></DL
+></DIV
+><P
+>    When <TT
+CLASS="LITERAL"
+>use_remote_estimate</TT
+> is true,
+    <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> obtains row count and cost estimates from the
+    remote server and then adds <TT
+CLASS="LITERAL"
+>fdw_startup_cost</TT
+> and
+    <TT
+CLASS="LITERAL"
+>fdw_tuple_cost</TT
+> to the cost estimates.  When
+    <TT
+CLASS="LITERAL"
+>use_remote_estimate</TT
+> is false,
+    <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> performs local row count and cost estimation
+    and then adds <TT
+CLASS="LITERAL"
+>fdw_startup_cost</TT
+> and
+    <TT
+CLASS="LITERAL"
+>fdw_tuple_cost</TT
+> to the cost estimates.  This local
+    estimation is unlikely to be very accurate unless local copies of the
+    remote table's statistics are available.  Running
+    <A
+HREF="sql-analyze.html"
+>ANALYZE</A
+> on the foreign table is the way to update
+    the local statistics; this will perform a scan of the remote table and
+    then calculate and store statistics just as though the table were local.
+    Keeping local statistics can be a useful way to reduce per-query planning
+    overhead for a remote table &mdash; but if the remote table is
+    frequently updated, the local statistics will soon be obsolete.
+   </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN174789"
+>F.31.1.4. Updatability Options</A
+></H3
+><P
+>    By default all foreign tables using <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> are assumed
+    to be updatable.  This may be overridden using the following option:
+   </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>updatable</TT
+></DT
+><DD
+><P
+>       This option controls whether <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> allows foreign
+       tables to be modified using <TT
+CLASS="COMMAND"
+>INSERT</TT
+>, <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> and
+       <TT
+CLASS="COMMAND"
+>DELETE</TT
+> commands.  It can be specified for a foreign table
+       or a foreign server.  A table-level option overrides a server-level
+       option.
+       The default is <TT
+CLASS="LITERAL"
+>true</TT
+>.
+      </P
+><P
+>       Of course, if the remote table is not in fact updatable, an error
+       would occur anyway.  Use of this option primarily allows the error to
+       be thrown locally without querying the remote server.  Note however
+       that the <TT
+CLASS="LITERAL"
+>information_schema</TT
+> views will report a
+       <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> foreign table to be updatable (or not)
+       according to the setting of this option, without any check of the
+       remote server.
+      </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN174807"
+>F.31.1.5. Importing Options</A
+></H3
+><P
+>    <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> is able to import foreign table definitions
+    using <A
+HREF="sql-importforeignschema.html"
+>IMPORT FOREIGN SCHEMA</A
+>.  This command creates
+    foreign table definitions on the local server that match tables or
+    views present on the remote server.  If the remote tables to be imported
+    have columns of user-defined data types, the local server must have
+    compatible types of the same names.
+   </P
+><P
+>    Importing behavior can be customized with the following options
+    (given in the <TT
+CLASS="COMMAND"
+>IMPORT FOREIGN SCHEMA</TT
+> command):
+   </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>import_collate</TT
+></DT
+><DD
+><P
+>       This option controls whether column <TT
+CLASS="LITERAL"
+>COLLATE</TT
+> options
+       are included in the definitions of foreign tables imported
+       from a foreign server. The default is <TT
+CLASS="LITERAL"
+>true</TT
+>.  You might
+       need to turn this off if the remote server has a different set of
+       collation names than the local server does, which is likely to be the
+       case if it's running on a different operating system.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>import_default</TT
+></DT
+><DD
+><P
+>       This option controls whether column <TT
+CLASS="LITERAL"
+>DEFAULT</TT
+> expressions
+       are included in the definitions of foreign tables imported
+       from a foreign server. The default is <TT
+CLASS="LITERAL"
+>false</TT
+>.  If you
+       enable this option, be wary of defaults that might get computed
+       differently on the local server than they would be on the remote
+       server; <CODE
+CLASS="FUNCTION"
+>nextval()</CODE
+> is a common source of problems.
+       The <TT
+CLASS="COMMAND"
+>IMPORT</TT
+> will fail altogether if an imported default
+       expression uses a function or operator that does not exist locally.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>import_not_null</TT
+></DT
+><DD
+><P
+>       This option controls whether column <TT
+CLASS="LITERAL"
+>NOT NULL</TT
+>
+       constraints are included in the definitions of foreign tables imported
+       from a foreign server. The default is <TT
+CLASS="LITERAL"
+>true</TT
+>.
+      </P
+></DD
+></DL
+></DIV
+><P
+>    Note that constraints other than <TT
+CLASS="LITERAL"
+>NOT NULL</TT
+> will never be
+    imported from the remote tables.  Although <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+    does support <TT
+CLASS="LITERAL"
+>CHECK</TT
+> constraints on foreign tables, there is no
+    provision for importing them automatically, because of the risk that a
+    constraint expression could evaluate differently on the local and remote
+    servers.  Any such inconsistency in the behavior of a <TT
+CLASS="LITERAL"
+>CHECK</TT
+>
+    constraint could lead to hard-to-detect errors in query optimization.
+    So if you wish to import <TT
+CLASS="LITERAL"
+>CHECK</TT
+> constraints, you must do so
+    manually, and you should verify the semantics of each one carefully.
+    For more detail about the treatment of <TT
+CLASS="LITERAL"
+>CHECK</TT
+> constraints on
+    foreign tables, see <A
+HREF="sql-createforeigntable.html"
+>CREATE FOREIGN TABLE</A
+>.
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174846"
+>F.31.2. Connection Management</A
+></H2
+><P
+>   <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> establishes a connection to a
+   foreign server during the first query that uses a foreign table
+   associated with the foreign server.  This connection is kept and
+   re-used for subsequent queries in the same session.  However, if
+   multiple user identities (user mappings) are used to access the foreign
+   server, a connection is established for each user mapping.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174850"
+>F.31.3. Transaction Management</A
+></H2
+><P
+>   During a query that references any remote tables on a foreign server,
+   <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> opens a transaction on the
+   remote server if one is not already open corresponding to the current
+   local transaction.  The remote transaction is committed or aborted when
+   the local transaction commits or aborts.  Savepoints are similarly
+   managed by creating corresponding remote savepoints.
+  </P
+><P
+>   The remote transaction uses <TT
+CLASS="LITERAL"
+>SERIALIZABLE</TT
+>
+   isolation level when the local transaction has <TT
+CLASS="LITERAL"
+>SERIALIZABLE</TT
+>
+   isolation level; otherwise it uses <TT
+CLASS="LITERAL"
+>REPEATABLE READ</TT
+>
+   isolation level.  This choice ensures that if a query performs multiple
+   table scans on the remote server, it will get snapshot-consistent results
+   for all the scans.  A consequence is that successive queries within a
+   single transaction will see the same data from the remote server, even if
+   concurrent updates are occurring on the remote server due to other
+   activities.  That behavior would be expected anyway if the local
+   transaction uses <TT
+CLASS="LITERAL"
+>SERIALIZABLE</TT
+> or <TT
+CLASS="LITERAL"
+>REPEATABLE READ</TT
+>
+   isolation level, but it might be surprising for a <TT
+CLASS="LITERAL"
+>READ
+   COMMITTED</TT
+> local transaction.  A future
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> release might modify these rules.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174862"
+>F.31.4. Remote Query Optimization</A
+></H2
+><P
+>   <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> attempts to optimize remote queries to reduce
+   the amount of data transferred from foreign servers.  This is done by
+   sending query <TT
+CLASS="LITERAL"
+>WHERE</TT
+> clauses to the remote server for
+   execution, and by not retrieving table columns that are not needed for
+   the current query.  To reduce the risk of misexecution of queries,
+   <TT
+CLASS="LITERAL"
+>WHERE</TT
+> clauses are not sent to the remote server unless they use
+   only built-in data types, operators, and functions.  Operators and
+   functions in the clauses must be <TT
+CLASS="LITERAL"
+>IMMUTABLE</TT
+> as well.
+  </P
+><P
+>   The query that is actually sent to the remote server for execution can
+   be examined using <TT
+CLASS="COMMAND"
+>EXPLAIN VERBOSE</TT
+>.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174871"
+>F.31.5. Remote Query Execution Environment</A
+></H2
+><P
+>   In the remote sessions opened by <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+>,
+   the <A
+HREF="runtime-config-client.html#GUC-SEARCH-PATH"
+>search_path</A
+> parameter is set to
+   just <TT
+CLASS="LITERAL"
+>pg_catalog</TT
+>, so that only built-in objects are visible
+   without schema qualification.  This is not an issue for queries
+   generated by <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> itself, because it always
+   supplies such qualification.  However, this can pose a hazard for
+   functions that are executed on the remote server via triggers or rules
+   on remote tables.  For example, if a remote table is actually a view,
+   any functions used in that view will be executed with the restricted
+   search path.  It is recommended to schema-qualify all names in such
+   functions, or else attach <TT
+CLASS="LITERAL"
+>SET search_path</TT
+> options
+   (see <A
+HREF="sql-createfunction.html"
+>CREATE FUNCTION</A
+>) to such functions
+   to establish their expected search path environment.
+  </P
+><P
+>   <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> likewise establishes remote session settings
+   for the parameters <A
+HREF="runtime-config-client.html#GUC-TIMEZONE"
+>TimeZone</A
+>,
+   <A
+HREF="runtime-config-client.html#GUC-DATESTYLE"
+>DateStyle</A
+>, <A
+HREF="runtime-config-client.html#GUC-INTERVALSTYLE"
+>IntervalStyle</A
+>,
+   and <A
+HREF="runtime-config-client.html#GUC-EXTRA-FLOAT-DIGITS"
+>extra_float_digits</A
+>.  These are less likely
+   to be problematic than <TT
+CLASS="VARNAME"
+>search_path</TT
+>, but can be handled
+   with function <TT
+CLASS="LITERAL"
+>SET</TT
+> options if the need arises.
+  </P
+><P
+>   It is <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+> recommended that you override this behavior by
+   changing the session-level settings of these parameters; that is likely
+   to cause <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> to malfunction.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174891"
+>F.31.6. Cross-Version Compatibility</A
+></H2
+><P
+>   <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+> can be used with remote servers dating back
+   to <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 8.3.  Read-only capability is available
+   back to 8.1.  A limitation however is that <TT
+CLASS="FILENAME"
+>postgres_fdw</TT
+>
+   generally assumes that immutable built-in functions and operators are
+   safe to send to the remote server for execution, if they appear in a
+   <TT
+CLASS="LITERAL"
+>WHERE</TT
+> clause for a foreign table.  Thus, a built-in
+   function that was added since the remote server's release might be sent
+   to it for execution, resulting in <SPAN
+CLASS="QUOTE"
+>"function does not exist"</SPAN
+> or
+   a similar error.  This type of failure can be worked around by
+   rewriting the query, for example by embedding the foreign table
+   reference in a sub-<TT
+CLASS="LITERAL"
+>SELECT</TT
+> with <TT
+CLASS="LITERAL"
+>OFFSET 0</TT
+> as an
+   optimization fence, and placing the problematic function or operator
+   outside the sub-<TT
+CLASS="LITERAL"
+>SELECT</TT
+>.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174902"
+>F.31.7. Examples</A
+></H2
+><P
+>   Here is an example of creating a foreign table with
+   <TT
+CLASS="LITERAL"
+>postgres_fdw</TT
+>. First install the extension:
+  </P
+><PRE
+CLASS="PROGRAMLISTING"
+>CREATE EXTENSION postgres_fdw;</PRE
+><P
+>   Then create a foreign server using <A
+HREF="sql-createserver.html"
+>CREATE SERVER</A
+>.
+   In this example we wish to connect to a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> server
+   on host <TT
+CLASS="LITERAL"
+>192.83.123.89</TT
+> listening on
+   port <TT
+CLASS="LITERAL"
+>5432</TT
+>.  The database to which the connection is made
+   is named <TT
+CLASS="LITERAL"
+>foreign_db</TT
+> on the remote server:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE SERVER foreign_server
+        FOREIGN DATA WRAPPER postgres_fdw
+        OPTIONS (host '192.83.123.89', port '5432', dbname 'foreign_db');</PRE
+><P>
+  </P
+><P
+>   A user mapping, defined with <A
+HREF="sql-createusermapping.html"
+>CREATE USER MAPPING</A
+>, is
+   needed as well to identify the role that will be used on the remote
+   server:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE USER MAPPING FOR local_user
+        SERVER foreign_server
+        OPTIONS (user 'foreign_user', password 'password');</PRE
+><P>
+  </P
+><P
+>   Now it is possible to create a foreign table with
+   <A
+HREF="sql-createforeigntable.html"
+>CREATE FOREIGN TABLE</A
+>.  In this example we
+   wish to access the table named <TT
+CLASS="STRUCTNAME"
+>some_schema.some_table</TT
+>
+   on the remote server.  The local name for it will
+   be <TT
+CLASS="STRUCTNAME"
+>foreign_table</TT
+>:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FOREIGN TABLE foreign_table (
+        id integer NOT NULL,
+        data text
+)
+        SERVER foreign_server
+        OPTIONS (schema_name 'some_schema', table_name 'some_table');</PRE
+><P>
+
+   It's essential that the data types and other properties of the columns
+   declared in <TT
+CLASS="COMMAND"
+>CREATE FOREIGN TABLE</TT
+> match the actual remote table.
+   Column names must match as well, unless you attach <TT
+CLASS="LITERAL"
+>column_name</TT
+>
+   options to the individual columns to show how they are named in the remote
+   table.
+   In many cases, use of <A
+HREF="sql-importforeignschema.html"
+>IMPORT FOREIGN SCHEMA</A
+> is
+   preferable to constructing foreign table definitions manually.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174925"
+>F.31.8. Author</A
+></H2
+><P
+>   Shigeru Hanada <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:shigeru.hanada@gmail.com"
+>shigeru.hanada@gmail.com</A
+>&#62;</CODE
+>
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="pgtrgm.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="seg.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>pg_trgm</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>seg</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

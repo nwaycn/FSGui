@@ -1,0 +1,447 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>SPI_cursor_open_with_args</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Interface Functions"
+HREF="spi-interface.html"><LINK
+REL="PREVIOUS"
+TITLE="SPI_cursor_open"
+HREF="spi-spi-cursor-open.html"><LINK
+REL="NEXT"
+TITLE="SPI_cursor_open_with_paramlist"
+HREF="spi-spi-cursor-open-with-paramlist.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="SPI_cursor_open"
+HREF="spi-spi-cursor-open.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="spi-interface.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="SPI_cursor_open_with_paramlist"
+HREF="spi-spi-cursor-open-with-paramlist.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SPI-SPI-CURSOR-OPEN-WITH-ARGS"
+></A
+>SPI_cursor_open_with_args</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN67158"
+></A
+><H2
+>Name</H2
+>SPI_cursor_open_with_args&nbsp;--&nbsp;set up a cursor using a query and parameters</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN67161"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>Portal SPI_cursor_open_with_args(const char *<TT
+CLASS="PARAMETER"
+>name</TT
+>,
+                                 const char *<TT
+CLASS="PARAMETER"
+>command</TT
+>,
+                                 int <TT
+CLASS="PARAMETER"
+>nargs</TT
+>, Oid *<TT
+CLASS="PARAMETER"
+>argtypes</TT
+>,
+                                 Datum *<TT
+CLASS="PARAMETER"
+>values</TT
+>, const char *<TT
+CLASS="PARAMETER"
+>nulls</TT
+>,
+                                 bool <TT
+CLASS="PARAMETER"
+>read_only</TT
+>, int <TT
+CLASS="PARAMETER"
+>cursorOptions</TT
+>)</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN67171"
+></A
+><H2
+>Description</H2
+><P
+>   <CODE
+CLASS="FUNCTION"
+>SPI_cursor_open_with_args</CODE
+> sets up a cursor
+   (internally, a portal) that will execute the specified query.
+   Most of the parameters have the same meanings as the corresponding
+   parameters to <CODE
+CLASS="FUNCTION"
+>SPI_prepare_cursor</CODE
+>
+   and <CODE
+CLASS="FUNCTION"
+>SPI_cursor_open</CODE
+>.
+  </P
+><P
+>   For one-time query execution, this function should be preferred
+   over <CODE
+CLASS="FUNCTION"
+>SPI_prepare_cursor</CODE
+> followed by
+   <CODE
+CLASS="FUNCTION"
+>SPI_cursor_open</CODE
+>.
+   If the same command is to be executed with many different parameters,
+   either method might be faster, depending on the cost of re-planning
+   versus the benefit of custom plans.
+  </P
+><P
+>   The passed-in parameter data will be copied into the cursor's portal, so it
+   can be freed while the cursor still exists.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN67181"
+></A
+><H2
+>Arguments</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>const char * <TT
+CLASS="PARAMETER"
+>name</TT
+></TT
+></DT
+><DD
+><P
+>      name for portal, or <TT
+CLASS="SYMBOL"
+>NULL</TT
+> to let the system
+      select a name
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>const char * <TT
+CLASS="PARAMETER"
+>command</TT
+></TT
+></DT
+><DD
+><P
+>      command string
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>int <TT
+CLASS="PARAMETER"
+>nargs</TT
+></TT
+></DT
+><DD
+><P
+>      number of input parameters (<TT
+CLASS="LITERAL"
+>$1</TT
+>, <TT
+CLASS="LITERAL"
+>$2</TT
+>, etc.)
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>Oid * <TT
+CLASS="PARAMETER"
+>argtypes</TT
+></TT
+></DT
+><DD
+><P
+>      an array of length <TT
+CLASS="PARAMETER"
+>nargs</TT
+>, containing the
+      <ACRONYM
+CLASS="ACRONYM"
+>OID</ACRONYM
+>s of the data types of the parameters
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>Datum * <TT
+CLASS="PARAMETER"
+>values</TT
+></TT
+></DT
+><DD
+><P
+>      an array of length <TT
+CLASS="PARAMETER"
+>nargs</TT
+>, containing the actual
+      parameter values
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>const char * <TT
+CLASS="PARAMETER"
+>nulls</TT
+></TT
+></DT
+><DD
+><P
+>      an array of length <TT
+CLASS="PARAMETER"
+>nargs</TT
+>, describing which
+      parameters are null
+     </P
+><P
+>      If <TT
+CLASS="PARAMETER"
+>nulls</TT
+> is <TT
+CLASS="SYMBOL"
+>NULL</TT
+> then
+      <CODE
+CLASS="FUNCTION"
+>SPI_cursor_open_with_args</CODE
+> assumes that no parameters
+      are null.  Otherwise, each entry of the <TT
+CLASS="PARAMETER"
+>nulls</TT
+>
+      array should be <TT
+CLASS="LITERAL"
+>'&nbsp;'</TT
+> if the corresponding parameter
+      value is non-null, or <TT
+CLASS="LITERAL"
+>'n'</TT
+> if the corresponding parameter
+      value is null.  (In the latter case, the actual value in the
+      corresponding <TT
+CLASS="PARAMETER"
+>values</TT
+> entry doesn't matter.)  Note
+      that <TT
+CLASS="PARAMETER"
+>nulls</TT
+> is not a text string, just an array:
+      it does not need a <TT
+CLASS="LITERAL"
+>'\0'</TT
+> terminator.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>bool <TT
+CLASS="PARAMETER"
+>read_only</TT
+></TT
+></DT
+><DD
+><P
+><TT
+CLASS="LITERAL"
+>true</TT
+> for read-only execution</P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>int <TT
+CLASS="PARAMETER"
+>cursorOptions</TT
+></TT
+></DT
+><DD
+><P
+>      integer bit mask of cursor options; zero produces default behavior
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN67250"
+></A
+><H2
+>Return Value</H2
+><P
+>   Pointer to portal containing the cursor.  Note there is no error
+   return convention; any error will be reported via <CODE
+CLASS="FUNCTION"
+>elog</CODE
+>.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="spi-spi-cursor-open.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="spi-spi-cursor-open-with-paramlist.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>SPI_cursor_open</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="spi-interface.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>SPI_cursor_open_with_paramlist</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

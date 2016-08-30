@@ -1,0 +1,414 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.2.11</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.2.12"
+HREF="release-8-2-12.html"><LINK
+REL="NEXT"
+TITLE="Release 8.2.10"
+HREF="release-8-2-10.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.2.12"
+HREF="release-8-2-12.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.2.10"
+HREF="release-8-2-10.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-2-11"
+>E.157. Release 8.2.11</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2008-11-03</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.2.10.
+   For information about new features in the 8.2 major release, see
+   <A
+HREF="release-8-2.html"
+>Section E.168</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN155978"
+>E.157.1. Migration to Version 8.2.11</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.2.X.
+    However, if you are upgrading from a version earlier than 8.2.7,
+    see <A
+HREF="release-8-2-7.html"
+>Section E.161</A
+>.  Also, if you were running a previous
+    8.2.X release, it is recommended to <TT
+CLASS="COMMAND"
+>REINDEX</TT
+> all GiST
+    indexes after the upgrade.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN155983"
+>E.157.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix GiST index corruption due to marking the wrong index entry
+      <SPAN
+CLASS="QUOTE"
+>"dead"</SPAN
+> after a deletion (Teodor)
+     </P
+><P
+>      This would result in index searches failing to find rows they
+      should have found.  Corrupted indexes can be fixed with
+      <TT
+CLASS="COMMAND"
+>REINDEX</TT
+>.
+     </P
+></LI
+><LI
+><P
+>      Fix backend crash when the client encoding cannot represent a localized
+      error message (Tom)
+     </P
+><P
+>      We have addressed similar issues before, but it would still fail if
+      the <SPAN
+CLASS="QUOTE"
+>"character has no equivalent"</SPAN
+> message itself couldn't
+      be converted.  The fix is to disable localization and send the plain
+      ASCII error message when we detect such a situation.
+     </P
+></LI
+><LI
+><P
+>      Fix possible crash when deeply nested functions are invoked from
+      a trigger (Tom)
+     </P
+></LI
+><LI
+><P
+>      Improve optimization of <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+> <TT
+CLASS="LITERAL"
+>IN</TT
+>
+      (<TT
+CLASS="REPLACEABLE"
+><I
+>expression-list</I
+></TT
+>) queries (Tom, per an idea from Robert
+      Haas)
+     </P
+><P
+>      Cases in which there are query variables on the right-hand side had been
+      handled less efficiently in 8.2.x and 8.3.x than in prior versions.
+      The fix restores 8.1 behavior for such cases.
+     </P
+></LI
+><LI
+><P
+>      Fix mis-expansion of rule queries when a sub-<TT
+CLASS="LITERAL"
+>SELECT</TT
+> appears
+      in a function call in <TT
+CLASS="LITERAL"
+>FROM</TT
+>,  a multi-row <TT
+CLASS="LITERAL"
+>VALUES</TT
+>
+      list, or a <TT
+CLASS="LITERAL"
+>RETURNING</TT
+> list (Tom)
+     </P
+><P
+>      The usual symptom of this problem is an <SPAN
+CLASS="QUOTE"
+>"unrecognized node type"</SPAN
+>
+      error.
+     </P
+></LI
+><LI
+><P
+>      Fix memory leak during rescan of a hashed aggregation plan (Neil)
+     </P
+></LI
+><LI
+><P
+>      Ensure an error is reported when a newly-defined PL/pgSQL trigger
+      function is invoked as a normal function (Tom)
+     </P
+></LI
+><LI
+><P
+>      Prevent possible collision of <TT
+CLASS="STRUCTFIELD"
+>relfilenode</TT
+> numbers
+      when moving a table to another tablespace with <TT
+CLASS="COMMAND"
+>ALTER SET
+      TABLESPACE</TT
+> (Heikki)
+     </P
+><P
+>      The command tried to re-use the existing filename, instead of
+      picking one that is known unused in the destination directory.
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect tsearch2 headline generation when single query
+      item matches first word of text (Sushant Sinha)
+     </P
+></LI
+><LI
+><P
+>      Fix improper display of fractional seconds in interval values when
+      using a non-ISO datestyle in an <TT
+CLASS="OPTION"
+>--enable-integer-datetimes</TT
+>
+      build (Ron Mayer)
+     </P
+></LI
+><LI
+><P
+>      Ensure <CODE
+CLASS="FUNCTION"
+>SPI_getvalue</CODE
+> and <CODE
+CLASS="FUNCTION"
+>SPI_getbinval</CODE
+>
+      behave correctly when the passed tuple and tuple descriptor have
+      different numbers of columns (Tom)
+     </P
+><P
+>      This situation is normal when a table has had columns added or removed,
+      but these two functions didn't handle it properly.
+      The only likely consequence is an incorrect error indication.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>'s parsing of <TT
+CLASS="COMMAND"
+>CREATE ROLE</TT
+> (Michael)
+     </P
+></LI
+><LI
+><P
+>      Fix recent breakage of <TT
+CLASS="LITERAL"
+>pg_ctl restart</TT
+> (Tom)
+     </P
+></LI
+><LI
+><P
+>      Ensure <TT
+CLASS="FILENAME"
+>pg_control</TT
+> is opened in binary mode
+      (Itagaki Takahiro)
+     </P
+><P
+>      <SPAN
+CLASS="APPLICATION"
+>pg_controldata</SPAN
+> and <SPAN
+CLASS="APPLICATION"
+>pg_resetxlog</SPAN
+>
+      did this incorrectly, and so could fail on Windows.
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2008i (for
+      DST law changes in Argentina, Brazil, Mauritius, Syria)
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-2-12.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-2-10.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.2.12</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.2.10</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,327 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Indexes and ORDER BY</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Indexes"
+HREF="indexes.html"><LINK
+REL="PREVIOUS"
+TITLE="Multicolumn Indexes"
+HREF="indexes-multicolumn.html"><LINK
+REL="NEXT"
+TITLE="Combining Multiple Indexes"
+HREF="indexes-bitmap-scans.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Multicolumn Indexes"
+HREF="indexes-multicolumn.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="indexes.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 11. Indexes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Combining Multiple Indexes"
+HREF="indexes-bitmap-scans.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="INDEXES-ORDERING"
+>11.4. Indexes and <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+></A
+></H1
+><P
+>   In addition to simply finding the rows to be returned by a query,
+   an index may be able to deliver them in a specific sorted order.
+   This allows a query's <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> specification to be honored
+   without a separate sorting step.  Of the index types currently
+   supported by <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>, only B-tree
+   can produce sorted output &mdash; the other index types return
+   matching rows in an unspecified, implementation-dependent order.
+  </P
+><P
+>   The planner will consider satisfying an <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> specification
+   either by scanning an available index that matches the specification,
+   or by scanning the table in physical order and doing an explicit
+   sort.  For a query that requires scanning a large fraction of the
+   table, an explicit sort is likely to be faster than using an index
+   because it requires
+   less disk I/O due to following a sequential access pattern.  Indexes are
+   more useful when only a few rows need be fetched.  An important
+   special case is <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> in combination with
+   <TT
+CLASS="LITERAL"
+>LIMIT</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>: an explicit sort will have to process
+   all the data to identify the first <TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+> rows, but if there is
+   an index matching the <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+>, the first <TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>
+   rows can be retrieved directly, without scanning the remainder at all.
+  </P
+><P
+>   By default, B-tree indexes store their entries in ascending order
+   with nulls last.  This means that a forward scan of an index on
+   column <TT
+CLASS="LITERAL"
+>x</TT
+> produces output satisfying <TT
+CLASS="LITERAL"
+>ORDER BY x</TT
+>
+   (or more verbosely, <TT
+CLASS="LITERAL"
+>ORDER BY x ASC NULLS LAST</TT
+>).  The
+   index can also be scanned backward, producing output satisfying
+   <TT
+CLASS="LITERAL"
+>ORDER BY x DESC</TT
+>
+   (or more verbosely, <TT
+CLASS="LITERAL"
+>ORDER BY x DESC NULLS FIRST</TT
+>, since
+   <TT
+CLASS="LITERAL"
+>NULLS FIRST</TT
+> is the default for <TT
+CLASS="LITERAL"
+>ORDER BY DESC</TT
+>).
+  </P
+><P
+>   You can adjust the ordering of a B-tree index by including the
+   options <TT
+CLASS="LITERAL"
+>ASC</TT
+>, <TT
+CLASS="LITERAL"
+>DESC</TT
+>, <TT
+CLASS="LITERAL"
+>NULLS FIRST</TT
+>,
+   and/or <TT
+CLASS="LITERAL"
+>NULLS LAST</TT
+> when creating the index; for example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE INDEX test2_info_nulls_low ON test2 (info NULLS FIRST);
+CREATE INDEX test3_desc_index ON test3 (id DESC NULLS LAST);</PRE
+><P>
+   An index stored in ascending order with nulls first can satisfy
+   either <TT
+CLASS="LITERAL"
+>ORDER BY x ASC NULLS FIRST</TT
+> or
+   <TT
+CLASS="LITERAL"
+>ORDER BY x DESC NULLS LAST</TT
+> depending on which direction
+   it is scanned in.
+  </P
+><P
+>   You might wonder why bother providing all four options, when two
+   options together with the possibility of backward scan would cover
+   all the variants of <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+>.  In single-column indexes
+   the options are indeed redundant, but in multicolumn indexes they can be
+   useful.  Consider a two-column index on <TT
+CLASS="LITERAL"
+>(x, y)</TT
+>: this can
+   satisfy <TT
+CLASS="LITERAL"
+>ORDER BY x, y</TT
+> if we scan forward, or
+   <TT
+CLASS="LITERAL"
+>ORDER BY x DESC, y DESC</TT
+> if we scan backward.
+   But it might be that the application frequently needs to use
+   <TT
+CLASS="LITERAL"
+>ORDER BY x ASC, y DESC</TT
+>.  There is no way to get that
+   ordering from a plain index, but it is possible if the index is defined
+   as <TT
+CLASS="LITERAL"
+>(x ASC, y DESC)</TT
+> or <TT
+CLASS="LITERAL"
+>(x DESC, y ASC)</TT
+>.
+  </P
+><P
+>   Obviously, indexes with non-default sort orderings are a fairly
+   specialized feature, but sometimes they can produce tremendous
+   speedups for certain queries.  Whether it's worth maintaining such an
+   index depends on how often you use queries that require a special
+   sort ordering.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="indexes-multicolumn.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="indexes-bitmap-scans.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Multicolumn Indexes</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="indexes.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Combining Multiple Indexes</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,380 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_default_acl</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="System Catalogs"
+HREF="catalogs.html"><LINK
+REL="PREVIOUS"
+TITLE="pg_db_role_setting"
+HREF="catalog-pg-db-role-setting.html"><LINK
+REL="NEXT"
+TITLE="pg_depend"
+HREF="catalog-pg-depend.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pg_db_role_setting"
+HREF="catalog-pg-db-role-setting.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="catalogs.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 49. System Catalogs</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pg_depend"
+HREF="catalog-pg-depend.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="CATALOG-PG-DEFAULT-ACL"
+>49.17. <TT
+CLASS="STRUCTNAME"
+>pg_default_acl</TT
+></A
+></H1
+><P
+>   The catalog <TT
+CLASS="STRUCTNAME"
+>pg_default_acl</TT
+> stores initial
+   privileges to be assigned to newly created objects.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="AEN102609"
+></A
+><P
+><B
+>Table 49-17. <TT
+CLASS="STRUCTNAME"
+>pg_default_acl</TT
+> Columns</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Type</TH
+><TH
+>References</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Row identifier (hidden attribute; must be explicitly selected)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>defaclrole</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-authid.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_authid</TT
+></A
+>.oid</TT
+></TD
+><TD
+>The OID of the role associated with this entry</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>defaclnamespace</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-namespace.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_namespace</TT
+></A
+>.oid</TT
+></TD
+><TD
+>The OID of the namespace associated with this entry,
+       or 0 if none</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>defaclobjtype</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>char</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>       Type of object this entry is for:
+       <TT
+CLASS="LITERAL"
+>r</TT
+> = relation (table, view),
+       <TT
+CLASS="LITERAL"
+>S</TT
+> = sequence,
+       <TT
+CLASS="LITERAL"
+>f</TT
+> = function,
+       <TT
+CLASS="LITERAL"
+>T</TT
+> = type
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>defaclacl</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>aclitem[]</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>       Access privileges that this type of object should have on creation
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   A <TT
+CLASS="STRUCTNAME"
+>pg_default_acl</TT
+> entry shows the initial privileges to
+   be assigned to an object belonging to the indicated user.  There are
+   currently two types of entry: <SPAN
+CLASS="QUOTE"
+>"global"</SPAN
+> entries with
+   <TT
+CLASS="STRUCTFIELD"
+>defaclnamespace</TT
+> = 0, and <SPAN
+CLASS="QUOTE"
+>"per-schema"</SPAN
+> entries
+   that reference a particular schema.  If a global entry is present then
+   it <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>overrides</I
+></SPAN
+> the normal hard-wired default privileges
+   for the object type.  A per-schema entry, if present, represents privileges
+   to be <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>added to</I
+></SPAN
+> the global or hard-wired default privileges.
+  </P
+><P
+>   Note that when an ACL entry in another catalog is null, it is taken
+   to represent the hard-wired default privileges for its object,
+   <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+> whatever might be in <TT
+CLASS="STRUCTNAME"
+>pg_default_acl</TT
+>
+   at the moment.  <TT
+CLASS="STRUCTNAME"
+>pg_default_acl</TT
+> is only consulted during
+   object creation.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="catalog-pg-db-role-setting.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="catalog-pg-depend.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><TT
+CLASS="STRUCTNAME"
+>pg_db_role_setting</TT
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="catalogs.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><TT
+CLASS="STRUCTNAME"
+>pg_depend</TT
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

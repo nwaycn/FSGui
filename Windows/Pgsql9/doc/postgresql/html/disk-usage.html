@@ -1,0 +1,290 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Determining Disk Usage</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Monitoring Disk Usage"
+HREF="diskusage.html"><LINK
+REL="PREVIOUS"
+TITLE="Monitoring Disk Usage"
+HREF="diskusage.html"><LINK
+REL="NEXT"
+TITLE="Disk Full Failure"
+HREF="disk-full.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Monitoring Disk Usage"
+HREF="diskusage.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="diskusage.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 28. Monitoring Disk Usage</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Disk Full Failure"
+HREF="disk-full.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="DISK-USAGE"
+>28.1. Determining Disk Usage</A
+></H1
+><P
+>   Each table has a primary heap disk file where most of the data is
+   stored. If the table has any columns with potentially-wide values,
+   there also might be a <ACRONYM
+CLASS="ACRONYM"
+>TOAST</ACRONYM
+> file associated with the table,
+   which is used to store values too wide to fit comfortably in the main
+   table (see <A
+HREF="storage-toast.html"
+>Section 63.2</A
+>).  There will be one valid index
+   on the <ACRONYM
+CLASS="ACRONYM"
+>TOAST</ACRONYM
+> table, if present. There also might be indexes
+   associated with the base table.  Each table and index is stored in a
+   separate disk file &mdash; possibly more than one file, if the file would
+   exceed one gigabyte.  Naming conventions for these files are described
+   in <A
+HREF="storage-file-layout.html"
+>Section 63.1</A
+>.
+  </P
+><P
+>   You can monitor disk space in three ways:
+   using the SQL functions listed in <A
+HREF="functions-admin.html#FUNCTIONS-ADMIN-DBSIZE"
+>Table 9-73</A
+>,
+   using the <A
+HREF="oid2name.html"
+>oid2name</A
+> module, or
+   using manual inspection of the system catalogs.
+   The SQL functions are the easiest to use and are generally recommended.
+   The remainder of this section shows how to do it by inspection of the
+   system catalogs.
+  </P
+><P
+>   Using <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> on a recently vacuumed or analyzed database,
+   you can issue queries to see the disk usage of any table:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT pg_relation_filepath(oid), relpages FROM pg_class WHERE relname = 'customer';
+
+ pg_relation_filepath | relpages
+----------------------+----------
+ base/16384/16806     |       60
+(1 row)</PRE
+><P>
+   Each page is typically 8 kilobytes. (Remember, <TT
+CLASS="STRUCTFIELD"
+>relpages</TT
+>
+   is only updated by <TT
+CLASS="COMMAND"
+>VACUUM</TT
+>, <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+>, and
+   a few DDL commands such as <TT
+CLASS="COMMAND"
+>CREATE INDEX</TT
+>.)  The file path name
+   is of interest if you want to examine the table's disk file directly.
+  </P
+><P
+>   To show the space used by <ACRONYM
+CLASS="ACRONYM"
+>TOAST</ACRONYM
+> tables, use a query
+   like the following:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT relname, relpages
+FROM pg_class,
+     (SELECT reltoastrelid
+      FROM pg_class
+      WHERE relname = 'customer') AS ss
+WHERE oid = ss.reltoastrelid OR
+      oid = (SELECT indexrelid
+             FROM pg_index
+             WHERE indrelid = ss.reltoastrelid)
+ORDER BY relname;
+
+       relname        | relpages
+----------------------+----------
+ pg_toast_16806       |        0
+ pg_toast_16806_index |        1</PRE
+><P>
+  </P
+><P
+>   You can easily display index sizes, too:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT c2.relname, c2.relpages
+FROM pg_class c, pg_class c2, pg_index i
+WHERE c.relname = 'customer' AND
+      c.oid = i.indrelid AND
+      c2.oid = i.indexrelid
+ORDER BY c2.relname;
+
+       relname        | relpages
+----------------------+----------
+ customer_id_indexdex |       26</PRE
+><P>
+  </P
+><P
+>   It is easy to find your largest tables and indexes using this
+   information:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT relname, relpages
+FROM pg_class
+ORDER BY relpages DESC;
+
+       relname        | relpages
+----------------------+----------
+ bigtable             |     3290
+ customer             |     3144</PRE
+><P>
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="diskusage.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="disk-full.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Monitoring Disk Usage</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="diskusage.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Disk Full Failure</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

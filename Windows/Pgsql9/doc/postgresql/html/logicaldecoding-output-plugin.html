@@ -1,0 +1,716 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Logical Decoding Output Plugins</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Logical Decoding"
+HREF="logicaldecoding.html"><LINK
+REL="PREVIOUS"
+TITLE="System Catalogs Related to Logical Decoding"
+HREF="logicaldecoding-catalogs.html"><LINK
+REL="NEXT"
+TITLE="Logical Decoding Output Writers"
+HREF="logicaldecoding-writer.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="System Catalogs Related to Logical Decoding"
+HREF="logicaldecoding-catalogs.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="logicaldecoding.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 46. Logical Decoding</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Logical Decoding Output Writers"
+HREF="logicaldecoding-writer.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="LOGICALDECODING-OUTPUT-PLUGIN"
+>46.6. Logical Decoding Output Plugins</A
+></H1
+><P
+>    An example output plugin can be found in the
+    <A
+HREF="test-decoding.html"
+>     <TT
+CLASS="FILENAME"
+>contrib/test_decoding</TT
+>
+    </A
+>
+    subdirectory of the PostgreSQL source tree.
+   </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="LOGICALDECODING-OUTPUT-INIT"
+>46.6.1. Initialization Function</A
+></H2
+><P
+>     An output plugin is loaded by dynamically loading a shared library with
+     the output plugin's name as the library base name. The normal library
+     search path is used to locate the library. To provide the required output
+     plugin callbacks and to indicate that the library is actually an output
+     plugin it needs to provide a function named
+     <CODE
+CLASS="FUNCTION"
+>_PG_output_plugin_init</CODE
+>. This function is passed a
+     struct that needs to be filled with the callback function pointers for
+     individual actions.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>typedef struct OutputPluginCallbacks
+{
+    LogicalDecodeStartupCB startup_cb;
+    LogicalDecodeBeginCB begin_cb;
+    LogicalDecodeChangeCB change_cb;
+    LogicalDecodeCommitCB commit_cb;
+    LogicalDecodeFilterByOriginCB filter_by_origin_cb;
+    LogicalDecodeShutdownCB shutdown_cb;
+} OutputPluginCallbacks;
+
+typedef void (*LogicalOutputPluginInit)(struct OutputPluginCallbacks *cb);</PRE
+><P>
+     The <CODE
+CLASS="FUNCTION"
+>begin_cb</CODE
+>, <CODE
+CLASS="FUNCTION"
+>change_cb</CODE
+>
+     and <CODE
+CLASS="FUNCTION"
+>commit_cb</CODE
+> callbacks are required,
+     while <CODE
+CLASS="FUNCTION"
+>startup_cb</CODE
+>,
+     <CODE
+CLASS="FUNCTION"
+>filter_by_origin_cb</CODE
+>
+     and <CODE
+CLASS="FUNCTION"
+>shutdown_cb</CODE
+> are optional.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="LOGICALDECODING-CAPABILITIES"
+>46.6.2. Capabilities</A
+></H2
+><P
+>     To decode, format and output changes, output plugins can use most of the
+     backend's normal infrastructure, including calling output functions. Read
+     only access to relations is permitted as long as only relations are
+     accessed that either have been created by <TT
+CLASS="COMMAND"
+>initdb</TT
+> in
+     the <TT
+CLASS="LITERAL"
+>pg_catalog</TT
+> schema, or have been marked as user
+     provided catalog tables using
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE user_catalog_table SET (user_catalog_table = true);
+CREATE TABLE another_catalog_table(data text) WITH (user_catalog_table = true);</PRE
+><P>
+     Any actions leading to transaction ID assignment are prohibited. That, among others,
+     includes writing to tables, performing DDL changes, and
+     calling <TT
+CLASS="LITERAL"
+>txid_current()</TT
+>.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="LOGICALDECODING-OUTPUT-MODE"
+>46.6.3. Output Modes</A
+></H2
+><P
+>     Output plugin callbacks can pass data to the consumer in nearly arbitrary
+     formats. For some use cases, like viewing the changes via SQL, returning
+     data in a data type that can contain arbitrary data (e.g., <TT
+CLASS="TYPE"
+>bytea</TT
+>) is
+     cumbersome. If the output plugin only outputs textual data in the
+     server's encoding, it can declare that by
+     setting <TT
+CLASS="LITERAL"
+>OutputPluginOptions.output_mode</TT
+>
+     to <TT
+CLASS="LITERAL"
+>OUTPUT_PLUGIN_TEXTUAL_OUTPUT</TT
+> instead
+     of <TT
+CLASS="LITERAL"
+>OUTPUT_PLUGIN_BINARY_OUTPUT</TT
+> in
+     the <A
+HREF="logicaldecoding-output-plugin.html#LOGICALDECODING-OUTPUT-PLUGIN-STARTUP"
+>startup
+     callback</A
+>. In that case, all the data has to be in the server's encoding
+     so that a <TT
+CLASS="TYPE"
+>text</TT
+> datum can contain it. This is checked in assertion-enabled
+     builds.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="LOGICALDECODING-OUTPUT-PLUGIN-CALLBACKS"
+>46.6.4. Output Plugin Callbacks</A
+></H2
+><P
+>     An output plugin gets notified about changes that are happening via
+     various callbacks it needs to provide.
+    </P
+><P
+>     Concurrent transactions are decoded in commit order, and only changes
+     belonging to a specific transaction are decoded between
+     the <TT
+CLASS="LITERAL"
+>begin</TT
+> and <TT
+CLASS="LITERAL"
+>commit</TT
+>
+     callbacks. Transactions that were rolled back explicitly or implicitly
+     never get
+     decoded. Successful savepoints are
+     folded into the transaction containing them in the order they were
+     executed within that transaction.
+    </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>      Only transactions that have already safely been flushed to disk will be
+      decoded. That can lead to a <TT
+CLASS="COMMAND"
+>COMMIT</TT
+> not immediately being decoded in a
+      directly following <TT
+CLASS="LITERAL"
+>pg_logical_slot_get_changes()</TT
+>
+      when <TT
+CLASS="VARNAME"
+>synchronous_commit</TT
+> is set
+      to <TT
+CLASS="LITERAL"
+>off</TT
+>.
+     </P
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="LOGICALDECODING-OUTPUT-PLUGIN-STARTUP"
+>46.6.4.1. Startup Callback</A
+></H3
+><P
+>      The optional <CODE
+CLASS="FUNCTION"
+>startup_cb</CODE
+> callback is called whenever
+      a replication slot is created or asked to stream changes, independent
+      of the number of changes that are ready to be put out.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>typedef void (*LogicalDecodeStartupCB) (
+    struct LogicalDecodingContext *ctx,
+    OutputPluginOptions *options,
+    bool is_init
+);</PRE
+><P>
+      The <TT
+CLASS="LITERAL"
+>is_init</TT
+> parameter will be true when the
+      replication slot is being created and false
+      otherwise. <TT
+CLASS="PARAMETER"
+>options</TT
+> points to a struct of options
+      that output plugins can set:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>typedef struct OutputPluginOptions
+{
+    OutputPluginOutputType output_type;
+} OutputPluginOptions;</PRE
+><P>
+      <TT
+CLASS="LITERAL"
+>output_type</TT
+> has to either be set to
+      <TT
+CLASS="LITERAL"
+>OUTPUT_PLUGIN_TEXTUAL_OUTPUT</TT
+>
+      or <TT
+CLASS="LITERAL"
+>OUTPUT_PLUGIN_BINARY_OUTPUT</TT
+>. See also
+      <A
+HREF="logicaldecoding-output-plugin.html#LOGICALDECODING-OUTPUT-MODE"
+>Section 46.6.3</A
+>.
+     </P
+><P
+>      The startup callback should validate the options present in
+      <TT
+CLASS="LITERAL"
+>ctx-&gt;output_plugin_options</TT
+>. If the output plugin
+      needs to have a state, it can
+      use <TT
+CLASS="LITERAL"
+>ctx-&gt;output_plugin_private</TT
+> to store it.
+     </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="LOGICALDECODING-OUTPUT-PLUGIN-SHUTDOWN"
+>46.6.4.2. Shutdown Callback</A
+></H3
+><P
+>      The optional <CODE
+CLASS="FUNCTION"
+>shutdown_cb</CODE
+> callback is called
+      whenever a formerly active replication slot is not used anymore and can
+      be used to deallocate resources private to the output plugin. The slot
+      isn't necessarily being dropped, streaming is just being stopped.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>typedef void (*LogicalDecodeShutdownCB) (
+    struct LogicalDecodingContext *ctx
+);</PRE
+><P>
+     </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="LOGICALDECODING-OUTPUT-PLUGIN-BEGIN"
+>46.6.4.3. Transaction Begin Callback</A
+></H3
+><P
+>      The required <CODE
+CLASS="FUNCTION"
+>begin_cb</CODE
+> callback is called whenever a
+      start of a committed transaction has been decoded. Aborted transactions
+      and their contents never get decoded.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>typedef void (*LogicalDecodeBeginCB) (
+    struct LogicalDecodingContext *,
+    ReorderBufferTXN *txn
+);</PRE
+><P>
+      The <TT
+CLASS="PARAMETER"
+>txn</TT
+> parameter contains meta information about
+      the transaction, like the time stamp at which it has been committed and
+      its XID.
+     </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="LOGICALDECODING-OUTPUT-PLUGIN-COMMIT"
+>46.6.4.4. Transaction End Callback</A
+></H3
+><P
+>      The required <CODE
+CLASS="FUNCTION"
+>commit_cb</CODE
+> callback is called whenever
+      a transaction commit has been
+      decoded. The <CODE
+CLASS="FUNCTION"
+>change_cb</CODE
+> callbacks for all modified
+      rows will have been called before this, if there have been any modified
+      rows.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>typedef void (*LogicalDecodeCommitCB) (
+    struct LogicalDecodingContext *,
+    ReorderBufferTXN *txn
+);</PRE
+><P>
+     </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="LOGICALDECODING-OUTPUT-PLUGIN-CHANGE"
+>46.6.4.5. Change Callback</A
+></H3
+><P
+>      The required <CODE
+CLASS="FUNCTION"
+>change_cb</CODE
+> callback is called for every
+      individual row modification inside a transaction, may it be
+      an <TT
+CLASS="COMMAND"
+>INSERT</TT
+>, <TT
+CLASS="COMMAND"
+>UPDATE</TT
+>,
+      or <TT
+CLASS="COMMAND"
+>DELETE</TT
+>. Even if the original command modified
+      several rows at once the callback will be called individually for each
+      row.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>typedef void (*LogicalDecodeChangeCB) (
+    struct LogicalDecodingContext *ctx,
+    ReorderBufferTXN *txn,
+    Relation relation,
+    ReorderBufferChange *change
+);</PRE
+><P>
+      The <TT
+CLASS="PARAMETER"
+>ctx</TT
+> and <TT
+CLASS="PARAMETER"
+>txn</TT
+> parameters
+      have the same contents as for the <CODE
+CLASS="FUNCTION"
+>begin_cb</CODE
+>
+      and <CODE
+CLASS="FUNCTION"
+>commit_cb</CODE
+> callbacks, but additionally the
+      relation descriptor <TT
+CLASS="PARAMETER"
+>relation</TT
+> points to the
+      relation the row belongs to and a struct
+      <TT
+CLASS="PARAMETER"
+>change</TT
+> describing the row modification are passed
+      in.
+     </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>       Only changes in user defined tables that are not unlogged
+       (see <A
+HREF="sql-createtable.html#SQL-CREATETABLE-UNLOGGED"
+><I
+CLASS="TERM"
+><TT
+CLASS="LITERAL"
+>UNLOGGED</TT
+></I
+></A
+>) and not temporary
+       (see <A
+HREF="sql-createtable.html#SQL-CREATETABLE-TEMPORARY"
+><I
+CLASS="TERM"
+><TT
+CLASS="LITERAL"
+>TEMPORARY</TT
+> or <TT
+CLASS="LITERAL"
+>TEMP</TT
+></I
+></A
+>) can be extracted using
+       logical decoding.
+      </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="LOGICALDECODING-OUTPUT-PLUGIN-FILTER-ORIGIN"
+>46.6.4.6. Origin Filter Callback</A
+></H3
+><P
+>       The optional <CODE
+CLASS="FUNCTION"
+>filter_by_origin_cb</CODE
+> callback
+       is called to determine whether data that has been replayed
+       from <TT
+CLASS="PARAMETER"
+>origin_id</TT
+> is of interest to the
+       output plugin.
+</P><PRE
+CLASS="PROGRAMLISTING"
+>typedef bool (*LogicalDecodeFilterByOriginCB) (
+    struct LogicalDecodingContext *ctx,
+    RepNodeId origin_id
+);</PRE
+><P>
+      The <TT
+CLASS="PARAMETER"
+>ctx</TT
+> parameter has the same contents
+      as for the other callbacks. No information but the origin is
+      available. To signal that changes originating on the passed in
+      node are irrelevant, return true, causing them to be filtered
+      away; false otherwise. The other callbacks will not be called
+      for transactions and changes that have been filtered away.
+     </P
+><P
+>       This is useful when implementing cascading or multidirectional
+       replication solutions. Filtering by the origin allows to
+       prevent replicating the same changes back and forth in such
+       setups.  While transactions and changes also carry information
+       about the origin, filtering via this callback is noticeably
+       more efficient.
+     </P
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="LOGICALDECODING-OUTPUT-PLUGIN-OUTPUT"
+>46.6.5. Functions for Producing Output</A
+></H2
+><P
+>     To actually produce output, output plugins can write data to
+     the <TT
+CLASS="LITERAL"
+>StringInfo</TT
+> output buffer
+     in <TT
+CLASS="LITERAL"
+>ctx-&gt;out</TT
+> when inside
+     the <CODE
+CLASS="FUNCTION"
+>begin_cb</CODE
+>, <CODE
+CLASS="FUNCTION"
+>commit_cb</CODE
+>,
+     or <CODE
+CLASS="FUNCTION"
+>change_cb</CODE
+> callbacks. Before writing to the output
+     buffer, <CODE
+CLASS="FUNCTION"
+>OutputPluginPrepareWrite(ctx, last_write)</CODE
+> has
+     to be called, and after finishing writing to the
+     buffer, <CODE
+CLASS="FUNCTION"
+>OutputPluginWrite(ctx, last_write)</CODE
+> has to be
+     called to perform the write. The <TT
+CLASS="PARAMETER"
+>last_write</TT
+>
+     indicates whether a particular write was the callback's last write.
+    </P
+><P
+>     The following example shows how to output data to the consumer of an
+     output plugin:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>OutputPluginPrepareWrite(ctx, true);
+appendStringInfo(ctx-&#62;out, "BEGIN %u", txn-&#62;xid);
+OutputPluginWrite(ctx, true);</PRE
+><P>
+    </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="logicaldecoding-catalogs.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="logicaldecoding-writer.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>System Catalogs Related to Logical Decoding</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="logicaldecoding.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Logical Decoding Output Writers</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

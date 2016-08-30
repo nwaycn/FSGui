@@ -1,0 +1,1636 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Platform-specific Notes</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="  Installation from Source Code"
+HREF="installation.html"><LINK
+REL="PREVIOUS"
+TITLE="Supported Platforms"
+HREF="supported-platforms.html"><LINK
+REL="NEXT"
+TITLE="Installation from Source Code on Windows"
+HREF="install-windows.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Supported Platforms"
+HREF="supported-platforms.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="installation.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 15. Installation from Source Code</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Installation from Source Code on Windows"
+HREF="install-windows.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="INSTALLATION-PLATFORM-NOTES"
+>15.7. Platform-specific Notes</A
+></H1
+><P
+>   This section documents additional platform-specific issues
+   regarding the installation and setup of PostgreSQL.  Be sure to
+   read the installation instructions, and in
+   particular <A
+HREF="install-requirements.html"
+>Section 15.2</A
+> as well.  Also,
+   check 
+   <A
+HREF="regress.html"
+>Chapter 30</A
+> regarding the
+   interpretation of regression test results.
+  </P
+><P
+>   Platforms that are not covered here have no known platform-specific
+   installation issues.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="INSTALLATION-NOTES-AIX"
+>15.7.1. AIX</A
+></H2
+><P
+>    PostgreSQL works on AIX, but getting it installed properly can be
+    challenging.  AIX versions from 4.3.3 to 6.1 are considered supported.
+    You can use GCC or the native IBM compiler <TT
+CLASS="COMMAND"
+>xlc</TT
+>.  In
+    general, using recent versions of AIX and PostgreSQL helps.  Check
+    the build farm for up to date information about which versions of
+    AIX are known to work.
+   </P
+><P
+>    The minimum recommended fix levels for supported AIX versions are:
+   </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>AIX 4.3.3</DT
+><DD
+><P
+>Maintenance Level 11 + post ML11 bundle</P
+></DD
+><DT
+>AIX 5.1</DT
+><DD
+><P
+>Maintenance Level 9 + post ML9 bundle</P
+></DD
+><DT
+>AIX 5.2</DT
+><DD
+><P
+>Technology Level 10 Service Pack 3</P
+></DD
+><DT
+>AIX 5.3</DT
+><DD
+><P
+>Technology Level 7</P
+></DD
+><DT
+>AIX 6.1</DT
+><DD
+><P
+>Base Level</P
+></DD
+></DL
+></DIV
+><P
+>    To check your current fix level, use
+    <TT
+CLASS="COMMAND"
+>oslevel -r</TT
+> in AIX 4.3.3 to AIX 5.2 ML 7, or
+    <TT
+CLASS="COMMAND"
+>oslevel -s</TT
+> in later versions.
+   </P
+><P
+>    Use the following <TT
+CLASS="COMMAND"
+>configure</TT
+> flags in addition
+    to your own if you have installed Readline or libz in
+    <TT
+CLASS="LITERAL"
+>/usr/local</TT
+>:
+    <TT
+CLASS="LITERAL"
+>--with-includes=/usr/local/include
+    --with-libraries=/usr/local/lib</TT
+>.
+   </P
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN28586"
+>15.7.1.1. GCC Issues</A
+></H3
+><P
+>     On AIX 5.3, there have been some problems getting PostgreSQL to
+     compile and run using GCC.
+    </P
+><P
+>     You will want to use a version of GCC subsequent to 3.3.2,
+     particularly if you use a prepackaged version.  We had good
+     success with 4.0.1.  Problems with earlier versions seem to have
+     more to do with the way IBM packaged GCC than with actual issues
+     with GCC, so that if you compile GCC yourself, you might well
+     have success with an earlier version of GCC.
+    </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN28590"
+>15.7.1.2. Unix-Domain Sockets Broken</A
+></H3
+><P
+>     AIX 5.3 has a problem
+     where <TT
+CLASS="STRUCTNAME"
+>sockaddr_storage</TT
+> is not defined to
+     be large enough.  In version 5.3, IBM increased the size of
+     <TT
+CLASS="STRUCTNAME"
+>sockaddr_un</TT
+>, the address structure for
+     Unix-domain sockets, but did not correspondingly increase the
+     size of <TT
+CLASS="STRUCTNAME"
+>sockaddr_storage</TT
+>.  The result of
+     this is that attempts to use Unix-domain sockets with PostgreSQL
+     lead to libpq overflowing the data structure.  TCP/IP connections
+     work OK, but not Unix-domain sockets, which prevents the
+     regression tests from working.
+    </P
+><P
+>     The problem was reported to IBM, and is recorded as bug report
+     PMR29657.  If you upgrade to maintenance level 5300-03 or later,
+     that will include this fix.  A quick workaround
+     is to alter <TT
+CLASS="SYMBOL"
+>_SS_MAXSIZE</TT
+> to 1025 in
+     <TT
+CLASS="FILENAME"
+>/usr/include/sys/socket.h</TT
+>.  In either case,
+     recompile PostgreSQL once you have the corrected header file.
+    </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN28599"
+>15.7.1.3. Internet Address Issues</A
+></H3
+><P
+>     PostgreSQL relies on the system's <CODE
+CLASS="FUNCTION"
+>getaddrinfo</CODE
+> function
+     to parse IP addresses in <TT
+CLASS="VARNAME"
+>listen_addresses</TT
+>,
+     <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+>, etc.  Older versions of AIX have assorted
+     bugs in this function.  If you have problems related to these settings,
+     updating to the appropriate AIX fix level shown above
+     should take care of it.
+    </P
+><P
+>     One user reports:
+    </P
+><P
+>     When implementing PostgreSQL version 8.1 on AIX 5.3, we
+     periodically ran into problems where the statistics collector
+     would <SPAN
+CLASS="QUOTE"
+>"mysteriously"</SPAN
+> not come up successfully.  This
+     appears to be the result of unexpected behavior in the IPv6
+     implementation.  It looks like PostgreSQL and IPv6 do not play
+     very well together on AIX 5.3.
+    </P
+><P
+>     Any of the following actions <SPAN
+CLASS="QUOTE"
+>"fix"</SPAN
+> the problem.
+     <P
+></P
+></P><UL
+><LI
+><P
+>        Delete the IPv6 address for localhost:
+</P><PRE
+CLASS="SCREEN"
+>(as root)
+# ifconfig lo0 inet6 ::1/0 delete</PRE
+><P>
+       </P
+></LI
+><LI
+><P
+>        Remove IPv6 from net services.  The
+        file <TT
+CLASS="FILENAME"
+>/etc/netsvc.conf</TT
+> on AIX is roughly
+        equivalent to <TT
+CLASS="FILENAME"
+>/etc/nsswitch.conf</TT
+> on
+        Solaris/Linux.  The default, on AIX, is thus:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>hosts=local,bind</PRE
+><P>
+        Replace this with:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>hosts=local4,bind4</PRE
+><P>
+        to deactivate searching for IPv6 addresses.
+       </P
+></LI
+></UL
+><P>
+    </P
+><DIV
+CLASS="WARNING"
+><P
+></P
+><TABLE
+CLASS="WARNING"
+BORDER="1"
+WIDTH="100%"
+><TR
+><TD
+ALIGN="CENTER"
+><B
+>Warning</B
+></TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+><P
+>     This is really a workaround for problems relating
+     to immaturity of IPv6 support, which improved visibly during the
+     course of AIX 5.3 releases.  It has worked with AIX version 5.3,
+     but does not represent an elegant solution to the problem.  It has
+     been reported that this workaround is not only unnecessary, but
+     causes problems on AIX 6.1, where IPv6 support has become more mature.
+    </P
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN28622"
+>15.7.1.4. Memory Management</A
+></H3
+><P
+>     AIX can be somewhat peculiar with regards to the way it does
+     memory management.  You can have a server with many multiples of
+     gigabytes of RAM free, but still get out of memory or address
+     space errors when running applications.  One example
+     is <TT
+CLASS="COMMAND"
+>createlang</TT
+> failing with unusual errors.
+     For example, running as the owner of the PostgreSQL installation:
+</P><PRE
+CLASS="SCREEN"
+>-bash-3.00$ createlang plperl template1
+createlang: language installation failed: ERROR:  could not load library "/opt/dbs/pgsql748/lib/plperl.so": A memory address is not in the address space for the process.</PRE
+><P>
+    Running as a non-owner in the group possessing the PostgreSQL
+    installation:
+</P><PRE
+CLASS="SCREEN"
+>-bash-3.00$ createlang plperl template1
+createlang: language installation failed: ERROR:  could not load library "/opt/dbs/pgsql748/lib/plperl.so": Bad address</PRE
+><P>
+     Another example is out of memory errors in the PostgreSQL server
+     logs, with every memory allocation near or greater than 256 MB
+     failing.
+    </P
+><P
+>     The overall cause of all these problems is the default bittedness
+     and memory model used by the server process.  By default, all
+     binaries built on AIX are 32-bit.  This does not depend upon
+     hardware type or kernel in use.  These 32-bit processes are
+     limited to 4 GB of memory laid out in 256 MB segments using one
+     of a few models.  The default allows for less than 256 MB in the
+     heap as it shares a single segment with the stack.
+    </P
+><P
+>     In the case of the <TT
+CLASS="COMMAND"
+>createlang</TT
+> example, above,
+     check your umask and the permissions of the binaries in your
+     PostgreSQL installation.  The binaries involved in that example
+     were 32-bit and installed as mode 750 instead of 755.  Due to the
+     permissions being set in this fashion, only the owner or a member
+     of the possessing group can load the library.  Since it isn't
+     world-readable, the loader places the object into the process'
+     heap instead of the shared library segments where it would
+     otherwise be placed.
+    </P
+><P
+>     The <SPAN
+CLASS="QUOTE"
+>"ideal"</SPAN
+> solution for this is to use a 64-bit
+     build of PostgreSQL, but that is not always practical, because
+     systems with 32-bit processors can build, but not run, 64-bit
+     binaries.
+    </P
+><P
+>     If a 32-bit binary is desired, set <TT
+CLASS="SYMBOL"
+>LDR_CNTRL</TT
+> to
+     <TT
+CLASS="LITERAL"
+>MAXDATA=0x<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>0000000</TT
+>,
+     where 1 &lt;= n &lt;= 8, before starting the PostgreSQL server,
+     and try different values and <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+     settings to find a configuration that works satisfactorily.  This
+     use of <TT
+CLASS="SYMBOL"
+>LDR_CNTRL</TT
+> tells AIX that you want the
+     server to have <TT
+CLASS="SYMBOL"
+>MAXDATA</TT
+> bytes set aside for the
+     heap, allocated in 256 MB segments.  When you find a workable
+     configuration,
+     <TT
+CLASS="COMMAND"
+>ldedit</TT
+> can be used to modify the binaries so
+     that they default to using the desired heap size.  PostgreSQL can
+     also be rebuilt, passing <TT
+CLASS="LITERAL"
+>configure
+     LDFLAGS="-Wl,-bmaxdata:0x<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>0000000"</TT
+>
+     to achieve the same effect.
+    </P
+><P
+>     For a 64-bit build, set <TT
+CLASS="ENVAR"
+>OBJECT_MODE</TT
+> to 64 and
+     pass <TT
+CLASS="LITERAL"
+>CC="gcc -maix64"</TT
+>
+     and <TT
+CLASS="LITERAL"
+>LDFLAGS="-Wl,-bbigtoc"</TT
+>
+     to <TT
+CLASS="COMMAND"
+>configure</TT
+>.  (Options for
+    <TT
+CLASS="COMMAND"
+>xlc</TT
+> might differ.)  If you omit the export of
+    <TT
+CLASS="ENVAR"
+>OBJECT_MODE</TT
+>, your build may fail with linker errors.  When
+    <TT
+CLASS="ENVAR"
+>OBJECT_MODE</TT
+> is set, it tells AIX's build utilities
+    such as <TT
+CLASS="COMMAND"
+>ar</TT
+>, <TT
+CLASS="COMMAND"
+>as</TT
+>, and <TT
+CLASS="COMMAND"
+>ld</TT
+> what
+    type of objects to default to handling.
+    </P
+><P
+>     By default, overcommit of paging space can happen.  While we have
+     not seen this occur, AIX will kill processes when it runs out of
+     memory and the overcommit is accessed.  The closest to this that
+     we have seen is fork failing because the system decided that
+     there was not enough memory for another process.  Like many other
+     parts of AIX, the paging space allocation method and
+     out-of-memory kill is configurable on a system- or process-wide
+     basis if this becomes a problem.
+    </P
+><H3
+><A
+NAME="AEN28655"
+>References and Resources</A
+></H3
+><DIV
+CLASS="BIBLIOENTRY"
+><A
+NAME="AEN28657"
+></A
+><P
+>"<A
+HREF="http://publib.boulder.ibm.com/infocenter/pseries/topic/com.ibm.aix.doc/aixprggd/genprogc/lrg_prg_support.htm"
+TARGET="_top"
+>Large Program Support</A
+>", <I
+>AIX Documentation: General Programming Concepts: Writing and Debugging Programs</I
+>.</P
+><DIV
+CLASS="BIBLIOENTRYBLOCK"
+STYLE="margin-left: 0.5in"
+></DIV
+></DIV
+><DIV
+CLASS="BIBLIOENTRY"
+><A
+NAME="AEN28663"
+></A
+><P
+>"<A
+HREF="http://publib.boulder.ibm.com/infocenter/pseries/topic/com.ibm.aix.doc/aixprggd/genprogc/address_space.htm"
+TARGET="_top"
+>Program Address Space Overview</A
+>", <I
+>AIX Documentation: General Programming Concepts: Writing and Debugging Programs</I
+>.</P
+><DIV
+CLASS="BIBLIOENTRYBLOCK"
+STYLE="margin-left: 0.5in"
+></DIV
+></DIV
+><DIV
+CLASS="BIBLIOENTRY"
+><A
+NAME="AEN28669"
+></A
+><P
+>"<A
+HREF="http://publib.boulder.ibm.com/infocenter/pseries/v5r3/topic/com.ibm.aix.doc/aixbman/prftungd/resmgmt2.htm"
+TARGET="_top"
+>Performance Overview of the Virtual Memory Manager (VMM)</A
+>", <I
+>AIX Documentation: Performance Management Guide</I
+>.</P
+><DIV
+CLASS="BIBLIOENTRYBLOCK"
+STYLE="margin-left: 0.5in"
+></DIV
+></DIV
+><DIV
+CLASS="BIBLIOENTRY"
+><A
+NAME="AEN28675"
+></A
+><P
+>"<A
+HREF="http://publib.boulder.ibm.com/infocenter/pseries/v5r3/topic/com.ibm.aix.doc/aixbman/prftungd/memperf7.htm"
+TARGET="_top"
+>Page Space Allocation</A
+>", <I
+>AIX Documentation: Performance Management Guide</I
+>.</P
+><DIV
+CLASS="BIBLIOENTRYBLOCK"
+STYLE="margin-left: 0.5in"
+></DIV
+></DIV
+><DIV
+CLASS="BIBLIOENTRY"
+><A
+NAME="AEN28681"
+></A
+><P
+>"<A
+HREF="http://publib.boulder.ibm.com/infocenter/pseries/v5r3/topic/com.ibm.aix.doc/aixbman/prftungd/memperf6.htm"
+TARGET="_top"
+>Paging-space thresholds tuning</A
+>", <I
+>AIX Documentation: Performance Management Guide</I
+>.</P
+><DIV
+CLASS="BIBLIOENTRYBLOCK"
+STYLE="margin-left: 0.5in"
+></DIV
+></DIV
+><DIV
+CLASS="BIBLIOENTRY"
+><A
+NAME="AEN28687"
+></A
+><P
+><I
+><A
+HREF="http://www.redbooks.ibm.com/abstracts/sg245674.html?Open"
+TARGET="_top"
+>Developing and Porting C and C++ Applications on AIX</A
+></I
+>, IBM Redbook.</P
+><DIV
+CLASS="BIBLIOENTRYBLOCK"
+STYLE="margin-left: 0.5in"
+></DIV
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="INSTALLATION-NOTES-CYGWIN"
+>15.7.2. Cygwin</A
+></H2
+><P
+>    PostgreSQL can be built using Cygwin, a Linux-like environment for
+    Windows, but that method is inferior to the native Windows build
+    (see <A
+HREF="install-windows.html"
+>Chapter 16</A
+>) and
+    running a server under Cygwin is no longer recommended.
+   </P
+><P
+>    When building from source, proceed according to the normal
+    installation procedure (i.e., <TT
+CLASS="LITERAL"
+>./configure;
+    make</TT
+>; etc.), noting the following-Cygwin specific
+    differences:
+
+    <P
+></P
+></P><UL
+><LI
+><P
+>       Set your path to use the Cygwin bin directory before the
+       Windows utilities.  This will help prevent problems with
+       compilation.
+      </P
+></LI
+><LI
+><P
+>       The <TT
+CLASS="COMMAND"
+>adduser</TT
+> command is not supported; use
+       the appropriate user management application on Windows NT,
+       2000, or XP.  Otherwise, skip this step.
+      </P
+></LI
+><LI
+><P
+>       The <TT
+CLASS="COMMAND"
+>su</TT
+> command is not supported; use ssh to
+       simulate su on Windows NT, 2000, or XP. Otherwise, skip this
+       step.
+      </P
+></LI
+><LI
+><P
+>       OpenSSL is not supported.
+      </P
+></LI
+><LI
+><P
+>       Start <TT
+CLASS="COMMAND"
+>cygserver</TT
+> for shared memory support.
+       To do this, enter the command <TT
+CLASS="LITERAL"
+>/usr/sbin/cygserver
+       &amp;</TT
+>.  This program needs to be running anytime you
+       start the PostgreSQL server or initialize a database cluster
+       (<TT
+CLASS="COMMAND"
+>initdb</TT
+>).  The
+       default <TT
+CLASS="COMMAND"
+>cygserver</TT
+> configuration may need to
+       be changed (e.g., increase <TT
+CLASS="SYMBOL"
+>SEMMNS</TT
+>) to prevent
+       PostgreSQL from failing due to a lack of system resources.
+      </P
+></LI
+><LI
+><P
+>        Building might fail on some systems where a locale other than
+        C is in use. To fix this, set the locale to C by doing
+        <TT
+CLASS="COMMAND"
+>export LANG=C.utf8</TT
+> before building, and then
+        setting it back to the previous setting, after you have installed
+        PostgreSQL.
+      </P
+></LI
+><LI
+><P
+>       The parallel regression tests (<TT
+CLASS="LITERAL"
+>make check</TT
+>)
+       can generate spurious regression test failures due to
+       overflowing the <CODE
+CLASS="FUNCTION"
+>listen()</CODE
+> backlog queue
+       which causes connection refused errors or hangs.  You can limit
+       the number of connections using the make
+       variable <TT
+CLASS="VARNAME"
+>MAX_CONNECTIONS</TT
+> thus:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>make MAX_CONNECTIONS=5 check</PRE
+><P>
+       (On some systems you can have up to about 10 simultaneous
+       connections).
+      </P
+></LI
+></UL
+><P>
+   </P
+><P
+>    It is possible to install <TT
+CLASS="COMMAND"
+>cygserver</TT
+> and the
+    PostgreSQL server as Windows NT services.  For information on how
+    to do this, please refer to the <TT
+CLASS="FILENAME"
+>README</TT
+>
+    document included with the PostgreSQL binary package on Cygwin.
+    It is installed in the
+    directory <TT
+CLASS="FILENAME"
+>/usr/share/doc/Cygwin</TT
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="INSTALLATION-NOTES-HPUX"
+>15.7.3. HP-UX</A
+></H2
+><P
+>    PostgreSQL 7.3+ should work on Series 700/800 PA-RISC machines
+    running HP-UX 10.X or 11.X, given appropriate system patch levels
+    and build tools.  At least one developer routinely tests on HP-UX
+    10.20, and we have reports of successful installations on HP-UX
+    11.00 and 11.11.
+   </P
+><P
+>    Aside from the PostgreSQL source distribution, you will need GNU
+    make (HP's make will not do), and either GCC or HP's full ANSI C
+    compiler.  If you intend to build from Git sources rather than a
+    distribution tarball, you will also need Flex (GNU lex) and Bison
+    (GNU yacc).  We also recommend making sure you are fairly
+    up-to-date on HP patches.  At a minimum, if you are building 64
+    bit binaries on HP-UX 11.11 you may need PHSS_30966 (11.11) or a
+    successor patch otherwise <TT
+CLASS="COMMAND"
+>initdb</TT
+> may hang:
+<P
+CLASS="LITERALLAYOUT"
+>PHSS_30966&nbsp;&nbsp;s700_800&nbsp;ld(1)&nbsp;and&nbsp;linker&nbsp;tools&nbsp;cumulative&nbsp;patch</P
+>
+
+    On general principles you should be current on libc and ld/dld
+    patches, as well as compiler patches if you are using HP's C
+    compiler.  See HP's support sites such
+    as <A
+HREF="http://itrc.hp.com"
+TARGET="_top"
+>http://itrc.hp.com</A
+> and
+    <A
+HREF="ftp://us-ffs.external.hp.com/"
+TARGET="_top"
+>ftp://us-ffs.external.hp.com/</A
+> for free
+    copies of their latest patches.
+   </P
+><P
+>    If you are building on a PA-RISC 2.0 machine and want to have
+    64-bit binaries using GCC, you must use GCC 64-bit version. GCC
+    binaries for HP-UX PA-RISC and Itanium are available from
+    <A
+HREF="http://www.hp.com/go/gcc"
+TARGET="_top"
+>http://www.hp.com/go/gcc</A
+>.  Don't forget to
+    get and install binutils at the same time.
+   </P
+><P
+>    If you are building on a PA-RISC 2.0 machine and want the compiled
+    binaries to run on PA-RISC 1.1 machines you will need to specify
+    <TT
+CLASS="OPTION"
+>+DAportable</TT
+> in <TT
+CLASS="ENVAR"
+>CFLAGS</TT
+>.
+   </P
+><P
+>    If you are building on a HP-UX Itanium machine, you will need the
+    latest HP ANSI C compiler with its dependent patch or successor
+    patches:
+<P
+CLASS="LITERALLAYOUT"
+>PHSS_30848&nbsp;&nbsp;s700_800&nbsp;HP&nbsp;C&nbsp;Compiler&nbsp;(A.05.57)<br>
+PHSS_30849&nbsp;&nbsp;s700_800&nbsp;u2comp/be/plugin&nbsp;library&nbsp;Patch</P
+>
+   </P
+><P
+>    If you have both HP's C compiler and GCC's, then you might want to
+    explicitly select the compiler to use when you
+    run <TT
+CLASS="COMMAND"
+>configure</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>./configure CC=cc</PRE
+><P>
+    for HP's C compiler, or
+</P><PRE
+CLASS="PROGRAMLISTING"
+>./configure CC=gcc</PRE
+><P>
+    for GCC.  If you omit this setting, then configure will
+    pick <TT
+CLASS="COMMAND"
+>gcc</TT
+> if it has a choice.
+   </P
+><P
+>    The default install target location
+    is <TT
+CLASS="FILENAME"
+>/usr/local/pgsql</TT
+>, which you might want to
+    change to something under <TT
+CLASS="FILENAME"
+>/opt</TT
+>.  If so, use
+    the
+    <TT
+CLASS="OPTION"
+>--prefix</TT
+> switch to <TT
+CLASS="COMMAND"
+>configure</TT
+>.
+   </P
+><P
+>    In the regression tests, there might be some low-order-digit
+    differences in the geometry tests, which vary depending on which
+    compiler and math library versions you use.  Any other error is
+    cause for suspicion.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="INSTALLATION-NOTES-MINGW"
+>15.7.4. MinGW/Native Windows</A
+></H2
+><P
+>    PostgreSQL for Windows can be built using MinGW, a Unix-like build
+    environment for Microsoft operating systems, or using
+    Microsoft's <SPAN
+CLASS="PRODUCTNAME"
+>Visual C++</SPAN
+> compiler suite.
+    The MinGW build variant uses the normal build system described in
+    this chapter; the Visual C++ build works completely differently
+    and is described in <A
+HREF="install-windows.html"
+>Chapter 16</A
+>.
+    It is a fully native build and uses no additional software like
+    MinGW.  A ready-made installer is available on the main
+    PostgreSQL web site.
+   </P
+><P
+>    The native Windows port requires a 32 or 64-bit version of Windows
+    2000 or later. Earlier operating systems do
+    not have sufficient infrastructure (but Cygwin may be used on
+    those).  MinGW, the Unix-like build tools, and MSYS, a collection
+    of Unix tools required to run shell scripts
+    like <TT
+CLASS="COMMAND"
+>configure</TT
+>, can be downloaded
+    from <A
+HREF="http://www.mingw.org/"
+TARGET="_top"
+>http://www.mingw.org/</A
+>.  Neither is
+    required to run the resulting binaries; they are needed only for
+    creating the binaries.
+   </P
+><P
+>     To build 64 bit binaries using MinGW, install the 64 bit tool set
+     from <A
+HREF="http://mingw-w64.sourceforge.net/"
+TARGET="_top"
+>http://mingw-w64.sourceforge.net/</A
+>, put its bin
+     directory in the <TT
+CLASS="ENVAR"
+>PATH</TT
+>, and run
+     <TT
+CLASS="COMMAND"
+>configure</TT
+> with the
+     <TT
+CLASS="COMMAND"
+>--host=x86_64-w64-mingw32</TT
+> option.
+   </P
+><P
+>    After you have everything installed, it is suggested that you
+    run <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>
+    under <TT
+CLASS="COMMAND"
+>CMD.EXE</TT
+>, as the MSYS console has
+    buffering issues.
+   </P
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="WINDOWS-CRASH-DUMPS"
+>15.7.4.1. Collecting Crash Dumps on Windows</A
+></H3
+><P
+>     If PostgreSQL on Windows crashes, it has the ability to generate
+     <SPAN
+CLASS="PRODUCTNAME"
+>minidumps</SPAN
+> that can be used to track down the cause
+     for the crash, similar to core dumps on Unix. These dumps can be
+     read using the <SPAN
+CLASS="PRODUCTNAME"
+>Windows Debugger Tools</SPAN
+> or using
+     <SPAN
+CLASS="PRODUCTNAME"
+>Visual Studio</SPAN
+>. To enable the generation of dumps
+     on Windows, create a subdirectory named <TT
+CLASS="FILENAME"
+>crashdumps</TT
+>
+     inside the cluster data directory. The dumps will then be written
+     into this directory with a unique name based on the identifier of
+     the crashing process and the current time of the crash.
+    </P
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="INSTALLATION-NOTES-SCO"
+>15.7.5. SCO OpenServer and SCO UnixWare</A
+></H2
+><P
+>    PostgreSQL can be built on SCO UnixWare 7 and SCO OpenServer 5.
+    On OpenServer, you can use either the OpenServer Development Kit
+    or the Universal Development Kit.  However, some tweaking may be
+    needed, as described below.
+   </P
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN28796"
+>15.7.5.1. Skunkware</A
+></H3
+><P
+>     You should locate your copy of the SCO Skunkware CD.  The
+     Skunkware CD is included with UnixWare 7 and current versions of
+     OpenServer 5.  Skunkware includes ready-to-install versions of
+     many popular programs that are available on the Internet.  For
+     example, gzip, gunzip, GNU Make, Flex, and Bison are all
+     included.  For UnixWare 7.1, this CD is now labeled "Open License
+     Software Supplement".  If you do not have this CD, the software
+     on it is available
+     from <A
+HREF="http://www.sco.com/skunkware/"
+TARGET="_top"
+>http://www.sco.com/skunkware/</A
+>.
+    </P
+><P
+>     Skunkware has different versions for UnixWare and OpenServer.
+     Make sure you install the correct version for your operating
+     system, except as noted below.
+    </P
+><P
+>     On UnixWare 7.1.3 and beyond, the GCC compiler is included on the
+     UDK CD as is GNU Make.
+    </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN28802"
+>15.7.5.2. GNU Make</A
+></H3
+><P
+>     You need to use the GNU Make program, which is on the Skunkware
+     CD.  By default, it installs
+     as <TT
+CLASS="FILENAME"
+>/usr/local/bin/make</TT
+>.
+    </P
+><P
+>     As of UnixWare 7.1.3 and above, the GNU Make program is the
+     OSTK portion of the UDK CD, and is
+     in <TT
+CLASS="FILENAME"
+>/usr/gnu/bin/gmake</TT
+>.
+    </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN28808"
+>15.7.5.3. Readline</A
+></H3
+><P
+>     The Readline library is on the Skunkware CD.  But it is not
+     included on the UnixWare 7.1 Skunkware CD.  If you have the
+     UnixWare 7.0.0 or 7.0.1 Skunkware CDs, you can install it from
+     there.  Otherwise,
+     try <A
+HREF="http://www.sco.com/skunkware/"
+TARGET="_top"
+>http://www.sco.com/skunkware/</A
+>.
+    </P
+><P
+>     By default, Readline installs into <TT
+CLASS="FILENAME"
+>/usr/local/lib</TT
+> and
+     <TT
+CLASS="FILENAME"
+>/usr/local/include</TT
+>.  However, the
+     PostgreSQL <TT
+CLASS="COMMAND"
+>configure</TT
+> program will not find it
+     there without help.  If you installed Readline, then use the
+     following options to <TT
+CLASS="COMMAND"
+>configure</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>./configure --with-libraries=/usr/local/lib --with-includes=/usr/local/include</PRE
+><P>
+    </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN28818"
+>15.7.5.4. Using the UDK on OpenServer</A
+></H3
+><P
+>     If you are using the new Universal Development Kit (UDK) compiler
+     on OpenServer, you need to specify the locations of the UDK
+     libraries:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>./configure --with-libraries=/udk/usr/lib --with-includes=/udk/usr/include</PRE
+><P>
+     Putting these together with the Readline options from above:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>./configure --with-libraries="/udk/usr/lib /usr/local/lib" --with-includes="/udk/usr/include /usr/local/include"</PRE
+><P>
+    </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN28823"
+>15.7.5.5. Reading the PostgreSQL Man Pages</A
+></H3
+><P
+>     By default, the PostgreSQL man pages are installed into
+     <TT
+CLASS="FILENAME"
+>/usr/local/pgsql/share/man</TT
+>.  By default, UnixWare
+     does not look there for man pages.  To be able to read them you
+     need to modify the
+     <TT
+CLASS="VARNAME"
+>MANPATH</TT
+> variable
+     in <TT
+CLASS="FILENAME"
+>/etc/default/man</TT
+>, for example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>MANPATH=/usr/lib/scohelp/%L/man:/usr/dt/man:/usr/man:/usr/share/man:scohelp:/usr/local/man:/usr/local/pgsql/share/man</PRE
+><P>
+    </P
+><P
+>     On OpenServer, some extra research needs to be invested to make
+     the man pages usable, because the man system is a bit different
+     from other platforms.  Currently, PostgreSQL will not install
+     them at all.
+    </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN28831"
+>15.7.5.6. C99 Issues with the 7.1.1b Feature Supplement</A
+></H3
+><P
+>     For compilers earlier than the one released with OpenUNIX 8.0.0
+     (UnixWare 7.1.2), including the 7.1.1b Feature Supplement, you
+     may need to specify <TT
+CLASS="OPTION"
+>-Xb</TT
+>
+     in <TT
+CLASS="VARNAME"
+>CFLAGS</TT
+> or the <TT
+CLASS="VARNAME"
+>CC</TT
+>
+     environment variable.  The indication of this is an error in
+     compiling <TT
+CLASS="FILENAME"
+>tuplesort.c</TT
+> referencing inline
+     functions.  Apparently there was a change in the 7.1.2(8.0.0)
+     compiler and beyond.
+    </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN28838"
+>15.7.5.7. Threading on UnixWare</A
+></H3
+><P
+>     For threading, you<SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>must</I
+></SPAN
+> use <TT
+CLASS="OPTION"
+>-Kpthread</TT
+>
+     on <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>all</I
+></SPAN
+> libpq-using programs.  libpq
+     uses <CODE
+CLASS="FUNCTION"
+>pthread_*</CODE
+> calls, which are only
+     available with the
+     <TT
+CLASS="OPTION"
+>-Kpthread</TT
+>/<TT
+CLASS="OPTION"
+>-Kthread</TT
+> flag.
+    </P
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="INSTALLATION-NOTES-SOLARIS"
+>15.7.6. Solaris</A
+></H2
+><P
+>    PostgreSQL is well-supported on Solaris.  The more up to date your
+    operating system, the fewer issues you will experience; details
+    below.
+   </P
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN28853"
+>15.7.6.1. Required Tools</A
+></H3
+><P
+>     You can build with either GCC or Sun's compiler suite.  For
+     better code optimization, Sun's compiler is strongly recommended
+     on the SPARC architecture.  We have heard reports of problems
+     when using GCC 2.95.1; GCC 2.95.3 or later is recommended.  If
+     you are using Sun's compiler, be careful not to select
+     <TT
+CLASS="FILENAME"
+>/usr/ucb/cc</TT
+>;
+     use <TT
+CLASS="FILENAME"
+>/opt/SUNWspro/bin/cc</TT
+>.
+    </P
+><P
+>     You can download Sun Studio
+     from <A
+HREF="http://www.oracle.com/technetwork/server-storage/solarisstudio/downloads/"
+TARGET="_top"
+>http://www.oracle.com/technetwork/server-storage/solarisstudio/downloads/</A
+>.
+     Many of GNU tools are integrated into Solaris 10, or they are
+     present on the Solaris companion CD.  If you like packages for
+     older version of Solaris, you can find these tools
+     at <A
+HREF="http://www.sunfreeware.com"
+TARGET="_top"
+>http://www.sunfreeware.com</A
+>.
+     If you prefer
+     sources, look
+     at <A
+HREF="http://www.gnu.org/order/ftp.html"
+TARGET="_top"
+>http://www.gnu.org/order/ftp.html</A
+>.
+    </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN28862"
+>15.7.6.2. Problems with OpenSSL</A
+></H3
+><P
+>     When you build PostgreSQL with OpenSSL support you might get
+     compilation errors in the following files:
+     <P
+></P
+></P><UL
+><LI
+><P
+><TT
+CLASS="FILENAME"
+>src/backend/libpq/crypt.c</TT
+></P
+></LI
+><LI
+><P
+><TT
+CLASS="FILENAME"
+>src/backend/libpq/password.c</TT
+></P
+></LI
+><LI
+><P
+><TT
+CLASS="FILENAME"
+>src/interfaces/libpq/fe-auth.c</TT
+></P
+></LI
+><LI
+><P
+><TT
+CLASS="FILENAME"
+>src/interfaces/libpq/fe-connect.c</TT
+></P
+></LI
+></UL
+><P>
+
+     This is because of a namespace conflict between the standard
+     <TT
+CLASS="FILENAME"
+>/usr/include/crypt.h</TT
+> header and the header
+     files provided by OpenSSL.
+    </P
+><P
+>     Upgrading your OpenSSL installation to version 0.9.6a fixes this
+     problem.  Solaris 9 and above has a newer version of OpenSSL.
+    </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN28880"
+>15.7.6.3. configure Complains About a Failed Test Program</A
+></H3
+><P
+>     If <TT
+CLASS="COMMAND"
+>configure</TT
+> complains about a failed test
+     program, this is probably a case of the run-time linker being
+     unable to find some library, probably libz, libreadline or some
+     other non-standard library such as libssl.  To point it to the
+     right location, set the <TT
+CLASS="ENVAR"
+>LDFLAGS</TT
+> environment
+     variable on the <TT
+CLASS="COMMAND"
+>configure</TT
+> command line, e.g.,
+</P><PRE
+CLASS="PROGRAMLISTING"
+>configure ... LDFLAGS="-R /usr/sfw/lib:/opt/sfw/lib:/usr/local/lib"</PRE
+><P>
+     See
+     the <SPAN
+CLASS="CITEREFENTRY"
+><SPAN
+CLASS="REFENTRYTITLE"
+>ld</SPAN
+></SPAN
+>
+     man page for more information.
+    </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN28890"
+>15.7.6.4. 64-bit Build Sometimes Crashes</A
+></H3
+><P
+>     On Solaris 7 and older, the 64-bit version of libc has a buggy
+     <CODE
+CLASS="FUNCTION"
+>vsnprintf</CODE
+> routine, which leads to erratic
+     core dumps in PostgreSQL.  The simplest known workaround is to
+     force PostgreSQL to use its own version of <CODE
+CLASS="FUNCTION"
+>vsnprintf</CODE
+> rather than
+     the library copy.  To do this, after you
+     run <TT
+CLASS="COMMAND"
+>configure</TT
+> edit a file produced by
+     <TT
+CLASS="COMMAND"
+>configure</TT
+>:
+     In <TT
+CLASS="FILENAME"
+>src/Makefile.global</TT
+>, change the line
+</P><PRE
+CLASS="PROGRAMLISTING"
+>LIBOBJS =</PRE
+><P>
+     to read
+</P><PRE
+CLASS="PROGRAMLISTING"
+>LIBOBJS = snprintf.o</PRE
+><P>
+     (There might be other files already listed in this variable.
+     Order does not matter.)  Then build as usual.
+    </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN28900"
+>15.7.6.5. Compiling for Optimal Performance</A
+></H3
+><P
+>     On the SPARC architecture, Sun Studio is strongly recommended for
+     compilation.  Try using the <TT
+CLASS="OPTION"
+>-xO5</TT
+> optimization
+     flag to generate significantly faster binaries.  Do not use any
+     flags that modify behavior of floating-point operations
+     and <TT
+CLASS="VARNAME"
+>errno</TT
+> processing (e.g.,
+     <TT
+CLASS="OPTION"
+>-fast</TT
+>).  These flags could raise some
+     nonstandard PostgreSQL behavior for example in the date/time
+     computing.
+    </P
+><P
+>     If you do not have a reason to use 64-bit binaries on SPARC,
+     prefer the 32-bit version.  The 64-bit operations are slower and
+     64-bit binaries are slower than the 32-bit variants.  And on
+     other hand, 32-bit code on the AMD64 CPU family is not native,
+     and that is why 32-bit code is significant slower on this CPU
+     family.
+    </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN28907"
+>15.7.6.6. Using DTrace for Tracing PostgreSQL</A
+></H3
+><P
+>     Yes, using DTrace is possible.  See 
+     <A
+HREF="dynamic-trace.html"
+>Section 27.4</A
+> for further
+     information.  You can also find more information in this
+     article: <A
+HREF="https://blogs.oracle.com/robertlor/entry/user_level_dtrace_probes_in"
+TARGET="_top"
+>https://blogs.oracle.com/robertlor/entry/user_level_dtrace_probes_in</A
+>.
+    </P
+><P
+>     If you see the linking of the <TT
+CLASS="COMMAND"
+>postgres</TT
+> executable abort with an
+     error message like:
+</P><PRE
+CLASS="SCREEN"
+>Undefined                       first referenced
+ symbol                             in file
+AbortTransaction                    utils/probes.o
+CommitTransaction                   utils/probes.o
+ld: fatal: Symbol referencing errors. No output written to postgres
+collect2: ld returned 1 exit status
+make: *** [postgres] Error 1</PRE
+><P>
+     your DTrace installation is too old to handle probes in static
+     functions.  You need Solaris 10u4 or newer.
+    </P
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="supported-platforms.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="install-windows.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Supported Platforms</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="installation.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Installation from Source Code on <SPAN
+CLASS="PRODUCTNAME"
+>Windows</SPAN
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,323 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_enum</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="System Catalogs"
+HREF="catalogs.html"><LINK
+REL="PREVIOUS"
+TITLE="pg_description"
+HREF="catalog-pg-description.html"><LINK
+REL="NEXT"
+TITLE="pg_event_trigger"
+HREF="catalog-pg-event-trigger.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pg_description"
+HREF="catalog-pg-description.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="catalogs.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 49. System Catalogs</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pg_event_trigger"
+HREF="catalog-pg-event-trigger.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="CATALOG-PG-ENUM"
+>49.20. <TT
+CLASS="STRUCTNAME"
+>pg_enum</TT
+></A
+></H1
+><P
+>   The <TT
+CLASS="STRUCTNAME"
+>pg_enum</TT
+> catalog contains entries
+   showing the values and labels for each enum type. The
+   internal representation of a given enum value is actually the OID
+   of its associated row in <TT
+CLASS="STRUCTNAME"
+>pg_enum</TT
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="AEN102873"
+></A
+><P
+><B
+>Table 49-20. <TT
+CLASS="STRUCTNAME"
+>pg_enum</TT
+> Columns</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Type</TH
+><TH
+>References</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Row identifier (hidden attribute; must be explicitly selected)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>enumtypid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-type.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_type</TT
+></A
+>.oid</TT
+></TD
+><TD
+>The OID of the <TT
+CLASS="STRUCTNAME"
+>pg_type</TT
+> entry owning this enum value</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>enumsortorder</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>float4</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>The sort position of this enum value within its enum type</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>enumlabel</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>The textual label for this enum value</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   The OIDs for <TT
+CLASS="STRUCTNAME"
+>pg_enum</TT
+> rows follow a special
+   rule: even-numbered OIDs are guaranteed to be ordered in the same way
+   as the sort ordering of their enum type.  That is, if two even OIDs
+   belong to the same enum type, the smaller OID must have the smaller
+   <TT
+CLASS="STRUCTFIELD"
+>enumsortorder</TT
+> value.  Odd-numbered OID values
+   need bear no relationship to the sort order.  This rule allows the
+   enum comparison routines to avoid catalog lookups in many common cases.
+   The routines that create and alter enum types attempt to assign even
+   OIDs to enum values whenever possible.
+  </P
+><P
+>   When an enum type is created, its members are assigned sort-order
+   positions 1..<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>.  But members added later might be given
+   negative or fractional values of <TT
+CLASS="STRUCTFIELD"
+>enumsortorder</TT
+>.
+   The only requirement on these values is that they be correctly
+   ordered and unique within each enum type.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="catalog-pg-description.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="catalog-pg-event-trigger.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><TT
+CLASS="STRUCTNAME"
+>pg_description</TT
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="catalogs.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><TT
+CLASS="STRUCTNAME"
+>pg_event_trigger</TT
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

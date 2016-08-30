@@ -1,0 +1,342 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Enumerated Types</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Data Types"
+HREF="datatype.html"><LINK
+REL="PREVIOUS"
+TITLE="Boolean Type"
+HREF="datatype-boolean.html"><LINK
+REL="NEXT"
+TITLE="Geometric Types"
+HREF="datatype-geometric.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Boolean Type"
+HREF="datatype-boolean.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="datatype.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 8. Data Types</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Geometric Types"
+HREF="datatype-geometric.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="DATATYPE-ENUM"
+>8.7. Enumerated Types</A
+></H1
+><P
+>    Enumerated (enum) types are data types that
+    comprise a static, ordered set of values.
+    They are equivalent to the <TT
+CLASS="TYPE"
+>enum</TT
+>
+    types supported in a number of programming languages. An example of an enum
+    type might be the days of the week, or a set of status values for
+    a piece of data.
+   </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN6817"
+>8.7.1. Declaration of Enumerated Types</A
+></H2
+><P
+>     Enum types are created using the <A
+HREF="sql-createtype.html"
+>CREATE TYPE</A
+> command,
+     for example:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TYPE mood AS ENUM ('sad', 'ok', 'happy');</PRE
+><P>
+
+     Once created, the enum type can be used in table and function
+     definitions much like any other type:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TYPE mood AS ENUM ('sad', 'ok', 'happy');
+CREATE TABLE person (
+    name text,
+    current_mood mood
+);
+INSERT INTO person VALUES ('Moe', 'happy');
+SELECT * FROM person WHERE current_mood = 'happy';
+ name | current_mood 
+------+--------------
+ Moe  | happy
+(1 row)</PRE
+><P>
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN6823"
+>8.7.2. Ordering</A
+></H2
+><P
+>      The ordering of the values in an enum type is the
+      order in which the values were listed when the type was created.
+      All standard comparison operators and related
+      aggregate functions are supported for enums.  For example:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>INSERT INTO person VALUES ('Larry', 'sad');
+INSERT INTO person VALUES ('Curly', 'ok');
+SELECT * FROM person WHERE current_mood &#62; 'sad';
+ name  | current_mood 
+-------+--------------
+ Moe   | happy
+ Curly | ok
+(2 rows)
+
+SELECT * FROM person WHERE current_mood &#62; 'sad' ORDER BY current_mood;
+ name  | current_mood 
+-------+--------------
+ Curly | ok
+ Moe   | happy
+(2 rows)
+
+SELECT name
+FROM person
+WHERE current_mood = (SELECT MIN(current_mood) FROM person);
+ name  
+-------
+ Larry
+(1 row)</PRE
+><P>
+     </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN6827"
+>8.7.3. Type Safety</A
+></H2
+><P
+>     Each enumerated data type is separate and cannot
+     be compared with other enumerated types.  See this example:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TYPE happiness AS ENUM ('happy', 'very happy', 'ecstatic');
+CREATE TABLE holidays (
+    num_weeks integer,
+    happiness happiness
+);
+INSERT INTO holidays(num_weeks,happiness) VALUES (4, 'happy');
+INSERT INTO holidays(num_weeks,happiness) VALUES (6, 'very happy');
+INSERT INTO holidays(num_weeks,happiness) VALUES (8, 'ecstatic');
+INSERT INTO holidays(num_weeks,happiness) VALUES (2, 'sad');
+ERROR:  invalid input value for enum happiness: "sad"
+SELECT person.name, holidays.num_weeks FROM person, holidays
+  WHERE person.current_mood = holidays.happiness;
+ERROR:  operator does not exist: mood = happiness</PRE
+><P>
+    </P
+><P
+>     If you really need to do something like that, you can either
+     write a custom operator or add explicit casts to your query:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT person.name, holidays.num_weeks FROM person, holidays
+  WHERE person.current_mood::text = holidays.happiness::text;
+ name | num_weeks 
+------+-----------
+ Moe  |         4
+(1 row)&#13;</PRE
+><P>
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN6833"
+>8.7.4. Implementation Details</A
+></H2
+><P
+>     An enum value occupies four bytes on disk.  The length of an enum
+     value's textual label is limited by the <TT
+CLASS="SYMBOL"
+>NAMEDATALEN</TT
+>
+     setting compiled into <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>; in standard
+     builds this means at most 63 bytes.
+    </P
+><P
+>     Enum labels are case sensitive, so
+     <TT
+CLASS="TYPE"
+>'happy'</TT
+> is not the same as <TT
+CLASS="TYPE"
+>'HAPPY'</TT
+>.
+     White space in the labels is significant too.
+    </P
+><P
+>     The translations from internal enum values to textual labels are
+     kept in the system catalog
+     <A
+HREF="catalog-pg-enum.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_enum</TT
+></A
+>.
+     Querying this catalog directly can be useful.
+    </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="datatype-boolean.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="datatype-geometric.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Boolean Type</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="datatype.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Geometric Types</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

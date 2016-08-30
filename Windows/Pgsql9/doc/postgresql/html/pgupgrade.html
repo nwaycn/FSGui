@@ -1,0 +1,1595 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_upgrade</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="PostgreSQL Server Applications"
+HREF="reference-server.html"><LINK
+REL="PREVIOUS"
+TITLE="pg_test_timing"
+HREF="pgtesttiming.html"><LINK
+REL="NEXT"
+TITLE="pg_xlogdump"
+HREF="pgxlogdump.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pg_test_timing"
+HREF="pgtesttiming.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="reference-server.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pg_xlogdump"
+HREF="pgxlogdump.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="PGUPGRADE"
+></A
+><SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+></H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN98828"
+></A
+><H2
+>Name</H2
+>pg_upgrade&nbsp;--&nbsp;upgrade a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> server instance</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN98832"
+></A
+><H2
+>Synopsis</H2
+><P
+><TT
+CLASS="COMMAND"
+>pg_upgrade</TT
+>  <TT
+CLASS="OPTION"
+>-b</TT
+>   <TT
+CLASS="REPLACEABLE"
+><I
+>oldbindir</I
+></TT
+>   <TT
+CLASS="OPTION"
+>-B</TT
+>   <TT
+CLASS="REPLACEABLE"
+><I
+>newbindir</I
+></TT
+>   <TT
+CLASS="OPTION"
+>-d</TT
+>   <TT
+CLASS="REPLACEABLE"
+><I
+>olddatadir</I
+></TT
+>   <TT
+CLASS="OPTION"
+>-D</TT
+>   <TT
+CLASS="REPLACEABLE"
+><I
+>newdatadir</I
+></TT
+>  [<TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+>...]</P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN98853"
+></A
+><H2
+>Description</H2
+><P
+>  <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> (formerly called <SPAN
+CLASS="APPLICATION"
+>pg_migrator</SPAN
+>) allows data
+  stored in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> data files to be upgraded to a later <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+  major version without the data dump/reload typically required for
+  major version upgrades, e.g. from 8.4.7 to the current major release
+  of <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>.  It is not required for minor version upgrades, e.g. from
+  9.0.1 to 9.0.4.
+ </P
+><P
+>  Major PostgreSQL releases regularly add new features that often
+  change the layout of the system tables, but the internal data storage
+  format rarely changes.  <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> uses this fact
+  to perform rapid upgrades by creating new system tables and simply
+  reusing the old user data files.  If a future major release ever
+  changes the data storage format in a way that makes the old data
+  format unreadable, <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> will not be usable
+  for such upgrades.  (The community will attempt to avoid such
+  situations.)
+ </P
+><P
+>  <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> does its best to
+  make sure the old and new clusters are binary-compatible, e.g.  by
+  checking for compatible compile-time settings, including 32/64-bit
+  binaries.  It is important that
+  any external modules are also binary compatible, though this cannot
+  be checked by <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>.
+ </P
+><P
+>   pg_upgrade supports upgrades from 8.4.X and later to the current
+   major release of <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>, including snapshot and alpha releases.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN98869"
+></A
+><H2
+>Options</H2
+><P
+>    <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> accepts the following command-line arguments:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-b</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>bindir</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--old-bindir=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>bindir</I
+></TT
+></DT
+><DD
+><P
+>the old PostgreSQL executable directory;
+      environment variable <TT
+CLASS="ENVAR"
+>PGBINOLD</TT
+></P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-B</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>bindir</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--new-bindir=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>bindir</I
+></TT
+></DT
+><DD
+><P
+>the new PostgreSQL executable directory;
+      environment variable <TT
+CLASS="ENVAR"
+>PGBINNEW</TT
+></P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-c</TT
+><BR><TT
+CLASS="OPTION"
+>--check</TT
+></DT
+><DD
+><P
+>check clusters only, don't change any data</P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-d</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>datadir</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--old-datadir=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>datadir</I
+></TT
+></DT
+><DD
+><P
+>the old cluster data directory; environment
+      variable <TT
+CLASS="ENVAR"
+>PGDATAOLD</TT
+></P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-D</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>datadir</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--new-datadir=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>datadir</I
+></TT
+></DT
+><DD
+><P
+>the new cluster data directory; environment
+      variable <TT
+CLASS="ENVAR"
+>PGDATANEW</TT
+></P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-j</TT
+><BR><TT
+CLASS="OPTION"
+>--jobs</TT
+></DT
+><DD
+><P
+>number of simultaneous processes or threads to use
+      </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-k</TT
+><BR><TT
+CLASS="OPTION"
+>--link</TT
+></DT
+><DD
+><P
+>use hard links instead of copying files to the new
+      cluster (use junction points on Windows)</P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-o</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>options</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--old-options</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>options</I
+></TT
+></DT
+><DD
+><P
+>options to be passed directly to the
+      old <TT
+CLASS="COMMAND"
+>postgres</TT
+> command;  multiple
+      option invocations are appended</P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-O</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>options</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--new-options</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>options</I
+></TT
+></DT
+><DD
+><P
+>options to be passed directly to the
+      new <TT
+CLASS="COMMAND"
+>postgres</TT
+> command;  multiple
+      option invocations are appended</P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-p</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>port</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--old-port=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>port</I
+></TT
+></DT
+><DD
+><P
+>the old cluster port number; environment
+      variable <TT
+CLASS="ENVAR"
+>PGPORTOLD</TT
+></P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-P</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>port</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--new-port=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>port</I
+></TT
+></DT
+><DD
+><P
+>the new cluster port number; environment
+      variable <TT
+CLASS="ENVAR"
+>PGPORTNEW</TT
+></P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-r</TT
+><BR><TT
+CLASS="OPTION"
+>--retain</TT
+></DT
+><DD
+><P
+>retain SQL and log files even after successful completion
+      </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-U</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>username</I
+></TT
+><BR><TT
+CLASS="OPTION"
+>--username=</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>username</I
+></TT
+></DT
+><DD
+><P
+>cluster's install user name; environment
+      variable <TT
+CLASS="ENVAR"
+>PGUSER</TT
+></P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-v</TT
+><BR><TT
+CLASS="OPTION"
+>--verbose</TT
+></DT
+><DD
+><P
+>enable verbose internal logging</P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-V</TT
+><BR><TT
+CLASS="OPTION"
+>--version</TT
+></DT
+><DD
+><P
+>display version information, then exit</P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-?</TT
+><BR><TT
+CLASS="OPTION"
+>--help</TT
+></DT
+><DD
+><P
+>show help, then exit</P
+></DD
+></DL
+></DIV
+><P>
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN99013"
+></A
+><H2
+>Usage</H2
+><P
+>   These are the steps to perform an upgrade
+   with <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>:
+  </P
+><DIV
+CLASS="PROCEDURE"
+><OL
+TYPE="1"
+><LI
+CLASS="STEP"
+><P
+><B
+>Optionally move the old cluster</B
+></P
+><P
+>     If you are using a version-specific installation directory, e.g.
+     <TT
+CLASS="FILENAME"
+>/opt/PostgreSQL/9.1</TT
+>, you do not need to move the old cluster. The
+     graphical installers all use version-specific installation directories.
+    </P
+><P
+>     If your installation directory is not version-specific, e.g.
+     <TT
+CLASS="FILENAME"
+>/usr/local/pgsql</TT
+>, it is necessary to move the current PostgreSQL install
+     directory so it does not interfere with the new <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> installation.
+     Once the current <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> server is shut down, it is safe to rename the
+     PostgreSQL installation directory; assuming the old directory is
+     <TT
+CLASS="FILENAME"
+>/usr/local/pgsql</TT
+>, you can do:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>mv /usr/local/pgsql /usr/local/pgsql.old</PRE
+><P>
+     to rename the directory.
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>For source installs, build the new version</B
+></P
+><P
+>     Build the new PostgreSQL source with <TT
+CLASS="COMMAND"
+>configure</TT
+> flags that are compatible
+     with the old cluster. <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> will check <TT
+CLASS="COMMAND"
+>pg_controldata</TT
+> to make
+     sure all settings are compatible before starting the upgrade.
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Install the new PostgreSQL binaries</B
+></P
+><P
+>     Install the new server's binaries and support
+     files.  <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> is included in a default installation.
+    </P
+><P
+>     For source installs, if you wish to install the new server in a custom
+     location, use the <TT
+CLASS="LITERAL"
+>prefix</TT
+> variable:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>make prefix=/usr/local/pgsql.new install</PRE
+><P></P
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Initialize the new PostgreSQL cluster</B
+></P
+><P
+>     Initialize the new cluster using <TT
+CLASS="COMMAND"
+>initdb</TT
+>.
+     Again, use compatible <TT
+CLASS="COMMAND"
+>initdb</TT
+>
+     flags that match the old cluster. Many
+     prebuilt installers do this step automatically. There is no need to
+     start the new cluster.
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Install custom shared object files</B
+></P
+><P
+>     Install any custom shared object files (or DLLs) used by the old cluster
+     into the new cluster, e.g. <TT
+CLASS="FILENAME"
+>pgcrypto.so</TT
+>,
+     whether they are from <TT
+CLASS="FILENAME"
+>contrib</TT
+>
+     or some other source. Do not install the schema definitions, e.g.
+     <TT
+CLASS="FILENAME"
+>pgcrypto.sql</TT
+>, because these will be upgraded from the old cluster.
+     Also, any custom full text search files (dictionary, synonym,
+     thesaurus, stop words) must also be copied to the new cluster.
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Adjust authentication</B
+></P
+><P
+>     <TT
+CLASS="COMMAND"
+>pg_upgrade</TT
+> will connect to the old and new servers several
+     times, so you might want to set authentication to <TT
+CLASS="LITERAL"
+>peer</TT
+>
+     in <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> or use a <TT
+CLASS="FILENAME"
+>~/.pgpass</TT
+> file
+     (see <A
+HREF="libpq-pgpass.html"
+>Section 31.15</A
+>).
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Stop both servers</B
+></P
+><P
+>     Make sure both database servers are stopped using, on Unix, e.g.:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>pg_ctl -D /opt/PostgreSQL/8.4 stop
+pg_ctl -D /opt/PostgreSQL/9.0 stop</PRE
+><P>
+
+     or on Windows, using the proper service names:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>NET STOP postgresql-8.4
+NET STOP postgresql-9.0</PRE
+><P>
+    </P
+><P
+>     Streaming replication and log-shipping standby servers can
+     remain running until a later step.
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Verify standby servers</B
+></P
+><P
+>     If you are upgrading Streaming Replication and Log-Shipping standby
+     servers, verify that the old standby servers are caught up by running
+     <SPAN
+CLASS="APPLICATION"
+>pg_controldata</SPAN
+> against the old primary and standby
+     clusters.  Verify that the <SPAN
+CLASS="QUOTE"
+>"Latest checkpoint location"</SPAN
+>
+     values match in all clusters.  (There will be a mismatch if old
+     standby servers were shut down before the old primary.)
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Run <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+></B
+></P
+><P
+>     Always run the <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> binary of the new server, not the old one.
+     <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> requires the specification of the old and new cluster's
+     data and executable (<TT
+CLASS="FILENAME"
+>bin</TT
+>) directories. You can also specify
+     user and port values, and whether you want the data linked instead of
+     copied (the default).
+    </P
+><P
+>     If you use link mode, the upgrade will be much faster (no file
+     copying) and use less disk space, but you will not be able to access
+     your old cluster
+     once you start the new cluster after the upgrade.  Link mode also
+     requires that the old and new cluster data directories be in the
+     same file system.  (Tablespaces and <TT
+CLASS="FILENAME"
+>pg_xlog</TT
+> can be on
+     different file systems.)  See <TT
+CLASS="LITERAL"
+>pg_upgrade --help</TT
+> for a full
+     list of options.
+    </P
+><P
+>     The <TT
+CLASS="OPTION"
+>--jobs</TT
+> option allows multiple CPU cores to be used
+     for copying/linking of files and to dump and reload database schemas
+     in parallel;  a good place to start is the maximum of the number of
+     CPU cores and tablespaces.  This option can dramatically reduce the
+     time to upgrade a multi-database server running on a multiprocessor
+     machine.
+    </P
+><P
+>     For Windows users, you must be logged into an administrative account, and
+     then start a shell as the <TT
+CLASS="LITERAL"
+>postgres</TT
+> user and set the proper path:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>RUNAS /USER:postgres "CMD.EXE"
+SET PATH=%PATH%;C:\Program Files\PostgreSQL\9.0\bin;</PRE
+><P>
+
+     and then run <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> with quoted directories, e.g.:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>pg_upgrade.exe
+        --old-datadir "C:/Program Files/PostgreSQL/8.4/data"
+        --new-datadir "C:/Program Files/PostgreSQL/9.0/data"
+        --old-bindir "C:/Program Files/PostgreSQL/8.4/bin"
+        --new-bindir "C:/Program Files/PostgreSQL/9.0/bin"</PRE
+><P>
+
+     Once started, <TT
+CLASS="COMMAND"
+>pg_upgrade</TT
+> will verify the two clusters are compatible
+     and then do the upgrade. You can use <TT
+CLASS="COMMAND"
+>pg_upgrade --check</TT
+>
+     to perform only the checks, even if the old server is still
+     running. <TT
+CLASS="COMMAND"
+>pg_upgrade --check</TT
+> will also outline any
+     manual adjustments you will need to make after the upgrade.  If you
+     are going to be using link mode, you should use the <TT
+CLASS="OPTION"
+>--link</TT
+>
+     option with <TT
+CLASS="OPTION"
+>--check</TT
+> to enable link-mode-specific checks.
+     <TT
+CLASS="COMMAND"
+>pg_upgrade</TT
+> requires write permission in the current directory.
+    </P
+><P
+>     Obviously, no one should be accessing the clusters during the
+     upgrade.  <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> defaults to running servers
+     on port 50432 to avoid unintended client connections.
+     You can use the same port number for both clusters when doing an
+     upgrade because the old and new clusters will not be running at the
+     same time.  However, when checking an old running server, the old
+     and new port numbers must be different.
+    </P
+><P
+>     If an error occurs while restoring the database schema, <TT
+CLASS="COMMAND"
+>pg_upgrade</TT
+> will
+     exit and you will have to revert to the old cluster as outlined in <A
+HREF="pgupgrade.html#PGUPGRADE-STEP-REVERT"
+>step 16</A
+>
+     below. To try <TT
+CLASS="COMMAND"
+>pg_upgrade</TT
+> again, you will need to modify the old
+     cluster so the pg_upgrade schema restore succeeds. If the problem is a
+     <TT
+CLASS="FILENAME"
+>contrib</TT
+> module, you might need to uninstall the <TT
+CLASS="FILENAME"
+>contrib</TT
+> module from
+     the old cluster and install it in the new cluster after the upgrade,
+     assuming the module is not being used to store user data.
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Upgrade Streaming Replication and Log-Shipping standby servers</B
+></P
+><P
+>     If you have Streaming Replication (see <A
+HREF="warm-standby.html#STREAMING-REPLICATION"
+>Section 25.2.5</A
+>) or Log-Shipping (see <A
+HREF="warm-standby.html"
+>Section 25.2</A
+>) standby servers, follow these steps to
+     upgrade them.  You will not be running <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>
+     on the standby servers, but rather <SPAN
+CLASS="APPLICATION"
+>rsync</SPAN
+>.  Do not
+     start any servers yet.
+    </P
+><OL
+CLASS="SUBSTEPS"
+TYPE="a"
+><LI
+CLASS="STEP"
+><P
+><B
+>Install the new PostgreSQL binaries on standby servers</B
+></P
+><P
+>       Make sure the new binaries and support files are installed on all
+       standby servers.
+      </P
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Make sure the new standby data directories do <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+> exist</B
+></P
+><P
+>       Make sure the new standby data directories do <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+>
+       exist or are empty.  If <SPAN
+CLASS="APPLICATION"
+>initdb</SPAN
+> was run, delete
+       the standby server data directories.
+      </P
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Install custom shared object files</B
+></P
+><P
+>       Install the same custom shared object files on the new standbys
+       that you installed in the new master cluster.
+      </P
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Stop standby servers</B
+></P
+><P
+>       If the standby servers are still running, stop them now using the
+       above instructions.
+      </P
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Save configuration files</B
+></P
+><P
+>       Save any configuration files from the standbys you need to keep,
+       e.g.  <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>, <TT
+CLASS="LITERAL"
+>recovery.conf</TT
+>,
+       as these will be overwritten or removed in the next step.
+      </P
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Start and stop the new master cluster</B
+></P
+><P
+>       In the new master cluster, change <TT
+CLASS="VARNAME"
+>wal_level</TT
+> to
+       <TT
+CLASS="LITERAL"
+>hot_standby</TT
+> in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> file
+       and then start and stop the cluster.
+      </P
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Run <SPAN
+CLASS="APPLICATION"
+>rsync</SPAN
+></B
+></P
+><P
+>       From a directory that is above the old and new database cluster
+       directories, run this for each slave:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>rsync --archive --delete --hard-links --size-only old_pgdata new_pgdata remote_dir</PRE
+><P>
+
+       where <TT
+CLASS="OPTION"
+>old_pgdata</TT
+> and <TT
+CLASS="OPTION"
+>new_pgdata</TT
+> are relative
+       to the current directory, and <TT
+CLASS="OPTION"
+>remote_dir</TT
+> is
+       <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>above</I
+></SPAN
+> the old and new cluster directories on
+       the standby server.  The old and new relative cluster paths
+       must match on the master and standby server.  Consult the
+       <SPAN
+CLASS="APPLICATION"
+>rsync</SPAN
+> manual page for details on specifying the
+       remote directory, e.g. <TT
+CLASS="LITERAL"
+>standbyhost:/opt/PostgreSQL/</TT
+>.
+       <SPAN
+CLASS="APPLICATION"
+>rsync</SPAN
+> will be fast when <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>'s
+       <TT
+CLASS="OPTION"
+>--link</TT
+> mode is used because it will create hard links
+       on the remote server rather than transferring user data.
+      </P
+><P
+>       If you have tablespaces, you will need to run a similar
+       <SPAN
+CLASS="APPLICATION"
+>rsync</SPAN
+> command for each tablespace directory.  If you
+       have relocated <TT
+CLASS="FILENAME"
+>pg_xlog</TT
+> outside the data directories,
+       <SPAN
+CLASS="APPLICATION"
+>rsync</SPAN
+> must be run on those directories too.
+      </P
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Configure streaming replication and log-shipping standby servers</B
+></P
+><P
+>       Configure the servers for log shipping.  (You do not need to run
+       <CODE
+CLASS="FUNCTION"
+>pg_start_backup()</CODE
+> and <CODE
+CLASS="FUNCTION"
+>pg_stop_backup()</CODE
+>
+       or take a file system backup as the slaves are still synchronized
+       with the master.)
+      </P
+></LI
+></OL
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Restore <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+></B
+></P
+><P
+>     If you modified <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+>, restore its original settings.
+     It might also be necessary to adjust other configuration files in the new
+     cluster to match the old cluster, e.g. <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>.
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Start the new server</B
+></P
+><P
+>     The new server can now be safely started, and then any
+     <SPAN
+CLASS="APPLICATION"
+>rsync</SPAN
+>'ed standby servers.
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Post-Upgrade processing</B
+></P
+><P
+>     If any post-upgrade processing is required, pg_upgrade will issue
+     warnings as it completes. It will also generate script files that must
+     be run by the administrator. The script files will connect to each
+     database that needs post-upgrade processing. Each script should be
+     run using:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>psql --username postgres --file script.sql postgres</PRE
+><P>
+
+     The scripts can be run in any order and can be deleted once they have
+     been run.
+    </P
+><DIV
+CLASS="CAUTION"
+><P
+></P
+><TABLE
+CLASS="CAUTION"
+BORDER="1"
+WIDTH="100%"
+><TR
+><TD
+ALIGN="CENTER"
+><B
+>Caution</B
+></TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+><P
+>     In general it is unsafe to access tables referenced in rebuild scripts
+     until the rebuild scripts have run to completion; doing so could yield
+     incorrect results or poor performance. Tables not referenced in rebuild
+     scripts can be accessed immediately.
+    </P
+></TD
+></TR
+></TABLE
+></DIV
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Statistics</B
+></P
+><P
+>     Because optimizer statistics are not transferred by <TT
+CLASS="COMMAND"
+>pg_upgrade</TT
+>, you will
+     be instructed to run a command to regenerate that information at the end
+     of the upgrade.  You might need to set connection parameters to
+     match your new cluster.
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+><B
+>Delete old cluster</B
+></P
+><P
+>     Once you are satisfied with the upgrade, you can delete the old
+     cluster's data directories by running the script mentioned when
+     <TT
+CLASS="COMMAND"
+>pg_upgrade</TT
+> completes. (Automatic deletion is not
+     possible if you have user-defined tablespaces inside the old data
+     directory.)  You can also delete the old installation directories
+     (e.g. <TT
+CLASS="FILENAME"
+>bin</TT
+>, <TT
+CLASS="FILENAME"
+>share</TT
+>).
+    </P
+></LI
+><LI
+CLASS="STEP"
+><A
+NAME="PGUPGRADE-STEP-REVERT"
+></A
+><P
+><B
+>Reverting to old cluster</B
+></P
+><P
+>     If, after running <TT
+CLASS="COMMAND"
+>pg_upgrade</TT
+>, you wish to revert to the old cluster,
+     there are several options:
+
+     <P
+></P
+></P><UL
+><LI
+><P
+>        If you ran <TT
+CLASS="COMMAND"
+>pg_upgrade</TT
+>
+        with <TT
+CLASS="OPTION"
+>--check</TT
+>, no modifications were made to the old
+        cluster and you can re-use it anytime.
+       </P
+></LI
+><LI
+><P
+>        If you ran <TT
+CLASS="COMMAND"
+>pg_upgrade</TT
+>
+        with <TT
+CLASS="OPTION"
+>--link</TT
+>, the data files are shared between the
+        old and new cluster. If you started the new cluster, the new
+        server has written to those shared files and it is unsafe to
+        use the old cluster.
+       </P
+></LI
+><LI
+><P
+>        If you ran <TT
+CLASS="COMMAND"
+>pg_upgrade</TT
+> <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>without</I
+></SPAN
+>
+        <TT
+CLASS="OPTION"
+>--link</TT
+> or did not start the new server, the
+        old cluster was not modified except that, if linking
+        started, a <TT
+CLASS="LITERAL"
+>.old</TT
+> suffix was appended to
+        <TT
+CLASS="FILENAME"
+>$PGDATA/global/pg_control</TT
+>.  To reuse the old
+        cluster, possibly remove the <TT
+CLASS="FILENAME"
+>.old</TT
+> suffix from
+        <TT
+CLASS="FILENAME"
+>$PGDATA/global/pg_control</TT
+>; you can then restart the
+        old cluster.
+       </P
+></LI
+></UL
+><P>
+    </P
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN99207"
+></A
+><H2
+>Notes</H2
+><P
+>   <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> does not support upgrading of databases
+   containing these <TT
+CLASS="TYPE"
+>reg*</TT
+> OID-referencing system data types:
+   <TT
+CLASS="TYPE"
+>regproc</TT
+>, <TT
+CLASS="TYPE"
+>regprocedure</TT
+>, <TT
+CLASS="TYPE"
+>regoper</TT
+>,
+   <TT
+CLASS="TYPE"
+>regoperator</TT
+>, <TT
+CLASS="TYPE"
+>regconfig</TT
+>, and
+   <TT
+CLASS="TYPE"
+>regdictionary</TT
+>.  (<TT
+CLASS="TYPE"
+>regtype</TT
+> can be upgraded.)
+  </P
+><P
+>   All failure, rebuild, and reindex cases will be reported by
+   <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> if they affect your installation;
+   post-upgrade scripts to rebuild tables and indexes will be
+   generated automatically.  If you are trying to automate the upgrade
+   of many clusters, you should find that clusters with identical database
+   schemas require the same post-upgrade steps for all cluster upgrades;
+   this is because the post-upgrade steps are based on the database
+   schemas, and not user data.
+  </P
+><P
+>   For deployment testing, create a schema-only copy of the old cluster,
+   insert dummy data, and upgrade that.
+  </P
+><P
+>   If you are upgrading a pre-<SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 9.2 cluster
+   that uses a configuration-file-only directory, you must pass the
+   real data directory location to <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>, and
+   pass the configuration directory location to the server, e.g.
+   <TT
+CLASS="LITERAL"
+>-d /real-data-directory -o '-D /configuration-directory'</TT
+>.
+  </P
+><P
+>   If using a pre-9.1 old server that is using a non-default Unix-domain
+   socket directory or a default that differs from the default of the
+   new cluster, set <TT
+CLASS="ENVAR"
+>PGHOST</TT
+> to point to the old server's socket
+   location.  (This is not relevant on Windows.)
+  </P
+><P
+>   If you want to use link mode and you do not want your old cluster
+   to be modified when the new cluster is started, make a copy of the
+   old cluster and upgrade that in link mode. To make a valid copy
+   of the old cluster, use <TT
+CLASS="COMMAND"
+>rsync</TT
+> to create a dirty
+   copy of the old cluster while the server is running, then shut down
+   the old server and run <TT
+CLASS="COMMAND"
+>rsync --checksum</TT
+> again to update the
+   copy with any changes to make it consistent.  (<TT
+CLASS="OPTION"
+>--checksum</TT
+>
+   is necessary because <TT
+CLASS="COMMAND"
+>rsync</TT
+> only has file modification-time
+   granularity of one second.)  You might want to exclude some
+   files, e.g. <TT
+CLASS="FILENAME"
+>postmaster.pid</TT
+>, as documented in <A
+HREF="continuous-archiving.html#BACKUP-LOWLEVEL-BASE-BACKUP"
+>Section 24.3.3</A
+>.  If your file system supports
+   file system snapshots or copy-on-write file copies, you can use that
+   to make a backup of the old cluster and tablespaces, though the snapshot
+   and copies must be created simultaneously or while the database server
+   is down.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN99235"
+></A
+><H2
+>See Also</H2
+><A
+HREF="app-initdb.html"
+>initdb</A
+>, <A
+HREF="app-pg-ctl.html"
+><SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+></A
+>, <A
+HREF="app-pgdump.html"
+>pg_dump</A
+>, <A
+HREF="app-postgres.html"
+><SPAN
+CLASS="APPLICATION"
+>postgres</SPAN
+></A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="pgtesttiming.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="pgxlogdump.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><SPAN
+CLASS="APPLICATION"
+>pg_test_timing</SPAN
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="reference-server.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><SPAN
+CLASS="APPLICATION"
+>pg_xlogdump</SPAN
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

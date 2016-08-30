@@ -1,0 +1,272 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>dblink_send_query</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="dblink"
+HREF="dblink.html"><LINK
+REL="PREVIOUS"
+TITLE="dblink_error_message"
+HREF="contrib-dblink-error-message.html"><LINK
+REL="NEXT"
+TITLE="dblink_is_busy"
+HREF="contrib-dblink-is-busy.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="dblink_error_message"
+HREF="contrib-dblink-error-message.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="dblink.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="dblink_is_busy"
+HREF="contrib-dblink-is-busy.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="CONTRIB-DBLINK-SEND-QUERY"
+></A
+>dblink_send_query</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN170011"
+></A
+><H2
+>Name</H2
+>dblink_send_query&nbsp;--&nbsp;sends an async query to a remote database</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN170014"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>dblink_send_query(text connname, text sql) returns int</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN170016"
+></A
+><H2
+>Description</H2
+><P
+>    <CODE
+CLASS="FUNCTION"
+>dblink_send_query</CODE
+> sends a query to be executed
+    asynchronously, that is, without immediately waiting for the result.
+    There must not be an async query already in progress on the
+    connection.
+   </P
+><P
+>    After successfully dispatching an async query, completion status
+    can be checked with <CODE
+CLASS="FUNCTION"
+>dblink_is_busy</CODE
+>, and the results
+    are ultimately collected with <CODE
+CLASS="FUNCTION"
+>dblink_get_result</CODE
+>.
+    It is also possible to attempt to cancel an active async query
+    using <CODE
+CLASS="FUNCTION"
+>dblink_cancel_query</CODE
+>.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN170024"
+></A
+><H2
+>Arguments</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="PARAMETER"
+>connname</TT
+></DT
+><DD
+><P
+>       Name of the connection to use.
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>sql</TT
+></DT
+><DD
+><P
+>       The SQL statement that you wish to execute in the remote database,
+       for example <TT
+CLASS="LITERAL"
+>select * from pg_class</TT
+>.
+      </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN170038"
+></A
+><H2
+>Return Value</H2
+><P
+>    Returns 1 if the query was successfully dispatched, 0 otherwise.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN170041"
+></A
+><H2
+>Examples</H2
+><PRE
+CLASS="PROGRAMLISTING"
+>SELECT dblink_send_query('dtest1', 'SELECT * FROM foo WHERE f1 &lt; 3');</PRE
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib-dblink-error-message.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="contrib-dblink-is-busy.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>dblink_error_message</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="dblink.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>dblink_is_busy</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

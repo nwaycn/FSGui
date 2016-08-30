@@ -1,0 +1,649 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_aggregate</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="System Catalogs"
+HREF="catalogs.html"><LINK
+REL="PREVIOUS"
+TITLE="Overview"
+HREF="catalogs-overview.html"><LINK
+REL="NEXT"
+TITLE="pg_am"
+HREF="catalog-pg-am.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Overview"
+HREF="catalogs-overview.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="catalogs.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 49. System Catalogs</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pg_am"
+HREF="catalog-pg-am.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="CATALOG-PG-AGGREGATE"
+>49.2. <TT
+CLASS="STRUCTNAME"
+>pg_aggregate</TT
+></A
+></H1
+><P
+>   The catalog <TT
+CLASS="STRUCTNAME"
+>pg_aggregate</TT
+> stores information about
+   aggregate functions.  An aggregate function is a function that
+   operates on a set of values (typically one column from each row
+   that matches a query condition) and returns a single value computed
+   from all these values.  Typical aggregate functions are
+   <CODE
+CLASS="FUNCTION"
+>sum</CODE
+>, <CODE
+CLASS="FUNCTION"
+>count</CODE
+>, and
+   <CODE
+CLASS="FUNCTION"
+>max</CODE
+>.  Each entry in
+   <TT
+CLASS="STRUCTNAME"
+>pg_aggregate</TT
+> is an extension of an entry
+   in <TT
+CLASS="STRUCTNAME"
+>pg_proc</TT
+>.  The <TT
+CLASS="STRUCTNAME"
+>pg_proc</TT
+>
+   entry carries the aggregate's name, input and output data types, and
+   other information that is similar to ordinary functions.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="AEN100439"
+></A
+><P
+><B
+>Table 49-2. <TT
+CLASS="STRUCTNAME"
+>pg_aggregate</TT
+> Columns</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Type</TH
+><TH
+>References</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>aggfnoid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>regproc</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-proc.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_proc</TT
+></A
+>.oid</TT
+></TD
+><TD
+><TT
+CLASS="STRUCTNAME"
+>pg_proc</TT
+> OID of the aggregate function</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>aggkind</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>char</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Aggregate kind:
+       <TT
+CLASS="LITERAL"
+>n</TT
+> for <SPAN
+CLASS="QUOTE"
+>"normal"</SPAN
+> aggregates,
+       <TT
+CLASS="LITERAL"
+>o</TT
+> for <SPAN
+CLASS="QUOTE"
+>"ordered-set"</SPAN
+> aggregates, or
+       <TT
+CLASS="LITERAL"
+>h</TT
+> for <SPAN
+CLASS="QUOTE"
+>"hypothetical-set"</SPAN
+> aggregates
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>aggnumdirectargs</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int2</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Number of direct (non-aggregated) arguments of an ordered-set or
+       hypothetical-set aggregate, counting a variadic array as one argument.
+       If equal to <TT
+CLASS="STRUCTFIELD"
+>pronargs</TT
+>, the aggregate must be variadic
+       and the variadic array describes the aggregated arguments as well as
+       the final direct arguments.
+       Always zero for normal aggregates.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>aggtransfn</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>regproc</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-proc.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_proc</TT
+></A
+>.oid</TT
+></TD
+><TD
+>Transition function</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>aggfinalfn</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>regproc</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-proc.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_proc</TT
+></A
+>.oid</TT
+></TD
+><TD
+>Final function (zero if none)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>aggmtransfn</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>regproc</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-proc.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_proc</TT
+></A
+>.oid</TT
+></TD
+><TD
+>Forward transition function for moving-aggregate mode (zero if none)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>aggminvtransfn</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>regproc</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-proc.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_proc</TT
+></A
+>.oid</TT
+></TD
+><TD
+>Inverse transition function for moving-aggregate mode (zero if none)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>aggmfinalfn</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>regproc</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-proc.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_proc</TT
+></A
+>.oid</TT
+></TD
+><TD
+>Final function for moving-aggregate mode (zero if none)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>aggfinalextra</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bool</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>True to pass extra dummy arguments to <TT
+CLASS="STRUCTFIELD"
+>aggfinalfn</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>aggmfinalextra</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bool</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>True to pass extra dummy arguments to <TT
+CLASS="STRUCTFIELD"
+>aggmfinalfn</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>aggsortop</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-operator.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_operator</TT
+></A
+>.oid</TT
+></TD
+><TD
+>Associated sort operator (zero if none)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>aggtranstype</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-type.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_type</TT
+></A
+>.oid</TT
+></TD
+><TD
+>Data type of the aggregate function's internal transition (state) data</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>aggtransspace</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int4</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Approximate average size (in bytes) of the transition state
+       data, or zero to use a default estimate</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>aggmtranstype</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-type.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_type</TT
+></A
+>.oid</TT
+></TD
+><TD
+>Data type of the aggregate function's internal transition (state)
+       data for moving-aggregate mode (zero if none)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>aggmtransspace</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int4</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Approximate average size (in bytes) of the transition state data
+       for moving-aggregate mode, or zero to use a default estimate</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>agginitval</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>       The initial value of the transition state.  This is a text
+       field containing the initial value in its external string
+       representation.  If this field is null, the transition state
+       value starts out null.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>aggminitval</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>       The initial value of the transition state for moving-aggregate mode.
+       This is a text field containing the initial value in its external
+       string representation.  If this field is null, the transition state
+       value starts out null.
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   New aggregate functions are registered with the <A
+HREF="sql-createaggregate.html"
+>CREATE AGGREGATE</A
+>
+   command.  See <A
+HREF="xaggr.html"
+>Section 35.10</A
+> for more information about
+   writing aggregate functions and the meaning of the transition
+   functions, etc.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="catalogs-overview.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="catalog-pg-am.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Overview</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="catalogs.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><TT
+CLASS="STRUCTNAME"
+>pg_am</TT
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,406 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pgrowlocks</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="pg_prewarm"
+HREF="pgprewarm.html"><LINK
+REL="NEXT"
+TITLE="pg_stat_statements"
+HREF="pgstatstatements.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pg_prewarm"
+HREF="pgprewarm.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pg_stat_statements"
+HREF="pgstatstatements.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PGROWLOCKS"
+>F.27. pgrowlocks</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>pgrowlocks</TT
+> module provides a function to show row
+  locking information for a specified table.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN173752"
+>F.27.1. Overview</A
+></H2
+><PRE
+CLASS="SYNOPSIS"
+>pgrowlocks(text) returns setof record</PRE
+><P
+>   The parameter is the name of a table.  The result is a set of records,
+   with one row for each locked row within the table.  The output columns
+   are shown in <A
+HREF="pgrowlocks.html#PGROWLOCKS-COLUMNS"
+>Table F-19</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="PGROWLOCKS-COLUMNS"
+></A
+><P
+><B
+>Table F-19. <CODE
+CLASS="FUNCTION"
+>pgrowlocks</CODE
+> Output Columns</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>locked_row</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>tid</TT
+></TD
+><TD
+>Tuple ID (TID) of locked row</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>locker</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>xid</TT
+></TD
+><TD
+>Transaction ID of locker, or multixact ID if multitransaction</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>multi</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>True if locker is a multitransaction</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>xids</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>xid[]</TT
+></TD
+><TD
+>Transaction IDs of lockers (more than one if multitransaction)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>lock_type</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text[]</TT
+></TD
+><TD
+>Lock mode of lockers (more than one if multitransaction),
+       an array of <TT
+CLASS="LITERAL"
+>Key Share</TT
+>, <TT
+CLASS="LITERAL"
+>Share</TT
+>,
+       <TT
+CLASS="LITERAL"
+>For No Key Update</TT
+>, <TT
+CLASS="LITERAL"
+>No Key Update</TT
+>,
+       <TT
+CLASS="LITERAL"
+>For Update</TT
+>, <TT
+CLASS="LITERAL"
+>Update</TT
+>.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>pids</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer[]</TT
+></TD
+><TD
+>Process IDs of locking backends (more than one if multitransaction)</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   <CODE
+CLASS="FUNCTION"
+>pgrowlocks</CODE
+> takes <TT
+CLASS="LITERAL"
+>AccessShareLock</TT
+> for the
+   target table and reads each row one by one to collect the row locking
+   information.  This is not very speedy for a large table.  Note that:
+  </P
+><P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>    If the table as a whole is exclusive-locked by someone else,
+    <CODE
+CLASS="FUNCTION"
+>pgrowlocks</CODE
+> will be blocked.
+    </P
+></LI
+><LI
+><P
+>     <CODE
+CLASS="FUNCTION"
+>pgrowlocks</CODE
+> is not guaranteed to produce a
+     self-consistent snapshot.  It is possible that a new row lock is taken,
+     or an old lock is freed, during its execution.
+    </P
+></LI
+></OL
+><P
+>   <CODE
+CLASS="FUNCTION"
+>pgrowlocks</CODE
+> does not show the contents of locked
+   rows. If you want to take a look at the row contents at the same time, you
+   could do something like this:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT * FROM accounts AS a, pgrowlocks('accounts') AS p
+  WHERE p.locked_row = a.ctid;</PRE
+><P>
+
+   Be aware however that such a query will be very inefficient.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN173824"
+>F.27.2. Sample Output</A
+></H2
+><PRE
+CLASS="SCREEN"
+>test=# SELECT * FROM pgrowlocks('t1');
+ locked_row | lock_type | locker | multi |   xids    |     pids
+------------+-----------+--------+-------+-----------+---------------
+      (0,1) | Shared    |     19 | t     | {804,805} | {29066,29068}
+      (0,2) | Shared    |     19 | t     | {804,805} | {29066,29068}
+      (0,3) | Exclusive |    804 | f     | {804}     | {29066}
+      (0,4) | Exclusive |    804 | f     | {804}     | {29066}
+(4 rows)</PRE
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN173827"
+>F.27.3. Author</A
+></H2
+><P
+>   Tatsuo Ishii
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="pgprewarm.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="pgstatstatements.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>pg_prewarm</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>pg_stat_statements</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

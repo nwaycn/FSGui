@@ -1,0 +1,540 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.3.9</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.3.10"
+HREF="release-8-3-10.html"><LINK
+REL="NEXT"
+TITLE="Release 8.3.8"
+HREF="release-8-3-8.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.3.10"
+HREF="release-8-3-10.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.3.8"
+HREF="release-8-3-8.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-3-9"
+>E.135. Release 8.3.9</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2009-12-14</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.3.8.
+   For information about new features in the 8.3 major release, see
+   <A
+HREF="release-8-3.html"
+>Section E.144</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN152860"
+>E.135.1. Migration to Version 8.3.9</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.3.X.
+    However, if you are upgrading from a version earlier than 8.3.8,
+    see <A
+HREF="release-8-3-8.html"
+>Section E.136</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN152864"
+>E.135.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Protect against indirect security threats caused by index functions
+      changing session-local state (Gurjeet Singh, Tom)
+     </P
+><P
+>      This change prevents allegedly-immutable index functions from possibly
+      subverting a superuser's session (CVE-2009-4136).
+     </P
+></LI
+><LI
+><P
+>      Reject SSL certificates containing an embedded null byte in the common
+      name (CN) field (Magnus)
+     </P
+><P
+>      This prevents unintended matching of a certificate to a server or client
+      name during SSL validation (CVE-2009-4034).
+     </P
+></LI
+><LI
+><P
+>      Fix possible crash during backend-startup-time cache initialization (Tom)
+     </P
+></LI
+><LI
+><P
+>      Avoid crash on empty thesaurus dictionary (Tom)
+     </P
+></LI
+><LI
+><P
+>      Prevent signals from interrupting <TT
+CLASS="LITERAL"
+>VACUUM</TT
+> at unsafe times
+      (Alvaro)
+     </P
+><P
+>      This fix prevents a PANIC if a <TT
+CLASS="LITERAL"
+>VACUUM FULL</TT
+> is canceled
+      after it's already committed its tuple movements, as well as transient
+      errors if a plain <TT
+CLASS="LITERAL"
+>VACUUM</TT
+> is interrupted after having
+      truncated the table.
+     </P
+></LI
+><LI
+><P
+>      Fix possible crash due to integer overflow in hash table size
+      calculation (Tom)
+     </P
+><P
+>      This could occur with extremely large planner estimates for the size of
+      a hashjoin's result.
+     </P
+></LI
+><LI
+><P
+>      Fix very rare crash in <TT
+CLASS="TYPE"
+>inet</TT
+>/<TT
+CLASS="TYPE"
+>cidr</TT
+> comparisons (Chris
+      Mikkelson)
+     </P
+></LI
+><LI
+><P
+>      Ensure that shared tuple-level locks held by prepared transactions are
+      not ignored (Heikki)
+     </P
+></LI
+><LI
+><P
+>      Fix premature drop of temporary files used for a cursor that is accessed
+      within a subtransaction (Heikki)
+     </P
+></LI
+><LI
+><P
+>      Fix memory leak in syslogger process when rotating to a new CSV logfile
+      (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix Windows permission-downgrade logic (Jesse Morris)
+     </P
+><P
+>      This fixes some cases where the database failed to start on Windows,
+      often with misleading error messages such as <SPAN
+CLASS="QUOTE"
+>"could not locate
+      matching postgres executable"</SPAN
+>.
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect logic for GiST index page splits, when the split depends
+      on a non-first column of the index (Paul Ramsey)
+     </P
+></LI
+><LI
+><P
+>      Don't error out if recycling or removing an old WAL file fails at the
+      end of checkpoint (Heikki)
+     </P
+><P
+>      It's better to treat the problem as non-fatal and allow the checkpoint
+      to complete.  Future checkpoints will retry the removal.  Such problems
+      are not expected in normal operation, but have been seen to be
+      caused by misdesigned Windows anti-virus and backup software.
+     </P
+></LI
+><LI
+><P
+>      Ensure WAL files aren't repeatedly archived on Windows (Heikki)
+     </P
+><P
+>      This is another symptom that could happen if some other process
+      interfered with deletion of a no-longer-needed file.
+     </P
+></LI
+><LI
+><P
+>      Fix PAM password processing to be more robust (Tom)
+     </P
+><P
+>      The previous code is known to fail with the combination of the Linux
+      <TT
+CLASS="LITERAL"
+>pam_krb5</TT
+> PAM module with Microsoft Active Directory as the
+      domain controller.  It might have problems elsewhere too, since it was
+      making unjustified assumptions about what arguments the PAM stack would
+      pass to it.
+     </P
+></LI
+><LI
+><P
+>      Raise the maximum authentication token (Kerberos ticket) size in GSSAPI
+      and SSPI authentication methods (Ian Turner)
+     </P
+><P
+>      While the old 2000-byte limit was more than enough for Unix Kerberos
+      implementations, tickets issued by Windows Domain Controllers can be
+      much larger.
+     </P
+></LI
+><LI
+><P
+>      Re-enable collection of access statistics for sequences (Akira Kurosawa)
+     </P
+><P
+>      This used to work but was broken in 8.3.
+     </P
+></LI
+><LI
+><P
+>      Fix processing of ownership dependencies during <TT
+CLASS="LITERAL"
+>CREATE OR
+      REPLACE FUNCTION</TT
+> (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect handling of <TT
+CLASS="LITERAL"
+>WHERE</TT
+>
+      <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+>=<TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> conditions (Tom)
+     </P
+><P
+>      In some cases these could get ignored as redundant, but they aren't
+      &mdash; they're equivalent to <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> <TT
+CLASS="LITERAL"
+>IS NOT NULL</TT
+>.
+     </P
+></LI
+><LI
+><P
+>      Make text search parser accept underscores in XML attributes (Peter)
+     </P
+></LI
+><LI
+><P
+>      Fix encoding handling in <TT
+CLASS="TYPE"
+>xml</TT
+> binary input (Heikki)
+     </P
+><P
+>      If the XML header doesn't specify an encoding, we now assume UTF-8 by
+      default; the previous handling was inconsistent.
+     </P
+></LI
+><LI
+><P
+>      Fix bug with calling <TT
+CLASS="LITERAL"
+>plperl</TT
+> from <TT
+CLASS="LITERAL"
+>plperlu</TT
+> or vice
+      versa (Tom)
+     </P
+><P
+>      An error exit from the inner function could result in crashes due to
+      failure to re-select the correct Perl interpreter for the outer function.
+     </P
+></LI
+><LI
+><P
+>      Fix session-lifespan memory leak when a PL/Perl function is redefined
+      (Tom)
+     </P
+></LI
+><LI
+><P
+>      Ensure that Perl arrays are properly converted to
+      <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> arrays when returned by a set-returning
+      PL/Perl function (Andrew Dunstan, Abhijit Menon-Sen)
+     </P
+><P
+>      This worked correctly already for non-set-returning functions.
+     </P
+></LI
+><LI
+><P
+>      Fix rare crash in exception processing in PL/Python (Peter)
+     </P
+></LI
+><LI
+><P
+>      In <TT
+CLASS="FILENAME"
+>contrib/pg_standby</TT
+>, disable triggering failover with a
+      signal on Windows (Fujii Masao)
+     </P
+><P
+>      This never did anything useful, because Windows doesn't have Unix-style
+      signals, but recent changes made it actually crash.
+     </P
+></LI
+><LI
+><P
+>      Ensure <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s flex module is compiled with the correct
+      system header definitions (Tom)
+     </P
+><P
+>      This fixes build failures on platforms where
+      <TT
+CLASS="LITERAL"
+>--enable-largefile</TT
+> causes incompatible changes in the
+      generated code.
+     </P
+></LI
+><LI
+><P
+>      Make the postmaster ignore any <TT
+CLASS="LITERAL"
+>application_name</TT
+> parameter in
+      connection request packets, to improve compatibility with future libpq
+      versions (Tom)
+     </P
+></LI
+><LI
+><P
+>      Update the timezone abbreviation files to match current reality (Joachim
+      Wieland)
+     </P
+><P
+>      This includes adding <TT
+CLASS="LITERAL"
+>IDT</TT
+> and <TT
+CLASS="LITERAL"
+>SGT</TT
+> to the default
+      timezone abbreviation set.
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2009s
+      for DST law changes in Antarctica, Argentina, Bangladesh, Fiji,
+      Novokuznetsk, Pakistan, Palestine, Samoa, Syria; also historical
+      corrections for Hong Kong.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-3-10.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-3-8.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.3.10</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.3.8</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

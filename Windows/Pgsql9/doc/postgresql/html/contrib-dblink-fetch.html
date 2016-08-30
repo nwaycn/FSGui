@@ -1,0 +1,352 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>dblink_fetch</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="dblink"
+HREF="dblink.html"><LINK
+REL="PREVIOUS"
+TITLE="dblink_open"
+HREF="contrib-dblink-open.html"><LINK
+REL="NEXT"
+TITLE="dblink_close"
+HREF="contrib-dblink-close.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="dblink_open"
+HREF="contrib-dblink-open.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="dblink.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="dblink_close"
+HREF="contrib-dblink-close.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="CONTRIB-DBLINK-FETCH"
+></A
+>dblink_fetch</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN169859"
+></A
+><H2
+>Name</H2
+>dblink_fetch&nbsp;--&nbsp;returns rows from an open cursor in a remote database</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN169862"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>dblink_fetch(text cursorname, int howmany [, bool fail_on_error]) returns setof record
+dblink_fetch(text connname, text cursorname, int howmany [, bool fail_on_error]) returns setof record</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169864"
+></A
+><H2
+>Description</H2
+><P
+>    <CODE
+CLASS="FUNCTION"
+>dblink_fetch</CODE
+> fetches rows from a cursor previously
+    established by <CODE
+CLASS="FUNCTION"
+>dblink_open</CODE
+>.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169869"
+></A
+><H2
+>Arguments</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="PARAMETER"
+>connname</TT
+></DT
+><DD
+><P
+>       Name of the connection to use; omit this parameter to use the
+       unnamed connection.
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>cursorname</TT
+></DT
+><DD
+><P
+>       The name of the cursor to fetch from.
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>howmany</TT
+></DT
+><DD
+><P
+>       The maximum number of rows to retrieve. The next <TT
+CLASS="PARAMETER"
+>howmany</TT
+>
+       rows are fetched, starting at the current cursor position, moving
+       forward. Once the cursor has reached its end, no more rows are produced.
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>fail_on_error</TT
+></DT
+><DD
+><P
+>       If true (the default when omitted) then an error thrown on the
+       remote side of the connection causes an error to also be thrown
+       locally. If false, the remote error is locally reported as a NOTICE,
+       and the function returns no rows.
+      </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169893"
+></A
+><H2
+>Return Value</H2
+><P
+>    The function returns the row(s) fetched from the cursor.  To use this
+    function, you will need to specify the expected set of columns,
+    as previously discussed for <CODE
+CLASS="FUNCTION"
+>dblink</CODE
+>.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169897"
+></A
+><H2
+>Notes</H2
+><P
+>    On a mismatch between the number of return columns specified in the
+    <TT
+CLASS="LITERAL"
+>FROM</TT
+> clause, and the actual number of columns returned by the
+    remote cursor, an error will be thrown. In this event, the remote cursor
+    is still advanced by as many rows as it would have been if the error had
+    not occurred.  The same is true for any other error occurring in the local
+    query after the remote <TT
+CLASS="COMMAND"
+>FETCH</TT
+> has been done.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169902"
+></A
+><H2
+>Examples</H2
+><PRE
+CLASS="SCREEN"
+>SELECT dblink_connect('dbname=postgres');
+ dblink_connect
+----------------
+ OK
+(1 row)
+
+SELECT dblink_open('foo', 'select proname, prosrc from pg_proc where proname like ''bytea%''');
+ dblink_open
+-------------
+ OK
+(1 row)
+
+SELECT * FROM dblink_fetch('foo', 5) AS (funcname name, source text);
+ funcname |  source
+----------+----------
+ byteacat | byteacat
+ byteacmp | byteacmp
+ byteaeq  | byteaeq
+ byteage  | byteage
+ byteagt  | byteagt
+(5 rows)
+
+SELECT * FROM dblink_fetch('foo', 5) AS (funcname name, source text);
+ funcname  |  source
+-----------+-----------
+ byteain   | byteain
+ byteale   | byteale
+ bytealike | bytealike
+ bytealt   | bytealt
+ byteane   | byteane
+(5 rows)
+
+SELECT * FROM dblink_fetch('foo', 5) AS (funcname name, source text);
+  funcname  |   source
+------------+------------
+ byteanlike | byteanlike
+ byteaout   | byteaout
+(2 rows)
+
+SELECT * FROM dblink_fetch('foo', 5) AS (funcname name, source text);
+ funcname | source
+----------+--------
+(0 rows)</PRE
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib-dblink-open.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="contrib-dblink-close.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>dblink_open</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="dblink.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>dblink_close</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

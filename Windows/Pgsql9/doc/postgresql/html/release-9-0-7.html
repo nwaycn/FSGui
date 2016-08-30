@@ -1,0 +1,800 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.0.7</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.0.8"
+HREF="release-9-0-8.html"><LINK
+REL="NEXT"
+TITLE="Release 9.0.6"
+HREF="release-9-0-6.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.0.8"
+HREF="release-9-0-8.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.0.6"
+HREF="release-9-0-6.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-0-7"
+>E.90. Release 9.0.7</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2012-02-27</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 9.0.6.
+   For information about new features in the 9.0 major release, see
+   <A
+HREF="release-9-0.html"
+>Section E.97</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN144879"
+>E.90.1. Migration to Version 9.0.7</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.0.X.
+   </P
+><P
+>    However, if you are upgrading from a version earlier than 9.0.6,
+    see <A
+HREF="release-9-0-6.html"
+>Section E.91</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN144884"
+>E.90.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Require execute permission on the trigger function for
+      <TT
+CLASS="COMMAND"
+>CREATE TRIGGER</TT
+> (Robert Haas)
+     </P
+><P
+>      This missing check could allow another user to execute a trigger
+      function with forged input data, by installing it on a table he owns.
+      This is only of significance for trigger functions marked
+      <TT
+CLASS="LITERAL"
+>SECURITY DEFINER</TT
+>, since otherwise trigger functions run
+      as the table owner anyway.  (CVE-2012-0866)
+     </P
+></LI
+><LI
+><P
+>      Remove arbitrary limitation on length of common name in SSL
+      certificates (Heikki Linnakangas)
+     </P
+><P
+>      Both <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> and the server truncated the common name
+      extracted from an SSL certificate at 32 bytes.  Normally this would
+      cause nothing worse than an unexpected verification failure, but there
+      are some rather-implausible scenarios in which it might allow one
+      certificate holder to impersonate another.  The victim would have to
+      have a common name exactly 32 bytes long, and the attacker would have
+      to persuade a trusted CA to issue a certificate in which the common
+      name has that string as a prefix.  Impersonating a server would also
+      require some additional exploit to redirect client connections.
+      (CVE-2012-0867)
+     </P
+></LI
+><LI
+><P
+>      Convert newlines to spaces in names written in <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>
+      comments (Robert Haas)
+     </P
+><P
+>      <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> was incautious about sanitizing object names
+      that are emitted within SQL comments in its output script.  A name
+      containing a newline would at least render the script syntactically
+      incorrect.  Maliciously crafted object names could present a SQL
+      injection risk when the script is reloaded.  (CVE-2012-0868)
+     </P
+></LI
+><LI
+><P
+>      Fix btree index corruption from insertions concurrent with vacuuming
+      (Tom Lane)
+     </P
+><P
+>      An index page split caused by an insertion could sometimes cause a
+      concurrently-running <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> to miss removing index entries
+      that it should remove.  After the corresponding table rows are removed,
+      the dangling index entries would cause errors (such as <SPAN
+CLASS="QUOTE"
+>"could not
+      read block N in file ..."</SPAN
+>) or worse, silently wrong query results
+      after unrelated rows are re-inserted at the now-free table locations.
+      This bug has been present since release 8.2, but occurs so infrequently
+      that it was not diagnosed until now.  If you have reason to suspect
+      that it has happened in your database, reindexing the affected index
+      will fix things.
+     </P
+></LI
+><LI
+><P
+>      Fix transient zeroing of shared buffers during WAL replay (Tom Lane)
+     </P
+><P
+>      The replay logic would sometimes zero and refill a shared buffer, so
+      that the contents were transiently invalid.  In hot standby mode this
+      can result in a query that's executing in parallel seeing garbage data.
+      Various symptoms could result from that, but the most common one seems
+      to be <SPAN
+CLASS="QUOTE"
+>"invalid memory alloc request size"</SPAN
+>.
+     </P
+></LI
+><LI
+><P
+>      Fix postmaster to attempt restart after a hot-standby crash (Tom Lane)
+     </P
+><P
+>      A logic error caused the postmaster to terminate, rather than attempt
+      to restart the cluster, if any backend process crashed while operating
+      in hot standby mode.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+>/<TT
+CLASS="COMMAND"
+>VACUUM FULL</TT
+> handling of toast
+      values owned by recently-updated rows (Tom Lane)
+     </P
+><P
+>      This oversight could lead to <SPAN
+CLASS="QUOTE"
+>"duplicate key value violates unique
+      constraint"</SPAN
+> errors being reported against the toast table's index
+      during one of these commands.
+     </P
+></LI
+><LI
+><P
+>      Update per-column permissions, not only per-table permissions, when
+      changing table owner (Tom Lane)
+     </P
+><P
+>      Failure to do this meant that any previously granted column permissions
+      were still shown as having been granted by the old owner.  This meant
+      that neither the new owner nor a superuser could revoke the
+      now-untraceable-to-table-owner permissions.
+     </P
+></LI
+><LI
+><P
+>      Support foreign data wrappers and foreign servers in
+      <TT
+CLASS="COMMAND"
+>REASSIGN OWNED</TT
+> (Alvaro Herrera)
+     </P
+><P
+>      This command failed with <SPAN
+CLASS="QUOTE"
+>"unexpected classid"</SPAN
+> errors if
+      it needed to change the ownership of any such objects.
+     </P
+></LI
+><LI
+><P
+>      Allow non-existent values for some settings in <TT
+CLASS="COMMAND"
+>ALTER
+      USER/DATABASE SET</TT
+> (Heikki Linnakangas)
+     </P
+><P
+>      Allow <TT
+CLASS="VARNAME"
+>default_text_search_config</TT
+>,
+      <TT
+CLASS="VARNAME"
+>default_tablespace</TT
+>, and <TT
+CLASS="VARNAME"
+>temp_tablespaces</TT
+> to be
+      set to names that are not known.  This is because they might be known
+      in another database where the setting is intended to be used, or for the
+      tablespace cases because the tablespace might not be created yet.  The
+      same issue was previously recognized for <TT
+CLASS="VARNAME"
+>search_path</TT
+>, and
+      these settings now act like that one.
+     </P
+></LI
+><LI
+><P
+>      Avoid crashing when we have problems deleting table files post-commit
+      (Tom Lane)
+     </P
+><P
+>      Dropping a table should lead to deleting the underlying disk files only
+      after the transaction commits.  In event of failure then (for instance,
+      because of wrong file permissions) the code is supposed to just emit a
+      warning message and go on, since it's too late to abort the
+      transaction.  This logic got broken as of release 8.4, causing such
+      situations to result in a PANIC and an unrestartable database.
+     </P
+></LI
+><LI
+><P
+>      Recover from errors occurring during WAL replay of <TT
+CLASS="COMMAND"
+>DROP
+      TABLESPACE</TT
+> (Tom Lane)
+     </P
+><P
+>      Replay will attempt to remove the tablespace's directories, but there
+      are various reasons why this might fail (for example, incorrect
+      ownership or permissions on those directories).  Formerly the replay
+      code would panic, rendering the database unrestartable without manual
+      intervention.  It seems better to log the problem and continue, since
+      the only consequence of failure to remove the directories is some
+      wasted disk space.
+     </P
+></LI
+><LI
+><P
+>      Fix race condition in logging AccessExclusiveLocks for hot standby
+      (Simon Riggs)
+     </P
+><P
+>      Sometimes a lock would be logged as being held by <SPAN
+CLASS="QUOTE"
+>"transaction
+      zero"</SPAN
+>.  This is at least known to produce assertion failures on
+      slave servers, and might be the cause of more serious problems.
+     </P
+></LI
+><LI
+><P
+>      Track the OID counter correctly during WAL replay, even when it wraps
+      around (Tom Lane)
+     </P
+><P
+>      Previously the OID counter would remain stuck at a high value until the
+      system exited replay mode.  The practical consequences of that are
+      usually nil, but there are scenarios wherein a standby server that's
+      been promoted to master might take a long time to advance the OID
+      counter to a reasonable value once values are needed.
+     </P
+></LI
+><LI
+><P
+>      Prevent emitting misleading <SPAN
+CLASS="QUOTE"
+>"consistent recovery state reached"</SPAN
+>
+      log message at the beginning of crash recovery (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Fix initial value of
+      <TT
+CLASS="STRUCTNAME"
+>pg_stat_replication</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>replay_location</TT
+>
+      (Fujii Masao)
+     </P
+><P
+>      Previously, the value shown would be wrong until at least one WAL
+      record had been replayed.
+     </P
+></LI
+><LI
+><P
+>      Fix regular expression back-references with <TT
+CLASS="LITERAL"
+>*</TT
+> attached
+      (Tom Lane)
+     </P
+><P
+>      Rather than enforcing an exact string match, the code would effectively
+      accept any string that satisfies the pattern sub-expression referenced
+      by the back-reference symbol.
+     </P
+><P
+>      A similar problem still afflicts back-references that are embedded in a
+      larger quantified expression, rather than being the immediate subject
+      of the quantifier.  This will be addressed in a future
+      <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> release.
+     </P
+></LI
+><LI
+><P
+>      Fix recently-introduced memory leak in processing of
+      <TT
+CLASS="TYPE"
+>inet</TT
+>/<TT
+CLASS="TYPE"
+>cidr</TT
+> values (Heikki Linnakangas)
+     </P
+><P
+>      A patch in the December 2011 releases of <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+      caused memory leakage in these operations, which could be significant
+      in scenarios such as building a btree index on such a column.
+     </P
+></LI
+><LI
+><P
+>      Fix dangling pointer after <TT
+CLASS="COMMAND"
+>CREATE TABLE AS</TT
+>/<TT
+CLASS="COMMAND"
+>SELECT
+      INTO</TT
+> in a SQL-language function (Tom Lane)
+     </P
+><P
+>      In most cases this only led to an assertion failure in assert-enabled
+      builds, but worse consequences seem possible.
+     </P
+></LI
+><LI
+><P
+>      Avoid double close of file handle in syslogger on Windows (MauMau)
+     </P
+><P
+>      Ordinarily this error was invisible, but it would cause an exception
+      when running on a debug version of Windows.
+     </P
+></LI
+><LI
+><P
+>      Fix I/O-conversion-related memory leaks in plpgsql
+      (Andres Freund, Jan Urbanski, Tom Lane)
+     </P
+><P
+>      Certain operations would leak memory until the end of the current
+      function.
+     </P
+></LI
+><LI
+><P
+>      Improve <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>'s handling of inherited table columns
+      (Tom Lane)
+     </P
+><P
+>      <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> mishandled situations where a child column has
+      a different default expression than its parent column.  If the default
+      is textually identical to the parent's default, but not actually the
+      same (for instance, because of schema search path differences) it would
+      not be recognized as different, so that after dump and restore the
+      child would be allowed to inherit the parent's default.  Child columns
+      that are <TT
+CLASS="LITERAL"
+>NOT NULL</TT
+> where their parent is not could also be
+      restored subtly incorrectly.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+>'s direct-to-database mode for
+      INSERT-style table data (Tom Lane)
+     </P
+><P
+>      Direct-to-database restores from archive files made with
+      <TT
+CLASS="OPTION"
+>--inserts</TT
+> or <TT
+CLASS="OPTION"
+>--column-inserts</TT
+> options fail when
+      using <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> from a release dated September or
+      December 2011, as a result of an oversight in a fix for another
+      problem.  The archive file itself is not at fault, and text-mode
+      output is okay.
+     </P
+></LI
+><LI
+><P
+>      Allow <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> to process tables containing
+      <TT
+CLASS="TYPE"
+>regclass</TT
+> columns (Bruce Momjian)
+     </P
+><P
+>      Since <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> now takes care to preserve
+      <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+> OIDs, there was no longer any reason for this
+      restriction.
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> ignore <TT
+CLASS="LITERAL"
+>ENOTDIR</TT
+> errors
+      when looking for an SSL client certificate file
+      (Magnus Hagander)
+     </P
+><P
+>      This allows SSL connections to be established, though without a
+      certificate, even when the user's home directory is set to something
+      like <TT
+CLASS="LITERAL"
+>/dev/null</TT
+>.
+     </P
+></LI
+><LI
+><P
+>      Fix some more field alignment issues in <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>'s SQLDA area
+      (Zoltan Boszormenyi)
+     </P
+></LI
+><LI
+><P
+>      Allow <TT
+CLASS="LITERAL"
+>AT</TT
+> option in <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>
+      <TT
+CLASS="LITERAL"
+>DEALLOCATE</TT
+> statements (Michael Meskes)
+     </P
+><P
+>      The infrastructure to support this has been there for awhile, but
+      through an oversight there was still an error check rejecting the case.
+     </P
+></LI
+><LI
+><P
+>      Do not use the variable name when defining a varchar structure in ecpg
+      (Michael Meskes)
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="FILENAME"
+>contrib/auto_explain</TT
+>'s JSON output mode to produce
+      valid JSON (Andrew Dunstan)
+     </P
+><P
+>      The output used brackets at the top level, when it should have used
+      braces.
+     </P
+></LI
+><LI
+><P
+>      Fix error in <TT
+CLASS="FILENAME"
+>contrib/intarray</TT
+>'s <TT
+CLASS="LITERAL"
+>int[] &amp;
+      int[]</TT
+> operator (Guillaume Lelarge)
+     </P
+><P
+>      If the smallest integer the two input arrays have in common is 1,
+      and there are smaller values in either array, then 1 would be
+      incorrectly omitted from the result.
+     </P
+></LI
+><LI
+><P
+>      Fix error detection in <TT
+CLASS="FILENAME"
+>contrib/pgcrypto</TT
+>'s
+      <CODE
+CLASS="FUNCTION"
+>encrypt_iv()</CODE
+> and <CODE
+CLASS="FUNCTION"
+>decrypt_iv()</CODE
+>
+      (Marko Kreen)
+     </P
+><P
+>      These functions failed to report certain types of invalid-input errors,
+      and would instead return random garbage values for incorrect input.
+     </P
+></LI
+><LI
+><P
+>      Fix one-byte buffer overrun in <TT
+CLASS="FILENAME"
+>contrib/test_parser</TT
+>
+      (Paul Guyot)
+     </P
+><P
+>      The code would try to read one more byte than it should, which would
+      crash in corner cases.
+      Since <TT
+CLASS="FILENAME"
+>contrib/test_parser</TT
+> is only example code, this is
+      not a security issue in itself, but bad example code is still bad.
+     </P
+></LI
+><LI
+><P
+>      Use <CODE
+CLASS="FUNCTION"
+>__sync_lock_test_and_set()</CODE
+> for spinlocks on ARM, if
+      available (Martin Pitt)
+     </P
+><P
+>      This function replaces our previous use of the <TT
+CLASS="LITERAL"
+>SWPB</TT
+>
+      instruction, which is deprecated and not available on ARMv6 and later.
+      Reports suggest that the old code doesn't fail in an obvious way on
+      recent ARM boards, but simply doesn't interlock concurrent accesses,
+      leading to bizarre failures in multiprocess operation.
+     </P
+></LI
+><LI
+><P
+>      Use <TT
+CLASS="OPTION"
+>-fexcess-precision=standard</TT
+> option when building with
+      gcc versions that accept it (Andrew Dunstan)
+     </P
+><P
+>      This prevents assorted scenarios wherein recent versions of gcc will
+      produce creative results.
+     </P
+></LI
+><LI
+><P
+>      Allow use of threaded Python on FreeBSD (Chris Rees)
+     </P
+><P
+>      Our configure script previously believed that this combination wouldn't
+      work; but FreeBSD fixed the problem, so remove that error check.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-0-8.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-0-6.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.0.8</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.0.6</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

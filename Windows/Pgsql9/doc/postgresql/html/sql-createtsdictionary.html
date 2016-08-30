@@ -1,0 +1,351 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>CREATE TEXT SEARCH DICTIONARY</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="CREATE TEXT SEARCH CONFIGURATION"
+HREF="sql-createtsconfig.html"><LINK
+REL="NEXT"
+TITLE="CREATE TEXT SEARCH PARSER"
+HREF="sql-createtsparser.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="CREATE TEXT SEARCH CONFIGURATION"
+HREF="sql-createtsconfig.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="CREATE TEXT SEARCH PARSER"
+HREF="sql-createtsparser.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-CREATETSDICTIONARY"
+></A
+>CREATE TEXT SEARCH DICTIONARY</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN79705"
+></A
+><H2
+>Name</H2
+>CREATE TEXT SEARCH DICTIONARY&nbsp;--&nbsp;define a new text search dictionary</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN79708"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>CREATE TEXT SEARCH DICTIONARY <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> (
+    TEMPLATE = <TT
+CLASS="REPLACEABLE"
+><I
+>template</I
+></TT
+>
+    [, <TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+> = <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> [, ... ]]
+)</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN79714"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>CREATE TEXT SEARCH DICTIONARY</TT
+> creates a new text search
+   dictionary.  A text search dictionary specifies a way of recognizing
+   interesting or uninteresting words for searching.  A dictionary depends
+   on a text search template, which specifies the functions that actually
+   perform the work.  Typically the dictionary provides some options that
+   control the detailed behavior of the template's functions.
+  </P
+><P
+>   If a schema name is given then the text search dictionary is created in the
+   specified schema.  Otherwise it is created in the current schema.
+  </P
+><P
+>   The user who defines a text search dictionary becomes its owner.
+  </P
+><P
+>   Refer to <A
+HREF="textsearch.html"
+>Chapter 12</A
+> for further information.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN79722"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></DT
+><DD
+><P
+>      The name of the text search dictionary to be created.  The name can be
+      schema-qualified.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>template</I
+></TT
+></DT
+><DD
+><P
+>      The name of the text search template that will define the basic
+      behavior of this dictionary.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+></DT
+><DD
+><P
+>      The name of a template-specific option to be set for this dictionary.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+></DT
+><DD
+><P
+>      The value to use for a template-specific option.  If the value
+      is not a simple identifier or number, it must be quoted (but you can
+      always quote it, if you wish).
+     </P
+></DD
+></DL
+></DIV
+><P
+>   The options can appear in any order.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN79746"
+></A
+><H2
+>Examples</H2
+><P
+>   The following example command creates a Snowball-based dictionary
+   with a nonstandard list of stop words.
+  </P
+><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TEXT SEARCH DICTIONARY my_russian (
+    template = snowball,
+    language = russian,
+    stopwords = myrussian
+);</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN79750"
+></A
+><H2
+>Compatibility</H2
+><P
+>   There is no <TT
+CLASS="COMMAND"
+>CREATE TEXT SEARCH DICTIONARY</TT
+> statement in
+   the SQL standard.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN79754"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-altertsdictionary.html"
+>ALTER TEXT SEARCH DICTIONARY</A
+>, <A
+HREF="sql-droptsdictionary.html"
+>DROP TEXT SEARCH DICTIONARY</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-createtsconfig.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-createtsparser.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>CREATE TEXT SEARCH CONFIGURATION</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>CREATE TEXT SEARCH PARSER</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

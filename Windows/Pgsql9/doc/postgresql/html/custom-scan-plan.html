@@ -1,0 +1,346 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Creating Custom Scan Plans</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Writing A Custom Scan Provider"
+HREF="custom-scan.html"><LINK
+REL="PREVIOUS"
+TITLE="Creating Custom Scan Paths"
+HREF="custom-scan-path.html"><LINK
+REL="NEXT"
+TITLE="Executing Custom Scans"
+HREF="custom-scan-execution.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Creating Custom Scan Paths"
+HREF="custom-scan-path.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="custom-scan.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 56. Writing A Custom Scan Provider</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Executing Custom Scans"
+HREF="custom-scan-execution.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="CUSTOM-SCAN-PLAN"
+>56.2. Creating Custom Scan Plans</A
+></H1
+><P
+>    A custom scan is represented in a finished plan tree using the following
+    structure:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>typedef struct CustomScan
+{
+    Scan      scan;
+    uint32    flags;
+    List     *custom_plans;
+    List     *custom_exprs;
+    List     *custom_private;
+    List     *custom_scan_tlist;
+    Bitmapset *custom_relids;
+    const CustomScanMethods *methods;
+} CustomScan;</PRE
+><P>
+  </P
+><P
+>    <TT
+CLASS="STRUCTFIELD"
+>scan</TT
+> must be initialized as for any other scan, including
+    estimated costs, target lists, qualifications, and so on.
+    <TT
+CLASS="STRUCTFIELD"
+>flags</TT
+> is a bit mask with the same meaning as in
+    <TT
+CLASS="STRUCTNAME"
+>CustomPath</TT
+>.
+    <TT
+CLASS="STRUCTFIELD"
+>custom_plans</TT
+> can be used to store child
+    <TT
+CLASS="STRUCTNAME"
+>Plan</TT
+> nodes.
+    <TT
+CLASS="STRUCTFIELD"
+>custom_exprs</TT
+> should be used to
+    store expression trees that will need to be fixed up by
+    <TT
+CLASS="FILENAME"
+>setrefs.c</TT
+> and <TT
+CLASS="FILENAME"
+>subselect.c</TT
+>, while
+    <TT
+CLASS="STRUCTFIELD"
+>custom_private</TT
+> should be used to store other private data
+    that is only used by the custom scan provider itself.
+    <TT
+CLASS="STRUCTFIELD"
+>custom_scan_tlist</TT
+> can be NIL when scanning a base
+    relation, indicating that the custom scan returns scan tuples that match
+    the base relation's row type.  Otherwise it is a target list describing
+    the actual scan tuples.  <TT
+CLASS="STRUCTFIELD"
+>custom_scan_tlist</TT
+> must be
+    provided for joins, and could be provided for scans if the custom scan
+    provider can compute some non-Var expressions.
+    <TT
+CLASS="STRUCTFIELD"
+>custom_relids</TT
+> is set by the core code to the set of
+    relations (range table indexes) that this scan node handles; except when
+    this scan is replacing a join, it will have only one member.
+    <TT
+CLASS="STRUCTFIELD"
+>methods</TT
+> must point to a (usually statically allocated)
+    object implementing the required custom scan methods, which are further
+    detailed below.
+  </P
+><P
+>   When a <TT
+CLASS="STRUCTNAME"
+>CustomScan</TT
+> scans a single relation,
+   <TT
+CLASS="STRUCTFIELD"
+>scan.scanrelid</TT
+> must be the range table index of the table
+   to be scanned.  When it replaces a join, <TT
+CLASS="STRUCTFIELD"
+>scan.scanrelid</TT
+>
+   should be zero.
+  </P
+><P
+>   Plan trees must be able to be duplicated using <CODE
+CLASS="FUNCTION"
+>copyObject</CODE
+>,
+   so all the data stored within the <SPAN
+CLASS="QUOTE"
+>"custom"</SPAN
+> fields must consist of
+   nodes that that function can handle.  Furthermore, custom scan providers
+   cannot substitute a larger structure that embeds
+   a <TT
+CLASS="STRUCTNAME"
+>CustomScan</TT
+> for the structure itself, as would be possible
+   for a <TT
+CLASS="STRUCTNAME"
+>CustomPath</TT
+> or <TT
+CLASS="STRUCTNAME"
+>CustomScanState</TT
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="CUSTOM-SCAN-PLAN-CALLBACKS"
+>56.2.1. Custom Scan Plan Callbacks</A
+></H2
+><P
+></P><PRE
+CLASS="PROGRAMLISTING"
+>Node *(*CreateCustomScanState) (CustomScan *cscan);</PRE
+><P>
+    Allocate a <TT
+CLASS="STRUCTNAME"
+>CustomScanState</TT
+> for this
+    <TT
+CLASS="STRUCTNAME"
+>CustomScan</TT
+>.  The actual allocation will often be larger than
+    required for an ordinary <TT
+CLASS="STRUCTNAME"
+>CustomScanState</TT
+>, because many
+    providers will wish to embed that as the first field of a larger structure.
+    The value returned must have the node tag and <TT
+CLASS="STRUCTFIELD"
+>methods</TT
+>
+    set appropriately, but other fields should be left as zeroes at this
+    stage; after <CODE
+CLASS="FUNCTION"
+>ExecInitCustomScan</CODE
+> performs basic initialization,
+    the <CODE
+CLASS="FUNCTION"
+>BeginCustomScan</CODE
+> callback will be invoked to give the
+    custom scan provider a chance to do whatever else is needed.
+   </P
+><P
+></P><PRE
+CLASS="PROGRAMLISTING"
+>void (*TextOutCustomScan) (StringInfo str,
+                           const CustomScan *node);</PRE
+><P>
+    Generate additional output when <CODE
+CLASS="FUNCTION"
+>nodeToString</CODE
+> is invoked on
+    this custom plan node.  This callback is optional.  Since
+    <CODE
+CLASS="FUNCTION"
+>nodeToString</CODE
+> will automatically dump all fields in the
+    structure, including the substructure of the <SPAN
+CLASS="QUOTE"
+>"custom"</SPAN
+> fields,
+    there is usually not much need for this callback.
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="custom-scan-path.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="custom-scan-execution.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Creating Custom Scan Paths</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="custom-scan.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Executing Custom Scans</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

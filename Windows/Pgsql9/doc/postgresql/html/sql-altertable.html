@@ -1,0 +1,2446 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>ALTER TABLE</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="ALTER SYSTEM"
+HREF="sql-altersystem.html"><LINK
+REL="NEXT"
+TITLE="ALTER TABLESPACE"
+HREF="sql-altertablespace.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="ALTER SYSTEM"
+HREF="sql-altersystem.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="ALTER TABLESPACE"
+HREF="sql-altertablespace.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-ALTERTABLE"
+></A
+>ALTER TABLE</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN71966"
+></A
+><H2
+>Name</H2
+>ALTER TABLE&nbsp;--&nbsp;change the definition of a table</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN71969"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>ALTER TABLE [ IF EXISTS ] [ ONLY ] <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> [ * ]
+    <TT
+CLASS="REPLACEABLE"
+><I
+>action</I
+></TT
+> [, ... ]
+ALTER TABLE [ IF EXISTS ] [ ONLY ] <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> [ * ]
+    RENAME [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> TO <TT
+CLASS="REPLACEABLE"
+><I
+>new_column_name</I
+></TT
+>
+ALTER TABLE [ IF EXISTS ] [ ONLY ] <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> [ * ]
+    RENAME CONSTRAINT <TT
+CLASS="REPLACEABLE"
+><I
+>constraint_name</I
+></TT
+> TO <TT
+CLASS="REPLACEABLE"
+><I
+>new_constraint_name</I
+></TT
+>
+ALTER TABLE [ IF EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>
+    RENAME TO <TT
+CLASS="REPLACEABLE"
+><I
+>new_name</I
+></TT
+>
+ALTER TABLE [ IF EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>
+    SET SCHEMA <TT
+CLASS="REPLACEABLE"
+><I
+>new_schema</I
+></TT
+>
+ALTER TABLE ALL IN TABLESPACE <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> [ OWNED BY <TT
+CLASS="REPLACEABLE"
+><I
+>role_name</I
+></TT
+> [, ... ] ]
+    SET TABLESPACE <TT
+CLASS="REPLACEABLE"
+><I
+>new_tablespace</I
+></TT
+> [ NOWAIT ]
+
+<SPAN
+CLASS="phrase"
+><SPAN
+CLASS="PHRASE"
+>where <TT
+CLASS="REPLACEABLE"
+><I
+>action</I
+></TT
+> is one of:</SPAN
+></SPAN
+>
+
+    ADD [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>data_type</I
+></TT
+> [ COLLATE <TT
+CLASS="REPLACEABLE"
+><I
+>collation</I
+></TT
+> ] [ <TT
+CLASS="REPLACEABLE"
+><I
+>column_constraint</I
+></TT
+> [ ... ] ]
+    DROP [ COLUMN ] [ IF EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> [ RESTRICT | CASCADE ]
+    ALTER [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> [ SET DATA ] TYPE <TT
+CLASS="REPLACEABLE"
+><I
+>data_type</I
+></TT
+> [ COLLATE <TT
+CLASS="REPLACEABLE"
+><I
+>collation</I
+></TT
+> ] [ USING <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+> ]
+    ALTER [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> SET DEFAULT <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>
+    ALTER [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> DROP DEFAULT
+    ALTER [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> { SET | DROP } NOT NULL
+    ALTER [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> SET STATISTICS <TT
+CLASS="REPLACEABLE"
+><I
+>integer</I
+></TT
+>
+    ALTER [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> SET ( <TT
+CLASS="REPLACEABLE"
+><I
+>attribute_option</I
+></TT
+> = <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> [, ... ] )
+    ALTER [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> RESET ( <TT
+CLASS="REPLACEABLE"
+><I
+>attribute_option</I
+></TT
+> [, ... ] )
+    ALTER [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> SET STORAGE { PLAIN | EXTERNAL | EXTENDED | MAIN }
+    ADD <TT
+CLASS="REPLACEABLE"
+><I
+>table_constraint</I
+></TT
+> [ NOT VALID ]
+    ADD <TT
+CLASS="REPLACEABLE"
+><I
+>table_constraint_using_index</I
+></TT
+>
+    ALTER CONSTRAINT <TT
+CLASS="REPLACEABLE"
+><I
+>constraint_name</I
+></TT
+> [ DEFERRABLE | NOT DEFERRABLE ] [ INITIALLY DEFERRED | INITIALLY IMMEDIATE ]
+    VALIDATE CONSTRAINT <TT
+CLASS="REPLACEABLE"
+><I
+>constraint_name</I
+></TT
+>
+    DROP CONSTRAINT [ IF EXISTS ]  <TT
+CLASS="REPLACEABLE"
+><I
+>constraint_name</I
+></TT
+> [ RESTRICT | CASCADE ]
+    DISABLE TRIGGER [ <TT
+CLASS="REPLACEABLE"
+><I
+>trigger_name</I
+></TT
+> | ALL | USER ]
+    ENABLE TRIGGER [ <TT
+CLASS="REPLACEABLE"
+><I
+>trigger_name</I
+></TT
+> | ALL | USER ]
+    ENABLE REPLICA TRIGGER <TT
+CLASS="REPLACEABLE"
+><I
+>trigger_name</I
+></TT
+>
+    ENABLE ALWAYS TRIGGER <TT
+CLASS="REPLACEABLE"
+><I
+>trigger_name</I
+></TT
+>
+    DISABLE RULE <TT
+CLASS="REPLACEABLE"
+><I
+>rewrite_rule_name</I
+></TT
+>
+    ENABLE RULE <TT
+CLASS="REPLACEABLE"
+><I
+>rewrite_rule_name</I
+></TT
+>
+    ENABLE REPLICA RULE <TT
+CLASS="REPLACEABLE"
+><I
+>rewrite_rule_name</I
+></TT
+>
+    ENABLE ALWAYS RULE <TT
+CLASS="REPLACEABLE"
+><I
+>rewrite_rule_name</I
+></TT
+>
+    DISABLE ROW LEVEL SECURITY
+    ENABLE ROW LEVEL SECURITY
+    FORCE ROW LEVEL SECURITY
+    NO FORCE ROW LEVEL SECURITY
+    CLUSTER ON <TT
+CLASS="REPLACEABLE"
+><I
+>index_name</I
+></TT
+>
+    SET WITHOUT CLUSTER
+    SET WITH OIDS
+    SET WITHOUT OIDS
+    SET TABLESPACE <TT
+CLASS="REPLACEABLE"
+><I
+>new_tablespace</I
+></TT
+>
+    SET { LOGGED | UNLOGGED }
+    SET ( <TT
+CLASS="REPLACEABLE"
+><I
+>storage_parameter</I
+></TT
+> = <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> [, ... ] )
+    RESET ( <TT
+CLASS="REPLACEABLE"
+><I
+>storage_parameter</I
+></TT
+> [, ... ] )
+    INHERIT <TT
+CLASS="REPLACEABLE"
+><I
+>parent_table</I
+></TT
+>
+    NO INHERIT <TT
+CLASS="REPLACEABLE"
+><I
+>parent_table</I
+></TT
+>
+    OF <TT
+CLASS="REPLACEABLE"
+><I
+>type_name</I
+></TT
+>
+    NOT OF
+    OWNER TO { <TT
+CLASS="REPLACEABLE"
+><I
+>new_owner</I
+></TT
+> | CURRENT_USER | SESSION_USER }
+    REPLICA IDENTITY { DEFAULT | USING INDEX <TT
+CLASS="REPLACEABLE"
+><I
+>index_name</I
+></TT
+> | FULL | NOTHING }
+
+<SPAN
+CLASS="phrase"
+><SPAN
+CLASS="PHRASE"
+>and <TT
+CLASS="REPLACEABLE"
+><I
+>table_constraint_using_index</I
+></TT
+> is:</SPAN
+></SPAN
+>
+
+    [ CONSTRAINT <TT
+CLASS="REPLACEABLE"
+><I
+>constraint_name</I
+></TT
+> ]
+    { UNIQUE | PRIMARY KEY } USING INDEX <TT
+CLASS="REPLACEABLE"
+><I
+>index_name</I
+></TT
+>
+    [ DEFERRABLE | NOT DEFERRABLE ] [ INITIALLY DEFERRED | INITIALLY IMMEDIATE ]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN72036"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>ALTER TABLE</TT
+> changes the definition of an existing table.
+   There are several subforms described below. Note that the lock level required
+   may differ for each subform. An <TT
+CLASS="LITERAL"
+>ACCESS EXCLUSIVE</TT
+> lock is held
+   unless explicitly noted. When multiple subcommands are listed, the lock
+   held will be the strictest one required from any subcommand.
+
+  <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>ADD COLUMN</TT
+></DT
+><DD
+><P
+>      This form adds a new column to the table, using the same syntax as
+      <A
+HREF="sql-createtable.html"
+>CREATE TABLE</A
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>DROP COLUMN [ IF EXISTS ]</TT
+></DT
+><DD
+><P
+>      This form drops a column from a table.  Indexes and
+      table constraints involving the column will be automatically
+      dropped as well.  You will need to say <TT
+CLASS="LITERAL"
+>CASCADE</TT
+> if
+      anything outside the table depends on the column, for example,
+      foreign key references or views.
+      If <TT
+CLASS="LITERAL"
+>IF EXISTS</TT
+> is specified and the column
+      does not exist, no error is thrown. In this case a notice
+      is issued instead.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET DATA TYPE</TT
+></DT
+><DD
+><P
+>      This form changes the type of a column of a table. Indexes and
+      simple table constraints involving the column will be automatically
+      converted to use the new column type by reparsing the originally
+      supplied expression.
+      The optional <TT
+CLASS="LITERAL"
+>COLLATE</TT
+> clause specifies a collation
+      for the new column; if omitted, the collation is the default for the
+      new column type.
+      The optional <TT
+CLASS="LITERAL"
+>USING</TT
+>
+      clause specifies how to compute the new column value from the old;
+      if omitted, the default conversion is the same as an assignment
+      cast from old data type to new.  A  <TT
+CLASS="LITERAL"
+>USING</TT
+>
+      clause must be provided if there is no implicit or assignment
+      cast from old to new type.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET</TT
+>/<TT
+CLASS="LITERAL"
+>DROP DEFAULT</TT
+></DT
+><DD
+><P
+>      These forms set or remove the default value for a column.
+      Default values only apply in subsequent <TT
+CLASS="COMMAND"
+>INSERT</TT
+>
+      or <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> commands; they do not cause rows already in the
+      table to change.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET</TT
+>/<TT
+CLASS="LITERAL"
+>DROP NOT NULL</TT
+></DT
+><DD
+><P
+>      These forms change whether a column is marked to allow null
+      values or to reject null values.  You can only use <TT
+CLASS="LITERAL"
+>SET
+      NOT NULL</TT
+> when the column contains no null values.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET STATISTICS</TT
+></DT
+><DD
+><P
+>      This form
+      sets the per-column statistics-gathering target for subsequent
+      <A
+HREF="sql-analyze.html"
+>ANALYZE</A
+> operations.
+      The target can be set in the range 0 to 10000; alternatively, set it
+      to -1 to revert to using the system default statistics
+      target (<A
+HREF="runtime-config-query.html#GUC-DEFAULT-STATISTICS-TARGET"
+>default_statistics_target</A
+>).
+      For more information on the use of statistics by the
+      <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> query planner, refer to
+      <A
+HREF="planner-stats.html"
+>Section 14.2</A
+>.
+     </P
+><P
+>      <TT
+CLASS="LITERAL"
+>SET STATISTICS</TT
+> acquires a
+      <TT
+CLASS="LITERAL"
+>SHARE UPDATE EXCLUSIVE</TT
+> lock.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET ( <TT
+CLASS="REPLACEABLE"
+><I
+>attribute_option</I
+></TT
+> = <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> [, ... ] )</TT
+><BR><TT
+CLASS="LITERAL"
+>RESET ( <TT
+CLASS="REPLACEABLE"
+><I
+>attribute_option</I
+></TT
+> [, ... ] )</TT
+></DT
+><DD
+><P
+>      This form sets or resets per-attribute options.  Currently, the only
+      defined per-attribute options are <TT
+CLASS="LITERAL"
+>n_distinct</TT
+> and
+      <TT
+CLASS="LITERAL"
+>n_distinct_inherited</TT
+>, which override the
+      number-of-distinct-values estimates made by subsequent
+      <A
+HREF="sql-analyze.html"
+>ANALYZE</A
+>
+      operations.  <TT
+CLASS="LITERAL"
+>n_distinct</TT
+> affects the statistics for the table
+      itself, while <TT
+CLASS="LITERAL"
+>n_distinct_inherited</TT
+> affects the statistics
+      gathered for the table plus its inheritance children.  When set to a
+      positive value, <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> will assume that the column contains
+      exactly the specified number of distinct nonnull values.  When set to a
+      negative value, which must be greater
+      than or equal to -1, <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> will assume that the number of
+      distinct nonnull values in the column is linear in the size of the
+      table; the exact count is to be computed by multiplying the estimated
+      table size by the absolute value of the given number.  For example,
+      a value of -1 implies that all values in the column are distinct, while
+      a value of -0.5 implies that each value appears twice on the average.
+      This can be useful when the size of the table changes over time, since
+      the multiplication by the number of rows in the table is not performed
+      until query planning time.  Specify a value of 0 to revert to estimating
+      the number of distinct values normally.  For more information on the use
+      of statistics by the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> query
+      planner, refer to <A
+HREF="planner-stats.html"
+>Section 14.2</A
+>.
+     </P
+><P
+>      Changing per-attribute options acquires a
+      <TT
+CLASS="LITERAL"
+>SHARE UPDATE EXCLUSIVE</TT
+> lock.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET STORAGE</TT
+>
+     </DT
+><DD
+><P
+>      This form sets the storage mode for a column. This controls whether this
+      column is held inline or in a secondary <ACRONYM
+CLASS="ACRONYM"
+>TOAST</ACRONYM
+> table, and
+      whether the data
+      should be compressed or not. <TT
+CLASS="LITERAL"
+>PLAIN</TT
+> must be used
+      for fixed-length values such as <TT
+CLASS="TYPE"
+>integer</TT
+> and is
+      inline, uncompressed. <TT
+CLASS="LITERAL"
+>MAIN</TT
+> is for inline,
+      compressible data. <TT
+CLASS="LITERAL"
+>EXTERNAL</TT
+> is for external,
+      uncompressed data, and <TT
+CLASS="LITERAL"
+>EXTENDED</TT
+> is for external,
+      compressed data.  <TT
+CLASS="LITERAL"
+>EXTENDED</TT
+> is the default for most
+      data types that support non-<TT
+CLASS="LITERAL"
+>PLAIN</TT
+> storage.
+      Use of <TT
+CLASS="LITERAL"
+>EXTERNAL</TT
+> will make substring operations on
+      very large <TT
+CLASS="TYPE"
+>text</TT
+> and <TT
+CLASS="TYPE"
+>bytea</TT
+> values run faster,
+      at the penalty of increased storage space.  Note that
+      <TT
+CLASS="LITERAL"
+>SET STORAGE</TT
+> doesn't itself change anything in the table,
+      it just sets the strategy to be pursued during future table updates.
+      See <A
+HREF="storage-toast.html"
+>Section 63.2</A
+> for more information.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>ADD <TT
+CLASS="REPLACEABLE"
+><I
+>table_constraint</I
+></TT
+> [ NOT VALID ]</TT
+></DT
+><DD
+><P
+>      This form adds a new constraint to a table using the same syntax as
+      <A
+HREF="sql-createtable.html"
+>CREATE TABLE</A
+>, plus the option <TT
+CLASS="LITERAL"
+>NOT
+      VALID</TT
+>, which is currently only allowed for foreign key
+      and CHECK constraints.
+      If the constraint is marked <TT
+CLASS="LITERAL"
+>NOT VALID</TT
+>, the
+      potentially-lengthy initial check to verify that all rows in the table
+      satisfy the constraint is skipped.  The constraint will still be
+      enforced against subsequent inserts or updates (that is, they'll fail
+      unless there is a matching row in the referenced table, in the case
+      of foreign keys; and they'll fail unless the new row matches the
+      specified check constraints).  But the
+      database will not assume that the constraint holds for all rows in
+      the table, until it is validated by using the <TT
+CLASS="LITERAL"
+>VALIDATE
+      CONSTRAINT</TT
+> option.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>ADD <TT
+CLASS="REPLACEABLE"
+><I
+>table_constraint_using_index</I
+></TT
+></TT
+></DT
+><DD
+><P
+>      This form adds a new <TT
+CLASS="LITERAL"
+>PRIMARY KEY</TT
+> or <TT
+CLASS="LITERAL"
+>UNIQUE</TT
+>
+      constraint to a table based on an existing unique index.  All the
+      columns of the index will be included in the constraint.
+     </P
+><P
+>      The index cannot have expression columns nor be a partial index.
+      Also, it must be a b-tree index with default sort ordering.  These
+      restrictions ensure that the index is equivalent to one that would be
+      built by a regular <TT
+CLASS="LITERAL"
+>ADD PRIMARY KEY</TT
+> or <TT
+CLASS="LITERAL"
+>ADD UNIQUE</TT
+>
+      command.
+     </P
+><P
+>      If <TT
+CLASS="LITERAL"
+>PRIMARY KEY</TT
+> is specified, and the index's columns are not
+      already marked <TT
+CLASS="LITERAL"
+>NOT NULL</TT
+>, then this command will attempt to
+      do <TT
+CLASS="LITERAL"
+>ALTER COLUMN SET NOT NULL</TT
+> against each such column.
+      That requires a full table scan to verify the column(s) contain no
+      nulls.  In all other cases, this is a fast operation.
+     </P
+><P
+>      If a constraint name is provided then the index will be renamed to match
+      the constraint name.  Otherwise the constraint will be named the same as
+      the index.
+     </P
+><P
+>      After this command is executed, the index is <SPAN
+CLASS="QUOTE"
+>"owned"</SPAN
+> by the
+      constraint, in the same way as if the index had been built by
+      a regular <TT
+CLASS="LITERAL"
+>ADD PRIMARY KEY</TT
+> or <TT
+CLASS="LITERAL"
+>ADD UNIQUE</TT
+>
+      command.  In particular, dropping the constraint will make the index
+      disappear too.
+     </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>       Adding a constraint using an existing index can be helpful in
+       situations where a new constraint needs to be added without blocking
+       table updates for a long time.  To do that, create the index using
+       <TT
+CLASS="COMMAND"
+>CREATE INDEX CONCURRENTLY</TT
+>, and then install it as an
+       official constraint using this syntax.  See the example below.
+      </P
+></BLOCKQUOTE
+></DIV
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>ALTER CONSTRAINT</TT
+></DT
+><DD
+><P
+>      This form alters the attributes of a constraint that was previously
+      created. Currently only foreign key constraints may be altered.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>VALIDATE CONSTRAINT</TT
+></DT
+><DD
+><P
+>      This form validates a foreign key or check constraint that was previously created
+      as <TT
+CLASS="LITERAL"
+>NOT VALID</TT
+>, by scanning the table to ensure there
+      are no rows for which the constraint is not satisfied.
+      Nothing happens if the constraint is already marked valid.
+     </P
+><P
+>      Validation can be a long process on larger tables. The value of separating
+      validation from initial creation is that you can defer validation to less
+      busy times, or can be used to give additional time to correct pre-existing
+      errors while preventing new errors. Note also that validation on its own
+      does not prevent normal write commands against the table while it runs.
+     </P
+><P
+>      Validation acquires only a <TT
+CLASS="LITERAL"
+>SHARE UPDATE EXCLUSIVE</TT
+> lock
+      on the table being altered. If the constraint is a foreign key then
+      a <TT
+CLASS="LITERAL"
+>ROW SHARE</TT
+> lock is also required on
+      the table referenced by the constraint.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>DROP CONSTRAINT [ IF EXISTS ]</TT
+></DT
+><DD
+><P
+>      This form drops the specified constraint on a table.
+      If <TT
+CLASS="LITERAL"
+>IF EXISTS</TT
+> is specified and the constraint
+      does not exist, no error is thrown. In this case a notice is issued instead.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>DISABLE</TT
+>/<TT
+CLASS="LITERAL"
+>ENABLE [ REPLICA | ALWAYS ] TRIGGER</TT
+></DT
+><DD
+><P
+>      These forms configure the firing of trigger(s) belonging to the table.
+      A disabled trigger is still known to the system, but is not executed
+      when its triggering event occurs.  For a deferred trigger, the enable
+      status is checked when the event occurs, not when the trigger function
+      is actually executed.  One can disable or enable a single
+      trigger specified by name, or all triggers on the table, or only
+      user triggers (this option excludes internally generated constraint
+      triggers such as those that are used to implement foreign key
+      constraints or deferrable uniqueness and exclusion constraints).
+      Disabling or enabling internally generated constraint triggers
+      requires superuser privileges; it should be done with caution since
+      of course the integrity of the constraint cannot be guaranteed if the
+      triggers are not executed.
+      The trigger firing mechanism is also affected by the configuration
+      variable <A
+HREF="runtime-config-client.html#GUC-SESSION-REPLICATION-ROLE"
+>session_replication_role</A
+>. Simply enabled
+      triggers will fire when the replication role is <SPAN
+CLASS="QUOTE"
+>"origin"</SPAN
+>
+      (the default) or <SPAN
+CLASS="QUOTE"
+>"local"</SPAN
+>. Triggers configured as <TT
+CLASS="LITERAL"
+>ENABLE
+      REPLICA</TT
+> will only fire if the session is in <SPAN
+CLASS="QUOTE"
+>"replica"</SPAN
+>
+      mode, and triggers configured as <TT
+CLASS="LITERAL"
+>ENABLE ALWAYS</TT
+> will
+      fire regardless of the current replication mode.
+     </P
+><P
+>      This command acquires a <TT
+CLASS="LITERAL"
+>SHARE ROW EXCLUSIVE</TT
+> lock.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>DISABLE</TT
+>/<TT
+CLASS="LITERAL"
+>ENABLE [ REPLICA | ALWAYS ] RULE</TT
+></DT
+><DD
+><P
+>      These forms configure the firing of rewrite rules belonging to the table.
+      A disabled rule is still known to the system, but is not applied
+      during query rewriting. The semantics are as for disabled/enabled
+      triggers. This configuration is ignored for <TT
+CLASS="LITERAL"
+>ON SELECT</TT
+> rules, which
+      are always applied in order to keep views working even if the current
+      session is in a non-default replication role.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>DISABLE</TT
+>/<TT
+CLASS="LITERAL"
+>ENABLE ROW LEVEL SECURITY</TT
+></DT
+><DD
+><P
+>      These forms control the application of row security policies belonging
+      to the table.  If enabled and no policies exist for the table, then a
+      default-deny policy is applied.  Note that policies can exist for a table
+      even if row level security is disabled - in this case, the policies will
+      NOT be applied and the policies will be ignored.
+      See also
+      <A
+HREF="sql-createpolicy.html"
+>CREATE POLICY</A
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>NO FORCE</TT
+>/<TT
+CLASS="LITERAL"
+>FORCE ROW LEVEL SECURITY</TT
+></DT
+><DD
+><P
+>      These forms control the application of row security policies belonging
+      to the table when the user is the table owner.  If enabled, row level
+      security policies will be applied when the user is the table owner.  If
+      disabled (the default) then row level security will not be applied when
+      the user is the table owner.
+      See also
+      <A
+HREF="sql-createpolicy.html"
+>CREATE POLICY</A
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>CLUSTER ON</TT
+></DT
+><DD
+><P
+>      This form selects the default index for future
+      <A
+HREF="sql-cluster.html"
+>CLUSTER</A
+>
+      operations.  It does not actually re-cluster the table.
+     </P
+><P
+>      Changing cluster options acquires a <TT
+CLASS="LITERAL"
+>SHARE UPDATE EXCLUSIVE</TT
+> lock.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET WITHOUT CLUSTER</TT
+></DT
+><DD
+><P
+>      This form removes the most recently used
+      <A
+HREF="sql-cluster.html"
+>CLUSTER</A
+>
+      index specification from the table.  This affects
+      future cluster operations that don't specify an index.
+     </P
+><P
+>      Changing cluster options acquires a <TT
+CLASS="LITERAL"
+>SHARE UPDATE EXCLUSIVE</TT
+> lock.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET WITH OIDS</TT
+></DT
+><DD
+><P
+>      This form adds an <TT
+CLASS="LITERAL"
+>oid</TT
+> system column to the
+      table (see <A
+HREF="ddl-system-columns.html"
+>Section 5.4</A
+>).
+      It does nothing if the table already has OIDs.
+     </P
+><P
+>      Note that this is not equivalent to <TT
+CLASS="LITERAL"
+>ADD COLUMN oid oid</TT
+>;
+      that would add a normal column that happened to be named
+      <TT
+CLASS="LITERAL"
+>oid</TT
+>, not a system column.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET WITHOUT OIDS</TT
+></DT
+><DD
+><P
+>      This form removes the <TT
+CLASS="LITERAL"
+>oid</TT
+> system column from the
+      table.  This is exactly equivalent to
+      <TT
+CLASS="LITERAL"
+>DROP COLUMN oid RESTRICT</TT
+>,
+      except that it will not complain if there is already no
+      <TT
+CLASS="LITERAL"
+>oid</TT
+> column.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET TABLESPACE</TT
+></DT
+><DD
+><P
+>      This form changes the table's tablespace to the specified tablespace and
+      moves the data file(s) associated with the table to the new tablespace.
+      Indexes on the table, if any, are not moved; but they can be moved
+      separately with additional <TT
+CLASS="LITERAL"
+>SET TABLESPACE</TT
+> commands.
+      All tables in the current database in a tablespace can be moved by using
+      the <TT
+CLASS="LITERAL"
+>ALL IN TABLESPACE</TT
+> form, which will lock all tables
+      to be moved first and then move each one.  This form also supports
+      <TT
+CLASS="LITERAL"
+>OWNED BY</TT
+>, which will only move tables owned by the
+      roles specified.  If the <TT
+CLASS="LITERAL"
+>NOWAIT</TT
+> option is specified
+      then the command will fail if it is unable to acquire all of the locks
+      required immediately.  Note that system catalogs are not moved by this
+      command, use <TT
+CLASS="COMMAND"
+>ALTER DATABASE</TT
+> or explicit
+      <TT
+CLASS="COMMAND"
+>ALTER TABLE</TT
+> invocations instead if desired.  The
+      <TT
+CLASS="LITERAL"
+>information_schema</TT
+> relations are not considered part
+      of the system catalogs and will be moved.
+      See also
+      <A
+HREF="sql-createtablespace.html"
+>CREATE TABLESPACE</A
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET { LOGGED | UNLOGGED }</TT
+></DT
+><DD
+><P
+>      This form changes the table from unlogged to logged or vice-versa
+      (see <A
+HREF="sql-createtable.html#SQL-CREATETABLE-UNLOGGED"
+><I
+CLASS="TERM"
+><TT
+CLASS="LITERAL"
+>UNLOGGED</TT
+></I
+></A
+>).  It cannot be applied
+      to a temporary table.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET ( <TT
+CLASS="REPLACEABLE"
+><I
+>storage_parameter</I
+></TT
+> = <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> [, ... ] )</TT
+></DT
+><DD
+><P
+>      This form changes one or more storage parameters for the table.  See
+      <A
+HREF="sql-createtable.html#SQL-CREATETABLE-STORAGE-PARAMETERS"
+><I
+>Storage Parameters</I
+></A
+>
+      for details on the available parameters.  Note that the table contents
+      will not be modified immediately by this command; depending on the
+      parameter you might need to rewrite the table to get the desired effects.
+      That can be done with <A
+HREF="sql-vacuum.html"
+>VACUUM
+      FULL</A
+>, <A
+HREF="sql-cluster.html"
+>CLUSTER</A
+> or one of the forms
+      of <TT
+CLASS="COMMAND"
+>ALTER TABLE</TT
+> that forces a table rewrite.
+     </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>       While <TT
+CLASS="COMMAND"
+>CREATE TABLE</TT
+> allows <TT
+CLASS="LITERAL"
+>OIDS</TT
+> to be specified
+       in the <TT
+CLASS="LITERAL"
+>WITH (<TT
+CLASS="REPLACEABLE"
+><I
+>storage_parameter</I
+></TT
+>)</TT
+> syntax,
+       <TT
+CLASS="COMMAND"
+>ALTER TABLE</TT
+> does not treat <TT
+CLASS="LITERAL"
+>OIDS</TT
+> as a
+       storage parameter.  Instead use the <TT
+CLASS="LITERAL"
+>SET WITH OIDS</TT
+>
+       and <TT
+CLASS="LITERAL"
+>SET WITHOUT OIDS</TT
+> forms to change OID status.
+      </P
+></BLOCKQUOTE
+></DIV
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>RESET ( <TT
+CLASS="REPLACEABLE"
+><I
+>storage_parameter</I
+></TT
+> [, ... ] )</TT
+></DT
+><DD
+><P
+>      This form resets one or more storage parameters to their
+      defaults.  As with <TT
+CLASS="LITERAL"
+>SET</TT
+>, a table rewrite might be
+      needed to update the table entirely.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>INHERIT <TT
+CLASS="REPLACEABLE"
+><I
+>parent_table</I
+></TT
+></TT
+></DT
+><DD
+><P
+>      This form adds the target table as a new child of the specified parent
+      table.  Subsequently, queries against the parent will include records
+      of the target table.  To be added as a child, the target table must
+      already contain all the same columns as the parent (it could have
+      additional columns, too).  The columns must have matching data types,
+      and if they have <TT
+CLASS="LITERAL"
+>NOT NULL</TT
+> constraints in the parent
+      then they must also have <TT
+CLASS="LITERAL"
+>NOT NULL</TT
+> constraints in the
+      child.
+     </P
+><P
+>      There must also be matching child-table constraints for all
+      <TT
+CLASS="LITERAL"
+>CHECK</TT
+> constraints of the parent, except those
+      marked non-inheritable (that is, created with <TT
+CLASS="LITERAL"
+>ALTER TABLE ... ADD CONSTRAINT ... NO INHERIT</TT
+>)
+      in the parent, which are ignored; all child-table constraints matched
+      must not be marked non-inheritable.
+      Currently
+      <TT
+CLASS="LITERAL"
+>UNIQUE</TT
+>, <TT
+CLASS="LITERAL"
+>PRIMARY KEY</TT
+>, and
+      <TT
+CLASS="LITERAL"
+>FOREIGN KEY</TT
+> constraints are not considered, but
+      this might change in the future.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>NO INHERIT <TT
+CLASS="REPLACEABLE"
+><I
+>parent_table</I
+></TT
+></TT
+></DT
+><DD
+><P
+>      This form removes the target table from the list of children of the
+      specified parent table.
+      Queries against the parent table will no longer include records drawn
+      from the target table.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>OF <TT
+CLASS="REPLACEABLE"
+><I
+>type_name</I
+></TT
+></TT
+></DT
+><DD
+><P
+>      This form links the table to a composite type as though <TT
+CLASS="COMMAND"
+>CREATE
+      TABLE OF</TT
+> had formed it.  The table's list of column names and types
+      must precisely match that of the composite type; the presence of
+      an <TT
+CLASS="LITERAL"
+>oid</TT
+> system column is permitted to differ.  The table must
+      not inherit from any other table.  These restrictions ensure
+      that <TT
+CLASS="COMMAND"
+>CREATE TABLE OF</TT
+> would permit an equivalent table
+      definition.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>NOT OF</TT
+></DT
+><DD
+><P
+>      This form dissociates a typed table from its type.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>OWNER</TT
+></DT
+><DD
+><P
+>      This form changes the owner of the table, sequence, view, materialized view,
+      or foreign table to the specified user.
+     </P
+></DD
+><DT
+><A
+NAME="SQL-CREATETABLE-REPLICA-IDENTITY"
+></A
+><TT
+CLASS="LITERAL"
+>REPLICA IDENTITY</TT
+></DT
+><DD
+><P
+>      This form changes the information which is written to the write-ahead log
+      to identify rows which are updated or deleted.  This option has no effect
+      except when logical replication is in use.  <TT
+CLASS="LITERAL"
+>DEFAULT</TT
+>
+      (the default for non-system tables) records the
+      old values of the columns of the primary key, if any.  <TT
+CLASS="LITERAL"
+>USING INDEX</TT
+>
+      records the old values of the columns covered by the named index, which
+      must be unique, not partial, not deferrable, and include only columns marked
+      <TT
+CLASS="LITERAL"
+>NOT NULL</TT
+>.  <TT
+CLASS="LITERAL"
+>FULL</TT
+> records the old values of all columns
+      in the row.  <TT
+CLASS="LITERAL"
+>NOTHING</TT
+> records no information about the old row.
+      (This is the default for system tables.)
+      In all cases, no old values are logged unless at least one of the columns
+      that would be logged differs between the old and new versions of the row.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>RENAME</TT
+></DT
+><DD
+><P
+>      The <TT
+CLASS="LITERAL"
+>RENAME</TT
+> forms change the name of a table
+      (or an index, sequence, view, materialized view, or foreign table), the name
+      of an individual column in a table, or the name of a constraint of the table.
+      There is no effect on the stored data.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET SCHEMA</TT
+></DT
+><DD
+><P
+>      This form moves the table into another schema.  Associated indexes,
+      constraints, and sequences owned by table columns are moved as well.
+     </P
+></DD
+></DL
+></DIV
+><P>
+  </P
+><P
+>   All the actions except <TT
+CLASS="LITERAL"
+>RENAME</TT
+>,
+   <TT
+CLASS="LITERAL"
+>SET TABLESPACE</TT
+> and <TT
+CLASS="LITERAL"
+>SET SCHEMA</TT
+>
+   can be combined into
+   a list of multiple alterations to apply in parallel.  For example, it
+   is possible to add several columns and/or alter the type of several
+   columns in a single command.  This is particularly useful with large
+   tables, since only one pass over the table need be made.
+  </P
+><P
+>   You must own the table to use <TT
+CLASS="COMMAND"
+>ALTER TABLE</TT
+>.
+   To change the schema or tablespace of a table, you must also have
+   <TT
+CLASS="LITERAL"
+>CREATE</TT
+> privilege on the new schema or tablespace.
+   To add the table as a new child of a parent table, you must own the
+   parent table as well.
+   To alter the owner, you must also be a direct or indirect member of the new
+   owning role, and that role must have <TT
+CLASS="LITERAL"
+>CREATE</TT
+> privilege on
+   the table's schema.  (These restrictions enforce that altering the owner
+   doesn't do anything you couldn't do by dropping and recreating the table.
+   However, a superuser can alter ownership of any table anyway.)
+   To add a column or alter a column type or use the <TT
+CLASS="LITERAL"
+>OF</TT
+>
+   clause, you must also have <TT
+CLASS="LITERAL"
+>USAGE</TT
+> privilege on the data
+   type.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN72372"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>IF EXISTS</TT
+></DT
+><DD
+><P
+>        Do not throw an error if the table does not exist. A notice is issued
+        in this case.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></DT
+><DD
+><P
+>        The name (optionally schema-qualified) of an existing table to
+        alter. If <TT
+CLASS="LITERAL"
+>ONLY</TT
+> is specified before the table name, only
+        that table is altered. If <TT
+CLASS="LITERAL"
+>ONLY</TT
+> is not specified, the table
+        and all its descendant tables (if any) are altered.  Optionally,
+        <TT
+CLASS="LITERAL"
+>*</TT
+> can be specified after the table name to explicitly
+        indicate that descendant tables are included.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+></DT
+><DD
+><P
+>        Name of a new or existing column.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_column_name</I
+></TT
+></DT
+><DD
+><P
+>        New name for an existing column.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_name</I
+></TT
+></DT
+><DD
+><P
+>        New name for the table.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>data_type</I
+></TT
+></DT
+><DD
+><P
+>        Data type of the new column, or new data type for an existing
+        column.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>table_constraint</I
+></TT
+></DT
+><DD
+><P
+>        New table constraint for the table.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>constraint_name</I
+></TT
+></DT
+><DD
+><P
+>        Name of a new or existing constraint.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>CASCADE</TT
+></DT
+><DD
+><P
+>        Automatically drop objects that depend on the dropped column
+        or constraint (for example, views referencing the column).
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>RESTRICT</TT
+></DT
+><DD
+><P
+>        Refuse to drop the column or constraint if there are any dependent
+        objects. This is the default behavior.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>trigger_name</I
+></TT
+></DT
+><DD
+><P
+>        Name of a single trigger to disable or enable.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>ALL</TT
+></DT
+><DD
+><P
+>        Disable or enable all triggers belonging to the table.
+        (This requires superuser privilege if any of the triggers are
+        internally generated constraint triggers such as those that are used
+        to implement foreign key constraints or deferrable uniqueness and
+        exclusion constraints.)
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>USER</TT
+></DT
+><DD
+><P
+>        Disable or enable all triggers belonging to the table except for
+        internally generated constraint triggers such as those that are used
+        to implement foreign key constraints or deferrable uniqueness and
+        exclusion constraints.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>index_name</I
+></TT
+></DT
+><DD
+><P
+>        The name of an existing index.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>storage_parameter</I
+></TT
+></DT
+><DD
+><P
+>        The name of a table storage parameter.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+></DT
+><DD
+><P
+>        The new value for a table storage parameter.
+        This might be a number or a word depending on the parameter.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>parent_table</I
+></TT
+></DT
+><DD
+><P
+>        A parent table to associate or de-associate with this table.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_owner</I
+></TT
+></DT
+><DD
+><P
+>        The user name of the new owner of the table.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_tablespace</I
+></TT
+></DT
+><DD
+><P
+>        The name of the tablespace to which the table will be moved.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_schema</I
+></TT
+></DT
+><DD
+><P
+>        The name of the schema to which the table will be moved.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN72478"
+></A
+><H2
+>Notes</H2
+><P
+>    The key word <TT
+CLASS="LITERAL"
+>COLUMN</TT
+> is noise and can be omitted.
+   </P
+><P
+>    When a column is added with <TT
+CLASS="LITERAL"
+>ADD COLUMN</TT
+>, all existing
+    rows in the table are initialized with the column's default value
+    (NULL if no <TT
+CLASS="LITERAL"
+>DEFAULT</TT
+> clause is specified).
+    If there is no <TT
+CLASS="LITERAL"
+>DEFAULT</TT
+> clause, this is merely a metadata
+    change and does not require any immediate update of the table's data;
+    the added NULL values are supplied on readout, instead.
+   </P
+><P
+>    Adding a column with a <TT
+CLASS="LITERAL"
+>DEFAULT</TT
+> clause or changing the type of
+    an existing column will require the entire table and its indexes to be
+    rewritten.  As an exception when changing the type of an existing column,
+    if the <TT
+CLASS="LITERAL"
+>USING</TT
+> clause does not change the column
+    contents and the old type is either binary coercible to the new type or
+    an unconstrained domain over the new type, a table rewrite is not needed;
+    but any indexes on the affected columns must still be rebuilt.  Adding or
+    removing a system <TT
+CLASS="LITERAL"
+>oid</TT
+> column also requires rewriting the entire
+    table.  Table and/or index rebuilds may take a significant amount of time
+    for a large table; and will temporarily require as much as double the disk
+    space.
+   </P
+><P
+>    Adding a <TT
+CLASS="LITERAL"
+>CHECK</TT
+> or <TT
+CLASS="LITERAL"
+>NOT NULL</TT
+> constraint requires
+    scanning the table to verify that existing rows meet the constraint,
+    but does not require a table rewrite.
+   </P
+><P
+>    The main reason for providing the option to specify multiple changes
+    in a single <TT
+CLASS="COMMAND"
+>ALTER TABLE</TT
+> is that multiple table scans or
+    rewrites can thereby be combined into a single pass over the table.
+   </P
+><P
+>    The <TT
+CLASS="LITERAL"
+>DROP COLUMN</TT
+> form does not physically remove
+    the column, but simply makes it invisible to SQL operations.  Subsequent
+    insert and update operations in the table will store a null value for the
+    column. Thus, dropping a column is quick but it will not immediately
+    reduce the on-disk size of your table, as the space occupied
+    by the dropped column is not reclaimed.  The space will be
+    reclaimed over time as existing rows are updated.  (These statements do
+    not apply when dropping the system <TT
+CLASS="LITERAL"
+>oid</TT
+> column; that is done
+    with an immediate rewrite.)
+   </P
+><P
+>    To force immediate reclamation of space occupied by a dropped column,
+    you can execute one of the forms of <TT
+CLASS="COMMAND"
+>ALTER TABLE</TT
+> that
+    performs a rewrite of the whole table.  This results in reconstructing
+    each row with the dropped column replaced by a null value.
+   </P
+><P
+>    The rewriting forms of <TT
+CLASS="COMMAND"
+>ALTER TABLE</TT
+> are not MVCC-safe.
+    After a table rewrite, the table will appear empty to concurrent
+    transactions, if they are using a snapshot taken before the rewrite
+    occurred.  See <A
+HREF="mvcc-caveats.html"
+>Section 13.5</A
+> for more details.
+   </P
+><P
+>    The <TT
+CLASS="LITERAL"
+>USING</TT
+> option of <TT
+CLASS="LITERAL"
+>SET DATA TYPE</TT
+> can actually
+    specify any expression involving the old values of the row; that is, it
+    can refer to other columns as well as the one being converted.  This allows
+    very general conversions to be done with the <TT
+CLASS="LITERAL"
+>SET DATA TYPE</TT
+>
+    syntax.  Because of this flexibility, the <TT
+CLASS="LITERAL"
+>USING</TT
+>
+    expression is not applied to the column's default value (if any); the
+    result might not be a constant expression as required for a default.
+    This means that when there is no implicit or assignment cast from old to
+    new type, <TT
+CLASS="LITERAL"
+>SET DATA TYPE</TT
+> might fail to convert the default even
+    though a <TT
+CLASS="LITERAL"
+>USING</TT
+> clause is supplied.  In such cases,
+    drop the default with <TT
+CLASS="LITERAL"
+>DROP DEFAULT</TT
+>, perform the <TT
+CLASS="LITERAL"
+>ALTER
+    TYPE</TT
+>, and then use <TT
+CLASS="LITERAL"
+>SET DEFAULT</TT
+> to add a suitable new
+    default.  Similar considerations apply to indexes and constraints involving
+    the column.
+   </P
+><P
+>    If a table has any descendant tables, it is not permitted to add,
+    rename, or change the type of a column, or rename an inherited constraint
+    in the parent table without doing
+    the same to the descendants.  That is, <TT
+CLASS="COMMAND"
+>ALTER TABLE ONLY</TT
+>
+    will be rejected.  This ensures that the descendants always have
+    columns matching the parent.
+   </P
+><P
+>    A recursive <TT
+CLASS="LITERAL"
+>DROP COLUMN</TT
+> operation will remove a
+    descendant table's column only if the descendant does not inherit
+    that column from any other parents and never had an independent
+    definition of the column.  A nonrecursive <TT
+CLASS="LITERAL"
+>DROP
+    COLUMN</TT
+> (i.e., <TT
+CLASS="COMMAND"
+>ALTER TABLE ONLY ... DROP
+    COLUMN</TT
+>) never removes any descendant columns, but
+    instead marks them as independently defined rather than inherited.
+   </P
+><P
+>    The <TT
+CLASS="LITERAL"
+>TRIGGER</TT
+>, <TT
+CLASS="LITERAL"
+>CLUSTER</TT
+>, <TT
+CLASS="LITERAL"
+>OWNER</TT
+>,
+    and <TT
+CLASS="LITERAL"
+>TABLESPACE</TT
+> actions never recurse to descendant tables;
+    that is, they always act as though <TT
+CLASS="LITERAL"
+>ONLY</TT
+> were specified.
+    Adding a constraint recurses only for <TT
+CLASS="LITERAL"
+>CHECK</TT
+> constraints
+    that are not marked <TT
+CLASS="LITERAL"
+>NO INHERIT</TT
+>.
+   </P
+><P
+>    Changing any part of a system catalog table is not permitted.
+   </P
+><P
+>    Refer to <A
+HREF="sql-createtable.html"
+>CREATE TABLE</A
+> for a further description of valid
+    parameters. <A
+HREF="ddl.html"
+>Chapter 5</A
+> has further information on
+    inheritance.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN72531"
+></A
+><H2
+>Examples</H2
+><P
+>   To add a column of type <TT
+CLASS="TYPE"
+>varchar</TT
+> to a table:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE distributors ADD COLUMN address varchar(30);</PRE
+><P>
+  </P
+><P
+>   To drop a column from a table:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE distributors DROP COLUMN address RESTRICT;</PRE
+><P>
+  </P
+><P
+>   To change the types of two existing columns in one operation:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE distributors
+    ALTER COLUMN address TYPE varchar(80),
+    ALTER COLUMN name TYPE varchar(100);</PRE
+><P>
+  </P
+><P
+>   To change an integer column containing Unix timestamps to <TT
+CLASS="TYPE"
+>timestamp
+   with time zone</TT
+> via a <TT
+CLASS="LITERAL"
+>USING</TT
+> clause:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE foo
+    ALTER COLUMN foo_timestamp SET DATA TYPE timestamp with time zone
+    USING
+        timestamp with time zone 'epoch' + foo_timestamp * interval '1 second';</PRE
+><P>
+  </P
+><P
+>   The same, when the column has a default expression that won't automatically
+   cast to the new data type:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE foo
+    ALTER COLUMN foo_timestamp DROP DEFAULT,
+    ALTER COLUMN foo_timestamp TYPE timestamp with time zone
+    USING
+        timestamp with time zone 'epoch' + foo_timestamp * interval '1 second',
+    ALTER COLUMN foo_timestamp SET DEFAULT now();</PRE
+><P>
+  </P
+><P
+>   To rename an existing column:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE distributors RENAME COLUMN address TO city;</PRE
+><P>
+  </P
+><P
+>   To rename an existing table:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE distributors RENAME TO suppliers;</PRE
+><P>
+  </P
+><P
+>   To rename an existing constraint:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE distributors RENAME CONSTRAINT zipchk TO zip_check;</PRE
+><P>
+  </P
+><P
+>   To add a not-null constraint to a column:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE distributors ALTER COLUMN street SET NOT NULL;</PRE
+><P>
+   To remove a not-null constraint from a column:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE distributors ALTER COLUMN street DROP NOT NULL;</PRE
+><P>
+  </P
+><P
+>   To add a check constraint to a table and all its children:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE distributors ADD CONSTRAINT zipchk CHECK (char_length(zipcode) = 5);</PRE
+><P>
+  </P
+><P
+>   To add a check constraint only to a table and not to its children:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE distributors ADD CONSTRAINT zipchk CHECK (char_length(zipcode) = 5) NO INHERIT;</PRE
+><P>
+   (The check constraint will not be inherited by future children, either.)
+  </P
+><P
+>   To remove a check constraint from a table and all its children:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE distributors DROP CONSTRAINT zipchk;</PRE
+><P>
+  </P
+><P
+>   To remove a check constraint from one table only:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE ONLY distributors DROP CONSTRAINT zipchk;</PRE
+><P>
+   (The check constraint remains in place for any child tables.)
+  </P
+><P
+>   To add a foreign key constraint to a table:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE distributors ADD CONSTRAINT distfk FOREIGN KEY (address) REFERENCES addresses (address);</PRE
+><P>
+  </P
+><P
+>   To add a foreign key constraint to a table with the least impact on other work:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE distributors ADD CONSTRAINT distfk FOREIGN KEY (address) REFERENCES addresses (address) NOT VALID;
+ALTER TABLE distributors VALIDATE CONSTRAINT distfk;</PRE
+><P>
+  </P
+><P
+>   To add a (multicolumn) unique constraint to a table:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE distributors ADD CONSTRAINT dist_id_zipcode_key UNIQUE (dist_id, zipcode);</PRE
+><P>
+  </P
+><P
+>   To add an automatically named primary key constraint to a table, noting
+   that a table can only ever have one primary key:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE distributors ADD PRIMARY KEY (dist_id);</PRE
+><P>
+  </P
+><P
+>   To move a table to a different tablespace:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE distributors SET TABLESPACE fasttablespace;</PRE
+><P>
+  </P
+><P
+>   To move a table to a different schema:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TABLE myschema.distributors SET SCHEMA yourschema;</PRE
+><P>
+  </P
+><P
+>   To recreate a primary key constraint, without blocking updates while the
+   index is rebuilt:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE UNIQUE INDEX CONCURRENTLY dist_id_temp_idx ON distributors (dist_id);
+ALTER TABLE distributors DROP CONSTRAINT distributors_pkey,
+    ADD CONSTRAINT distributors_pkey PRIMARY KEY USING INDEX dist_id_temp_idx;</PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN72577"
+></A
+><H2
+>Compatibility</H2
+><P
+>   The forms <TT
+CLASS="LITERAL"
+>ADD</TT
+> (without <TT
+CLASS="LITERAL"
+>USING INDEX</TT
+>),
+   <TT
+CLASS="LITERAL"
+>DROP</TT
+>, <TT
+CLASS="LITERAL"
+>SET DEFAULT</TT
+>,
+   and <TT
+CLASS="LITERAL"
+>SET DATA TYPE</TT
+> (without <TT
+CLASS="LITERAL"
+>USING</TT
+>)
+   conform with the SQL standard.  The other forms are
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> extensions of the SQL standard.
+   Also, the ability to specify more than one manipulation in a single
+   <TT
+CLASS="COMMAND"
+>ALTER TABLE</TT
+> command is an extension.
+  </P
+><P
+>   <TT
+CLASS="COMMAND"
+>ALTER TABLE DROP COLUMN</TT
+> can be used to drop the only
+   column of a table, leaving a zero-column table.  This is an
+   extension of SQL, which disallows zero-column tables.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN72590"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-createtable.html"
+>CREATE TABLE</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-altersystem.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-altertablespace.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>ALTER SYSTEM</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>ALTER TABLESPACE</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

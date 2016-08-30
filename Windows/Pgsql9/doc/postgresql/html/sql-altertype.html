@@ -1,0 +1,740 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>ALTER TYPE</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="ALTER TRIGGER"
+HREF="sql-altertrigger.html"><LINK
+REL="NEXT"
+TITLE="ALTER USER"
+HREF="sql-alteruser.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="ALTER TRIGGER"
+HREF="sql-altertrigger.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="ALTER USER"
+HREF="sql-alteruser.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-ALTERTYPE"
+></A
+>ALTER TYPE</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN73031"
+></A
+><H2
+>Name</H2
+>ALTER TYPE&nbsp;--&nbsp;   change the definition of a type
+  </DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN73034"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>ALTER TYPE <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>action</I
+></TT
+> [, ... ]
+ALTER TYPE <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> OWNER TO { <TT
+CLASS="REPLACEABLE"
+><I
+>new_owner</I
+></TT
+> | CURRENT_USER | SESSION_USER }
+ALTER TYPE <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> RENAME ATTRIBUTE <TT
+CLASS="REPLACEABLE"
+><I
+>attribute_name</I
+></TT
+> TO <TT
+CLASS="REPLACEABLE"
+><I
+>new_attribute_name</I
+></TT
+> [ CASCADE | RESTRICT ]
+ALTER TYPE <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> RENAME TO <TT
+CLASS="REPLACEABLE"
+><I
+>new_name</I
+></TT
+>
+ALTER TYPE <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> SET SCHEMA <TT
+CLASS="REPLACEABLE"
+><I
+>new_schema</I
+></TT
+>
+ALTER TYPE <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> ADD VALUE [ IF NOT EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>new_enum_value</I
+></TT
+> [ { BEFORE | AFTER } <TT
+CLASS="REPLACEABLE"
+><I
+>existing_enum_value</I
+></TT
+> ]
+
+<SPAN
+CLASS="phrase"
+><SPAN
+CLASS="PHRASE"
+>where <TT
+CLASS="REPLACEABLE"
+><I
+>action</I
+></TT
+> is one of:</SPAN
+></SPAN
+>
+
+    ADD ATTRIBUTE <TT
+CLASS="REPLACEABLE"
+><I
+>attribute_name</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>data_type</I
+></TT
+> [ COLLATE <TT
+CLASS="REPLACEABLE"
+><I
+>collation</I
+></TT
+> ] [ CASCADE | RESTRICT ]
+    DROP ATTRIBUTE [ IF EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>attribute_name</I
+></TT
+> [ CASCADE | RESTRICT ]
+    ALTER ATTRIBUTE <TT
+CLASS="REPLACEABLE"
+><I
+>attribute_name</I
+></TT
+> [ SET DATA ] TYPE <TT
+CLASS="REPLACEABLE"
+><I
+>data_type</I
+></TT
+> [ COLLATE <TT
+CLASS="REPLACEABLE"
+><I
+>collation</I
+></TT
+> ] [ CASCADE | RESTRICT ]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN73059"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>ALTER TYPE</TT
+> changes the definition of an existing type.
+   There are several subforms:
+
+  <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>ADD ATTRIBUTE</TT
+></DT
+><DD
+><P
+>      This form adds a new attribute to a composite type, using the same syntax as
+      <A
+HREF="sql-createtype.html"
+>CREATE TYPE</A
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>DROP ATTRIBUTE [ IF EXISTS ]</TT
+></DT
+><DD
+><P
+>      This form drops an attribute from a composite type.
+      If <TT
+CLASS="LITERAL"
+>IF EXISTS</TT
+> is specified and the attribute
+      does not exist, no error is thrown. In this case a notice
+      is issued instead.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET DATA TYPE</TT
+></DT
+><DD
+><P
+>      This form changes the type of an attribute of a composite type.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>OWNER</TT
+></DT
+><DD
+><P
+>      This form changes the owner of the type.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>RENAME</TT
+></DT
+><DD
+><P
+>      This form changes the name of the type or the name of an
+      individual attribute of a composite type.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET SCHEMA</TT
+></DT
+><DD
+><P
+>      This form moves the type into another schema.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>ADD VALUE [ IF NOT EXISTS ] [ BEFORE | AFTER ]</TT
+></DT
+><DD
+><P
+>      This form adds a new value to an enum type.  The new value's place in
+      the enum's ordering can be specified as being <TT
+CLASS="LITERAL"
+>BEFORE</TT
+>
+      or <TT
+CLASS="LITERAL"
+>AFTER</TT
+> one of the existing values.  Otherwise,
+      the new item is added at the end of the list of values.
+     </P
+><P
+>      If <TT
+CLASS="LITERAL"
+>IF NOT EXISTS</TT
+> is specified, it is not an error if
+      the type already contains the new value: a notice is issued but no other
+      action is taken. Otherwise, an error will occur if the new value is
+      already present.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>CASCADE</TT
+></DT
+><DD
+><P
+>      Automatically propagate the operation to typed tables of the
+      type being altered, and their descendants.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>RESTRICT</TT
+></DT
+><DD
+><P
+>      Refuse the operation if the type being altered is the type of a
+      typed table.  This is the default.
+     </P
+></DD
+></DL
+></DIV
+><P>
+  </P
+><P
+>   The <TT
+CLASS="LITERAL"
+>ADD ATTRIBUTE</TT
+>, <TT
+CLASS="LITERAL"
+>DROP
+   ATTRIBUTE</TT
+>, and <TT
+CLASS="LITERAL"
+>ALTER ATTRIBUTE</TT
+> actions
+   can be combined into a list of multiple alterations to apply in
+   parallel.  For example, it is possible to add several attributes
+   and/or alter the type of several attributes in a single command.
+  </P
+><P
+>   You must own the type to use <TT
+CLASS="COMMAND"
+>ALTER TYPE</TT
+>.
+   To change the schema of a type, you must also have
+   <TT
+CLASS="LITERAL"
+>CREATE</TT
+> privilege on the new schema.
+   To alter the owner, you must also be a direct or indirect member of the new
+   owning role, and that role must have <TT
+CLASS="LITERAL"
+>CREATE</TT
+> privilege on
+   the type's schema.  (These restrictions enforce that altering the owner
+   doesn't do anything you couldn't do by dropping and recreating the type.
+   However, a superuser can alter ownership of any type anyway.)
+   To add an attribute or alter an attribute type, you must also
+   have <TT
+CLASS="LITERAL"
+>USAGE</TT
+> privilege on the data type.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN73124"
+></A
+><H2
+>Parameters</H2
+><P
+>    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></DT
+><DD
+><P
+>        The name (possibly schema-qualified) of an existing type to
+        alter.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_name</I
+></TT
+></DT
+><DD
+><P
+>        The new name for the type.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_owner</I
+></TT
+></DT
+><DD
+><P
+>        The user name of the new owner of the type.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_schema</I
+></TT
+></DT
+><DD
+><P
+>        The new schema for the type.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>attribute_name</I
+></TT
+></DT
+><DD
+><P
+>        The name of the attribute to add, alter, or drop.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_attribute_name</I
+></TT
+></DT
+><DD
+><P
+>        The new name of the attribute to be renamed.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>data_type</I
+></TT
+></DT
+><DD
+><P
+>        The data type of the attribute to add, or the new type of the
+        attribute to alter.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_enum_value</I
+></TT
+></DT
+><DD
+><P
+>        The new value to be added to an enum type's list of values.
+        Like all enum literals, it needs to be quoted.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>existing_enum_value</I
+></TT
+></DT
+><DD
+><P
+>        The existing enum value that the new value should be added immediately
+        before or after in the enum type's sort ordering.
+        Like all enum literals, it needs to be quoted.
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN73173"
+></A
+><H2
+>Notes</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>ALTER TYPE ... ADD VALUE</TT
+> (the form that adds a new value to an
+   enum type) cannot be executed inside a transaction block.
+  </P
+><P
+>   Comparisons involving an added enum value will sometimes be slower than
+   comparisons involving only original members of the enum type.  This will
+   usually only occur if <TT
+CLASS="LITERAL"
+>BEFORE</TT
+> or <TT
+CLASS="LITERAL"
+>AFTER</TT
+>
+   is used to set the new value's sort position somewhere other than at the
+   end of the list.  However, sometimes it will happen even though the new
+   value is added at the end (this occurs if the OID counter <SPAN
+CLASS="QUOTE"
+>"wrapped
+   around"</SPAN
+> since the original creation of the enum type).  The slowdown is
+   usually insignificant; but if it matters, optimal performance can be
+   regained by dropping and recreating the enum type, or by dumping and
+   reloading the database.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN73181"
+></A
+><H2
+>Examples</H2
+><P
+>   To rename a data type:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TYPE electronic_mail RENAME TO email;</PRE
+><P>
+  </P
+><P
+>   To change the owner of the type <TT
+CLASS="LITERAL"
+>email</TT
+>
+   to <TT
+CLASS="LITERAL"
+>joe</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TYPE email OWNER TO joe;</PRE
+><P>
+  </P
+><P
+>   To change the schema of the type <TT
+CLASS="LITERAL"
+>email</TT
+>
+   to <TT
+CLASS="LITERAL"
+>customers</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TYPE email SET SCHEMA customers;</PRE
+><P>
+  </P
+><P
+>   To add a new attribute to a type:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TYPE compfoo ADD ATTRIBUTE f3 int;</PRE
+><P>
+  </P
+><P
+>   To add a new value to an enum type in a particular sort position:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TYPE colors ADD VALUE 'orange' AFTER 'red';</PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN73197"
+></A
+><H2
+>Compatibility</H2
+><P
+>   The variants to add and drop attributes are part of the SQL
+   standard; the other variants are PostgreSQL extensions.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-ALTERTYPE-SEE-ALSO"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-createtype.html"
+>CREATE TYPE</A
+>, <A
+HREF="sql-droptype.html"
+>DROP TYPE</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-altertrigger.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-alteruser.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>ALTER TRIGGER</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>ALTER USER</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

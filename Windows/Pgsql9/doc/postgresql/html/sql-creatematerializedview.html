@@ -1,0 +1,452 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>CREATE MATERIALIZED VIEW</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="CREATE LANGUAGE"
+HREF="sql-createlanguage.html"><LINK
+REL="NEXT"
+TITLE="CREATE OPERATOR"
+HREF="sql-createoperator.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="CREATE LANGUAGE"
+HREF="sql-createlanguage.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="CREATE OPERATOR"
+HREF="sql-createoperator.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-CREATEMATERIALIZEDVIEW"
+></A
+>CREATE MATERIALIZED VIEW</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN76971"
+></A
+><H2
+>Name</H2
+>CREATE MATERIALIZED VIEW&nbsp;--&nbsp;define a new materialized view</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN76974"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>CREATE MATERIALIZED VIEW [ IF NOT EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+>
+    [ (<TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> [, ...] ) ]
+    [ WITH ( <TT
+CLASS="REPLACEABLE"
+><I
+>storage_parameter</I
+></TT
+> [= <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>] [, ... ] ) ]
+    [ TABLESPACE <TT
+CLASS="REPLACEABLE"
+><I
+>tablespace_name</I
+></TT
+> ]
+    AS <TT
+CLASS="REPLACEABLE"
+><I
+>query</I
+></TT
+>
+    [ WITH [ NO ] DATA ]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN76982"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>CREATE MATERIALIZED VIEW</TT
+> defines a materialized view of
+   a query.  The query is executed and used to populate the view at the time
+   the command is issued (unless <TT
+CLASS="COMMAND"
+>WITH NO DATA</TT
+> is used) and may be
+   refreshed later using <TT
+CLASS="COMMAND"
+>REFRESH MATERIALIZED VIEW</TT
+>.
+  </P
+><P
+>   <TT
+CLASS="COMMAND"
+>CREATE MATERIALIZED VIEW</TT
+> is similar to
+   <TT
+CLASS="COMMAND"
+>CREATE TABLE AS</TT
+>, except that it also remembers the query used
+   to initialize the view, so that it can be refreshed later upon demand.
+   A materialized view has many of the same properties as a table, but there
+   is no support for temporary materialized views or automatic generation of
+   OIDs.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN76991"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>IF NOT EXISTS</TT
+></DT
+><DD
+><P
+>      Do not throw an error if a materialized view with the same name already
+      exists. A notice is issued in this case.  Note that there is no guarantee
+      that the existing materialized view is anything like the one that would
+      have been created.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+></DT
+><DD
+><P
+>      The name (optionally schema-qualified) of the materialized view to be
+      created.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+></DT
+><DD
+><P
+>      The name of a column in the new materialized view.  If column names are
+      not provided, they are taken from the output column names of the query.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>WITH ( <TT
+CLASS="REPLACEABLE"
+><I
+>storage_parameter</I
+></TT
+> [= <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>] [, ... ] )</TT
+></DT
+><DD
+><P
+>      This clause specifies optional storage parameters for the new
+      materialized view; see <A
+HREF="sql-createtable.html#SQL-CREATETABLE-STORAGE-PARAMETERS"
+><I
+>Storage Parameters</I
+></A
+> for more
+      information.  All parameters supported for <TT
+CLASS="LITERAL"
+>CREATE
+      TABLE</TT
+> are also supported for <TT
+CLASS="LITERAL"
+>CREATE MATERIALIZED
+      VIEW</TT
+> with the exception of <TT
+CLASS="LITERAL"
+>OIDS</TT
+>.
+      See <A
+HREF="sql-createtable.html"
+>CREATE TABLE</A
+> for more information.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>TABLESPACE <TT
+CLASS="REPLACEABLE"
+><I
+>tablespace_name</I
+></TT
+></TT
+></DT
+><DD
+><P
+>      The <TT
+CLASS="REPLACEABLE"
+><I
+>tablespace_name</I
+></TT
+> is the name
+      of the tablespace in which the new materialized view is to be created.
+      If not specified, <A
+HREF="runtime-config-client.html#GUC-DEFAULT-TABLESPACE"
+>default_tablespace</A
+> is consulted.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>query</I
+></TT
+></DT
+><DD
+><P
+>      A <A
+HREF="sql-select.html"
+>SELECT</A
+>, <A
+HREF="sql-select.html#SQL-TABLE"
+>TABLE</A
+>,
+      or <A
+HREF="sql-values.html"
+>VALUES</A
+> command.  This query will run within a
+      security-restricted operation; in particular, calls to functions that
+      themselves create temporary tables will fail.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>WITH [ NO ] DATA</TT
+></DT
+><DD
+><P
+>      This clause specifies whether or not the materialized view should be
+      populated at creation time.  If not, the materialized view will be
+      flagged as unscannable and cannot be queried until <TT
+CLASS="COMMAND"
+>REFRESH
+      MATERIALIZED VIEW</TT
+> is used.
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN77043"
+></A
+><H2
+>Compatibility</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>CREATE MATERIALIZED VIEW</TT
+> is a
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> extension.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN77048"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-altermaterializedview.html"
+>ALTER MATERIALIZED VIEW</A
+>, <A
+HREF="sql-createtableas.html"
+>CREATE TABLE AS</A
+>, <A
+HREF="sql-createview.html"
+>CREATE VIEW</A
+>, <A
+HREF="sql-dropmaterializedview.html"
+>DROP MATERIALIZED VIEW</A
+>, <A
+HREF="sql-refreshmaterializedview.html"
+>REFRESH MATERIALIZED VIEW</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-createlanguage.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-createoperator.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>CREATE LANGUAGE</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>CREATE OPERATOR</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,1139 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.2.2</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.2.3"
+HREF="release-9-2-3.html"><LINK
+REL="NEXT"
+TITLE="Release 9.2.1"
+HREF="release-9-2-1.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.2.3"
+HREF="release-9-2-3.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.2.1"
+HREF="release-9-2-1.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-2-2"
+>E.47. Release 9.2.2</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2012-12-06</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 9.2.1.
+   For information about new features in the 9.2 major release, see
+   <A
+HREF="release-9-2.html"
+>Section E.49</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN136604"
+>E.47.1. Migration to Version 9.2.2</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.2.X.
+   </P
+><P
+>    However, you may need to perform <TT
+CLASS="COMMAND"
+>REINDEX</TT
+> operations to
+    correct problems in concurrently-built indexes, as described in the first
+    changelog item below.
+   </P
+><P
+>    Also, if you are upgrading from version 9.2.0,
+    see <A
+HREF="release-9-2-1.html"
+>Section E.48</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN136611"
+>E.47.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix multiple bugs associated with <TT
+CLASS="COMMAND"
+>CREATE/DROP INDEX
+      CONCURRENTLY</TT
+> (Andres Freund, Tom Lane, Simon Riggs, Pavan Deolasee)
+     </P
+><P
+>      An error introduced while adding <TT
+CLASS="COMMAND"
+>DROP INDEX CONCURRENTLY</TT
+>
+      allowed incorrect indexing decisions to be made during the initial
+      phase of <TT
+CLASS="COMMAND"
+>CREATE INDEX CONCURRENTLY</TT
+>; so that indexes built
+      by that command could be corrupt.  It is recommended that indexes
+      built in 9.2.X with <TT
+CLASS="COMMAND"
+>CREATE INDEX CONCURRENTLY</TT
+> be rebuilt
+      after applying this update.
+     </P
+><P
+>      In addition, fix <TT
+CLASS="COMMAND"
+>CREATE/DROP INDEX CONCURRENTLY</TT
+> to use
+      in-place updates when changing the state of an index's
+      <TT
+CLASS="STRUCTNAME"
+>pg_index</TT
+> row.  This prevents race conditions that could
+      cause concurrent sessions to miss updating the target index, thus
+      again resulting in corrupt concurrently-created indexes.
+     </P
+><P
+>      Also, fix various other operations to ensure that they ignore
+      invalid indexes resulting from a failed <TT
+CLASS="COMMAND"
+>CREATE INDEX
+      CONCURRENTLY</TT
+> command.  The most important of these is
+      <TT
+CLASS="COMMAND"
+>VACUUM</TT
+>, because an auto-vacuum could easily be launched
+      on the table before corrective action can be taken to fix or remove
+      the invalid index.
+     </P
+><P
+>      Also fix <TT
+CLASS="COMMAND"
+>DROP INDEX CONCURRENTLY</TT
+> to not disable
+      insertions into the target index until all queries using it are done.
+     </P
+><P
+>      Also fix misbehavior if <TT
+CLASS="COMMAND"
+>DROP INDEX CONCURRENTLY</TT
+> is
+      canceled: the previous coding could leave an un-droppable index behind.
+     </P
+></LI
+><LI
+><P
+>      Correct predicate locking for <TT
+CLASS="COMMAND"
+>DROP INDEX CONCURRENTLY</TT
+>
+      (Kevin Grittner)
+     </P
+><P
+>      Previously, SSI predicate locks were processed at the wrong time,
+      possibly leading to incorrect behavior of serializable transactions
+      executing in parallel with the <TT
+CLASS="COMMAND"
+>DROP</TT
+>.
+     </P
+></LI
+><LI
+><P
+>      Fix buffer locking during WAL replay (Tom Lane)
+     </P
+><P
+>      The WAL replay code was insufficiently careful about locking buffers
+      when replaying WAL records that affect more than one page.  This could
+      result in hot standby queries transiently seeing inconsistent states,
+      resulting in wrong answers or unexpected failures.
+     </P
+></LI
+><LI
+><P
+>      Fix an error in WAL generation logic for GIN indexes (Tom Lane)
+     </P
+><P
+>      This could result in index corruption, if a torn-page failure occurred.
+     </P
+></LI
+><LI
+><P
+>      Fix an error in WAL replay logic for SP-GiST indexes (Tom Lane)
+     </P
+><P
+>      This could result in index corruption after a crash, or on a standby
+      server.
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect detection of end-of-base-backup location during WAL
+      recovery (Heikki Linnakangas)
+     </P
+><P
+>      This mistake allowed hot standby mode to start up before the database
+      reaches a consistent state.
+     </P
+></LI
+><LI
+><P
+>      Properly remove startup process's virtual XID lock when promoting a
+      hot standby server to normal running (Simon Riggs)
+     </P
+><P
+>      This oversight could prevent subsequent execution of certain
+      operations such as <TT
+CLASS="COMMAND"
+>CREATE INDEX CONCURRENTLY</TT
+>.
+     </P
+></LI
+><LI
+><P
+>      Avoid bogus <SPAN
+CLASS="QUOTE"
+>"out-of-sequence timeline ID"</SPAN
+> errors in standby
+      mode (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Prevent the postmaster from launching new child processes after it's
+      received a shutdown signal (Tom Lane)
+     </P
+><P
+>      This mistake could result in shutdown taking longer than it should, or
+      even never completing at all without additional user action.
+     </P
+></LI
+><LI
+><P
+>      Fix the syslogger process to not fail when
+      <TT
+CLASS="VARNAME"
+>log_rotation_age</TT
+> exceeds 2^31 milliseconds (about 25 days)
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <CODE
+CLASS="FUNCTION"
+>WaitLatch()</CODE
+> to return promptly when the requested
+      timeout expires (Jeff Janes, Tom Lane)
+     </P
+><P
+>      With the previous coding, a steady stream of non-wait-terminating
+      interrupts could delay return from <CODE
+CLASS="FUNCTION"
+>WaitLatch()</CODE
+>
+      indefinitely.  This has been shown to be a problem for the autovacuum
+      launcher process, and might cause trouble elsewhere as well.
+     </P
+></LI
+><LI
+><P
+>      Avoid corruption of internal hash tables when out of memory
+      (Hitoshi Harada)
+     </P
+></LI
+><LI
+><P
+>      Prevent file descriptors for dropped tables from being held open past
+      transaction end (Tom Lane)
+     </P
+><P
+>      This should reduce problems with long-since-dropped tables continuing
+      to occupy disk space.
+     </P
+></LI
+><LI
+><P
+>      Prevent database-wide crash and restart when a new child process is
+      unable to create a pipe for its latch (Tom Lane)
+     </P
+><P
+>      Although the new process must fail, there is no good reason to force a
+      database-wide restart, so avoid that.  This improves robustness when
+      the kernel is nearly out of file descriptors.
+     </P
+></LI
+><LI
+><P
+>      Avoid planner crash with joins to unflattened subqueries (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix planning of non-strict equivalence clauses above outer joins
+      (Tom Lane)
+     </P
+><P
+>      The planner could derive incorrect constraints from a clause equating
+      a non-strict construct to something else, for example
+      <TT
+CLASS="LITERAL"
+>WHERE COALESCE(foo, 0) = 0</TT
+>
+      when <TT
+CLASS="LITERAL"
+>foo</TT
+> is coming from the nullable side of an outer join.
+      9.2 showed this type of error in more cases than previous releases,
+      but the basic bug has been there for a long time.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>SELECT DISTINCT</TT
+> with index-optimized
+      <CODE
+CLASS="FUNCTION"
+>MIN</CODE
+>/<CODE
+CLASS="FUNCTION"
+>MAX</CODE
+> on an inheritance tree (Tom Lane)
+     </P
+><P
+>      The planner would fail with <SPAN
+CLASS="QUOTE"
+>"failed to re-find MinMaxAggInfo
+      record"</SPAN
+> given this combination of factors.
+     </P
+></LI
+><LI
+><P
+>      Make sure the planner sees implicit and explicit casts as equivalent
+      for all purposes, except in the minority of cases where there's
+      actually a semantic difference (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Include join clauses when considering whether partial indexes can be
+      used for a query (Tom Lane)
+     </P
+><P
+>      A strict join clause can be sufficient to establish an
+      <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> <TT
+CLASS="LITERAL"
+>IS NOT NULL</TT
+> predicate, for example.
+      This fixes a planner regression in 9.2, since previous versions could
+      make comparable deductions.
+     </P
+></LI
+><LI
+><P
+>      Limit growth of planning time when there are many indexable join
+      clauses for the same index (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Improve planner's ability to prove exclusion constraints from
+      equivalence classes (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix partial-row matching in hashed subplans to handle cross-type cases
+      correctly (Tom Lane)
+     </P
+><P
+>      This affects multicolumn <TT
+CLASS="LITERAL"
+>NOT IN</TT
+> subplans, such as
+      <TT
+CLASS="LITERAL"
+>WHERE (a, b) NOT IN (SELECT x, y FROM ...)</TT
+>
+      when for instance <TT
+CLASS="LITERAL"
+>b</TT
+> and <TT
+CLASS="LITERAL"
+>y</TT
+> are <TT
+CLASS="TYPE"
+>int4</TT
+>
+      and <TT
+CLASS="TYPE"
+>int8</TT
+> respectively.  This mistake led to wrong answers
+      or crashes depending on the specific datatypes involved.
+     </P
+></LI
+><LI
+><P
+>      Fix btree mark/restore functions to handle array keys (Tom Lane)
+     </P
+><P
+>      This oversight could result in wrong answers from merge joins whose
+      inner side is an index scan using an
+      <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>indexed_column</I
+></TT
+> =
+      ANY(<TT
+CLASS="REPLACEABLE"
+><I
+>array</I
+></TT
+>)</TT
+> condition.
+     </P
+></LI
+><LI
+><P
+>      Revert patch for taking fewer snapshots (Tom Lane)
+     </P
+><P
+>      The 9.2 change to reduce the number of snapshots taken during query
+      execution led to some anomalous behaviors not seen in previous
+      releases, because execution would proceed with a snapshot acquired
+      before locking the tables used by the query.  Thus, for example,
+      a query would not be guaranteed to see updates committed by a
+      preceding transaction even if that transaction had exclusive lock.
+      We'll probably revisit this in future releases, but meanwhile put it
+      back the way it was before 9.2.
+     </P
+></LI
+><LI
+><P
+>      Acquire buffer lock when re-fetching the old tuple for an
+      <TT
+CLASS="LITERAL"
+>AFTER ROW UPDATE/DELETE</TT
+> trigger (Andres Freund)
+     </P
+><P
+>      In very unusual circumstances, this oversight could result in passing
+      incorrect data to a trigger <TT
+CLASS="LITERAL"
+>WHEN</TT
+> condition, or to the
+      precheck logic for a foreign-key enforcement trigger.  That could
+      result in a crash, or in an incorrect decision about whether to
+      fire the trigger.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>ALTER COLUMN TYPE</TT
+> to handle inherited check
+      constraints properly (Pavan Deolasee)
+     </P
+><P
+>      This worked correctly in pre-8.4 releases, and now works correctly
+      in 8.4 and later.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>ALTER EXTENSION SET SCHEMA</TT
+>'s failure  to move some
+      subsidiary objects into the new schema (&Aacute;lvaro Herrera, Dimitri
+      Fontaine)
+     </P
+></LI
+><LI
+><P
+>      Handle <TT
+CLASS="COMMAND"
+>CREATE TABLE AS EXECUTE</TT
+> correctly in extended query
+      protocol (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Don't modify the input parse tree in <TT
+CLASS="COMMAND"
+>DROP RULE IF NOT
+      EXISTS</TT
+> and <TT
+CLASS="COMMAND"
+>DROP TRIGGER IF NOT EXISTS</TT
+> (Tom Lane)
+     </P
+><P
+>      This mistake would cause errors if a cached statement of one of these
+      types was re-executed.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>REASSIGN OWNED</TT
+> to handle grants on tablespaces
+      (&Aacute;lvaro Herrera)
+     </P
+></LI
+><LI
+><P
+>      Ignore incorrect <TT
+CLASS="STRUCTNAME"
+>pg_attribute</TT
+> entries for system
+      columns for views (Tom Lane)
+     </P
+><P
+>      Views do not have any system columns.  However, we forgot to
+      remove such entries when converting a table to a view.  That's fixed
+      properly for 9.3 and later, but in previous branches we need to defend
+      against existing mis-converted views.
+     </P
+></LI
+><LI
+><P
+>      Fix rule printing to dump <TT
+CLASS="LITERAL"
+>INSERT INTO <TT
+CLASS="REPLACEABLE"
+><I
+>table</I
+></TT
+>
+      DEFAULT VALUES</TT
+> correctly (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Guard against stack overflow when there are too many
+      <TT
+CLASS="LITERAL"
+>UNION</TT
+>/<TT
+CLASS="LITERAL"
+>INTERSECT</TT
+>/<TT
+CLASS="LITERAL"
+>EXCEPT</TT
+> clauses
+      in a query (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Prevent platform-dependent failures when dividing the minimum possible
+      integer value by -1 (Xi Wang, Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix possible access past end of string in date parsing
+      (Hitoshi Harada)
+     </P
+></LI
+><LI
+><P
+>      Fix failure to advance XID epoch if XID wraparound happens during a
+      checkpoint and <TT
+CLASS="VARNAME"
+>wal_level</TT
+> is <TT
+CLASS="LITERAL"
+>hot_standby</TT
+>
+      (Tom Lane, Andres Freund)
+     </P
+><P
+>      While this mistake had no particular impact on
+      <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> itself, it was bad for
+      applications that rely on <CODE
+CLASS="FUNCTION"
+>txid_current()</CODE
+> and related
+      functions: the TXID value would appear to go backwards.
+     </P
+></LI
+><LI
+><P
+>      Fix <CODE
+CLASS="FUNCTION"
+>pg_terminate_backend()</CODE
+> and
+      <CODE
+CLASS="FUNCTION"
+>pg_cancel_backend()</CODE
+> to not throw error for a non-existent
+      target process (Josh Kupershmidt)
+     </P
+><P
+>      This case already worked as intended when called by a superuser,
+      but not so much when called by ordinary users.
+     </P
+></LI
+><LI
+><P
+>      Fix display of
+      <TT
+CLASS="STRUCTNAME"
+>pg_stat_replication</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>sync_state</TT
+> at a
+      page boundary (Kyotaro Horiguchi)
+     </P
+></LI
+><LI
+><P
+>      Produce an understandable error message if the length of the path name
+      for a Unix-domain socket exceeds the platform-specific limit
+      (Tom Lane, Andrew Dunstan)
+     </P
+><P
+>      Formerly, this would result in something quite unhelpful, such as
+      <SPAN
+CLASS="QUOTE"
+>"Non-recoverable failure in name resolution"</SPAN
+>.
+     </P
+></LI
+><LI
+><P
+>      Fix memory leaks when sending composite column values to the client
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Save some cycles by not searching for subtransaction locks at commit
+      (Simon Riggs)
+     </P
+><P
+>      In a transaction holding many exclusive locks, this useless activity
+      could be quite costly.
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> more robust about reading the
+      <TT
+CLASS="FILENAME"
+>postmaster.pid</TT
+> file (Heikki Linnakangas)
+     </P
+><P
+>      This fixes race conditions and possible file descriptor leakage.
+     </P
+></LI
+><LI
+><P
+>      Fix possible crash in <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> if incorrectly-encoded data
+      is presented and the <TT
+CLASS="VARNAME"
+>client_encoding</TT
+> setting is a
+      client-only encoding, such as SJIS (Jiang Guiqing)
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> dump <TT
+CLASS="LITERAL"
+>SEQUENCE SET</TT
+> items in
+      the data not pre-data section of the archive (Tom Lane)
+     </P
+><P
+>      This fixes an undesirable inconsistency between the meanings of
+      <TT
+CLASS="OPTION"
+>--data-only</TT
+> and <TT
+CLASS="OPTION"
+>--section=data</TT
+>, and also fixes
+      dumping of sequences that are marked as extension configuration tables.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>'s handling of <TT
+CLASS="COMMAND"
+>DROP DATABASE</TT
+>
+      commands in <TT
+CLASS="OPTION"
+>--clean</TT
+> mode (Guillaume Lelarge)
+     </P
+><P
+>      Beginning in 9.2.0, <TT
+CLASS="LITERAL"
+>pg_dump --clean</TT
+> would issue a
+      <TT
+CLASS="COMMAND"
+>DROP DATABASE</TT
+> command, which was either useless or
+      dangerous depending on the usage scenario.  It no longer does that.
+      This change also fixes the combination of <TT
+CLASS="OPTION"
+>--clean</TT
+> and
+      <TT
+CLASS="OPTION"
+>--create</TT
+> to work sensibly, i.e., emit <TT
+CLASS="COMMAND"
+>DROP
+      DATABASE</TT
+> then <TT
+CLASS="COMMAND"
+>CREATE DATABASE</TT
+> before reconnecting to the
+      target database.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> for views with circular dependencies and
+      no relation options (Tom Lane)
+     </P
+><P
+>      The previous fix to dump relation options when a view is
+      involved in a circular dependency didn't work right for the case
+      that the view has no options; it emitted <TT
+CLASS="LITERAL"
+>ALTER VIEW foo
+      SET ()</TT
+> which is invalid syntax.
+     </P
+></LI
+><LI
+><P
+>      Fix bugs in the <TT
+CLASS="FILENAME"
+>restore.sql</TT
+> script emitted by
+      <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> in <TT
+CLASS="LITERAL"
+>tar</TT
+> output format (Tom Lane)
+     </P
+><P
+>      The script would fail outright on tables whose names include
+      upper-case characters.  Also, make the script capable of restoring
+      data in <TT
+CLASS="OPTION"
+>--inserts</TT
+> mode as well as the regular COPY mode.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> to accept POSIX-conformant
+      <TT
+CLASS="LITERAL"
+>tar</TT
+> files (Brian Weaver, Tom Lane)
+     </P
+><P
+>      The original coding of <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>'s <TT
+CLASS="LITERAL"
+>tar</TT
+>
+      output mode produced files that are not fully conformant with the
+      POSIX standard.  This has been corrected for version 9.3.  This
+      patch updates previous branches so that they will accept both the
+      incorrect and the corrected formats, in hopes of avoiding
+      compatibility problems when 9.3 comes out.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="LITERAL"
+>tar</TT
+> files emitted by <SPAN
+CLASS="APPLICATION"
+>pg_basebackup</SPAN
+> to
+      be POSIX conformant (Brian Weaver, Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_resetxlog</SPAN
+> to locate <TT
+CLASS="FILENAME"
+>postmaster.pid</TT
+>
+      correctly when given a relative path to the data directory (Tom Lane)
+     </P
+><P
+>      This mistake could lead to <SPAN
+CLASS="APPLICATION"
+>pg_resetxlog</SPAN
+> not noticing
+      that there is an active postmaster using the data directory.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>'s <CODE
+CLASS="FUNCTION"
+>lo_import()</CODE
+> and
+      <CODE
+CLASS="FUNCTION"
+>lo_export()</CODE
+> functions to report file I/O errors properly
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>'s processing of nested structure pointer
+      variables (Muhammad Usama)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>'s <CODE
+CLASS="FUNCTION"
+>ecpg_get_data</CODE
+> function to
+      handle arrays properly (Michael Meskes)
+     </P
+></LI
+><LI
+><P
+>      Prevent <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> from trying to process TOAST tables
+      for system catalogs (Bruce Momjian)
+     </P
+><P
+>      This fixes an error seen when the <TT
+CLASS="LITERAL"
+>information_schema</TT
+> has
+      been dropped and recreated.  Other failures were also possible.
+     </P
+></LI
+><LI
+><P
+>      Improve <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> performance by setting
+      <TT
+CLASS="VARNAME"
+>synchronous_commit</TT
+> to <TT
+CLASS="LITERAL"
+>off</TT
+> in the new cluster
+      (Bruce Momjian)
+     </P
+></LI
+><LI
+><P
+>      Make <TT
+CLASS="FILENAME"
+>contrib/pageinspect</TT
+>'s btree page inspection
+      functions take buffer locks while examining pages (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Work around unportable behavior of <TT
+CLASS="LITERAL"
+>malloc(0)</TT
+> and
+      <TT
+CLASS="LITERAL"
+>realloc(NULL, 0)</TT
+> (Tom Lane)
+     </P
+><P
+>      On platforms where these calls return <TT
+CLASS="LITERAL"
+>NULL</TT
+>, some code
+      mistakenly thought that meant out-of-memory.
+      This is known to have broken <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> for databases
+      containing no user-defined aggregates.  There might be other cases
+      as well.
+     </P
+></LI
+><LI
+><P
+>      Ensure that <TT
+CLASS="LITERAL"
+>make install</TT
+> for an extension creates the
+      <TT
+CLASS="FILENAME"
+>extension</TT
+> installation directory (C&eacute;dric Villemain)
+     </P
+><P
+>      Previously, this step was missed if <TT
+CLASS="VARNAME"
+>MODULEDIR</TT
+> was set in
+      the extension's Makefile.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pgxs</SPAN
+> support for building loadable modules on AIX
+      (Tom Lane)
+     </P
+><P
+>      Building modules outside the original source tree didn't work on AIX.
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2012j
+      for DST law changes in Cuba, Israel, Jordan, Libya, Palestine, Western
+      Samoa, and portions of Brazil.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-2-3.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-2-1.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.2.3</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.2.1</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

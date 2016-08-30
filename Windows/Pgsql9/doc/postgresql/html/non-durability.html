@@ -1,0 +1,262 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Non-Durable Settings</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Performance Tips"
+HREF="performance-tips.html"><LINK
+REL="PREVIOUS"
+TITLE="Populating a Database"
+HREF="populate.html"><LINK
+REL="NEXT"
+TITLE="Server Administration"
+HREF="admin.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Populating a Database"
+HREF="populate.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="performance-tips.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 14. Performance Tips</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Server Administration"
+HREF="admin.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="NON-DURABILITY"
+>14.5. Non-Durable Settings</A
+></H1
+><P
+>    Durability is a database feature that guarantees the recording of
+    committed transactions even if the server crashes or loses
+    power.  However, durability adds significant database overhead,
+    so if your site does not require such a guarantee,
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> can be configured to run
+    much faster.  The following are configuration changes you can make
+    to improve performance in such cases.  Except as noted below, durability
+    is still guaranteed in case of a crash of the database software;
+    only abrupt operating system stoppage creates a risk of data loss
+    or corruption when these settings are used.
+
+    <P
+></P
+></P><UL
+><LI
+><P
+>       Place the database cluster's data directory in a memory-backed
+       file system (i.e. <ACRONYM
+CLASS="ACRONYM"
+>RAM</ACRONYM
+> disk).  This eliminates all
+       database disk I/O, but limits data storage to the amount of
+       available memory (and perhaps swap).
+      </P
+></LI
+><LI
+><P
+>       Turn off <A
+HREF="runtime-config-wal.html#GUC-FSYNC"
+>fsync</A
+>;  there is no need to flush
+       data to disk.
+      </P
+></LI
+><LI
+><P
+>       Turn off <A
+HREF="runtime-config-wal.html#GUC-SYNCHRONOUS-COMMIT"
+>synchronous_commit</A
+>;  there might be no
+       need to force <ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+> writes to disk on every
+       commit.  This setting does risk transaction loss (though not data
+       corruption) in case of a crash of the <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>database</I
+></SPAN
+>.
+      </P
+></LI
+><LI
+><P
+>       Turn off <A
+HREF="runtime-config-wal.html#GUC-FULL-PAGE-WRITES"
+>full_page_writes</A
+>;  there is no need
+       to guard against partial page writes.
+      </P
+></LI
+><LI
+><P
+>       Increase <A
+HREF="runtime-config-wal.html#GUC-MAX-WAL-SIZE"
+>max_wal_size</A
+> and <A
+HREF="runtime-config-wal.html#GUC-CHECKPOINT-TIMEOUT"
+>checkpoint_timeout</A
+> ; this reduces the frequency
+       of checkpoints, but increases the storage requirements of
+       <TT
+CLASS="FILENAME"
+>/pg_xlog</TT
+>.
+      </P
+></LI
+><LI
+><P
+>       Create <A
+HREF="sql-createtable.html#SQL-CREATETABLE-UNLOGGED"
+>unlogged
+       tables</A
+> to avoid <ACRONYM
+CLASS="ACRONYM"
+>WAL</ACRONYM
+> writes, though it
+       makes the tables non-crash-safe.
+      </P
+></LI
+></UL
+><P>
+   </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="populate.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="admin.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Populating a Database</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="performance-tips.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Server Administration</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

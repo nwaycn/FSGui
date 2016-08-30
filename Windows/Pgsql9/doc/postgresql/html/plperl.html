@@ -1,0 +1,308 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>PL/Perl - Perl Procedural Language</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Programming"
+HREF="server-programming.html"><LINK
+REL="PREVIOUS"
+TITLE="Tcl Procedure Names"
+HREF="pltcl-procnames.html"><LINK
+REL="NEXT"
+TITLE="PL/Perl Functions and Arguments"
+HREF="plperl-funcs.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="CHAPTER"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Tcl Procedure Names"
+HREF="pltcl-procnames.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="server-programming.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="PL/Perl Functions and Arguments"
+HREF="plperl-funcs.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="PLPERL"
+></A
+>Chapter 42. PL/Perl - Perl Procedural Language</H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+>42.1. <A
+HREF="plperl-funcs.html"
+>PL/Perl Functions and Arguments</A
+></DT
+><DT
+>42.2. <A
+HREF="plperl-data.html"
+>Data Values in PL/Perl</A
+></DT
+><DT
+>42.3. <A
+HREF="plperl-builtins.html"
+>Built-in Functions</A
+></DT
+><DD
+><DL
+><DT
+>42.3.1. <A
+HREF="plperl-builtins.html#PLPERL-DATABASE"
+>Database Access from PL/Perl</A
+></DT
+><DT
+>42.3.2. <A
+HREF="plperl-builtins.html#PLPERL-UTILITY-FUNCTIONS"
+>Utility Functions in PL/Perl</A
+></DT
+></DL
+></DD
+><DT
+>42.4. <A
+HREF="plperl-global.html"
+>Global Values in PL/Perl</A
+></DT
+><DT
+>42.5. <A
+HREF="plperl-trusted.html"
+>Trusted and Untrusted PL/Perl</A
+></DT
+><DT
+>42.6. <A
+HREF="plperl-triggers.html"
+>PL/Perl Triggers</A
+></DT
+><DT
+>42.7. <A
+HREF="plperl-event-triggers.html"
+>PL/Perl Event Triggers</A
+></DT
+><DT
+>42.8. <A
+HREF="plperl-under-the-hood.html"
+>PL/Perl Under the Hood</A
+></DT
+><DD
+><DL
+><DT
+>42.8.1. <A
+HREF="plperl-under-the-hood.html#PLPERL-CONFIG"
+>Configuration</A
+></DT
+><DT
+>42.8.2. <A
+HREF="plperl-under-the-hood.html#PLPERL-MISSING"
+>Limitations and Missing Features</A
+></DT
+></DL
+></DD
+></DL
+></DIV
+><P
+>   PL/Perl is a loadable procedural language that enables you to write
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> functions in the
+   <A
+HREF="http://www.perl.org"
+TARGET="_top"
+>Perl programming language</A
+>.
+  </P
+><P
+>   The main advantage to using PL/Perl is that this allows use,
+   within stored functions, of the manyfold <SPAN
+CLASS="QUOTE"
+>"string
+   munging"</SPAN
+> operators and functions available for Perl.  Parsing
+   complex strings might be easier using Perl than it is with the
+   string functions and control structures provided in PL/pgSQL.
+  </P
+><P
+>   To install PL/Perl in a particular database, use
+   <TT
+CLASS="LITERAL"
+>CREATE EXTENSION plperl</TT
+>, or from the shell command line use
+   <TT
+CLASS="LITERAL"
+>createlang plperl <TT
+CLASS="REPLACEABLE"
+><I
+>dbname</I
+></TT
+></TT
+>.
+  </P
+><DIV
+CLASS="TIP"
+><BLOCKQUOTE
+CLASS="TIP"
+><P
+><B
+>Tip: </B
+>    If a language is installed into <TT
+CLASS="LITERAL"
+>template1</TT
+>, all subsequently
+    created databases will have the language installed automatically.
+   </P
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    Users of source packages must specially enable the build of
+    PL/Perl during the installation process.  (Refer to <A
+HREF="installation.html"
+>Chapter 15</A
+> for more information.)  Users of
+    binary packages might find PL/Perl in a separate subpackage.
+   </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="pltcl-procnames.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="plperl-funcs.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Tcl Procedure Names</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="server-programming.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>PL/Perl Functions and Arguments</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

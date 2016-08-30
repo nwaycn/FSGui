@@ -1,0 +1,491 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.3.7</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.3.8"
+HREF="release-8-3-8.html"><LINK
+REL="NEXT"
+TITLE="Release 8.3.6"
+HREF="release-8-3-6.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.3.8"
+HREF="release-8-3-8.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.3.6"
+HREF="release-8-3-6.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-3-7"
+>E.137. Release 8.3.7</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2009-03-16</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.3.6.
+   For information about new features in the 8.3 major release, see
+   <A
+HREF="release-8-3.html"
+>Section E.144</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN153099"
+>E.137.1. Migration to Version 8.3.7</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.3.X.
+    However, if you are upgrading from a version earlier than 8.3.5,
+    see <A
+HREF="release-8-3-5.html"
+>Section E.139</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN153103"
+>E.137.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Prevent error recursion crashes when encoding conversion fails (Tom)
+     </P
+><P
+>      This change extends fixes made in the last two minor releases for
+      related failure scenarios.  The previous fixes were narrowly tailored
+      for the original problem reports, but we have now recognized that
+      <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>any</I
+></SPAN
+> error thrown by an encoding conversion function could
+      potentially lead to infinite recursion while trying to report the
+      error.  The solution therefore is to disable translation and encoding
+      conversion and report the plain-ASCII form of any error message,
+      if we find we have gotten into a recursive error reporting situation.
+      (CVE-2009-0922)
+     </P
+></LI
+><LI
+><P
+>      Disallow <TT
+CLASS="COMMAND"
+>CREATE CONVERSION</TT
+> with the wrong encodings
+      for the specified conversion function (Heikki)
+     </P
+><P
+>      This prevents one possible scenario for encoding conversion failure.
+      The previous change is a backstop to guard against other kinds of
+      failures in the same area.
+     </P
+></LI
+><LI
+><P
+>      Fix <CODE
+CLASS="FUNCTION"
+>xpath()</CODE
+> to not modify the path expression unless
+      necessary, and to make a saner attempt at it when necessary (Andrew)
+     </P
+><P
+>      The SQL standard suggests that <CODE
+CLASS="FUNCTION"
+>xpath</CODE
+> should work on data
+      that is a document fragment, but <SPAN
+CLASS="APPLICATION"
+>libxml</SPAN
+> doesn't support
+      that, and indeed it's not clear that this is sensible according to the
+      XPath standard.  <CODE
+CLASS="FUNCTION"
+>xpath</CODE
+> attempted to work around this
+      mismatch by modifying both the data and the path expression, but the
+      modification was buggy and could cause valid searches to fail.  Now,
+      <CODE
+CLASS="FUNCTION"
+>xpath</CODE
+> checks whether the data is in fact a well-formed
+      document, and if so invokes <SPAN
+CLASS="APPLICATION"
+>libxml</SPAN
+> with no change to the
+      data or path expression.  Otherwise, a different modification method
+      that is somewhat less likely to fail is used.
+     </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>       The new modification method is still not 100% satisfactory, and it
+       seems likely that no real solution is possible.  This patch should
+       therefore be viewed as a band-aid to keep from breaking existing
+       applications unnecessarily.  It is likely that
+       <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 8.4 will simply reject use of
+       <CODE
+CLASS="FUNCTION"
+>xpath</CODE
+> on data that is not a well-formed document.
+      </P
+></BLOCKQUOTE
+></DIV
+></LI
+><LI
+><P
+>      Fix core dump when <CODE
+CLASS="FUNCTION"
+>to_char()</CODE
+> is given format codes that
+      are inappropriate for the type of the data argument (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix possible failure in text search when C locale is used with
+      a multi-byte encoding (Teodor)
+     </P
+><P
+>      Crashes were possible on platforms where <TT
+CLASS="TYPE"
+>wchar_t</TT
+> is narrower
+      than <TT
+CLASS="TYPE"
+>int</TT
+>; Windows in particular.
+     </P
+></LI
+><LI
+><P
+>      Fix extreme inefficiency in text search parser's handling of an
+      email-like string containing multiple <TT
+CLASS="LITERAL"
+>@</TT
+> characters (Heikki)
+     </P
+></LI
+><LI
+><P
+>      Fix planner problem with sub-<TT
+CLASS="COMMAND"
+>SELECT</TT
+> in the output list
+      of a larger subquery (Tom)
+     </P
+><P
+>      The known symptom of this bug is a <SPAN
+CLASS="QUOTE"
+>"failed to locate grouping
+      columns"</SPAN
+> error that is dependent on the datatype involved;
+      but there could be other issues as well.
+     </P
+></LI
+><LI
+><P
+>      Fix decompilation of <TT
+CLASS="LITERAL"
+>CASE WHEN</TT
+> with an implicit coercion
+      (Tom)
+     </P
+><P
+>      This mistake could lead to Assert failures in an Assert-enabled build,
+      or an <SPAN
+CLASS="QUOTE"
+>"unexpected CASE WHEN clause"</SPAN
+> error message in other
+      cases, when trying to examine or dump a view.
+     </P
+></LI
+><LI
+><P
+>      Fix possible misassignment of the owner of a TOAST table's rowtype (Tom)
+     </P
+><P
+>      If <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+> or a rewriting variant of <TT
+CLASS="COMMAND"
+>ALTER TABLE</TT
+>
+      were executed by someone other than the table owner, the
+      <TT
+CLASS="STRUCTNAME"
+>pg_type</TT
+> entry for the table's TOAST table would end up
+      marked as owned by that someone.  This caused no immediate problems,
+      since the permissions on the TOAST rowtype aren't examined by any
+      ordinary database operation.  However, it could lead to unexpected
+      failures if one later tried to drop the role that issued the command
+      (in 8.1 or 8.2), or <SPAN
+CLASS="QUOTE"
+>"owner of data type appears to be invalid"</SPAN
+>
+      warnings from <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> after having done so (in 8.3).
+     </P
+></LI
+><LI
+><P
+>      Change <TT
+CLASS="COMMAND"
+>UNLISTEN</TT
+> to exit quickly if the current session has
+      never executed any <TT
+CLASS="COMMAND"
+>LISTEN</TT
+> command (Tom)
+     </P
+><P
+>      Most of the time this is not a particularly useful optimization, but
+      since <TT
+CLASS="COMMAND"
+>DISCARD ALL</TT
+> invokes <TT
+CLASS="COMMAND"
+>UNLISTEN</TT
+>, the previous
+      coding caused a substantial performance problem for applications that
+      made heavy use of <TT
+CLASS="COMMAND"
+>DISCARD ALL</TT
+>.
+     </P
+></LI
+><LI
+><P
+>      Fix PL/pgSQL to not treat <TT
+CLASS="LITERAL"
+>INTO</TT
+> after <TT
+CLASS="COMMAND"
+>INSERT</TT
+> as
+      an INTO-variables clause anywhere in the string, not only at the start;
+      in particular, don't fail for <TT
+CLASS="COMMAND"
+>INSERT INTO</TT
+> within
+      <TT
+CLASS="COMMAND"
+>CREATE RULE</TT
+> (Tom)
+     </P
+></LI
+><LI
+><P
+>      Clean up PL/pgSQL error status variables fully at block exit
+      (Ashesh Vashi and Dave Page)
+     </P
+><P
+>      This is not a problem for PL/pgSQL itself, but the omission could cause
+      the PL/pgSQL Debugger to crash while examining the state of a function.
+     </P
+></LI
+><LI
+><P
+>      Retry failed calls to <CODE
+CLASS="FUNCTION"
+>CallNamedPipe()</CODE
+> on Windows
+      (Steve Marshall, Magnus)
+     </P
+><P
+>      It appears that this function can sometimes fail transiently;
+      we previously treated any failure as a hard error, which could
+      confuse <TT
+CLASS="COMMAND"
+>LISTEN</TT
+>/<TT
+CLASS="COMMAND"
+>NOTIFY</TT
+> as well as other
+      operations.
+     </P
+></LI
+><LI
+><P
+>      Add <TT
+CLASS="LITERAL"
+>MUST</TT
+> (Mauritius Island Summer Time) to the default list
+      of known timezone abbreviations (Xavier Bugaud)
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-3-8.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-3-6.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.3.8</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.3.6</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

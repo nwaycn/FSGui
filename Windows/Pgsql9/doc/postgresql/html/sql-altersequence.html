@@ -1,0 +1,830 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>ALTER SEQUENCE</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="ALTER SCHEMA"
+HREF="sql-alterschema.html"><LINK
+REL="NEXT"
+TITLE="ALTER SERVER"
+HREF="sql-alterserver.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="ALTER SCHEMA"
+HREF="sql-alterschema.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="ALTER SERVER"
+HREF="sql-alterserver.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-ALTERSEQUENCE"
+></A
+>ALTER SEQUENCE</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN71608"
+></A
+><H2
+>Name</H2
+>ALTER SEQUENCE&nbsp;--&nbsp;   change the definition of a sequence generator
+  </DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN71611"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>ALTER SEQUENCE [ IF EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> [ INCREMENT [ BY ] <TT
+CLASS="REPLACEABLE"
+><I
+>increment</I
+></TT
+> ]
+    [ MINVALUE <TT
+CLASS="REPLACEABLE"
+><I
+>minvalue</I
+></TT
+> | NO MINVALUE ] [ MAXVALUE <TT
+CLASS="REPLACEABLE"
+><I
+>maxvalue</I
+></TT
+> | NO MAXVALUE ]
+    [ START [ WITH ] <TT
+CLASS="REPLACEABLE"
+><I
+>start</I
+></TT
+> ]
+    [ RESTART [ [ WITH ] <TT
+CLASS="REPLACEABLE"
+><I
+>restart</I
+></TT
+> ] ]
+    [ CACHE <TT
+CLASS="REPLACEABLE"
+><I
+>cache</I
+></TT
+> ] [ [ NO ] CYCLE ]
+    [ OWNED BY { <TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+>.<TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> | NONE } ]
+ALTER SEQUENCE [ IF EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> OWNER TO { <TT
+CLASS="REPLACEABLE"
+><I
+>new_owner</I
+></TT
+> | CURRENT_USER | SESSION_USER }
+ALTER SEQUENCE [ IF EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> RENAME TO <TT
+CLASS="REPLACEABLE"
+><I
+>new_name</I
+></TT
+>
+ALTER SEQUENCE [ IF EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> SET SCHEMA <TT
+CLASS="REPLACEABLE"
+><I
+>new_schema</I
+></TT
+></PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN71628"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>ALTER SEQUENCE</TT
+> changes the parameters of an existing
+   sequence generator.  Any parameters not specifically set in the
+   <TT
+CLASS="COMMAND"
+>ALTER SEQUENCE</TT
+> command retain their prior settings.
+  </P
+><P
+>   You must own the sequence to use <TT
+CLASS="COMMAND"
+>ALTER SEQUENCE</TT
+>.
+   To change a sequence's schema, you must also have <TT
+CLASS="LITERAL"
+>CREATE</TT
+>
+   privilege on the new schema.
+   To alter the owner, you must also be a direct or indirect member of the new
+   owning role, and that role must have <TT
+CLASS="LITERAL"
+>CREATE</TT
+> privilege on
+   the sequence's schema.  (These restrictions enforce that altering the owner
+   doesn't do anything you couldn't do by dropping and recreating the sequence.
+   However, a superuser can alter ownership of any sequence anyway.)
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN71637"
+></A
+><H2
+>Parameters</H2
+><P
+>    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></DT
+><DD
+><P
+>        The name (optionally schema-qualified) of a sequence to be altered.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>IF EXISTS</TT
+></DT
+><DD
+><P
+>        Do not throw an error if the sequence does not exist. A notice is issued
+        in this case.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>increment</I
+></TT
+></DT
+><DD
+><P
+>        The clause <TT
+CLASS="LITERAL"
+>INCREMENT BY <TT
+CLASS="REPLACEABLE"
+><I
+>increment</I
+></TT
+></TT
+> is
+        optional. A positive value will make an ascending sequence, a
+        negative one a descending sequence.  If unspecified, the old
+        increment value will be maintained.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>minvalue</I
+></TT
+><BR><TT
+CLASS="LITERAL"
+>NO MINVALUE</TT
+></DT
+><DD
+><P
+>        The optional clause <TT
+CLASS="LITERAL"
+>MINVALUE <TT
+CLASS="REPLACEABLE"
+><I
+>minvalue</I
+></TT
+></TT
+> determines
+        the minimum value a sequence can generate. If <TT
+CLASS="LITERAL"
+>NO
+        MINVALUE</TT
+> is specified, the defaults of 1 and
+        -2<SUP
+>63</SUP
+>-1 for ascending and descending sequences,
+        respectively, will be used.  If neither option is specified,
+        the current minimum value will be maintained.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>maxvalue</I
+></TT
+><BR><TT
+CLASS="LITERAL"
+>NO MAXVALUE</TT
+></DT
+><DD
+><P
+>        The optional clause <TT
+CLASS="LITERAL"
+>MAXVALUE <TT
+CLASS="REPLACEABLE"
+><I
+>maxvalue</I
+></TT
+></TT
+> determines
+        the maximum value for the sequence. If <TT
+CLASS="LITERAL"
+>NO
+        MAXVALUE</TT
+> is specified, the defaults are
+        2<SUP
+>63</SUP
+>-1 and -1 for ascending and descending
+        sequences, respectively, will be used.  If neither option is
+        specified, the current maximum value will be maintained.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>start</I
+></TT
+></DT
+><DD
+><P
+>        The optional clause <TT
+CLASS="LITERAL"
+>START WITH <TT
+CLASS="REPLACEABLE"
+><I
+>start</I
+></TT
+></TT
+> changes the
+        recorded start value of the sequence.  This has no effect on the
+        <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>current</I
+></SPAN
+> sequence value; it simply sets the value
+        that future <TT
+CLASS="COMMAND"
+>ALTER SEQUENCE RESTART</TT
+> commands will use.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>restart</I
+></TT
+></DT
+><DD
+><P
+>        The optional clause <TT
+CLASS="LITERAL"
+>RESTART [ WITH <TT
+CLASS="REPLACEABLE"
+><I
+>restart</I
+></TT
+> ]</TT
+> changes the
+        current value of the sequence.  This is equivalent to calling the
+        <CODE
+CLASS="FUNCTION"
+>setval</CODE
+> function with <TT
+CLASS="LITERAL"
+>is_called</TT
+> =
+        <TT
+CLASS="LITERAL"
+>false</TT
+>: the specified value will be returned by the
+        <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>next</I
+></SPAN
+> call of <CODE
+CLASS="FUNCTION"
+>nextval</CODE
+>.
+        Writing <TT
+CLASS="LITERAL"
+>RESTART</TT
+> with no <TT
+CLASS="REPLACEABLE"
+><I
+>restart</I
+></TT
+> value is equivalent to supplying
+        the start value that was recorded by <TT
+CLASS="COMMAND"
+>CREATE SEQUENCE</TT
+>
+        or last set by <TT
+CLASS="COMMAND"
+>ALTER SEQUENCE START WITH</TT
+>.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>cache</I
+></TT
+></DT
+><DD
+><P
+>        The clause <TT
+CLASS="LITERAL"
+>CACHE <TT
+CLASS="REPLACEABLE"
+><I
+>cache</I
+></TT
+></TT
+> enables
+        sequence numbers to be preallocated and stored in memory for
+        faster access. The minimum value is 1 (only one value can be
+        generated at a time, i.e., no cache).  If unspecified, the old
+        cache value will be maintained.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>CYCLE</TT
+></DT
+><DD
+><P
+>        The optional <TT
+CLASS="LITERAL"
+>CYCLE</TT
+> key word can be used to enable
+        the sequence to wrap around when the
+        <TT
+CLASS="REPLACEABLE"
+><I
+>maxvalue</I
+></TT
+> or
+        <TT
+CLASS="REPLACEABLE"
+><I
+>minvalue</I
+></TT
+> has been
+        reached by
+        an ascending or descending sequence respectively. If the limit is
+        reached, the next number generated will be the
+        <TT
+CLASS="REPLACEABLE"
+><I
+>minvalue</I
+></TT
+> or
+        <TT
+CLASS="REPLACEABLE"
+><I
+>maxvalue</I
+></TT
+>,
+        respectively.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>NO CYCLE</TT
+></DT
+><DD
+><P
+>        If the optional <TT
+CLASS="LITERAL"
+>NO CYCLE</TT
+> key word is
+        specified, any calls to <CODE
+CLASS="FUNCTION"
+>nextval</CODE
+> after the
+        sequence has reached its maximum value will return an error.
+        If neither <TT
+CLASS="LITERAL"
+>CYCLE</TT
+> or <TT
+CLASS="LITERAL"
+>NO
+        CYCLE</TT
+> are specified, the old cycle behavior will be
+        maintained.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>OWNED BY</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+>.<TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+><BR><TT
+CLASS="LITERAL"
+>OWNED BY NONE</TT
+></DT
+><DD
+><P
+>      The <TT
+CLASS="LITERAL"
+>OWNED BY</TT
+> option causes the sequence to be
+      associated with a specific table column, such that if that column
+      (or its whole table) is dropped, the sequence will be automatically
+      dropped as well.  If specified, this association replaces any
+      previously specified association for the sequence.  The specified
+      table must have the same owner and be in the same schema as the
+      sequence.
+      Specifying <TT
+CLASS="LITERAL"
+>OWNED BY NONE</TT
+> removes any existing
+      association, making the sequence <SPAN
+CLASS="QUOTE"
+>"free-standing"</SPAN
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_owner</I
+></TT
+></DT
+><DD
+><P
+>      The user name of the new owner of the sequence.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_name</I
+></TT
+></DT
+><DD
+><P
+>      The new name for the sequence.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_schema</I
+></TT
+></DT
+><DD
+><P
+>      The new schema for the sequence.
+     </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN71758"
+></A
+><H2
+>Notes</H2
+><P
+>   To avoid blocking of concurrent transactions that obtain numbers from the
+   same sequence, <TT
+CLASS="COMMAND"
+>ALTER SEQUENCE</TT
+>'s effects on the sequence
+   generation parameters are never rolled back; those changes take effect
+   immediately and are not reversible.  However, the <TT
+CLASS="LITERAL"
+>OWNED BY</TT
+>,
+   <TT
+CLASS="LITERAL"
+>OWNER TO</TT
+>, <TT
+CLASS="LITERAL"
+>RENAME TO</TT
+>, and <TT
+CLASS="LITERAL"
+>SET SCHEMA</TT
+>
+   clauses cause ordinary catalog updates that can be rolled back.
+  </P
+><P
+>   <TT
+CLASS="COMMAND"
+>ALTER SEQUENCE</TT
+> will not immediately affect
+   <CODE
+CLASS="FUNCTION"
+>nextval</CODE
+> results in backends,
+   other than the current one, that have preallocated (cached) sequence
+   values. They will use up all cached values prior to noticing the changed
+   sequence generation parameters.  The current backend will be affected
+   immediately.
+  </P
+><P
+>   <TT
+CLASS="COMMAND"
+>ALTER SEQUENCE</TT
+> does not affect the <CODE
+CLASS="FUNCTION"
+>currval</CODE
+>
+   status for the sequence.  (Before <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+   8.3, it sometimes did.)
+  </P
+><P
+>   For historical reasons, <TT
+CLASS="COMMAND"
+>ALTER TABLE</TT
+> can be used with
+   sequences too; but the only variants of <TT
+CLASS="COMMAND"
+>ALTER TABLE</TT
+>
+   that are allowed with sequences are equivalent to the forms shown above.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN71776"
+></A
+><H2
+>Examples</H2
+><P
+>   Restart a sequence called <TT
+CLASS="LITERAL"
+>serial</TT
+>, at 105:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER SEQUENCE serial RESTART WITH 105;</PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN71781"
+></A
+><H2
+>Compatibility</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>ALTER SEQUENCE</TT
+> conforms to the <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+>
+   standard, except for the <TT
+CLASS="LITERAL"
+>START WITH</TT
+>,
+   <TT
+CLASS="LITERAL"
+>OWNED BY</TT
+>, <TT
+CLASS="LITERAL"
+>OWNER TO</TT
+>, <TT
+CLASS="LITERAL"
+>RENAME TO</TT
+>, and
+   <TT
+CLASS="LITERAL"
+>SET SCHEMA</TT
+> clauses, which are
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> extensions.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN71792"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-createsequence.html"
+>CREATE SEQUENCE</A
+>, <A
+HREF="sql-dropsequence.html"
+>DROP SEQUENCE</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-alterschema.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-alterserver.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>ALTER SCHEMA</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>ALTER SERVER</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

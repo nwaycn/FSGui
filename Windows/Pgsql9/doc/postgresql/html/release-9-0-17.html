@@ -1,0 +1,350 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.0.17</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.0.18"
+HREF="release-9-0-18.html"><LINK
+REL="NEXT"
+TITLE="Release 9.0.16"
+HREF="release-9-0-16.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.0.18"
+HREF="release-9-0-18.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.0.16"
+HREF="release-9-0-16.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-0-17"
+>E.80. Release 9.0.17</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2014-03-20</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 9.0.16.
+   For information about new features in the 9.0 major release, see
+   <A
+HREF="release-9-0.html"
+>Section E.97</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN143748"
+>E.80.1. Migration to Version 9.0.17</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.0.X.
+   </P
+><P
+>    However, if you are upgrading from a version earlier than 9.0.15,
+    see <A
+HREF="release-9-0-15.html"
+>Section E.82</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN143753"
+>E.80.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Restore GIN metapages unconditionally to avoid torn-page risk
+      (Heikki Linnakangas)
+     </P
+><P
+>      Although this oversight could theoretically result in a corrupted
+      index, it is unlikely to have caused any problems in practice, since
+      the active part of a GIN metapage is smaller than a standard 512-byte
+      disk sector.
+     </P
+></LI
+><LI
+><P
+>      Avoid race condition in checking transaction commit status during
+      receipt of a <TT
+CLASS="COMMAND"
+>NOTIFY</TT
+> message (Marko Tiikkaja)
+     </P
+><P
+>      This prevents a scenario wherein a sufficiently fast client might
+      respond to a notification before database updates made by the
+      notifier have become visible to the recipient.
+     </P
+></LI
+><LI
+><P
+>      Allow regular-expression operators to be terminated early by query
+      cancel requests (Tom Lane)
+     </P
+><P
+>      This prevents scenarios wherein a pathological regular expression
+      could lock up a server process uninterruptably for a long time.
+     </P
+></LI
+><LI
+><P
+>      Remove incorrect code that tried to allow <TT
+CLASS="LITERAL"
+>OVERLAPS</TT
+> with
+      single-element row arguments (Joshua Yanovski)
+     </P
+><P
+>      This code never worked correctly, and since the case is neither
+      specified by the SQL standard nor documented, it seemed better to
+      remove it than fix it.
+     </P
+></LI
+><LI
+><P
+>      Avoid getting more than <TT
+CLASS="LITERAL"
+>AccessShareLock</TT
+> when de-parsing a
+      rule or view (Dean Rasheed)
+     </P
+><P
+>      This oversight resulted in <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> unexpectedly
+      acquiring <TT
+CLASS="LITERAL"
+>RowExclusiveLock</TT
+> locks on tables mentioned as
+      the targets of <TT
+CLASS="LITERAL"
+>INSERT</TT
+>/<TT
+CLASS="LITERAL"
+>UPDATE</TT
+>/<TT
+CLASS="LITERAL"
+>DELETE</TT
+>
+      commands in rules.  While usually harmless, that could interfere with
+      concurrent transactions that tried to acquire, for example,
+      <TT
+CLASS="LITERAL"
+>ShareLock</TT
+> on those tables.
+     </P
+></LI
+><LI
+><P
+>      Improve performance of index endpoint probes during planning (Tom Lane)
+     </P
+><P
+>      This change fixes a significant performance problem that occurred
+      when there were many not-yet-committed rows at the end of the index,
+      which is a common situation for indexes on sequentially-assigned
+      values such as timestamps or sequence-generated identifiers.
+     </P
+></LI
+><LI
+><P
+>      Fix test to see if hot standby connections can be allowed immediately
+      after a crash (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Prevent interrupts while reporting non-<TT
+CLASS="LITERAL"
+>ERROR</TT
+> messages
+      (Tom Lane)
+     </P
+><P
+>      This guards against rare server-process freezeups due to recursive
+      entry to <CODE
+CLASS="FUNCTION"
+>syslog()</CODE
+>, and perhaps other related problems.
+     </P
+></LI
+><LI
+><P
+>      Prevent intermittent <SPAN
+CLASS="QUOTE"
+>"could not reserve shared memory region"</SPAN
+>
+      failures on recent Windows versions (MauMau)
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2014a
+      for DST law changes in Fiji and Turkey, plus historical changes in
+      Israel and Ukraine.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-0-18.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-0-16.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.0.18</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.0.16</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

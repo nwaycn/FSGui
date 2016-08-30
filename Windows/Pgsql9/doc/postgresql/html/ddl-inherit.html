@@ -1,0 +1,729 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Inheritance</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Data Definition"
+HREF="ddl.html"><LINK
+REL="PREVIOUS"
+TITLE="Schemas"
+HREF="ddl-schemas.html"><LINK
+REL="NEXT"
+TITLE="Partitioning"
+HREF="ddl-partitioning.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Schemas"
+HREF="ddl-schemas.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ddl.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 5. Data Definition</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Partitioning"
+HREF="ddl-partitioning.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="DDL-INHERIT"
+>5.9. Inheritance</A
+></H1
+><P
+>   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> implements table inheritance,
+   which can be a useful tool for database designers.  (SQL:1999 and
+   later define a type inheritance feature, which differs in many
+   respects from the features described here.)
+  </P
+><P
+>   Let's start with an example: suppose we are trying to build a data
+   model for cities.  Each state has many cities, but only one
+   capital. We want to be able to quickly retrieve the capital city
+   for any particular state. This can be done by creating two tables,
+   one for state capitals and one for cities that are not
+   capitals. However, what happens when we want to ask for data about
+   a city, regardless of whether it is a capital or not? The
+   inheritance feature can help to resolve this problem. We define the
+   <TT
+CLASS="STRUCTNAME"
+>capitals</TT
+> table so that it inherits from
+   <TT
+CLASS="STRUCTNAME"
+>cities</TT
+>:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE cities (
+    name            text,
+    population      float,
+    altitude        int     -- in feet
+);
+
+CREATE TABLE capitals (
+    state           char(2)
+) INHERITS (cities);</PRE
+><P>
+
+   In this case, the <TT
+CLASS="STRUCTNAME"
+>capitals</TT
+> table <I
+CLASS="FIRSTTERM"
+>inherits</I
+>
+   all the columns of its parent table, <TT
+CLASS="STRUCTNAME"
+>cities</TT
+>. State
+   capitals also have an extra column, <TT
+CLASS="STRUCTFIELD"
+>state</TT
+>, that shows
+   their state.
+  </P
+><P
+>   In <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>, a table can inherit from
+   zero or more other tables, and a query can reference either all
+   rows of a table or all rows of a table plus all of its descendant tables.
+   The latter behavior is the default.
+   For example, the following query finds the names of all cities,
+   including state capitals, that are located at an altitude over
+   500 feet:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT name, altitude
+    FROM cities
+    WHERE altitude &gt; 500;</PRE
+><P>
+
+   Given the sample data from the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+   tutorial (see <A
+HREF="tutorial-sql-intro.html"
+>Section 2.1</A
+>), this returns:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>   name    | altitude
+-----------+----------
+ Las Vegas |     2174
+ Mariposa  |     1953
+ Madison   |      845</PRE
+><P>
+  </P
+><P
+>   On the other hand, the following query finds all the cities that
+   are not state capitals and are situated at an altitude over 500 feet:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT name, altitude
+    FROM ONLY cities
+    WHERE altitude &gt; 500;
+
+   name    | altitude
+-----------+----------
+ Las Vegas |     2174
+ Mariposa  |     1953</PRE
+><P>
+  </P
+><P
+>   Here the <TT
+CLASS="LITERAL"
+>ONLY</TT
+> keyword indicates that the query
+   should apply only to <TT
+CLASS="STRUCTNAME"
+>cities</TT
+>, and not any tables
+   below <TT
+CLASS="STRUCTNAME"
+>cities</TT
+> in the inheritance hierarchy.  Many
+   of the commands that we have already discussed &mdash;
+   <TT
+CLASS="COMMAND"
+>SELECT</TT
+>, <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> and
+   <TT
+CLASS="COMMAND"
+>DELETE</TT
+> &mdash; support the
+   <TT
+CLASS="LITERAL"
+>ONLY</TT
+> keyword.
+  </P
+><P
+>   You can also write the table name with a trailing <TT
+CLASS="LITERAL"
+>*</TT
+>
+   to explicitly specify that descendant tables are included:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT name, altitude
+    FROM cities*
+    WHERE altitude &gt; 500;</PRE
+><P>
+
+   Writing <TT
+CLASS="LITERAL"
+>*</TT
+> is not necessary, since this behavior is
+   the default (unless you have changed the setting of the
+   <A
+HREF="runtime-config-compatible.html#GUC-SQL-INHERITANCE"
+>sql_inheritance</A
+> configuration option).
+   However writing <TT
+CLASS="LITERAL"
+>*</TT
+> might be useful to emphasize that
+   additional tables will be searched.
+  </P
+><P
+>   In some cases you might wish to know which table a particular row
+   originated from. There is a system column called
+   <TT
+CLASS="STRUCTFIELD"
+>tableoid</TT
+> in each table which can tell you the
+   originating table:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT c.tableoid, c.name, c.altitude
+FROM cities c
+WHERE c.altitude &gt; 500;</PRE
+><P>
+
+   which returns:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+> tableoid |   name    | altitude
+----------+-----------+----------
+   139793 | Las Vegas |     2174
+   139793 | Mariposa  |     1953
+   139798 | Madison   |      845</PRE
+><P>
+
+   (If you try to reproduce this example, you will probably get
+   different numeric OIDs.)  By doing a join with
+   <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+> you can see the actual table names:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT p.relname, c.name, c.altitude
+FROM cities c, pg_class p
+WHERE c.altitude &gt; 500 AND c.tableoid = p.oid;</PRE
+><P>
+
+   which returns:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+> relname  |   name    | altitude
+----------+-----------+----------
+ cities   | Las Vegas |     2174
+ cities   | Mariposa  |     1953
+ capitals | Madison   |      845</PRE
+><P>
+  </P
+><P
+>   Another way to get the same effect is to use the <TT
+CLASS="TYPE"
+>regclass</TT
+>
+   pseudo-type, which will print the table OID symbolically:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT c.tableoid::regclass, c.name, c.altitude
+FROM cities c
+WHERE c.altitude &gt; 500;</PRE
+><P>
+  </P
+><P
+>   Inheritance does not automatically propagate data from
+   <TT
+CLASS="COMMAND"
+>INSERT</TT
+> or <TT
+CLASS="COMMAND"
+>COPY</TT
+> commands to
+   other tables in the inheritance hierarchy. In our example, the
+   following <TT
+CLASS="COMMAND"
+>INSERT</TT
+> statement will fail:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>INSERT INTO cities (name, population, altitude, state)
+VALUES ('Albany', NULL, NULL, 'NY');</PRE
+><P>
+   We might hope that the data would somehow be routed to the
+   <TT
+CLASS="STRUCTNAME"
+>capitals</TT
+> table, but this does not happen:
+   <TT
+CLASS="COMMAND"
+>INSERT</TT
+> always inserts into exactly the table
+   specified.  In some cases it is possible to redirect the insertion
+   using a rule (see <A
+HREF="rules.html"
+>Chapter 38</A
+>).  However that does not
+   help for the above case because the <TT
+CLASS="STRUCTNAME"
+>cities</TT
+> table
+   does not contain the column <TT
+CLASS="STRUCTFIELD"
+>state</TT
+>, and so the
+   command will be rejected before the rule can be applied.
+  </P
+><P
+>   All check constraints and not-null constraints on a parent table are
+   automatically inherited by its children.  Other types of constraints
+   (unique, primary key, and foreign key constraints) are not inherited.
+  </P
+><P
+>   A table can inherit from more than one parent table, in which case it has
+   the union of the columns defined by the parent tables.  Any columns
+   declared in the child table's definition are added to these.  If the
+   same column name appears in multiple parent tables, or in both a parent
+   table and the child's definition, then these columns are <SPAN
+CLASS="QUOTE"
+>"merged"</SPAN
+>
+   so that there is only one such column in the child table.  To be merged,
+   columns must have the same data types, else an error is raised.  The
+   merged column will have copies of all the check constraints coming from
+   any one of the column definitions it came from, and will be marked not-null
+   if any of them are.
+  </P
+><P
+>   Table inheritance is typically established when the child table is
+   created, using the <TT
+CLASS="LITERAL"
+>INHERITS</TT
+> clause of the
+   <A
+HREF="sql-createtable.html"
+>CREATE TABLE</A
+>
+   statement.
+   Alternatively, a table which is already defined in a compatible way can
+   have a new parent relationship added, using the <TT
+CLASS="LITERAL"
+>INHERIT</TT
+>
+   variant of <A
+HREF="sql-altertable.html"
+>ALTER TABLE</A
+>.
+   To do this the new child table must already include columns with
+   the same names and types as the columns of the parent. It must also include
+   check constraints with the same names and check expressions as those of the
+   parent. Similarly an inheritance link can be removed from a child using the
+   <TT
+CLASS="LITERAL"
+>NO INHERIT</TT
+> variant of <TT
+CLASS="COMMAND"
+>ALTER TABLE</TT
+>.
+   Dynamically adding and removing inheritance links like this can be useful
+   when the inheritance relationship is being used for table
+   partitioning (see <A
+HREF="ddl-partitioning.html"
+>Section 5.10</A
+>).
+  </P
+><P
+>   One convenient way to create a compatible table that will later be made
+   a new child is to use the <TT
+CLASS="LITERAL"
+>LIKE</TT
+> clause in <TT
+CLASS="COMMAND"
+>CREATE
+   TABLE</TT
+>. This creates a new table with the same columns as
+   the source table. If there are any <TT
+CLASS="LITERAL"
+>CHECK</TT
+>
+   constraints defined on the source table, the <TT
+CLASS="LITERAL"
+>INCLUDING
+   CONSTRAINTS</TT
+> option to <TT
+CLASS="LITERAL"
+>LIKE</TT
+> should be
+   specified, as the new child must have constraints matching the parent
+   to be considered compatible.
+  </P
+><P
+>   A parent table cannot be dropped while any of its children remain. Neither
+   can columns or check constraints of child tables be dropped or altered
+   if they are inherited
+   from any parent tables. If you wish to remove a table and all of its
+   descendants, one easy way is to drop the parent table with the
+   <TT
+CLASS="LITERAL"
+>CASCADE</TT
+> option.
+  </P
+><P
+>   <A
+HREF="sql-altertable.html"
+>ALTER TABLE</A
+> will
+   propagate any changes in column data definitions and check
+   constraints down the inheritance hierarchy.  Again, dropping
+   columns that are depended on by other tables is only possible when using
+   the <TT
+CLASS="LITERAL"
+>CASCADE</TT
+> option. <TT
+CLASS="COMMAND"
+>ALTER
+   TABLE</TT
+> follows the same rules for duplicate column merging
+   and rejection that apply during <TT
+CLASS="COMMAND"
+>CREATE TABLE</TT
+>.
+  </P
+><P
+>   Note how table access permissions are handled.  Querying a parent
+   table can automatically access data in child tables without further
+   access privilege checking.  This preserves the appearance that the
+   data is (also) in the parent table.  Accessing the child tables
+   directly is, however, not automatically allowed and would require
+   further privileges to be granted.
+  </P
+><P
+>   Foreign tables (see <A
+HREF="ddl-foreign-data.html"
+>Section 5.11</A
+>) can also
+   be part of inheritance hierarchies, either as parent or child
+   tables, just as regular tables can be.  If a foreign table is part
+   of an inheritance hierarchy then any operations not supported by
+   the foreign table are not supported on the whole hierarchy either.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="DDL-INHERIT-CAVEATS"
+>5.9.1. Caveats</A
+></H2
+><P
+>   Note that not all SQL commands are able to work on
+   inheritance hierarchies.  Commands that are used for data querying,
+   data modification, or schema modification
+   (e.g., <TT
+CLASS="LITERAL"
+>SELECT</TT
+>, <TT
+CLASS="LITERAL"
+>UPDATE</TT
+>, <TT
+CLASS="LITERAL"
+>DELETE</TT
+>,
+   most variants of <TT
+CLASS="LITERAL"
+>ALTER TABLE</TT
+>, but
+   not <TT
+CLASS="LITERAL"
+>INSERT</TT
+> or <TT
+CLASS="LITERAL"
+>ALTER TABLE ...
+   RENAME</TT
+>) typically default to including child tables and
+   support the <TT
+CLASS="LITERAL"
+>ONLY</TT
+> notation to exclude them.
+   Commands that do database maintenance and tuning
+   (e.g., <TT
+CLASS="LITERAL"
+>REINDEX</TT
+>, <TT
+CLASS="LITERAL"
+>VACUUM</TT
+>)
+   typically only work on individual, physical tables and do not
+   support recursing over inheritance hierarchies.  The respective
+   behavior of each individual command is documented in its reference
+   page (<A
+HREF="sql-commands.html"
+>Reference I, <I
+>SQL Commands</I
+></A
+>).
+  </P
+><P
+>   A serious limitation of the inheritance feature is that indexes (including
+   unique constraints) and foreign key constraints only apply to single
+   tables, not to their inheritance children. This is true on both the
+   referencing and referenced sides of a foreign key constraint. Thus,
+   in the terms of the above example:
+
+   <P
+></P
+></P><UL
+><LI
+><P
+>      If we declared <TT
+CLASS="STRUCTNAME"
+>cities</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>name</TT
+> to be
+      <TT
+CLASS="LITERAL"
+>UNIQUE</TT
+> or a <TT
+CLASS="LITERAL"
+>PRIMARY KEY</TT
+>, this would not stop the
+      <TT
+CLASS="STRUCTNAME"
+>capitals</TT
+> table from having rows with names duplicating
+      rows in <TT
+CLASS="STRUCTNAME"
+>cities</TT
+>.  And those duplicate rows would by
+      default show up in queries from <TT
+CLASS="STRUCTNAME"
+>cities</TT
+>.  In fact, by
+      default <TT
+CLASS="STRUCTNAME"
+>capitals</TT
+> would have no unique constraint at all,
+      and so could contain multiple rows with the same name.
+      You could add a unique constraint to <TT
+CLASS="STRUCTNAME"
+>capitals</TT
+>, but this
+      would not prevent duplication compared to <TT
+CLASS="STRUCTNAME"
+>cities</TT
+>.
+     </P
+></LI
+><LI
+><P
+>      Similarly, if we were to specify that
+      <TT
+CLASS="STRUCTNAME"
+>cities</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>name</TT
+> <TT
+CLASS="LITERAL"
+>REFERENCES</TT
+> some
+      other table, this constraint would not automatically propagate to
+      <TT
+CLASS="STRUCTNAME"
+>capitals</TT
+>.  In this case you could work around it by
+      manually adding the same <TT
+CLASS="LITERAL"
+>REFERENCES</TT
+> constraint to
+      <TT
+CLASS="STRUCTNAME"
+>capitals</TT
+>.
+     </P
+></LI
+><LI
+><P
+>      Specifying that another table's column <TT
+CLASS="LITERAL"
+>REFERENCES
+      cities(name)</TT
+> would allow the other table to contain city names, but
+      not capital names.  There is no good workaround for this case.
+     </P
+></LI
+></UL
+><P>
+
+   These deficiencies will probably be fixed in some future release,
+   but in the meantime considerable care is needed in deciding whether
+   inheritance is useful for your application.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ddl-schemas.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="ddl-partitioning.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Schemas</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="ddl.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Partitioning</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,283 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Writing A Foreign Data Wrapper</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Internals"
+HREF="internals.html"><LINK
+REL="PREVIOUS"
+TITLE="Writing A Procedural Language Handler"
+HREF="plhandler.html"><LINK
+REL="NEXT"
+TITLE="Foreign Data Wrapper Functions"
+HREF="fdw-functions.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="CHAPTER"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Writing A Procedural Language Handler"
+HREF="plhandler.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="internals.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Foreign Data Wrapper Functions"
+HREF="fdw-functions.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="FDWHANDLER"
+></A
+>Chapter 54. Writing A Foreign Data Wrapper</H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+>54.1. <A
+HREF="fdw-functions.html"
+>Foreign Data Wrapper Functions</A
+></DT
+><DT
+>54.2. <A
+HREF="fdw-callbacks.html"
+>Foreign Data Wrapper Callback Routines</A
+></DT
+><DD
+><DL
+><DT
+>54.2.1. <A
+HREF="fdw-callbacks.html#FDW-CALLBACKS-SCAN"
+>FDW Routines For Scanning Foreign Tables</A
+></DT
+><DT
+>54.2.2. <A
+HREF="fdw-callbacks.html#FDW-CALLBACKS-JOIN-SCAN"
+>FDW Routines For Scanning Foreign Joins</A
+></DT
+><DT
+>54.2.3. <A
+HREF="fdw-callbacks.html#FDW-CALLBACKS-UPDATE"
+>FDW Routines For Updating Foreign Tables</A
+></DT
+><DT
+>54.2.4. <A
+HREF="fdw-callbacks.html#FDW-CALLBACKS-ROW-LOCKING"
+>FDW Routines For Row Locking</A
+></DT
+><DT
+>54.2.5. <A
+HREF="fdw-callbacks.html#FDW-CALLBACKS-EXPLAIN"
+>FDW Routines for <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+></A
+></DT
+><DT
+>54.2.6. <A
+HREF="fdw-callbacks.html#FDW-CALLBACKS-ANALYZE"
+>FDW Routines for <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+></A
+></DT
+><DT
+>54.2.7. <A
+HREF="fdw-callbacks.html#FDW-CALLBACKS-IMPORT"
+>FDW Routines For <TT
+CLASS="COMMAND"
+>IMPORT FOREIGN SCHEMA</TT
+></A
+></DT
+></DL
+></DD
+><DT
+>54.3. <A
+HREF="fdw-helpers.html"
+>Foreign Data Wrapper Helper Functions</A
+></DT
+><DT
+>54.4. <A
+HREF="fdw-planning.html"
+>Foreign Data Wrapper Query Planning</A
+></DT
+><DT
+>54.5. <A
+HREF="fdw-row-locking.html"
+>Row Locking in Foreign Data Wrappers</A
+></DT
+></DL
+></DIV
+><P
+>    All operations on a foreign table are handled through its foreign data
+    wrapper, which consists of a set of functions that the core server
+    calls.  The foreign data wrapper is responsible for fetching
+    data from the remote data source and returning it to the
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> executor.  If updating foreign
+    tables is to be supported, the wrapper must handle that, too.
+    This chapter outlines how to write a new foreign data wrapper.
+   </P
+><P
+>    The foreign data wrappers included in the standard distribution are good
+    references when trying to write your own.  Look into the
+    <TT
+CLASS="FILENAME"
+>contrib</TT
+> subdirectory of the source tree.
+    The <A
+HREF="sql-createforeigndatawrapper.html"
+>CREATE FOREIGN DATA WRAPPER</A
+> reference page also has
+    some useful details.
+   </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>     The SQL standard specifies an interface for writing foreign data wrappers.
+     However, PostgreSQL does not implement that API, because the effort to
+     accommodate it into PostgreSQL would be large, and the standard API hasn't
+     gained wide adoption anyway.
+    </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plhandler.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="fdw-functions.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Writing A Procedural Language Handler</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="internals.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Foreign Data Wrapper Functions</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

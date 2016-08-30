@@ -1,0 +1,540 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_test_timing</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="PostgreSQL Server Applications"
+HREF="reference-server.html"><LINK
+REL="PREVIOUS"
+TITLE="pg_test_fsync"
+HREF="pgtestfsync.html"><LINK
+REL="NEXT"
+TITLE="pg_upgrade"
+HREF="pgupgrade.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pg_test_fsync"
+HREF="pgtestfsync.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="reference-server.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pg_upgrade"
+HREF="pgupgrade.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="PGTESTTIMING"
+></A
+><SPAN
+CLASS="APPLICATION"
+>pg_test_timing</SPAN
+></H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN98737"
+></A
+><H2
+>Name</H2
+>pg_test_timing&nbsp;--&nbsp;measure timing overhead</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN98740"
+></A
+><H2
+>Synopsis</H2
+><P
+><TT
+CLASS="COMMAND"
+>pg_test_timing</TT
+> [<TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+>...]</P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN98745"
+></A
+><H2
+>Description</H2
+><P
+>  <SPAN
+CLASS="APPLICATION"
+>pg_test_timing</SPAN
+> is a tool to measure the timing overhead
+  on your system and confirm that the system time never moves backwards.
+  Systems that are slow to collect timing data can give less accurate
+  <TT
+CLASS="COMMAND"
+>EXPLAIN ANALYZE</TT
+> results.
+ </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN98750"
+></A
+><H2
+>Options</H2
+><P
+>    <SPAN
+CLASS="APPLICATION"
+>pg_test_timing</SPAN
+> accepts the following
+    command-line options:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-d <TT
+CLASS="REPLACEABLE"
+><I
+>duration</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--duration=<TT
+CLASS="REPLACEABLE"
+><I
+>duration</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Specifies the test duration, in seconds. Longer durations
+        give slightly better accuracy, and are more likely to discover
+        problems with the system clock moving backwards. The default
+        test duration is 3 seconds.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-V</TT
+><BR><TT
+CLASS="OPTION"
+>--version</TT
+></DT
+><DD
+><P
+>        Print the <SPAN
+CLASS="APPLICATION"
+>pg_test_timing</SPAN
+> version and exit.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-?</TT
+><BR><TT
+CLASS="OPTION"
+>--help</TT
+></DT
+><DD
+><P
+>        Show help about <SPAN
+CLASS="APPLICATION"
+>pg_test_timing</SPAN
+> command line
+        arguments, and exit.
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN98780"
+></A
+><H2
+>Usage</H2
+><DIV
+CLASS="REFSECT2"
+><A
+NAME="AEN98782"
+></A
+><H3
+>Interpreting results</H3
+><P
+>   Good results will show most (&#62;90%) individual timing calls take less than
+   one microsecond. Average per loop overhead will be even lower, below 100
+   nanoseconds. This example from an Intel i7-860 system using a TSC clock
+   source shows excellent performance:
+
+</P><PRE
+CLASS="SCREEN"
+>Testing timing overhead for 3 seconds.
+Per loop time including overhead: 35.96 nsec
+Histogram of timing durations:
+&#60; usec   % of total      count
+     1     96.40465   80435604 
+     2      3.59518    2999652  
+     4      0.00015        126  
+     8      0.00002         13  
+    16      0.00000          2  </PRE
+><P>
+  </P
+><P
+>   Note that different units are used for the per loop time than the
+   histogram. The loop can have resolution within a few nanoseconds (nsec),
+   while the individual timing calls can only resolve down to one microsecond
+   (usec).
+  </P
+></DIV
+><DIV
+CLASS="REFSECT2"
+><A
+NAME="AEN98787"
+></A
+><H3
+>Measuring executor timing overhead</H3
+><P
+>   When the query executor is running a statement using
+   <TT
+CLASS="COMMAND"
+>EXPLAIN ANALYZE</TT
+>, individual operations are timed as well
+   as showing a summary.  The overhead of your system can be checked by
+   counting rows with the <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> program:
+
+</P><PRE
+CLASS="SCREEN"
+>CREATE TABLE t AS SELECT * FROM generate_series(1,100000);
+\timing
+SELECT COUNT(*) FROM t;
+EXPLAIN ANALYZE SELECT COUNT(*) FROM t;</PRE
+><P>
+  </P
+><P
+>   The i7-860 system measured runs the count query in 9.8 ms while
+   the <TT
+CLASS="COMMAND"
+>EXPLAIN ANALYZE</TT
+> version takes 16.6 ms, each
+   processing just over 100,000 rows.  That 6.8 ms difference means the timing
+   overhead per row is 68 ns, about twice what pg_test_timing estimated it
+   would be.  Even that relatively small amount of overhead is making the fully
+   timed count statement take almost 70% longer.  On more substantial queries,
+   the timing overhead would be less problematic.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT2"
+><A
+NAME="AEN98795"
+></A
+><H3
+>Changing time sources</H3
+><P
+>   On some newer Linux systems, it's possible to change the clock source used
+   to collect timing data at any time.  A second example shows the slowdown
+   possible from switching to the slower acpi_pm time source, on the same
+   system used for the fast results above:
+
+</P><PRE
+CLASS="SCREEN"
+># cat /sys/devices/system/clocksource/clocksource0/available_clocksource
+tsc hpet acpi_pm
+# echo acpi_pm &#62; /sys/devices/system/clocksource/clocksource0/current_clocksource
+# pg_test_timing
+Per loop time including overhead: 722.92 nsec
+Histogram of timing durations:
+&#60; usec   % of total      count
+     1     27.84870    1155682 
+     2     72.05956    2990371 
+     4      0.07810       3241  
+     8      0.01357        563  
+    16      0.00007          3  </PRE
+><P>
+  </P
+><P
+>   In this configuration, the sample <TT
+CLASS="COMMAND"
+>EXPLAIN ANALYZE</TT
+> above
+   takes 115.9 ms.  That's 1061 nsec of timing overhead, again a small multiple
+   of what's measured directly by this utility.  That much timing overhead
+   means the actual query itself is only taking a tiny fraction of the
+   accounted for time, most of it is being consumed in overhead instead.  In
+   this configuration, any <TT
+CLASS="COMMAND"
+>EXPLAIN ANALYZE</TT
+> totals involving
+   many timed operations would be inflated significantly by timing overhead.
+  </P
+><P
+>   FreeBSD also allows changing the time source on the fly, and it logs
+   information about the timer selected during boot:
+
+</P><PRE
+CLASS="SCREEN"
+># dmesg | grep "Timecounter"
+Timecounter "ACPI-fast" frequency 3579545 Hz quality 900
+Timecounter "i8254" frequency 1193182 Hz quality 0
+Timecounters tick every 10.000 msec
+Timecounter "TSC" frequency 2531787134 Hz quality 800
+# sysctl kern.timecounter.hardware=TSC
+kern.timecounter.hardware: ACPI-fast -&#62; TSC</PRE
+><P>
+  </P
+><P
+>   Other systems may only allow setting the time source on boot.  On older
+   Linux systems the "clock" kernel setting is the only way to make this sort
+   of change.  And even on some more recent ones, the only option you'll see
+   for a clock source is "jiffies".  Jiffies are the older Linux software clock
+   implementation, which can have good resolution when it's backed by fast
+   enough timing hardware, as in this example:
+
+</P><PRE
+CLASS="SCREEN"
+>$ cat /sys/devices/system/clocksource/clocksource0/available_clocksource
+jiffies
+$ dmesg | grep time.c
+time.c: Using 3.579545 MHz WALL PM GTOD PIT/TSC timer.
+time.c: Detected 2400.153 MHz processor.
+$ pg_test_timing
+Testing timing overhead for 3 seconds.
+Per timing duration including loop overhead: 97.75 ns
+Histogram of timing durations:
+&#60; usec   % of total      count
+     1     90.23734   27694571 
+     2      9.75277    2993204  
+     4      0.00981       3010  
+     8      0.00007         22  
+    16      0.00000          1  
+    32      0.00000          1  </PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT2"
+><A
+NAME="AEN98806"
+></A
+><H3
+>Clock hardware and timing accuracy</H3
+><P
+>   Collecting accurate timing information is normally done on computers using
+   hardware clocks with various levels of accuracy.  With some hardware the
+   operating systems can pass the system clock time almost directly to
+   programs.  A system clock can also be derived from a chip that simply
+   provides timing interrupts, periodic ticks at some known time interval.  In
+   either case, operating system kernels provide a clock source that hides
+   these details.  But the accuracy of that clock source and how quickly it can
+   return results varies based on the underlying hardware.
+  </P
+><P
+>   Inaccurate time keeping can result in system instability.  Test any change
+   to the clock source very carefully.  Operating system defaults are sometimes
+   made to favor reliability over best accuracy. And if you are using a virtual
+   machine, look into the recommended time sources compatible with it.  Virtual
+   hardware faces additional difficulties when emulating timers, and there are
+   often per operating system settings suggested by vendors.
+  </P
+><P
+>   The Time Stamp Counter (TSC) clock source is the most accurate one available
+   on current generation CPUs. It's the preferred way to track the system time
+   when it's supported by the operating system and the TSC clock is
+   reliable. There are several ways that TSC can fail to provide an accurate
+   timing source, making it unreliable. Older systems can have a TSC clock that
+   varies based on the CPU temperature, making it unusable for timing. Trying
+   to use TSC on some older multicore CPUs can give a reported time that's
+   inconsistent among multiple cores. This can result in the time going
+   backwards, a problem this program checks for.  And even the newest systems
+   can fail to provide accurate TSC timing with very aggressive power saving
+   configurations.
+  </P
+><P
+>   Newer operating systems may check for the known TSC problems and switch to a
+   slower, more stable clock source when they are seen.  If your system
+   supports TSC time but doesn't default to that, it may be disabled for a good
+   reason.  And some operating systems may not detect all the possible problems
+   correctly, or will allow using TSC even in situations where it's known to be
+   inaccurate.
+  </P
+><P
+>   The High Precision Event Timer (HPET) is the preferred timer on systems
+   where it's available and TSC is not accurate.  The timer chip itself is
+   programmable to allow up to 100 nanosecond resolution, but you may not see
+   that much accuracy in your system clock.
+  </P
+><P
+>   Advanced Configuration and Power Interface (ACPI) provides a Power
+   Management (PM) Timer, which Linux refers to as the acpi_pm.  The clock
+   derived from acpi_pm will at best provide 300 nanosecond resolution.
+  </P
+><P
+>   Timers used on older PC hardware include the 8254 Programmable Interval
+   Timer (PIT), the real-time clock (RTC), the Advanced Programmable Interrupt
+   Controller (APIC) timer, and the Cyclone timer.  These timers aim for
+   millisecond resolution.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN98815"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-explain.html"
+>EXPLAIN</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="pgtestfsync.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="pgupgrade.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><SPAN
+CLASS="APPLICATION"
+>pg_test_fsync</SPAN
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="reference-server.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

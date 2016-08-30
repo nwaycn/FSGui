@@ -1,0 +1,536 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.2.22</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.2.23"
+HREF="release-8-2-23.html"><LINK
+REL="NEXT"
+TITLE="Release 8.2.21"
+HREF="release-8-2-21.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.2.23"
+HREF="release-8-2-23.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.2.21"
+HREF="release-8-2-21.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-2-22"
+>E.146. Release 8.2.22</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2011-09-26</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.2.21.
+   For information about new features in the 8.2 major release, see
+   <A
+HREF="release-8-2.html"
+>Section E.168</A
+>.
+  </P
+><P
+>   The <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> community will stop releasing updates
+   for the 8.2.X release series in December 2011.
+   Users are encouraged to update to a newer release branch soon.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN155059"
+>E.146.1. Migration to Version 8.2.22</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.2.X.
+    However, if you are upgrading from a version earlier than 8.2.14,
+    see <A
+HREF="release-8-2-14.html"
+>Section E.154</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN155063"
+>E.146.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix multiple bugs in GiST index page split processing (Heikki
+      Linnakangas)
+     </P
+><P
+>      The probability of occurrence was low, but these could lead to index
+      corruption.
+     </P
+></LI
+><LI
+><P
+>      Avoid possibly accessing off the end of memory in <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+>
+      (Noah Misch)
+     </P
+><P
+>      This fixes a very-low-probability server crash scenario.
+     </P
+></LI
+><LI
+><P
+>      Fix race condition in relcache init file invalidation (Tom Lane)
+     </P
+><P
+>      There was a window wherein a new backend process could read a stale init
+      file but miss the inval messages that would tell it the data is stale.
+      The result would be bizarre failures in catalog accesses, typically
+      <SPAN
+CLASS="QUOTE"
+>"could not read block 0 in file ..."</SPAN
+> later during startup.
+     </P
+></LI
+><LI
+><P
+>      Fix memory leak at end of a GiST index scan (Tom Lane)
+     </P
+><P
+>      Commands that perform many separate GiST index scans, such as
+      verification of a new GiST-based exclusion constraint on a table
+      already containing many rows, could transiently require large amounts of
+      memory due to this leak.
+     </P
+></LI
+><LI
+><P
+>      Fix performance problem when constructing a large, lossy bitmap
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix array- and path-creating functions to ensure padding bytes are
+      zeroes (Tom Lane)
+     </P
+><P
+>      This avoids some situations where the planner will think that
+      semantically-equal constants are not equal, resulting in poor
+      optimization.
+     </P
+></LI
+><LI
+><P
+>      Work around gcc 4.6.0 bug that breaks WAL replay (Tom Lane)
+     </P
+><P
+>      This could lead to loss of committed transactions after a server crash.
+     </P
+></LI
+><LI
+><P
+>      Fix dump bug for <TT
+CLASS="LITERAL"
+>VALUES</TT
+> in a view (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Disallow <TT
+CLASS="LITERAL"
+>SELECT FOR UPDATE/SHARE</TT
+> on sequences (Tom Lane)
+     </P
+><P
+>      This operation doesn't work as expected and can lead to failures.
+     </P
+></LI
+><LI
+><P
+>      Defend against integer overflow when computing size of a hash table (Tom
+      Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix portability bugs in use of credentials control messages for
+      <SPAN
+CLASS="QUOTE"
+>"peer"</SPAN
+> authentication (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix typo in <CODE
+CLASS="FUNCTION"
+>pg_srand48</CODE
+> seed initialization (Andres Freund)
+     </P
+><P
+>      This led to failure to use all bits of the provided seed.  This function
+      is not used on most platforms (only those without <CODE
+CLASS="FUNCTION"
+>srandom</CODE
+>),
+      and the potential security exposure from a less-random-than-expected
+      seed seems minimal in any case.
+     </P
+></LI
+><LI
+><P
+>      Avoid integer overflow when the sum of <TT
+CLASS="LITERAL"
+>LIMIT</TT
+> and
+      <TT
+CLASS="LITERAL"
+>OFFSET</TT
+> values exceeds 2^63 (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Add overflow checks to <TT
+CLASS="TYPE"
+>int4</TT
+> and <TT
+CLASS="TYPE"
+>int8</TT
+> versions of
+      <CODE
+CLASS="FUNCTION"
+>generate_series()</CODE
+> (Robert Haas)
+     </P
+></LI
+><LI
+><P
+>      Fix trailing-zero removal in <CODE
+CLASS="FUNCTION"
+>to_char()</CODE
+> (Marti Raudsepp)
+     </P
+><P
+>      In a format with <TT
+CLASS="LITERAL"
+>FM</TT
+> and no digit positions
+      after the decimal point, zeroes to the left of the decimal point could
+      be removed incorrectly.
+     </P
+></LI
+><LI
+><P
+>      Fix <CODE
+CLASS="FUNCTION"
+>pg_size_pretty()</CODE
+> to avoid overflow for inputs close to
+      2^63 (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s counting of script file line numbers during
+      <TT
+CLASS="LITERAL"
+>COPY</TT
+> from a different file (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+>'s direct-to-database mode for
+      <TT
+CLASS="VARNAME"
+>standard_conforming_strings</TT
+> (Tom Lane)
+     </P
+><P
+>      <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> could emit incorrect commands when restoring
+      directly to a database server from an archive file that had been made
+      with <TT
+CLASS="VARNAME"
+>standard_conforming_strings</TT
+> set to <TT
+CLASS="LITERAL"
+>on</TT
+>.
+     </P
+></LI
+><LI
+><P
+>      Fix write-past-buffer-end and memory leak in <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>'s
+      LDAP service lookup code (Albe Laurenz)
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>, avoid failures when using nonblocking I/O
+      and an SSL connection (Martin Pihlak, Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Improve libpq's handling of failures during connection startup
+      (Tom Lane)
+     </P
+><P
+>      In particular, the response to a server report of <CODE
+CLASS="FUNCTION"
+>fork()</CODE
+>
+      failure during SSL connection startup is now saner.
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>ecpglib</SPAN
+> write <TT
+CLASS="TYPE"
+>double</TT
+> values with 15 digits
+      precision (Akira Kurosawa)
+     </P
+></LI
+><LI
+><P
+>      Apply upstream fix for blowfish signed-character bug (CVE-2011-2483)
+      (Tom Lane)
+     </P
+><P
+>      <TT
+CLASS="FILENAME"
+>contrib/pg_crypto</TT
+>'s blowfish encryption code could give
+      wrong results on platforms where char is signed (which is most),
+      leading to encrypted passwords being weaker than they should be.
+     </P
+></LI
+><LI
+><P
+>      Fix memory leak in <TT
+CLASS="FILENAME"
+>contrib/seg</TT
+> (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Fix <CODE
+CLASS="FUNCTION"
+>pgstatindex()</CODE
+> to give consistent results for empty
+      indexes (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Allow building with perl 5.14 (Alex Hunsaker)
+     </P
+></LI
+><LI
+><P
+>      Update configure script's method for probing existence of system
+      functions (Tom Lane)
+     </P
+><P
+>      The version of autoconf we used in 8.3 and 8.2 could be fooled by
+      compilers that perform link-time optimization.
+     </P
+></LI
+><LI
+><P
+>      Fix assorted issues with build and install file paths containing spaces
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2011i
+      for DST law changes in Canada, Egypt, Russia, Samoa, and South Sudan.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-2-23.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-2-21.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.2.23</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.2.21</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

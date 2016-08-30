@@ -1,0 +1,544 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_archivecleanup</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="PostgreSQL Server Applications"
+HREF="reference-server.html"><LINK
+REL="PREVIOUS"
+TITLE="initdb"
+HREF="app-initdb.html"><LINK
+REL="NEXT"
+TITLE="pg_controldata"
+HREF="app-pgcontroldata.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="initdb"
+HREF="app-initdb.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="reference-server.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pg_controldata"
+HREF="app-pgcontroldata.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="PGARCHIVECLEANUP"
+></A
+><SPAN
+CLASS="APPLICATION"
+>pg_archivecleanup</SPAN
+></H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN97740"
+></A
+><H2
+>Name</H2
+>pg_archivecleanup&nbsp;--&nbsp;clean up <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> WAL archive files</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN97744"
+></A
+><H2
+>Synopsis</H2
+><P
+><TT
+CLASS="COMMAND"
+>pg_archivecleanup</TT
+> [<TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+>...]  <TT
+CLASS="REPLACEABLE"
+><I
+>archivelocation</I
+></TT
+>   <TT
+CLASS="REPLACEABLE"
+><I
+>oldestkeptwalfile</I
+></TT
+> </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN97753"
+></A
+><H2
+>Description</H2
+><P
+>  <SPAN
+CLASS="APPLICATION"
+>pg_archivecleanup</SPAN
+> is designed to be used as an
+  <TT
+CLASS="LITERAL"
+>archive_cleanup_command</TT
+> to clean up WAL file archives when
+  running as a standby server (see <A
+HREF="warm-standby.html"
+>Section 25.2</A
+>).
+  <SPAN
+CLASS="APPLICATION"
+>pg_archivecleanup</SPAN
+> can also be used as a standalone program to
+  clean WAL file archives.
+ </P
+><P
+>   To configure a standby
+   server to use <SPAN
+CLASS="APPLICATION"
+>pg_archivecleanup</SPAN
+>, put this into its
+   <TT
+CLASS="FILENAME"
+>recovery.conf</TT
+> configuration file:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>archive_cleanup_command = 'pg_archivecleanup <TT
+CLASS="REPLACEABLE"
+><I
+>archivelocation</I
+></TT
+> %r'</PRE
+><P>
+   where <TT
+CLASS="REPLACEABLE"
+><I
+>archivelocation</I
+></TT
+> is the directory from which WAL segment
+   files should be removed.
+  </P
+><P
+>   When used within <A
+HREF="archive-recovery-settings.html#ARCHIVE-CLEANUP-COMMAND"
+>archive_cleanup_command</A
+>, all WAL files
+   logically preceding the value of the <TT
+CLASS="LITERAL"
+>%r</TT
+> argument will be removed
+   from <TT
+CLASS="REPLACEABLE"
+><I
+>archivelocation</I
+></TT
+>. This minimizes the number of files
+   that need to be retained, while preserving crash-restart capability.  Use of
+   this parameter is appropriate if the <TT
+CLASS="REPLACEABLE"
+><I
+>archivelocation</I
+></TT
+> is a
+   transient staging area for this particular standby server, but
+   <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+> when the <TT
+CLASS="REPLACEABLE"
+><I
+>archivelocation</I
+></TT
+> is intended as a
+   long-term WAL archive area, or when multiple standby servers are recovering
+   from the same archive location.
+  </P
+><P
+>   When used as a standalone program all WAL files logically preceding the
+   <TT
+CLASS="REPLACEABLE"
+><I
+>oldestkeptwalfile</I
+></TT
+> will be removed from <TT
+CLASS="REPLACEABLE"
+><I
+>archivelocation</I
+></TT
+>.
+   In this mode, if you specify a <TT
+CLASS="FILENAME"
+>.partial</TT
+> or <TT
+CLASS="FILENAME"
+>.backup</TT
+>
+   file name, then only the file prefix will be used as the
+   <TT
+CLASS="REPLACEABLE"
+><I
+>oldestkeptwalfile</I
+></TT
+>. This treatment of <TT
+CLASS="FILENAME"
+>.backup</TT
+>
+   file name allows you to remove
+   all WAL files archived prior to a specific base backup without error.
+   For example, the following example will remove all files older than
+   WAL file name <TT
+CLASS="FILENAME"
+>000000010000003700000010</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>pg_archivecleanup -d archive 000000010000003700000010.00000020.backup
+
+pg_archivecleanup:  keep WAL file "archive/000000010000003700000010" and later
+pg_archivecleanup:  removing file "archive/00000001000000370000000F"
+pg_archivecleanup:  removing file "archive/00000001000000370000000E"</PRE
+><P>
+  </P
+><P
+>   <SPAN
+CLASS="APPLICATION"
+>pg_archivecleanup</SPAN
+> assumes that
+   <TT
+CLASS="REPLACEABLE"
+><I
+>archivelocation</I
+></TT
+> is a directory readable and writable by the
+   server-owning user.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN97785"
+></A
+><H2
+>Options</H2
+><P
+>    <SPAN
+CLASS="APPLICATION"
+>pg_archivecleanup</SPAN
+> accepts the following command-line arguments:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-d</TT
+></DT
+><DD
+><P
+>        Print lots of debug logging output on <TT
+CLASS="FILENAME"
+>stderr</TT
+>.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-n</TT
+></DT
+><DD
+><P
+>        Print the names of the files that would have been removed on <TT
+CLASS="FILENAME"
+>stdout</TT
+> (performs a dry run).
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-V</TT
+><BR><TT
+CLASS="OPTION"
+>--version</TT
+></DT
+><DD
+><P
+>        Print the <SPAN
+CLASS="APPLICATION"
+>pg_archivecleanup</SPAN
+> version and exit.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-x</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>extension</I
+></TT
+></DT
+><DD
+><P
+>        When using the program as a standalone utility, provide an extension
+        that will be stripped from all file names before deciding if they
+        should be deleted.  This is typically useful for cleaning up archives
+        that have been compressed during storage, and therefore have had an
+        extension added by the compression program.  For example: <TT
+CLASS="LITERAL"
+>-x
+        .gz</TT
+>.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-?</TT
+><BR><TT
+CLASS="OPTION"
+>--help</TT
+></DT
+><DD
+><P
+>        Show help about <SPAN
+CLASS="APPLICATION"
+>pg_archivecleanup</SPAN
+> command line
+        arguments, and exit.
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN97825"
+></A
+><H2
+>Notes</H2
+><P
+>   <SPAN
+CLASS="APPLICATION"
+>pg_archivecleanup</SPAN
+> is designed to work with
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 8.0 and later when used as a standalone utility,
+   or with <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 9.0 and later when used as an
+   archive cleanup command.
+  </P
+><P
+>   <SPAN
+CLASS="APPLICATION"
+>pg_archivecleanup</SPAN
+> is written in C and has an
+   easy-to-modify source code, with specifically designated sections to modify
+   for your own needs
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN97833"
+></A
+><H2
+>Examples</H2
+><P
+>On Linux or Unix systems, you might use:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>archive_cleanup_command = 'pg_archivecleanup -d /mnt/standby/archive %r 2&#62;&#62;cleanup.log'</PRE
+><P>
+   where the archive directory is physically located on the standby server,
+   so that the <TT
+CLASS="VARNAME"
+>archive_command</TT
+> is accessing it across NFS,
+   but the files are local to the standby.
+   This will:
+  </P
+><P
+></P
+><UL
+><LI
+><P
+>     produce debugging output in <TT
+CLASS="FILENAME"
+>cleanup.log</TT
+>
+    </P
+></LI
+><LI
+><P
+>     remove no-longer-needed files from the archive directory
+    </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN97844"
+></A
+><H2
+>See Also</H2
+><A
+HREF="pgstandby.html"
+><SPAN
+CLASS="APPLICATION"
+>pg_standby</SPAN
+></A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="app-initdb.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="app-pgcontroldata.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>initdb</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="reference-server.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><SPAN
+CLASS="APPLICATION"
+>pg_controldata</SPAN
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

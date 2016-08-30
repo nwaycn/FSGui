@@ -1,0 +1,335 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Frontend/Backend Protocol</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Internals"
+HREF="internals.html"><LINK
+REL="PREVIOUS"
+TITLE="pg_views"
+HREF="view-pg-views.html"><LINK
+REL="NEXT"
+TITLE="Overview"
+HREF="protocol-overview.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="CHAPTER"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pg_views"
+HREF="view-pg-views.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="internals.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Overview"
+HREF="protocol-overview.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="PROTOCOL"
+></A
+>Chapter 50. Frontend/Backend Protocol</H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+>50.1. <A
+HREF="protocol-overview.html"
+>Overview</A
+></DT
+><DD
+><DL
+><DT
+>50.1.1. <A
+HREF="protocol-overview.html#PROTOCOL-MESSAGE-CONCEPTS"
+>Messaging Overview</A
+></DT
+><DT
+>50.1.2. <A
+HREF="protocol-overview.html#PROTOCOL-QUERY-CONCEPTS"
+>Extended Query Overview</A
+></DT
+><DT
+>50.1.3. <A
+HREF="protocol-overview.html#PROTOCOL-FORMAT-CODES"
+>Formats and Format Codes</A
+></DT
+></DL
+></DD
+><DT
+>50.2. <A
+HREF="protocol-flow.html"
+>Message Flow</A
+></DT
+><DD
+><DL
+><DT
+>50.2.1. <A
+HREF="protocol-flow.html#AEN108743"
+>Start-up</A
+></DT
+><DT
+>50.2.2. <A
+HREF="protocol-flow.html#AEN108818"
+>Simple Query</A
+></DT
+><DT
+>50.2.3. <A
+HREF="protocol-flow.html#PROTOCOL-FLOW-EXT-QUERY"
+>Extended Query</A
+></DT
+><DT
+>50.2.4. <A
+HREF="protocol-flow.html#AEN108929"
+>Function Call</A
+></DT
+><DT
+>50.2.5. <A
+HREF="protocol-flow.html#PROTOCOL-COPY"
+>COPY Operations</A
+></DT
+><DT
+>50.2.6. <A
+HREF="protocol-flow.html#PROTOCOL-ASYNC"
+>Asynchronous Operations</A
+></DT
+><DT
+>50.2.7. <A
+HREF="protocol-flow.html#AEN109015"
+>Canceling Requests in Progress</A
+></DT
+><DT
+>50.2.8. <A
+HREF="protocol-flow.html#AEN109023"
+>Termination</A
+></DT
+><DT
+>50.2.9. <A
+HREF="protocol-flow.html#AEN109032"
+><ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> Session Encryption</A
+></DT
+></DL
+></DD
+><DT
+>50.3. <A
+HREF="protocol-replication.html"
+>Streaming Replication Protocol</A
+></DT
+><DT
+>50.4. <A
+HREF="protocol-message-types.html"
+>Message Data Types</A
+></DT
+><DT
+>50.5. <A
+HREF="protocol-message-formats.html"
+>Message Formats</A
+></DT
+><DT
+>50.6. <A
+HREF="protocol-error-fields.html"
+>Error and Notice Message Fields</A
+></DT
+><DT
+>50.7. <A
+HREF="protocol-changes.html"
+>Summary of Changes since Protocol 2.0</A
+></DT
+></DL
+></DIV
+><P
+>  <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> uses a message-based protocol
+  for communication between frontends and backends (clients and servers).
+  The protocol is supported over <ACRONYM
+CLASS="ACRONYM"
+>TCP/IP</ACRONYM
+> and also over
+  Unix-domain sockets.  Port number 5432 has been registered with IANA as
+  the customary TCP port number for servers supporting this protocol, but
+  in practice any non-privileged port number can be used.
+ </P
+><P
+>  This document describes version 3.0 of the protocol, implemented in
+  <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 7.4 and later.  For descriptions
+  of the earlier protocol versions, see previous releases of the
+  <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> documentation.  A single server
+  can support multiple protocol versions.  The initial
+  startup-request message tells the server which protocol version the
+  client is attempting to use, and then the server follows that protocol
+  if it is able.
+ </P
+><P
+>   In order to serve multiple clients efficiently, the server launches
+   a new <SPAN
+CLASS="QUOTE"
+>"backend"</SPAN
+> process for each client.
+   In the current implementation, a new child
+   process is created immediately after an incoming connection is detected.
+   This is transparent to the protocol, however.  For purposes of the
+   protocol, the terms <SPAN
+CLASS="QUOTE"
+>"backend"</SPAN
+> and <SPAN
+CLASS="QUOTE"
+>"server"</SPAN
+> are
+   interchangeable; likewise <SPAN
+CLASS="QUOTE"
+>"frontend"</SPAN
+> and <SPAN
+CLASS="QUOTE"
+>"client"</SPAN
+>
+   are interchangeable.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="view-pg-views.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="protocol-overview.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><TT
+CLASS="STRUCTNAME"
+>pg_views</TT
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="internals.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Overview</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

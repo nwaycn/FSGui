@@ -1,0 +1,910 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Range Functions and Operators</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Functions and Operators"
+HREF="functions.html"><LINK
+REL="PREVIOUS"
+TITLE="Array Functions and Operators"
+HREF="functions-array.html"><LINK
+REL="NEXT"
+TITLE="Aggregate Functions"
+HREF="functions-aggregate.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Array Functions and Operators"
+HREF="functions-array.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 9. Functions and Operators</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Aggregate Functions"
+HREF="functions-aggregate.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="FUNCTIONS-RANGE"
+>9.19. Range Functions and Operators</A
+></H1
+><P
+>   See <A
+HREF="rangetypes.html"
+>Section 8.17</A
+> for an overview of range types.
+  </P
+><P
+>   <A
+HREF="functions-range.html#RANGE-OPERATORS-TABLE"
+>Table 9-47</A
+> shows the operators
+   available for range types.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="RANGE-OPERATORS-TABLE"
+></A
+><P
+><B
+>Table 9-47. Range Operators</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Operator</TH
+><TH
+>Description</TH
+><TH
+>Example</TH
+><TH
+>Result</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>=</TT
+> </TD
+><TD
+>equal</TD
+><TD
+><TT
+CLASS="LITERAL"
+>int4range(1,5) = '[1,4]'::int4range</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>t</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>&lt;&gt;</TT
+> </TD
+><TD
+>not equal</TD
+><TD
+><TT
+CLASS="LITERAL"
+>numrange(1.1,2.2) &lt;&gt; numrange(1.1,2.3)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>t</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>&lt;</TT
+> </TD
+><TD
+>less than</TD
+><TD
+><TT
+CLASS="LITERAL"
+>int4range(1,10) &lt; int4range(2,3)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>t</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>&gt;</TT
+> </TD
+><TD
+>greater than</TD
+><TD
+><TT
+CLASS="LITERAL"
+>int4range(1,10) &gt; int4range(1,5)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>t</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>&lt;=</TT
+> </TD
+><TD
+>less than or equal</TD
+><TD
+><TT
+CLASS="LITERAL"
+>numrange(1.1,2.2) &lt;= numrange(1.1,2.2)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>t</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>&gt;=</TT
+> </TD
+><TD
+>greater than or equal</TD
+><TD
+><TT
+CLASS="LITERAL"
+>numrange(1.1,2.2) &gt;= numrange(1.1,2.0)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>t</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>@&gt;</TT
+> </TD
+><TD
+>contains range</TD
+><TD
+><TT
+CLASS="LITERAL"
+>int4range(2,4) @&gt; int4range(2,3)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>t</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>@&gt;</TT
+> </TD
+><TD
+>contains element</TD
+><TD
+><TT
+CLASS="LITERAL"
+>'[2011-01-01,2011-03-01)'::tsrange @&gt; '2011-01-10'::timestamp</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>t</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>&lt;@</TT
+> </TD
+><TD
+>range is contained by</TD
+><TD
+><TT
+CLASS="LITERAL"
+>int4range(2,4) &lt;@ int4range(1,7)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>t</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>&lt;@</TT
+> </TD
+><TD
+>element is contained by</TD
+><TD
+><TT
+CLASS="LITERAL"
+>42 &lt;@ int4range(1,7)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>f</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>&amp;&amp;</TT
+> </TD
+><TD
+>overlap (have points in common)</TD
+><TD
+><TT
+CLASS="LITERAL"
+>int8range(3,7) &amp;&amp; int8range(4,12)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>t</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>&lt;&lt;</TT
+> </TD
+><TD
+>strictly left of</TD
+><TD
+><TT
+CLASS="LITERAL"
+>int8range(1,10) &lt;&lt; int8range(100,110)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>t</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>&gt;&gt;</TT
+> </TD
+><TD
+>strictly right of</TD
+><TD
+><TT
+CLASS="LITERAL"
+>int8range(50,60) &gt;&gt; int8range(20,30)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>t</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>&amp;&lt;</TT
+> </TD
+><TD
+>does not extend to the right of</TD
+><TD
+><TT
+CLASS="LITERAL"
+>int8range(1,20) &amp;&lt; int8range(18,20)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>t</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>&amp;&gt;</TT
+> </TD
+><TD
+>does not extend to the left of</TD
+><TD
+><TT
+CLASS="LITERAL"
+>int8range(7,20) &amp;&gt; int8range(5,10)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>t</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>-|-</TT
+> </TD
+><TD
+>is adjacent to</TD
+><TD
+><TT
+CLASS="LITERAL"
+>numrange(1.1,2.2) -|- numrange(2.2,3.3)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>t</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>+</TT
+> </TD
+><TD
+>union</TD
+><TD
+><TT
+CLASS="LITERAL"
+>numrange(5,15) + numrange(10,20)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>[5,20)</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>*</TT
+> </TD
+><TD
+>intersection</TD
+><TD
+><TT
+CLASS="LITERAL"
+>int8range(5,15) * int8range(10,20)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>[10,15)</TT
+></TD
+></TR
+><TR
+><TD
+> <TT
+CLASS="LITERAL"
+>-</TT
+> </TD
+><TD
+>difference</TD
+><TD
+><TT
+CLASS="LITERAL"
+>int8range(5,15) - int8range(10,20)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>[5,10)</TT
+></TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   The simple comparison operators <TT
+CLASS="LITERAL"
+>&lt;</TT
+>,
+   <TT
+CLASS="LITERAL"
+>&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;=</TT
+>, and
+   <TT
+CLASS="LITERAL"
+>&gt;=</TT
+> compare the lower bounds first, and only if those
+   are equal, compare the upper bounds.  These comparisons are not usually
+   very useful for ranges, but are provided to allow B-tree indexes to be
+   constructed on ranges.
+  </P
+><P
+>   The left-of/right-of/adjacent operators always return false when an empty
+   range is involved; that is, an empty range is not considered to be either
+   before or after any other range.
+  </P
+><P
+>   The union and difference operators will fail if the resulting range would
+   need to contain two disjoint sub-ranges, as such a range cannot be
+   represented.
+  </P
+><P
+>   <A
+HREF="functions-range.html#RANGE-FUNCTIONS-TABLE"
+>Table 9-48</A
+> shows the functions
+   available for use with range types.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="RANGE-FUNCTIONS-TABLE"
+></A
+><P
+><B
+>Table 9-48. Range Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+><TH
+>Example</TH
+><TH
+>Result</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>         <TT
+CLASS="LITERAL"
+>          <CODE
+CLASS="FUNCTION"
+>lower</CODE
+>(<TT
+CLASS="TYPE"
+>anyrange</TT
+>)
+         </TT
+>
+        </TD
+><TD
+>range's element type</TD
+><TD
+>lower bound of range</TD
+><TD
+><TT
+CLASS="LITERAL"
+>lower(numrange(1.1,2.2))</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>1.1</TT
+></TD
+></TR
+><TR
+><TD
+>         <TT
+CLASS="LITERAL"
+>          <CODE
+CLASS="FUNCTION"
+>upper</CODE
+>(<TT
+CLASS="TYPE"
+>anyrange</TT
+>)
+         </TT
+>
+        </TD
+><TD
+>range's element type</TD
+><TD
+>upper bound of range</TD
+><TD
+><TT
+CLASS="LITERAL"
+>upper(numrange(1.1,2.2))</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>2.2</TT
+></TD
+></TR
+><TR
+><TD
+>         <TT
+CLASS="LITERAL"
+>          <CODE
+CLASS="FUNCTION"
+>isempty</CODE
+>(<TT
+CLASS="TYPE"
+>anyrange</TT
+>)
+         </TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>is the range empty?</TD
+><TD
+><TT
+CLASS="LITERAL"
+>isempty(numrange(1.1,2.2))</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>false</TT
+></TD
+></TR
+><TR
+><TD
+>         <TT
+CLASS="LITERAL"
+>          <CODE
+CLASS="FUNCTION"
+>lower_inc</CODE
+>(<TT
+CLASS="TYPE"
+>anyrange</TT
+>)
+         </TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>is the lower bound inclusive?</TD
+><TD
+><TT
+CLASS="LITERAL"
+>lower_inc(numrange(1.1,2.2))</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>true</TT
+></TD
+></TR
+><TR
+><TD
+>         <TT
+CLASS="LITERAL"
+>          <CODE
+CLASS="FUNCTION"
+>upper_inc</CODE
+>(<TT
+CLASS="TYPE"
+>anyrange</TT
+>)
+         </TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>is the upper bound inclusive?</TD
+><TD
+><TT
+CLASS="LITERAL"
+>upper_inc(numrange(1.1,2.2))</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>false</TT
+></TD
+></TR
+><TR
+><TD
+>         <TT
+CLASS="LITERAL"
+>          <CODE
+CLASS="FUNCTION"
+>lower_inf</CODE
+>(<TT
+CLASS="TYPE"
+>anyrange</TT
+>)
+         </TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>is the lower bound infinite?</TD
+><TD
+><TT
+CLASS="LITERAL"
+>lower_inf('(,)'::daterange)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>true</TT
+></TD
+></TR
+><TR
+><TD
+>         <TT
+CLASS="LITERAL"
+>          <CODE
+CLASS="FUNCTION"
+>upper_inf</CODE
+>(<TT
+CLASS="TYPE"
+>anyrange</TT
+>)
+         </TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>is the upper bound infinite?</TD
+><TD
+><TT
+CLASS="LITERAL"
+>upper_inf('(,)'::daterange)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>true</TT
+></TD
+></TR
+><TR
+><TD
+>         <TT
+CLASS="LITERAL"
+>          <CODE
+CLASS="FUNCTION"
+>range_merge</CODE
+>(<TT
+CLASS="TYPE"
+>anyrange</TT
+>, <TT
+CLASS="TYPE"
+>anyrange</TT
+>)
+         </TT
+>
+        </TD
+><TD
+><TT
+CLASS="TYPE"
+>anyrange</TT
+></TD
+><TD
+>the smallest range which includes both of the given ranges</TD
+><TD
+><TT
+CLASS="LITERAL"
+>range_merge('[1,2)'::int4range, '[3,4)'::int4range)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>[1,4)</TT
+></TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   The <CODE
+CLASS="FUNCTION"
+>lower</CODE
+> and  <CODE
+CLASS="FUNCTION"
+>upper</CODE
+> functions return null
+   if the range is empty or the requested bound is infinite.
+   The <CODE
+CLASS="FUNCTION"
+>lower_inc</CODE
+>, <CODE
+CLASS="FUNCTION"
+>upper_inc</CODE
+>,
+   <CODE
+CLASS="FUNCTION"
+>lower_inf</CODE
+>, and <CODE
+CLASS="FUNCTION"
+>upper_inf</CODE
+>
+   functions all return false for an empty range.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions-array.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="functions-aggregate.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Array Functions and Operators</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Aggregate Functions</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

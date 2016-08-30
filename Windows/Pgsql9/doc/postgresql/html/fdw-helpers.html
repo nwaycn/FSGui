@@ -1,0 +1,312 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Foreign Data Wrapper Helper Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Writing A Foreign Data Wrapper"
+HREF="fdwhandler.html"><LINK
+REL="PREVIOUS"
+TITLE="Foreign Data Wrapper Callback Routines"
+HREF="fdw-callbacks.html"><LINK
+REL="NEXT"
+TITLE="Foreign Data Wrapper Query Planning"
+HREF="fdw-planning.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Foreign Data Wrapper Callback Routines"
+HREF="fdw-callbacks.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="fdwhandler.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 54. Writing A Foreign Data Wrapper</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Foreign Data Wrapper Query Planning"
+HREF="fdw-planning.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="FDW-HELPERS"
+>54.3. Foreign Data Wrapper Helper Functions</A
+></H1
+><P
+>     Several helper functions are exported from the core server so that
+     authors of foreign data wrappers can get easy access to attributes of
+     FDW-related objects, such as FDW options.
+     To use any of these functions, you need to include the header file
+     <TT
+CLASS="FILENAME"
+>foreign/foreign.h</TT
+> in your source file.
+     That header also defines the struct types that are returned by
+     these functions.
+    </P
+><P
+></P><PRE
+CLASS="PROGRAMLISTING"
+>ForeignDataWrapper *
+GetForeignDataWrapper(Oid fdwid);</PRE
+><P>
+
+     This function returns a <TT
+CLASS="STRUCTNAME"
+>ForeignDataWrapper</TT
+>
+     object for the foreign-data wrapper with the given OID.  A
+     <TT
+CLASS="STRUCTNAME"
+>ForeignDataWrapper</TT
+> object contains properties
+     of the FDW (see <TT
+CLASS="FILENAME"
+>foreign/foreign.h</TT
+> for details).
+    </P
+><P
+></P><PRE
+CLASS="PROGRAMLISTING"
+>ForeignServer *
+GetForeignServer(Oid serverid);</PRE
+><P>
+
+     This function returns a <TT
+CLASS="STRUCTNAME"
+>ForeignServer</TT
+> object
+     for the foreign server with the given OID.  A
+     <TT
+CLASS="STRUCTNAME"
+>ForeignServer</TT
+> object contains properties
+     of the server (see <TT
+CLASS="FILENAME"
+>foreign/foreign.h</TT
+> for details).
+    </P
+><P
+></P><PRE
+CLASS="PROGRAMLISTING"
+>UserMapping *
+GetUserMapping(Oid userid, Oid serverid);</PRE
+><P>
+
+     This function returns a <TT
+CLASS="STRUCTNAME"
+>UserMapping</TT
+> object for
+     the user mapping of the given role on the given server.  (If there is no
+     mapping for the specific user, it will return the mapping for
+     <TT
+CLASS="LITERAL"
+>PUBLIC</TT
+>, or throw error if there is none.)  A
+     <TT
+CLASS="STRUCTNAME"
+>UserMapping</TT
+> object contains properties of the
+     user mapping (see <TT
+CLASS="FILENAME"
+>foreign/foreign.h</TT
+> for details).
+    </P
+><P
+></P><PRE
+CLASS="PROGRAMLISTING"
+>ForeignTable *
+GetForeignTable(Oid relid);</PRE
+><P>
+
+     This function returns a <TT
+CLASS="STRUCTNAME"
+>ForeignTable</TT
+> object for
+     the foreign table with the given OID.  A
+     <TT
+CLASS="STRUCTNAME"
+>ForeignTable</TT
+> object contains properties of the
+     foreign table (see <TT
+CLASS="FILENAME"
+>foreign/foreign.h</TT
+> for details).
+    </P
+><P
+></P><PRE
+CLASS="PROGRAMLISTING"
+>List *
+GetForeignColumnOptions(Oid relid, AttrNumber attnum);</PRE
+><P>
+
+     This function returns the per-column FDW options for the column with the
+     given foreign table OID and attribute number, in the form of a list of
+     <TT
+CLASS="STRUCTNAME"
+>DefElem</TT
+>.  NIL is returned if the column has no
+     options.
+    </P
+><P
+>     Some object types have name-based lookup functions in addition to the
+     OID-based ones:
+    </P
+><P
+></P><PRE
+CLASS="PROGRAMLISTING"
+>ForeignDataWrapper *
+GetForeignDataWrapperByName(const char *name, bool missing_ok);</PRE
+><P>
+
+     This function returns a <TT
+CLASS="STRUCTNAME"
+>ForeignDataWrapper</TT
+>
+     object for the foreign-data wrapper with the given name.  If the wrapper
+     is not found, return NULL if missing_ok is true, otherwise raise an
+     error.
+    </P
+><P
+></P><PRE
+CLASS="PROGRAMLISTING"
+>ForeignServer *
+GetForeignServerByName(const char *name, bool missing_ok);</PRE
+><P>
+
+     This function returns a <TT
+CLASS="STRUCTNAME"
+>ForeignServer</TT
+> object
+     for the foreign server with the given name.  If the server is not found,
+     return NULL if missing_ok is true, otherwise raise an error.
+    </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="fdw-callbacks.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="fdw-planning.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Foreign Data Wrapper Callback Routines</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="fdwhandler.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Foreign Data Wrapper Query Planning</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

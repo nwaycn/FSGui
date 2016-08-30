@@ -1,0 +1,1164 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_stat_statements</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="pgrowlocks"
+HREF="pgrowlocks.html"><LINK
+REL="NEXT"
+TITLE="pgstattuple"
+HREF="pgstattuple.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pgrowlocks"
+HREF="pgrowlocks.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pgstattuple"
+HREF="pgstattuple.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PGSTATSTATEMENTS"
+>F.28. pg_stat_statements</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>pg_stat_statements</TT
+> module provides a means for
+  tracking execution statistics of all SQL statements executed by a server.
+ </P
+><P
+>  The module must be loaded by adding <TT
+CLASS="LITERAL"
+>pg_stat_statements</TT
+> to
+  <A
+HREF="runtime-config-client.html#GUC-SHARED-PRELOAD-LIBRARIES"
+>shared_preload_libraries</A
+> in
+  <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>, because it requires additional shared memory.
+  This means that a server restart is needed to add or remove the module.
+ </P
+><P
+>   When <TT
+CLASS="FILENAME"
+>pg_stat_statements</TT
+> is loaded, it tracks
+   statistics across all databases of the server.  To access and manipulate
+   these statistics, the module provides a view, <TT
+CLASS="STRUCTNAME"
+>pg_stat_statements</TT
+>,
+   and the utility functions <CODE
+CLASS="FUNCTION"
+>pg_stat_statements_reset</CODE
+> and
+   <CODE
+CLASS="FUNCTION"
+>pg_stat_statements</CODE
+>.  These are not available globally but
+   can be enabled for a specific database with
+   <TT
+CLASS="COMMAND"
+>CREATE EXTENSION pg_stat_statements</TT
+>.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN173846"
+>F.28.1. The <TT
+CLASS="STRUCTNAME"
+>pg_stat_statements</TT
+> View</A
+></H2
+><P
+>   The statistics gathered by the module are made available via a
+   view named <TT
+CLASS="STRUCTNAME"
+>pg_stat_statements</TT
+>.  This view
+   contains one row for each distinct database ID, user ID and query
+   ID (up to the maximum number of distinct statements that the module
+   can track).  The columns of the view are shown in
+   <A
+HREF="pgstatstatements.html#PGSTATSTATEMENTS-COLUMNS"
+>Table F-20</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="PGSTATSTATEMENTS-COLUMNS"
+></A
+><P
+><B
+>Table F-20. <TT
+CLASS="STRUCTNAME"
+>pg_stat_statements</TT
+> Columns</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Type</TH
+><TH
+>References</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>userid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-authid.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_authid</TT
+></A
+>.oid</TT
+></TD
+><TD
+>OID of user who executed the statement</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>dbid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+><A
+HREF="catalog-pg-database.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_database</TT
+></A
+>.oid</TT
+></TD
+><TD
+>OID of database in which the statement was executed</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>queryid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Internal hash code, computed from the statement's parse tree</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>query</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Text of a representative statement</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>calls</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Number of times executed</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>total_time</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>double precision</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Total time spent in the statement, in milliseconds</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>min_time</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>double precision</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Minimum time spent in the statement, in milliseconds</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>max_time</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>double precision</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Maximum time spent in the statement, in milliseconds</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>mean_time</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>double precision</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Mean time spent in the statement, in milliseconds</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>stddev_time</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>double precision</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Population standard deviation of time spent in the statement, in milliseconds</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>rows</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Total number of rows retrieved or affected by the statement</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>shared_blks_hit</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Total number of shared block cache hits by the statement</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>shared_blks_read</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Total number of shared blocks read by the statement</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>shared_blks_dirtied</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Total number of shared blocks dirtied by the statement</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>shared_blks_written</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Total number of shared blocks written by the statement</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>local_blks_hit</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Total number of local block cache hits by the statement</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>local_blks_read</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Total number of local blocks read by the statement</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>local_blks_dirtied</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Total number of local blocks dirtied by the statement</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>local_blks_written</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Total number of local blocks written by the statement</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>temp_blks_read</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Total number of temp blocks read by the statement</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>temp_blks_written</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Total number of temp blocks written by the statement</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>blk_read_time</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>double precision</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>        Total time the statement spent reading blocks, in milliseconds
+        (if <A
+HREF="runtime-config-statistics.html#GUC-TRACK-IO-TIMING"
+>track_io_timing</A
+> is enabled, otherwise zero)
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>blk_write_time</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>double precision</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>        Total time the statement spent writing blocks, in milliseconds
+        (if <A
+HREF="runtime-config-statistics.html#GUC-TRACK-IO-TIMING"
+>track_io_timing</A
+> is enabled, otherwise zero)
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   For security reasons, non-superusers are not allowed to see the SQL
+   text or <TT
+CLASS="STRUCTFIELD"
+>queryid</TT
+> of queries executed by other users.
+   They can see the statistics, however, if the view has been installed in their
+   database.
+  </P
+><P
+>   Plannable queries (that is, <TT
+CLASS="COMMAND"
+>SELECT</TT
+>, <TT
+CLASS="COMMAND"
+>INSERT</TT
+>,
+   <TT
+CLASS="COMMAND"
+>UPDATE</TT
+>, and <TT
+CLASS="COMMAND"
+>DELETE</TT
+>) are combined into a single
+   <TT
+CLASS="STRUCTNAME"
+>pg_stat_statements</TT
+> entry whenever they have identical query
+   structures according to an internal hash calculation.  Typically, two
+   queries will be considered the same for this purpose if they are
+   semantically equivalent except for the values of literal constants
+   appearing in the query.  Utility commands (that is, all other commands)
+   are compared strictly on the basis of their textual query strings, however.
+  </P
+><P
+>   When a constant's value has been ignored for purposes of matching the
+   query to other queries, the constant is replaced by <TT
+CLASS="LITERAL"
+>?</TT
+>
+   in the <TT
+CLASS="STRUCTNAME"
+>pg_stat_statements</TT
+> display.  The rest of the query
+   text is that of the first query that had the particular
+   <TT
+CLASS="STRUCTFIELD"
+>queryid</TT
+> hash value associated with the
+   <TT
+CLASS="STRUCTNAME"
+>pg_stat_statements</TT
+> entry.
+  </P
+><P
+>   In some cases, queries with visibly different texts might get merged into a
+   single <TT
+CLASS="STRUCTNAME"
+>pg_stat_statements</TT
+> entry.  Normally this will happen
+   only for semantically equivalent queries, but there is a small chance of
+   hash collisions causing unrelated queries to be merged into one entry.
+   (This cannot happen for queries belonging to different users or databases,
+   however.)
+  </P
+><P
+>   Since the <TT
+CLASS="STRUCTFIELD"
+>queryid</TT
+> hash value is computed on the
+   post-parse-analysis representation of the queries, the opposite is
+   also possible: queries with identical texts might appear as
+   separate entries, if they have different meanings as a result of
+   factors such as different <TT
+CLASS="VARNAME"
+>search_path</TT
+> settings.
+  </P
+><P
+>   Consumers of <TT
+CLASS="STRUCTNAME"
+>pg_stat_statements</TT
+> may wish to use
+   <TT
+CLASS="STRUCTFIELD"
+>queryid</TT
+> (perhaps in combination with
+   <TT
+CLASS="STRUCTFIELD"
+>dbid</TT
+> and <TT
+CLASS="STRUCTFIELD"
+>userid</TT
+>) as a more stable
+   and reliable identifier for each entry than its query text.
+   However, it is important to understand that there are only limited
+   guarantees around the stability of the <TT
+CLASS="STRUCTFIELD"
+>queryid</TT
+> hash
+   value.  Since the identifier is derived from the
+   post-parse-analysis tree, its value is a function of, among other
+   things, the internal object identifiers appearing in this representation.
+   This has some counterintuitive implications.  For example,
+   <TT
+CLASS="FILENAME"
+>pg_stat_statements</TT
+> will consider two apparently-identical
+   queries to be distinct, if they reference a table that was dropped
+   and recreated between the executions of the two queries.
+   The hashing process is also sensitive to differences in
+   machine architecture and other facets of the platform.
+   Furthermore, it is not safe to assume that <TT
+CLASS="STRUCTFIELD"
+>queryid</TT
+>
+   will be stable across major versions of <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>.
+  </P
+><P
+>   As a rule of thumb, <TT
+CLASS="STRUCTFIELD"
+>queryid</TT
+> values can be assumed to be
+   stable and comparable only so long as the underlying server version and
+   catalog metadata details stay exactly the same.  Two servers
+   participating in replication based on physical WAL replay can be expected
+   to have identical <TT
+CLASS="STRUCTFIELD"
+>queryid</TT
+> values for the same query.
+   However, logical replication schemes do not promise to keep replicas
+   identical in all relevant details, so <TT
+CLASS="STRUCTFIELD"
+>queryid</TT
+> will
+   not be a useful identifier for accumulating costs across a set of logical
+   replicas.  If in doubt, direct testing is recommended.
+  </P
+><P
+>   The representative query texts are kept in an external disk file, and do
+   not consume shared memory.  Therefore, even very lengthy query texts can
+   be stored successfully.  However, if many long query texts are
+   accumulated, the external file might grow unmanageably large.  As a
+   recovery method if that happens, <TT
+CLASS="FILENAME"
+>pg_stat_statements</TT
+> may
+   choose to discard the query texts, whereupon all existing entries in
+   the <TT
+CLASS="STRUCTNAME"
+>pg_stat_statements</TT
+> view will show
+   null <TT
+CLASS="STRUCTFIELD"
+>query</TT
+> fields, though the statistics associated with
+   each <TT
+CLASS="STRUCTFIELD"
+>queryid</TT
+> are preserved.  If this happens, consider
+   reducing <TT
+CLASS="VARNAME"
+>pg_stat_statements.max</TT
+> to prevent
+   recurrences.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174069"
+>F.28.2. Functions</A
+></H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><CODE
+CLASS="FUNCTION"
+>pg_stat_statements_reset() returns void</CODE
+>
+     </DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>pg_stat_statements_reset</CODE
+> discards all statistics
+      gathered so far by <TT
+CLASS="FILENAME"
+>pg_stat_statements</TT
+>.
+      By default, this function can only be executed by superusers.
+     </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>pg_stat_statements(showtext boolean) returns setof record</CODE
+>
+     </DT
+><DD
+><P
+>      The <TT
+CLASS="STRUCTNAME"
+>pg_stat_statements</TT
+> view is defined in
+      terms of a function also named <CODE
+CLASS="FUNCTION"
+>pg_stat_statements</CODE
+>.
+      It is possible for clients to call
+      the <CODE
+CLASS="FUNCTION"
+>pg_stat_statements</CODE
+> function directly, and by
+      specifying <TT
+CLASS="LITERAL"
+>showtext := false</TT
+> have query text be
+      omitted (that is, the <TT
+CLASS="LITERAL"
+>OUT</TT
+> argument that corresponds
+      to the view's <TT
+CLASS="STRUCTFIELD"
+>query</TT
+> column will return nulls).  This
+      feature is intended to support external tools that might wish to avoid
+      the overhead of repeatedly retrieving query texts of indeterminate
+      length.  Such tools can instead cache the first query text observed
+      for each entry themselves, since that is
+      all <TT
+CLASS="FILENAME"
+>pg_stat_statements</TT
+> itself does, and then retrieve
+      query texts only as needed.  Since the server stores query texts in a
+      file, this approach may reduce physical I/O for repeated examination
+      of the <TT
+CLASS="STRUCTNAME"
+>pg_stat_statements</TT
+> data.
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174097"
+>F.28.3. Configuration Parameters</A
+></H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="VARNAME"
+>pg_stat_statements.max</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)</DT
+><DD
+><P
+>      <TT
+CLASS="VARNAME"
+>pg_stat_statements.max</TT
+> is the maximum number of
+      statements tracked by the module (i.e., the maximum number of rows
+      in the <TT
+CLASS="STRUCTNAME"
+>pg_stat_statements</TT
+> view).  If more distinct
+      statements than that are observed, information about the least-executed
+      statements is discarded.
+      The default value is 5000.
+      This parameter can only be set at server start.
+     </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>pg_stat_statements.track</TT
+> (<TT
+CLASS="TYPE"
+>enum</TT
+>)</DT
+><DD
+><P
+>      <TT
+CLASS="VARNAME"
+>pg_stat_statements.track</TT
+> controls which statements
+      are counted by the module.
+      Specify <TT
+CLASS="LITERAL"
+>top</TT
+> to track top-level statements (those issued
+      directly by clients), <TT
+CLASS="LITERAL"
+>all</TT
+> to also track nested statements
+      (such as statements invoked within functions), or <TT
+CLASS="LITERAL"
+>none</TT
+> to
+      disable statement statistics collection.
+      The default value is <TT
+CLASS="LITERAL"
+>top</TT
+>.
+      Only superusers can change this setting.
+     </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>pg_stat_statements.track_utility</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)</DT
+><DD
+><P
+>      <TT
+CLASS="VARNAME"
+>pg_stat_statements.track_utility</TT
+> controls whether
+      utility commands are tracked by the module.  Utility commands are
+      all those other than <TT
+CLASS="COMMAND"
+>SELECT</TT
+>, <TT
+CLASS="COMMAND"
+>INSERT</TT
+>,
+      <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> and <TT
+CLASS="COMMAND"
+>DELETE</TT
+>.
+      The default value is <TT
+CLASS="LITERAL"
+>on</TT
+>.
+      Only superusers can change this setting.
+     </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>pg_stat_statements.save</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)</DT
+><DD
+><P
+>      <TT
+CLASS="VARNAME"
+>pg_stat_statements.save</TT
+> specifies whether to
+      save statement statistics across server shutdowns.
+      If it is <TT
+CLASS="LITERAL"
+>off</TT
+> then statistics are not saved at
+      shutdown nor reloaded at server start.
+      The default value is <TT
+CLASS="LITERAL"
+>on</TT
+>.
+      This parameter can only be set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+      file or on the server command line.
+     </P
+></DD
+></DL
+></DIV
+><P
+>   The module requires additional shared memory proportional to
+   <TT
+CLASS="VARNAME"
+>pg_stat_statements.max</TT
+>.  Note that this
+   memory is consumed whenever the module is loaded, even if
+   <TT
+CLASS="VARNAME"
+>pg_stat_statements.track</TT
+> is set to <TT
+CLASS="LITERAL"
+>none</TT
+>.
+  </P
+><P
+>   These parameters must be set in <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>.
+   Typical usage might be:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+># postgresql.conf
+shared_preload_libraries = 'pg_stat_statements'
+
+pg_stat_statements.max = 10000
+pg_stat_statements.track = all</PRE
+><P>
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174148"
+>F.28.4. Sample Output</A
+></H2
+><PRE
+CLASS="SCREEN"
+>bench=# SELECT pg_stat_statements_reset();
+
+$ pgbench -i bench
+$ pgbench -c10 -t300 bench
+
+bench=# \x
+bench=# SELECT query, calls, total_time, rows, 100.0 * shared_blks_hit /
+               nullif(shared_blks_hit + shared_blks_read, 0) AS hit_percent
+          FROM pg_stat_statements ORDER BY total_time DESC LIMIT 5;
+-[ RECORD 1 ]---------------------------------------------------------------------
+query       | UPDATE pgbench_branches SET bbalance = bbalance + ? WHERE bid = ?;
+calls       | 3000
+total_time  | 9609.00100000002
+rows        | 2836
+hit_percent | 99.9778970000200936
+-[ RECORD 2 ]---------------------------------------------------------------------
+query       | UPDATE pgbench_tellers SET tbalance = tbalance + ? WHERE tid = ?;
+calls       | 3000
+total_time  | 8015.156
+rows        | 2990
+hit_percent | 99.9731126579631345
+-[ RECORD 3 ]---------------------------------------------------------------------
+query       | copy pgbench_accounts from stdin
+calls       | 1
+total_time  | 310.624
+rows        | 100000
+hit_percent | 0.30395136778115501520
+-[ RECORD 4 ]---------------------------------------------------------------------
+query       | UPDATE pgbench_accounts SET abalance = abalance + ? WHERE aid = ?;
+calls       | 3000
+total_time  | 271.741999999997
+rows        | 3000
+hit_percent | 93.7968855088209426
+-[ RECORD 5 ]---------------------------------------------------------------------
+query       | alter table pgbench_accounts add primary key (aid)
+calls       | 1
+total_time  | 81.42
+rows        | 0
+hit_percent | 34.4947735191637631</PRE
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174151"
+>F.28.5. Authors</A
+></H2
+><P
+>   Takahiro Itagaki <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:itagaki.takahiro@oss.ntt.co.jp"
+>itagaki.takahiro@oss.ntt.co.jp</A
+>&#62;</CODE
+>.
+   Query normalization added by Peter Geoghegan <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:peter@2ndquadrant.com"
+>peter@2ndquadrant.com</A
+>&#62;</CODE
+>.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="pgrowlocks.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="pgstattuple.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>pgrowlocks</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>pgstattuple</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

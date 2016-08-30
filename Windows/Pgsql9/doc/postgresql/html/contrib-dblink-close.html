@@ -1,0 +1,315 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>dblink_close</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="dblink"
+HREF="dblink.html"><LINK
+REL="PREVIOUS"
+TITLE="dblink_fetch"
+HREF="contrib-dblink-fetch.html"><LINK
+REL="NEXT"
+TITLE="dblink_get_connections"
+HREF="contrib-dblink-get-connections.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="dblink_fetch"
+HREF="contrib-dblink-fetch.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="dblink.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="dblink_get_connections"
+HREF="contrib-dblink-get-connections.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="CONTRIB-DBLINK-CLOSE"
+></A
+>dblink_close</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN169911"
+></A
+><H2
+>Name</H2
+>dblink_close&nbsp;--&nbsp;closes a cursor in a remote database</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN169914"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>dblink_close(text cursorname [, bool fail_on_error]) returns text
+dblink_close(text connname, text cursorname [, bool fail_on_error]) returns text</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169916"
+></A
+><H2
+>Description</H2
+><P
+>    <CODE
+CLASS="FUNCTION"
+>dblink_close</CODE
+> closes a cursor previously opened with
+    <CODE
+CLASS="FUNCTION"
+>dblink_open</CODE
+>.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169921"
+></A
+><H2
+>Arguments</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="PARAMETER"
+>connname</TT
+></DT
+><DD
+><P
+>       Name of the connection to use; omit this parameter to use the
+       unnamed connection.
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>cursorname</TT
+></DT
+><DD
+><P
+>       The name of the cursor to close.
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>fail_on_error</TT
+></DT
+><DD
+><P
+>       If true (the default when omitted) then an error thrown on the
+       remote side of the connection causes an error to also be thrown
+       locally. If false, the remote error is locally reported as a NOTICE,
+       and the function's return value is set to <TT
+CLASS="LITERAL"
+>ERROR</TT
+>.
+      </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169940"
+></A
+><H2
+>Return Value</H2
+><P
+>    Returns status, either <TT
+CLASS="LITERAL"
+>OK</TT
+> or <TT
+CLASS="LITERAL"
+>ERROR</TT
+>.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169945"
+></A
+><H2
+>Notes</H2
+><P
+>    If <CODE
+CLASS="FUNCTION"
+>dblink_open</CODE
+> started an explicit transaction block,
+    and this is the last remaining open cursor in this connection,
+    <CODE
+CLASS="FUNCTION"
+>dblink_close</CODE
+> will issue the matching <TT
+CLASS="COMMAND"
+>COMMIT</TT
+>.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169951"
+></A
+><H2
+>Examples</H2
+><PRE
+CLASS="SCREEN"
+>SELECT dblink_connect('dbname=postgres');
+ dblink_connect
+----------------
+ OK
+(1 row)
+
+SELECT dblink_open('foo', 'select proname, prosrc from pg_proc');
+ dblink_open
+-------------
+ OK
+(1 row)
+
+SELECT dblink_close('foo');
+ dblink_close
+--------------
+ OK
+(1 row)</PRE
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib-dblink-fetch.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="contrib-dblink-get-connections.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>dblink_fetch</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="dblink.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>dblink_get_connections</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

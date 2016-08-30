@@ -1,0 +1,366 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Overview of Event Trigger Behavior</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Event Triggers"
+HREF="event-triggers.html"><LINK
+REL="PREVIOUS"
+TITLE="Event Triggers"
+HREF="event-triggers.html"><LINK
+REL="NEXT"
+TITLE="Event Trigger Firing Matrix"
+HREF="event-trigger-matrix.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Event Triggers"
+HREF="event-triggers.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="event-triggers.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 37. Event Triggers</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Event Trigger Firing Matrix"
+HREF="event-trigger-matrix.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="EVENT-TRIGGER-DEFINITION"
+>37.1. Overview of Event Trigger Behavior</A
+></H1
+><P
+>     An event trigger fires whenever the event with which it is associated
+     occurs in the database in which it is defined. Currently, the only
+     supported events are
+     <TT
+CLASS="LITERAL"
+>ddl_command_start</TT
+>,
+     <TT
+CLASS="LITERAL"
+>ddl_command_end</TT
+>,
+     <TT
+CLASS="LITERAL"
+>table_rewrite</TT
+>
+     and <TT
+CLASS="LITERAL"
+>sql_drop</TT
+>.
+     Support for additional events may be added in future releases.
+   </P
+><P
+>     The <TT
+CLASS="LITERAL"
+>ddl_command_start</TT
+> event occurs just before the
+     execution of a <TT
+CLASS="LITERAL"
+>CREATE</TT
+>, <TT
+CLASS="LITERAL"
+>ALTER</TT
+>, <TT
+CLASS="LITERAL"
+>DROP</TT
+>,
+     <TT
+CLASS="LITERAL"
+>SECURITY LABEL</TT
+>,
+     <TT
+CLASS="LITERAL"
+>COMMENT</TT
+>, <TT
+CLASS="LITERAL"
+>GRANT</TT
+> or <TT
+CLASS="LITERAL"
+>REVOKE</TT
+>
+     command.  No check whether the affected object exists or doesn't exist is
+     performed before the event trigger fires.
+     As an exception, however, this event does not occur for
+     DDL commands targeting shared objects &mdash; databases, roles, and tablespaces
+     &mdash; or for commands targeting event triggers themselves.  The event trigger
+     mechanism does not support these object types.
+     <TT
+CLASS="LITERAL"
+>ddl_command_start</TT
+> also occurs just before the execution of a
+     <TT
+CLASS="LITERAL"
+>SELECT INTO</TT
+> command, since this is equivalent to
+     <TT
+CLASS="LITERAL"
+>CREATE TABLE AS</TT
+>.
+   </P
+><P
+>    The <TT
+CLASS="LITERAL"
+>ddl_command_end</TT
+> event occurs just after the execution of
+    this same set of commands.  To obtain more details on the <ACRONYM
+CLASS="ACRONYM"
+>DDL</ACRONYM
+>
+    operations that took place, use the set-returning function
+    <TT
+CLASS="LITERAL"
+>pg_event_trigger_ddl_commands()</TT
+> from the
+    <TT
+CLASS="LITERAL"
+>ddl_command_end</TT
+> event trigger code (see
+    <A
+HREF="functions-event-triggers.html"
+>Section 9.28</A
+>).  Note that the trigger fires
+    after the actions have taken place (but before the transaction commits),
+    and thus the system catalogs can be read as already changed.
+   </P
+><P
+>    The <TT
+CLASS="LITERAL"
+>sql_drop</TT
+> event occurs just before the
+    <TT
+CLASS="LITERAL"
+>ddl_command_end</TT
+> event trigger for any operation that drops
+    database objects.  To list the objects that have been dropped, use the
+    set-returning function <TT
+CLASS="LITERAL"
+>pg_event_trigger_dropped_objects()</TT
+> from the
+    <TT
+CLASS="LITERAL"
+>sql_drop</TT
+> event trigger code (see
+    <A
+HREF="functions-event-triggers.html"
+>Section 9.28</A
+>). Note that
+    the trigger is executed after the objects have been deleted from the
+    system catalogs, so it's not possible to look them up anymore.
+   </P
+><P
+>    The <TT
+CLASS="LITERAL"
+>table_rewrite</TT
+> event occurs just before a table is
+    rewritten by some actions of the commands <TT
+CLASS="LITERAL"
+>ALTER TABLE</TT
+> and
+    <TT
+CLASS="LITERAL"
+>ALTER TYPE</TT
+>.  While other
+    control statements are available to rewrite a table,
+    like <TT
+CLASS="LITERAL"
+>CLUSTER</TT
+> and <TT
+CLASS="LITERAL"
+>VACUUM</TT
+>,
+    the <TT
+CLASS="LITERAL"
+>table_rewrite</TT
+> event is not triggered by them.
+   </P
+><P
+>     Event triggers (like other functions) cannot be executed in an aborted
+     transaction.  Thus, if a DDL command fails with an error, any associated
+     <TT
+CLASS="LITERAL"
+>ddl_command_end</TT
+> triggers will not be executed.  Conversely,
+     if a <TT
+CLASS="LITERAL"
+>ddl_command_start</TT
+> trigger fails with an error, no
+     further event triggers will fire, and no attempt will be made to execute
+     the command itself.  Similarly, if a <TT
+CLASS="LITERAL"
+>ddl_command_end</TT
+> trigger
+     fails with an error, the effects of the DDL statement will be rolled
+     back, just as they would be in any other case where the containing
+     transaction aborts.
+   </P
+><P
+>     For a complete list of commands supported by the event trigger mechanism,
+     see <A
+HREF="event-trigger-matrix.html"
+>Section 37.2</A
+>.
+   </P
+><P
+>     Event triggers are created using the command <A
+HREF="sql-createeventtrigger.html"
+>CREATE EVENT TRIGGER</A
+>.
+     In order to create an event trigger, you must first create a function with
+     the special return type <TT
+CLASS="LITERAL"
+>event_trigger</TT
+>.  This function
+     need not (and may not) return a value; the return type serves merely as
+     a signal that the function is to be invoked as an event trigger.
+   </P
+><P
+>     If more than one event trigger is defined for a particular event, they will
+     fire in alphabetical order by trigger name.
+   </P
+><P
+>     A trigger definition can also specify a <TT
+CLASS="LITERAL"
+>WHEN</TT
+>
+     condition so that, for example, a <TT
+CLASS="LITERAL"
+>ddl_command_start</TT
+>
+     trigger can be fired only for particular commands which the user wishes
+     to intercept. A common use of such triggers is to restrict the range of
+     DDL operations which users may perform.
+   </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="event-triggers.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="event-trigger-matrix.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Event Triggers</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="event-triggers.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Event Trigger Firing Matrix</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

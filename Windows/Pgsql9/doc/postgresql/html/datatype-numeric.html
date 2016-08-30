@@ -1,0 +1,1171 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Numeric Types</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Data Types"
+HREF="datatype.html"><LINK
+REL="PREVIOUS"
+TITLE="Data Types"
+HREF="datatype.html"><LINK
+REL="NEXT"
+TITLE="Monetary Types"
+HREF="datatype-money.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Data Types"
+HREF="datatype.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="datatype.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 8. Data Types</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Monetary Types"
+HREF="datatype-money.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="DATATYPE-NUMERIC"
+>8.1. Numeric Types</A
+></H1
+><P
+>    Numeric types consist of two-, four-, and eight-byte integers,
+    four- and eight-byte floating-point numbers, and selectable-precision
+    decimals.  <A
+HREF="datatype-numeric.html#DATATYPE-NUMERIC-TABLE"
+>Table 8-2</A
+> lists the
+    available types.
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="DATATYPE-NUMERIC-TABLE"
+></A
+><P
+><B
+>Table 8-2. Numeric Types</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Storage Size</TH
+><TH
+>Description</TH
+><TH
+>Range</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>smallint</TT
+></TD
+><TD
+>2 bytes</TD
+><TD
+>small-range integer</TD
+><TD
+>-32768 to +32767</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>4 bytes</TD
+><TD
+>typical choice for integer</TD
+><TD
+>-2147483648 to +2147483647</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>8 bytes</TD
+><TD
+>large-range integer</TD
+><TD
+>-9223372036854775808 to +9223372036854775807</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>decimal</TT
+></TD
+><TD
+>variable</TD
+><TD
+>user-specified precision, exact</TD
+><TD
+>up to 131072 digits before the decimal point; up to 16383 digits after the decimal point</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>numeric</TT
+></TD
+><TD
+>variable</TD
+><TD
+>user-specified precision, exact</TD
+><TD
+>up to 131072 digits before the decimal point; up to 16383 digits after the decimal point</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>real</TT
+></TD
+><TD
+>4 bytes</TD
+><TD
+>variable-precision, inexact</TD
+><TD
+>6 decimal digits precision</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>double precision</TT
+></TD
+><TD
+>8 bytes</TD
+><TD
+>variable-precision, inexact</TD
+><TD
+>15 decimal digits precision</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>smallserial</TT
+></TD
+><TD
+>2 bytes</TD
+><TD
+>small autoincrementing integer</TD
+><TD
+>1 to 32767</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>serial</TT
+></TD
+><TD
+>4 bytes</TD
+><TD
+>autoincrementing integer</TD
+><TD
+>1 to 2147483647</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>bigserial</TT
+></TD
+><TD
+>8 bytes</TD
+><TD
+>large autoincrementing integer</TD
+><TD
+>1 to 9223372036854775807</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    The syntax of constants for the numeric types is described in
+    <A
+HREF="sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS"
+>Section 4.1.2</A
+>.  The numeric types have a
+    full set of corresponding arithmetic operators and
+    functions. Refer to <A
+HREF="functions.html"
+>Chapter 9</A
+> for more
+    information.  The following sections describe the types in detail.
+   </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="DATATYPE-INT"
+>8.1.1. Integer Types</A
+></H2
+><P
+>     The types <TT
+CLASS="TYPE"
+>smallint</TT
+>, <TT
+CLASS="TYPE"
+>integer</TT
+>, and
+     <TT
+CLASS="TYPE"
+>bigint</TT
+> store whole numbers, that is, numbers without
+     fractional components, of various ranges.  Attempts to store
+     values outside of the allowed range will result in an error.
+    </P
+><P
+>     The type <TT
+CLASS="TYPE"
+>integer</TT
+> is the common choice, as it offers
+     the best balance between range, storage size, and performance.
+     The <TT
+CLASS="TYPE"
+>smallint</TT
+> type is generally only used if disk
+     space is at a premium.  The <TT
+CLASS="TYPE"
+>bigint</TT
+> type is designed to be
+     used when the range of the <TT
+CLASS="TYPE"
+>integer</TT
+> type is insufficient.
+    </P
+><P
+>     <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> only specifies the integer types
+     <TT
+CLASS="TYPE"
+>integer</TT
+> (or <TT
+CLASS="TYPE"
+>int</TT
+>),
+     <TT
+CLASS="TYPE"
+>smallint</TT
+>, and <TT
+CLASS="TYPE"
+>bigint</TT
+>.  The
+     type names <TT
+CLASS="TYPE"
+>int2</TT
+>, <TT
+CLASS="TYPE"
+>int4</TT
+>, and
+     <TT
+CLASS="TYPE"
+>int8</TT
+> are extensions, which are also used by some
+     other <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> database systems.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="DATATYPE-NUMERIC-DECIMAL"
+>8.1.2. Arbitrary Precision Numbers</A
+></H2
+><P
+>     The type <TT
+CLASS="TYPE"
+>numeric</TT
+> can store numbers with a
+     very large number of digits. It is especially recommended for
+     storing monetary amounts and other quantities where exactness is
+     required.  Calculations with <TT
+CLASS="TYPE"
+>numeric</TT
+> values yield exact
+     results where possible, e.g.  addition, subtraction, multiplication.
+     However, calculations on <TT
+CLASS="TYPE"
+>numeric</TT
+> values are very slow
+     compared to the integer types, or to the floating-point types
+     described in the next section.
+    </P
+><P
+>     We use the following terms below:  The
+     <I
+CLASS="FIRSTTERM"
+>scale</I
+> of a <TT
+CLASS="TYPE"
+>numeric</TT
+> is the
+     count of decimal digits in the fractional part, to the right of
+     the decimal point.  The <I
+CLASS="FIRSTTERM"
+>precision</I
+> of a
+     <TT
+CLASS="TYPE"
+>numeric</TT
+> is the total count of significant digits in
+     the whole number, that is, the number of digits to both sides of
+     the decimal point.  So the number 23.5141 has a precision of 6
+     and a scale of 4.  Integers can be considered to have a scale of
+     zero.
+    </P
+><P
+>     Both the maximum precision and the maximum scale of a
+     <TT
+CLASS="TYPE"
+>numeric</TT
+> column can be
+     configured.  To declare a column of type <TT
+CLASS="TYPE"
+>numeric</TT
+> use
+     the syntax:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>NUMERIC(<TT
+CLASS="REPLACEABLE"
+><I
+>precision</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>scale</I
+></TT
+>)</PRE
+><P>
+     The precision must be positive, the scale zero or positive.
+     Alternatively:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>NUMERIC(<TT
+CLASS="REPLACEABLE"
+><I
+>precision</I
+></TT
+>)</PRE
+><P>
+     selects a scale of 0.  Specifying:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>NUMERIC</PRE
+><P>
+     without any precision or scale creates a column in which numeric
+     values of any precision and scale can be stored, up to the
+     implementation limit on precision.  A column of this kind will
+     not coerce input values to any particular scale, whereas
+     <TT
+CLASS="TYPE"
+>numeric</TT
+> columns with a declared scale will coerce
+     input values to that scale.  (The <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> standard
+     requires a default scale of 0, i.e., coercion to integer
+     precision.  We find this a bit useless.  If you're concerned
+     about portability, always specify the precision and scale
+     explicitly.)
+    </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>      The maximum allowed precision when explicitly specified in the
+      type declaration is 1000; <TT
+CLASS="TYPE"
+>NUMERIC</TT
+> without a specified
+      precision is subject to the limits described in <A
+HREF="datatype-numeric.html#DATATYPE-NUMERIC-TABLE"
+>Table 8-2</A
+>.
+     </P
+></BLOCKQUOTE
+></DIV
+><P
+>     If the scale of a value to be stored is greater than the declared
+     scale of the column, the system will round the value to the specified
+     number of fractional digits.  Then, if the number of digits to the
+     left of the decimal point exceeds the declared precision minus the
+     declared scale, an error is raised.
+    </P
+><P
+>     Numeric values are physically stored without any extra leading or
+     trailing zeroes.  Thus, the declared precision and scale of a column
+     are maximums, not fixed allocations.  (In this sense the <TT
+CLASS="TYPE"
+>numeric</TT
+>
+     type is more akin to <TT
+CLASS="TYPE"
+>varchar(<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>)</TT
+>
+     than to <TT
+CLASS="TYPE"
+>char(<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>)</TT
+>.)  The actual storage
+     requirement is two bytes for each group of four decimal digits,
+     plus three to eight bytes overhead.
+    </P
+><P
+>     In addition to ordinary numeric values, the <TT
+CLASS="TYPE"
+>numeric</TT
+>
+     type allows the special value <TT
+CLASS="LITERAL"
+>NaN</TT
+>, meaning
+     <SPAN
+CLASS="QUOTE"
+>"not-a-number"</SPAN
+>.  Any operation on <TT
+CLASS="LITERAL"
+>NaN</TT
+>
+     yields another <TT
+CLASS="LITERAL"
+>NaN</TT
+>.  When writing this value
+     as a constant in an SQL command, you must put quotes around it,
+     for example <TT
+CLASS="LITERAL"
+>UPDATE table SET x = 'NaN'</TT
+>.  On input,
+     the string <TT
+CLASS="LITERAL"
+>NaN</TT
+> is recognized in a case-insensitive manner.
+    </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>      In most implementations of the <SPAN
+CLASS="QUOTE"
+>"not-a-number"</SPAN
+> concept,
+      <TT
+CLASS="LITERAL"
+>NaN</TT
+> is not considered equal to any other numeric
+      value (including <TT
+CLASS="LITERAL"
+>NaN</TT
+>).  In order to allow
+      <TT
+CLASS="TYPE"
+>numeric</TT
+> values to be sorted and used in tree-based
+      indexes, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> treats <TT
+CLASS="LITERAL"
+>NaN</TT
+>
+      values as equal, and greater than all non-<TT
+CLASS="LITERAL"
+>NaN</TT
+>
+      values.
+     </P
+></BLOCKQUOTE
+></DIV
+><P
+>     The types <TT
+CLASS="TYPE"
+>decimal</TT
+> and <TT
+CLASS="TYPE"
+>numeric</TT
+> are
+     equivalent.  Both types are part of the <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+>
+     standard.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="DATATYPE-FLOAT"
+>8.1.3. Floating-Point Types</A
+></H2
+><P
+>     The data types <TT
+CLASS="TYPE"
+>real</TT
+> and <TT
+CLASS="TYPE"
+>double
+     precision</TT
+> are inexact, variable-precision numeric types.
+     In practice, these types are usually implementations of
+     <ACRONYM
+CLASS="ACRONYM"
+>IEEE</ACRONYM
+> Standard 754 for Binary Floating-Point
+     Arithmetic (single and double precision, respectively), to the
+     extent that the underlying processor, operating system, and
+     compiler support it.
+    </P
+><P
+>     Inexact means that some values cannot be converted exactly to the
+     internal format and are stored as approximations, so that storing
+     and retrieving a value might show slight discrepancies.
+     Managing these errors and how they propagate through calculations
+     is the subject of an entire branch of mathematics and computer
+     science and will not be discussed here, except for the
+     following points:
+     <P
+></P
+></P><UL
+><LI
+><P
+>        If you require exact storage and calculations (such as for
+        monetary amounts), use the <TT
+CLASS="TYPE"
+>numeric</TT
+> type instead.
+       </P
+></LI
+><LI
+><P
+>        If you want to do complicated calculations with these types
+        for anything important, especially if you rely on certain
+        behavior in boundary cases (infinity, underflow), you should
+        evaluate the implementation carefully.
+       </P
+></LI
+><LI
+><P
+>        Comparing two floating-point values for equality might not
+        always work as expected.
+       </P
+></LI
+></UL
+><P>
+    </P
+><P
+>     On most platforms, the <TT
+CLASS="TYPE"
+>real</TT
+> type has a range of at least
+     1E-37 to 1E+37 with a precision of at least 6 decimal digits.  The
+     <TT
+CLASS="TYPE"
+>double precision</TT
+> type typically has a range of around
+     1E-307 to 1E+308 with a precision of at least 15 digits.  Values that
+     are too large or too small will cause an error.  Rounding might
+     take place if the precision of an input number is too high.
+     Numbers too close to zero that are not representable as distinct
+     from zero will cause an underflow error.
+    </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>      The <A
+HREF="runtime-config-client.html#GUC-EXTRA-FLOAT-DIGITS"
+>extra_float_digits</A
+> setting controls the
+      number of extra significant digits included when a floating point
+      value is converted to text for output.  With the default value of
+      <TT
+CLASS="LITERAL"
+>0</TT
+>, the output is the same on every platform
+      supported by PostgreSQL.  Increasing it will produce output that
+      more accurately represents the stored value, but may be unportable.
+     </P
+></BLOCKQUOTE
+></DIV
+><P
+>     In addition to ordinary numeric values, the floating-point types
+     have several special values:
+<P
+CLASS="LITERALLAYOUT"
+><TT
+CLASS="LITERAL"
+>Infinity</TT
+><br>
+<TT
+CLASS="LITERAL"
+>-Infinity</TT
+><br>
+<TT
+CLASS="LITERAL"
+>NaN</TT
+></P
+>
+     These represent the IEEE 754 special values
+     <SPAN
+CLASS="QUOTE"
+>"infinity"</SPAN
+>, <SPAN
+CLASS="QUOTE"
+>"negative infinity"</SPAN
+>, and
+     <SPAN
+CLASS="QUOTE"
+>"not-a-number"</SPAN
+>, respectively.  (On a machine whose
+     floating-point arithmetic does not follow IEEE 754, these values
+     will probably not work as expected.)  When writing these values
+     as constants in an SQL command, you must put quotes around them,
+     for example <TT
+CLASS="LITERAL"
+>UPDATE table SET x = 'Infinity'</TT
+>.  On input,
+     these strings are recognized in a case-insensitive manner.
+    </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>      IEEE754 specifies that <TT
+CLASS="LITERAL"
+>NaN</TT
+> should not compare equal
+      to any other floating-point value (including <TT
+CLASS="LITERAL"
+>NaN</TT
+>).
+      In order to allow floating-point values to be sorted and used
+      in tree-based indexes, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> treats
+      <TT
+CLASS="LITERAL"
+>NaN</TT
+> values as equal, and greater than all
+      non-<TT
+CLASS="LITERAL"
+>NaN</TT
+> values.
+     </P
+></BLOCKQUOTE
+></DIV
+><P
+>     <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> also supports the SQL-standard
+     notations <TT
+CLASS="TYPE"
+>float</TT
+> and
+     <TT
+CLASS="TYPE"
+>float(<TT
+CLASS="REPLACEABLE"
+><I
+>p</I
+></TT
+>)</TT
+> for specifying
+     inexact numeric types.  Here, <TT
+CLASS="REPLACEABLE"
+><I
+>p</I
+></TT
+> specifies
+     the minimum acceptable precision in <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>binary</I
+></SPAN
+> digits.
+     <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> accepts
+     <TT
+CLASS="TYPE"
+>float(1)</TT
+> to <TT
+CLASS="TYPE"
+>float(24)</TT
+> as selecting the
+     <TT
+CLASS="TYPE"
+>real</TT
+> type, while
+     <TT
+CLASS="TYPE"
+>float(25)</TT
+> to <TT
+CLASS="TYPE"
+>float(53)</TT
+> select
+     <TT
+CLASS="TYPE"
+>double precision</TT
+>.  Values of <TT
+CLASS="REPLACEABLE"
+><I
+>p</I
+></TT
+>
+     outside the allowed range draw an error.
+     <TT
+CLASS="TYPE"
+>float</TT
+> with no precision specified is taken to mean
+     <TT
+CLASS="TYPE"
+>double precision</TT
+>.
+    </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>      The assumption that <TT
+CLASS="TYPE"
+>real</TT
+> and
+      <TT
+CLASS="TYPE"
+>double precision</TT
+> have exactly 24 and 53 bits in the
+      mantissa respectively is correct for IEEE-standard floating point
+      implementations.  On non-IEEE platforms it might be off a little, but
+      for simplicity the same ranges of <TT
+CLASS="REPLACEABLE"
+><I
+>p</I
+></TT
+> are used
+      on all platforms.
+     </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="DATATYPE-SERIAL"
+>8.1.4. Serial Types</A
+></H2
+><P
+>     The data types <TT
+CLASS="TYPE"
+>smallserial</TT
+>, <TT
+CLASS="TYPE"
+>serial</TT
+> and
+     <TT
+CLASS="TYPE"
+>bigserial</TT
+> are not true types, but merely
+     a notational convenience for creating unique identifier columns
+     (similar to the <TT
+CLASS="LITERAL"
+>AUTO_INCREMENT</TT
+> property
+     supported by some other databases). In the current
+     implementation, specifying:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE <TT
+CLASS="REPLACEABLE"
+><I
+>tablename</I
+></TT
+> (
+    <TT
+CLASS="REPLACEABLE"
+><I
+>colname</I
+></TT
+> SERIAL
+);</PRE
+><P>
+
+     is equivalent to specifying:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE SEQUENCE <TT
+CLASS="REPLACEABLE"
+><I
+>tablename</I
+></TT
+>_<TT
+CLASS="REPLACEABLE"
+><I
+>colname</I
+></TT
+>_seq;
+CREATE TABLE <TT
+CLASS="REPLACEABLE"
+><I
+>tablename</I
+></TT
+> (
+    <TT
+CLASS="REPLACEABLE"
+><I
+>colname</I
+></TT
+> integer NOT NULL DEFAULT nextval('<TT
+CLASS="REPLACEABLE"
+><I
+>tablename</I
+></TT
+>_<TT
+CLASS="REPLACEABLE"
+><I
+>colname</I
+></TT
+>_seq')
+);
+ALTER SEQUENCE <TT
+CLASS="REPLACEABLE"
+><I
+>tablename</I
+></TT
+>_<TT
+CLASS="REPLACEABLE"
+><I
+>colname</I
+></TT
+>_seq OWNED BY <TT
+CLASS="REPLACEABLE"
+><I
+>tablename</I
+></TT
+>.<TT
+CLASS="REPLACEABLE"
+><I
+>colname</I
+></TT
+>;</PRE
+><P>
+
+     Thus, we have created an integer column and arranged for its default
+     values to be assigned from a sequence generator.  A <TT
+CLASS="LITERAL"
+>NOT NULL</TT
+>
+     constraint is applied to ensure that a null value cannot be
+     inserted.  (In most cases you would also want to attach a
+     <TT
+CLASS="LITERAL"
+>UNIQUE</TT
+> or <TT
+CLASS="LITERAL"
+>PRIMARY KEY</TT
+> constraint to prevent
+     duplicate values from being inserted by accident, but this is
+     not automatic.)  Lastly, the sequence is marked as <SPAN
+CLASS="QUOTE"
+>"owned by"</SPAN
+>
+     the column, so that it will be dropped if the column or table is dropped.
+    </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>        Because <TT
+CLASS="TYPE"
+>smallserial</TT
+>, <TT
+CLASS="TYPE"
+>serial</TT
+> and
+        <TT
+CLASS="TYPE"
+>bigserial</TT
+> are implemented using sequences, there may
+        be "holes" or gaps in the sequence of values which appears in the
+        column, even if no rows are ever deleted.  A value allocated
+        from the sequence is still "used up" even if a row containing that
+        value is never successfully inserted into the table column.  This
+        may happen, for example, if the inserting transaction rolls back.
+        See <TT
+CLASS="LITERAL"
+>nextval()</TT
+> in <A
+HREF="functions-sequence.html"
+>Section 9.16</A
+>
+        for details.
+      </P
+></BLOCKQUOTE
+></DIV
+><P
+>     To insert the next value of the sequence into the <TT
+CLASS="TYPE"
+>serial</TT
+>
+     column, specify that the <TT
+CLASS="TYPE"
+>serial</TT
+>
+     column should be assigned its default value. This can be done
+     either by excluding the column from the list of columns in
+     the <TT
+CLASS="COMMAND"
+>INSERT</TT
+> statement, or through the use of
+     the <TT
+CLASS="LITERAL"
+>DEFAULT</TT
+> key word.
+    </P
+><P
+>     The type names <TT
+CLASS="TYPE"
+>serial</TT
+> and <TT
+CLASS="TYPE"
+>serial4</TT
+> are
+     equivalent: both create <TT
+CLASS="TYPE"
+>integer</TT
+> columns.  The type
+     names <TT
+CLASS="TYPE"
+>bigserial</TT
+> and <TT
+CLASS="TYPE"
+>serial8</TT
+> work
+     the same way, except that they create a <TT
+CLASS="TYPE"
+>bigint</TT
+>
+     column.  <TT
+CLASS="TYPE"
+>bigserial</TT
+> should be used if you anticipate
+     the use of more than 2<SUP
+>31</SUP
+> identifiers over the
+     lifetime of the table. The type names <TT
+CLASS="TYPE"
+>smallserial</TT
+> and
+     <TT
+CLASS="TYPE"
+>serial2</TT
+> also work the same way, except that they
+     create a <TT
+CLASS="TYPE"
+>smallint</TT
+> column.
+    </P
+><P
+>     The sequence created for a <TT
+CLASS="TYPE"
+>serial</TT
+> column is
+     automatically dropped when the owning column is dropped.
+     You can drop the sequence without dropping the column, but this
+     will force removal of the column default expression.
+    </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="datatype.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="datatype-money.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Data Types</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="datatype.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Monetary Types</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

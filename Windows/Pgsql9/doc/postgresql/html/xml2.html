@@ -1,0 +1,861 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>xml2</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="uuid-ossp"
+HREF="uuid-ossp.html"><LINK
+REL="NEXT"
+TITLE="Additional Supplied Programs"
+HREF="contrib-prog.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="uuid-ossp"
+HREF="uuid-ossp.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Additional Supplied Programs"
+HREF="contrib-prog.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="XML2"
+>F.44. xml2</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>xml2</TT
+> module provides XPath querying and
+  XSLT functionality.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN176343"
+>F.44.1. Deprecation Notice</A
+></H2
+><P
+>   From <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 8.3 on, there is XML-related
+   functionality based on the SQL/XML standard in the core server.
+   That functionality covers XML syntax checking and XPath queries,
+   which is what this module does, and more, but the API is
+   not at all compatible.  It is planned that this module will be
+   removed in a future version of PostgreSQL in favor of the newer standard API, so
+   you are encouraged to try converting your applications.  If you
+   find that some of the functionality of this module is not
+   available in an adequate form with the newer API, please explain
+   your issue to <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:pgsql-hackers@postgresql.org"
+>pgsql-hackers@postgresql.org</A
+>&#62;</CODE
+> so that the deficiency
+   can be addressed.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN176348"
+>F.44.2. Description of Functions</A
+></H2
+><P
+>   <A
+HREF="xml2.html#XML2-FUNCTIONS-TABLE"
+>Table F-33</A
+> shows the functions provided by this module.
+   These functions provide straightforward XML parsing and XPath queries.
+   All arguments are of type <TT
+CLASS="TYPE"
+>text</TT
+>, so for brevity that is not shown.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="XML2-FUNCTIONS-TABLE"
+></A
+><P
+><B
+>Table F-33. Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Returns</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>       <CODE
+CLASS="FUNCTION"
+>        xml_is_well_formed(document)
+       </CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>bool</TT
+>
+      </TD
+><TD
+>       <P
+>        This parses the document text in its parameter and returns true if the
+        document is well-formed XML.  (Note: before PostgreSQL 8.2, this
+        function was called <CODE
+CLASS="FUNCTION"
+>xml_valid()</CODE
+>.  That is the wrong name
+        since validity and well-formedness have different meanings in XML.
+        The old name is still available, but is deprecated.)
+       </P
+>
+      </TD
+></TR
+><TR
+><TD
+>        <CODE
+CLASS="FUNCTION"
+>         xpath_string(document, query)
+        </CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>text</TT
+>
+      </TD
+><TD
+ROWSPAN="3"
+>       <P
+>        These functions evaluate the XPath query on the supplied document, and
+        cast the result to the specified type.
+       </P
+>
+      </TD
+></TR
+><TR
+><TD
+>       <CODE
+CLASS="FUNCTION"
+>        xpath_number(document, query)
+       </CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>float4</TT
+>
+      </TD
+></TR
+><TR
+><TD
+>       <CODE
+CLASS="FUNCTION"
+>        xpath_bool(document, query)
+       </CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>bool</TT
+>
+      </TD
+></TR
+><TR
+><TD
+>        <CODE
+CLASS="FUNCTION"
+>         xpath_nodeset(document, query, toptag, itemtag)
+        </CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>text</TT
+>
+      </TD
+><TD
+>       <P
+>       This evaluates query on document and wraps the result in XML tags. If
+       the result is multivalued, the output will look like:
+</P><PRE
+CLASS="SYNOPSIS"
+>&lt;toptag&gt;
+&lt;itemtag&gt;Value 1 which could be an XML fragment&lt;/itemtag&gt;
+&lt;itemtag&gt;Value 2....&lt;/itemtag&gt;
+&lt;/toptag&gt;</PRE
+><P>
+        If either <TT
+CLASS="LITERAL"
+>toptag</TT
+> or <TT
+CLASS="LITERAL"
+>itemtag</TT
+> is an empty string, the relevant tag is omitted.
+       </P
+>
+      </TD
+></TR
+><TR
+><TD
+>        <CODE
+CLASS="FUNCTION"
+>         xpath_nodeset(document, query)
+        </CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>text</TT
+>
+      </TD
+><TD
+>       <P
+>        Like <CODE
+CLASS="FUNCTION"
+>xpath_nodeset(document, query, toptag, itemtag)</CODE
+> but result omits both tags.
+       </P
+>
+      </TD
+></TR
+><TR
+><TD
+>        <CODE
+CLASS="FUNCTION"
+>         xpath_nodeset(document, query, itemtag)
+        </CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>text</TT
+>
+      </TD
+><TD
+>       <P
+>        Like <CODE
+CLASS="FUNCTION"
+>xpath_nodeset(document, query, toptag, itemtag)</CODE
+> but result omits <TT
+CLASS="LITERAL"
+>toptag</TT
+>.
+       </P
+>
+      </TD
+></TR
+><TR
+><TD
+>        <CODE
+CLASS="FUNCTION"
+>         xpath_list(document, query, separator)
+        </CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>text</TT
+>
+      </TD
+><TD
+>       <P
+>        This function returns multiple values separated by the specified
+        separator, for example <TT
+CLASS="LITERAL"
+>Value 1,Value 2,Value 3</TT
+> if
+        separator is <TT
+CLASS="LITERAL"
+>,</TT
+>.
+       </P
+>
+      </TD
+></TR
+><TR
+><TD
+>        <CODE
+CLASS="FUNCTION"
+>         xpath_list(document, query)
+        </CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>text</TT
+>
+      </TD
+><TD
+>       This is a wrapper for the above function that uses <TT
+CLASS="LITERAL"
+>,</TT
+>
+       as the separator.
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN176430"
+>F.44.3. <TT
+CLASS="LITERAL"
+>xpath_table</TT
+></A
+></H2
+><PRE
+CLASS="SYNOPSIS"
+>xpath_table(text key, text document, text relation, text xpaths, text criteria) returns setof record</PRE
+><P
+>   <CODE
+CLASS="FUNCTION"
+>xpath_table</CODE
+> is a table function that evaluates a set of XPath
+   queries on each of a set of documents and returns the results as a
+   table. The primary key field from the original document table is returned
+   as the first column of the result so that the result set
+   can readily be used in joins.  The parameters are described in
+   <A
+HREF="xml2.html#XML2-XPATH-TABLE-PARAMETERS"
+>Table F-34</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="XML2-XPATH-TABLE-PARAMETERS"
+></A
+><P
+><B
+>Table F-34. <CODE
+CLASS="FUNCTION"
+>xpath_table</CODE
+> Parameters</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>Parameter</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="PARAMETER"
+>key</TT
+></TD
+><TD
+>       <P
+>        the name of the <SPAN
+CLASS="QUOTE"
+>"key"</SPAN
+> field &mdash; this is just a field to be used as
+        the first column of the output table, i.e., it identifies the record from
+        which each output row came (see note below about multiple values)
+       </P
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="PARAMETER"
+>document</TT
+></TD
+><TD
+>       <P
+>        the name of the field containing the XML document
+       </P
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="PARAMETER"
+>relation</TT
+></TD
+><TD
+>       <P
+>        the name of the table or view containing the documents
+       </P
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="PARAMETER"
+>xpaths</TT
+></TD
+><TD
+>       <P
+>        one or more XPath expressions, separated by <TT
+CLASS="LITERAL"
+>|</TT
+>
+       </P
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="PARAMETER"
+>criteria</TT
+></TD
+><TD
+>       <P
+>        the contents of the WHERE clause. This cannot be omitted, so use
+        <TT
+CLASS="LITERAL"
+>true</TT
+> or <TT
+CLASS="LITERAL"
+>1=1</TT
+> if you want to
+        process all the rows in the relation
+       </P
+>
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   These parameters (except the XPath strings) are just substituted
+   into a plain SQL SELECT statement, so you have some flexibility &mdash; the
+   statement is
+  </P
+><P
+>   <TT
+CLASS="LITERAL"
+>    SELECT &lt;key&gt;, &lt;document&gt; FROM &lt;relation&gt; WHERE &lt;criteria&gt;
+   </TT
+>
+  </P
+><P
+>   so those parameters can be <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>anything</I
+></SPAN
+> valid in those particular
+   locations. The result from this SELECT needs to return exactly two
+   columns (which it will unless you try to list multiple fields for key
+   or document). Beware that this simplistic approach requires that you
+   validate any user-supplied values to avoid SQL injection attacks.
+  </P
+><P
+>   The function has to be used in a <TT
+CLASS="LITERAL"
+>FROM</TT
+> expression, with an
+   <TT
+CLASS="LITERAL"
+>AS</TT
+> clause to specify the output columns; for example
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT * FROM
+xpath_table('article_id',
+            'article_xml',
+            'articles',
+            '/article/author|/article/pages|/article/title',
+            'date_entered &#62; ''2003-01-01'' ')
+AS t(article_id integer, author text, page_count integer, title text);</PRE
+><P>
+   The <TT
+CLASS="LITERAL"
+>AS</TT
+> clause defines the names and types of the columns in the
+   output table.  The first is the <SPAN
+CLASS="QUOTE"
+>"key"</SPAN
+> field and the rest correspond
+   to the XPath queries.
+   If there are more XPath queries than result columns,
+   the extra queries will be ignored. If there are more result columns
+   than XPath queries, the extra columns will be NULL.
+  </P
+><P
+>   Notice that this example defines the <TT
+CLASS="STRUCTNAME"
+>page_count</TT
+> result
+   column as an integer.  The function deals internally with string
+   representations, so when you say you want an integer in the output, it will
+   take the string representation of the XPath result and use PostgreSQL input
+   functions to transform it into an integer (or whatever type the <TT
+CLASS="TYPE"
+>AS</TT
+>
+   clause requests). An error will result if it can't do this &mdash; for
+   example if the result is empty &mdash; so you may wish to just stick to
+   <TT
+CLASS="TYPE"
+>text</TT
+> as the column type if you think your data has any problems.
+  </P
+><P
+>   The calling <TT
+CLASS="COMMAND"
+>SELECT</TT
+> statement doesn't necessarily have be
+   just <TT
+CLASS="LITERAL"
+>SELECT *</TT
+> &mdash; it can reference the output
+   columns by name or join them to other tables. The function produces a
+   virtual table with which you can perform any operation you wish (e.g.
+   aggregation, joining, sorting etc). So we could also have:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT t.title, p.fullname, p.email
+FROM xpath_table('article_id', 'article_xml', 'articles',
+                 '/article/title|/article/author/@id',
+                 'xpath_string(article_xml,''/article/@date'') &#62; ''2003-03-20'' ')
+       AS t(article_id integer, title text, author_id integer),
+     tblPeopleInfo AS p
+WHERE t.author_id = p.person_id;</PRE
+><P>
+   as a more complicated example. Of course, you could wrap all
+   of this in a view for convenience.
+  </P
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN176496"
+>F.44.3.1. Multivalued Results</A
+></H3
+><P
+>    The <CODE
+CLASS="FUNCTION"
+>xpath_table</CODE
+> function assumes that the results of each XPath query
+    might be multivalued, so the number of rows returned by the function
+    may not be the same as the number of input documents. The first row
+    returned contains the first result from each query, the second row the
+    second result from each query. If one of the queries has fewer values
+    than the others, null values will be returned instead.
+   </P
+><P
+>    In some cases, a user will know that a given XPath query will return
+    only a single result (perhaps a unique document identifier) &mdash; if used
+    alongside an XPath query returning multiple results, the single-valued
+    result will appear only on the first row of the result. The solution
+    to this is to use the key field as part of a join against a simpler
+    XPath query. As an example:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE test (
+    id int PRIMARY KEY,
+    xml text
+);
+
+INSERT INTO test VALUES (1, '&lt;doc num="C1"&gt;
+&lt;line num="L1"&gt;&lt;a&gt;1&lt;/a&gt;&lt;b&gt;2&lt;/b&gt;&lt;c&gt;3&lt;/c&gt;&lt;/line&gt;
+&lt;line num="L2"&gt;&lt;a&gt;11&lt;/a&gt;&lt;b&gt;22&lt;/b&gt;&lt;c&gt;33&lt;/c&gt;&lt;/line&gt;
+&lt;/doc&gt;');
+
+INSERT INTO test VALUES (2, '&lt;doc num="C2"&gt;
+&lt;line num="L1"&gt;&lt;a&gt;111&lt;/a&gt;&lt;b&gt;222&lt;/b&gt;&lt;c&gt;333&lt;/c&gt;&lt;/line&gt;
+&lt;line num="L2"&gt;&lt;a&gt;111&lt;/a&gt;&lt;b&gt;222&lt;/b&gt;&lt;c&gt;333&lt;/c&gt;&lt;/line&gt;
+&lt;/doc&gt;');
+
+SELECT * FROM
+  xpath_table('id','xml','test',
+              '/doc/@num|/doc/line/@num|/doc/line/a|/doc/line/b|/doc/line/c',
+              'true')
+  AS t(id int, doc_num varchar(10), line_num varchar(10), val1 int, val2 int, val3 int)
+WHERE id = 1 ORDER BY doc_num, line_num
+
+ id | doc_num | line_num | val1 | val2 | val3
+----+---------+----------+------+------+------
+  1 | C1      | L1       |    1 |    2 |    3
+  1 |         | L2       |   11 |   22 |   33</PRE
+><P>
+   </P
+><P
+>    To get <TT
+CLASS="LITERAL"
+>doc_num</TT
+> on every line, the solution is to use two invocations
+    of <CODE
+CLASS="FUNCTION"
+>xpath_table</CODE
+> and join the results:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT t.*,i.doc_num FROM
+  xpath_table('id', 'xml', 'test',
+              '/doc/line/@num|/doc/line/a|/doc/line/b|/doc/line/c',
+              'true')
+    AS t(id int, line_num varchar(10), val1 int, val2 int, val3 int),
+  xpath_table('id', 'xml', 'test', '/doc/@num', 'true')
+    AS i(id int, doc_num varchar(10))
+WHERE i.id=t.id AND i.id=1
+ORDER BY doc_num, line_num;
+
+ id | line_num | val1 | val2 | val3 | doc_num
+----+----------+------+------+------+---------
+  1 | L1       |    1 |    2 |    3 | C1
+  1 | L2       |   11 |   22 |   33 | C1
+(2 rows)</PRE
+><P>
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN176506"
+>F.44.4. XSLT Functions</A
+></H2
+><P
+>   The following functions are available if libxslt is installed:
+  </P
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN176509"
+>F.44.4.1. <TT
+CLASS="LITERAL"
+>xslt_process</TT
+></A
+></H3
+><PRE
+CLASS="SYNOPSIS"
+>xslt_process(text document, text stylesheet, text paramlist) returns text</PRE
+><P
+>    This function applies the XSL stylesheet to the document and returns
+    the transformed result. The <TT
+CLASS="LITERAL"
+>paramlist</TT
+> is a list of parameter
+    assignments to be used in the transformation, specified in the form
+    <TT
+CLASS="LITERAL"
+>a=1,b=2</TT
+>. Note that the
+    parameter parsing is very simple-minded: parameter values cannot
+    contain commas!
+   </P
+><P
+>    There is also a two-parameter version of <CODE
+CLASS="FUNCTION"
+>xslt_process</CODE
+> which
+    does not pass any parameters to the transformation.
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN176520"
+>F.44.5. Author</A
+></H2
+><P
+>   John Gray <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:jgray@azuli.co.uk"
+>jgray@azuli.co.uk</A
+>&#62;</CODE
+>
+  </P
+><P
+>   Development of this module was sponsored by Torchbox Ltd. (www.torchbox.com).
+   It has the same BSD license as PostgreSQL.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="uuid-ossp.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="contrib-prog.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>uuid-ossp</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Additional Supplied Programs</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

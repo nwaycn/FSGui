@@ -1,0 +1,350 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 7.3.15</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 7.3.16"
+HREF="release-7-3-16.html"><LINK
+REL="NEXT"
+TITLE="Release 7.3.14"
+HREF="release-7-3-14.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 7.3.16"
+HREF="release-7-3-16.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 7.3.14"
+HREF="release-7-3-14.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-7-3-15"
+>E.257. Release 7.3.15</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2006-05-23</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 7.3.14,
+   including patches for extremely serious security issues.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN165661"
+>E.257.1. Migration to Version 7.3.15</A
+></H2
+><P
+>    A dump/restore is not required for those running 7.3.X.  However,
+    if you are upgrading from a version earlier than 7.3.13,
+    see <A
+HREF="release-7-3-13.html"
+>Section E.259</A
+>.
+   </P
+><P
+>    Full security against the SQL-injection attacks described in
+    CVE-2006-2313 and CVE-2006-2314 might require changes in application
+    code.  If you have applications that embed untrustworthy strings
+    into SQL commands, you should examine them as soon as possible to
+    ensure that they are using recommended escaping techniques.  In
+    most cases, applications should be using subroutines provided by
+    libraries or drivers (such as <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>'s
+    <CODE
+CLASS="FUNCTION"
+>PQescapeStringConn()</CODE
+>) to perform string escaping,
+    rather than relying on <I
+CLASS="FOREIGNPHRASE"
+>ad hoc</I
+> code to do it.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN165669"
+>E.257.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>Change the server to reject invalidly-encoded multibyte
+characters in all cases (Tatsuo, Tom)</P
+><P
+>While <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> has been moving in this direction for
+some time, the checks are now applied uniformly to all encodings and all
+textual input, and are now always errors not merely warnings.  This change
+defends against SQL-injection attacks of the type described in CVE-2006-2313.</P
+></LI
+><LI
+><P
+>Reject unsafe uses of <TT
+CLASS="LITERAL"
+>\'</TT
+> in string literals</P
+><P
+>As a server-side defense against SQL-injection attacks of the type
+described in CVE-2006-2314, the server now only accepts <TT
+CLASS="LITERAL"
+>''</TT
+> and not
+<TT
+CLASS="LITERAL"
+>\'</TT
+> as a representation of ASCII single quote in SQL string
+literals.  By default, <TT
+CLASS="LITERAL"
+>\'</TT
+> is rejected only when
+<TT
+CLASS="VARNAME"
+>client_encoding</TT
+> is set to a client-only encoding (SJIS, BIG5, GBK,
+GB18030, or UHC), which is the scenario in which SQL injection is possible.
+A new configuration parameter <TT
+CLASS="VARNAME"
+>backslash_quote</TT
+> is available to
+adjust this behavior when needed.  Note that full security against
+CVE-2006-2314 might require client-side changes; the purpose of
+<TT
+CLASS="VARNAME"
+>backslash_quote</TT
+> is in part to make it obvious that insecure
+clients are insecure.</P
+></LI
+><LI
+><P
+>Modify <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>'s string-escaping routines to be
+aware of encoding considerations</P
+><P
+>This fixes <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>-using applications for the security
+issues described in CVE-2006-2313 and CVE-2006-2314.
+Applications that use multiple <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> connections
+concurrently should migrate to <CODE
+CLASS="FUNCTION"
+>PQescapeStringConn()</CODE
+> and
+<CODE
+CLASS="FUNCTION"
+>PQescapeByteaConn()</CODE
+> to ensure that escaping is done correctly
+for the settings in use in each database connection.  Applications that
+do string escaping <SPAN
+CLASS="QUOTE"
+>"by hand"</SPAN
+> should be modified to rely on library
+routines instead.</P
+></LI
+><LI
+><P
+>Fix some incorrect encoding conversion functions</P
+><P
+><CODE
+CLASS="FUNCTION"
+>win1251_to_iso</CODE
+>, <CODE
+CLASS="FUNCTION"
+>alt_to_iso</CODE
+>,
+<CODE
+CLASS="FUNCTION"
+>euc_tw_to_big5</CODE
+>, <CODE
+CLASS="FUNCTION"
+>euc_tw_to_mic</CODE
+>,
+<CODE
+CLASS="FUNCTION"
+>mic_to_euc_tw</CODE
+> were all broken to varying
+extents.</P
+></LI
+><LI
+><P
+>Clean up stray remaining uses of <TT
+CLASS="LITERAL"
+>\'</TT
+> in strings
+(Bruce, Jan)</P
+></LI
+><LI
+><P
+>Fix server to use custom DH SSL parameters correctly (Michael
+Fuhr)</P
+></LI
+><LI
+><P
+>Fix various minor memory leaks</P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-7-3-16.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-7-3-14.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 7.3.16</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 7.3.14</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

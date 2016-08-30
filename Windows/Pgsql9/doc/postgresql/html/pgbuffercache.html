@@ -1,0 +1,501 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_buffercache</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="passwordcheck"
+HREF="passwordcheck.html"><LINK
+REL="NEXT"
+TITLE="pgcrypto"
+HREF="pgcrypto.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="passwordcheck"
+HREF="passwordcheck.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pgcrypto"
+HREF="pgcrypto.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PGBUFFERCACHE"
+>F.23. pg_buffercache</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>pg_buffercache</TT
+> module provides a means for
+  examining what's happening in the shared buffer cache in real time.
+ </P
+><P
+>  The module provides a C function <CODE
+CLASS="FUNCTION"
+>pg_buffercache_pages</CODE
+>
+  that returns a set of records, plus a view
+  <TT
+CLASS="STRUCTNAME"
+>pg_buffercache</TT
+> that wraps the function for
+  convenient use.
+ </P
+><P
+>  By default public access is revoked from both of these, just in case there
+  are security issues lurking.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN172816"
+>F.23.1. The <TT
+CLASS="STRUCTNAME"
+>pg_buffercache</TT
+> View</A
+></H2
+><P
+>   The definitions of the columns exposed by the view are shown in <A
+HREF="pgbuffercache.html#PGBUFFERCACHE-COLUMNS"
+>Table F-14</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="PGBUFFERCACHE-COLUMNS"
+></A
+><P
+><B
+>Table F-14. <TT
+CLASS="STRUCTNAME"
+>pg_buffercache</TT
+> Columns</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Type</TH
+><TH
+>References</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>bufferid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>ID, in the range 1..<TT
+CLASS="VARNAME"
+>shared_buffers</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>relfilenode</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>pg_class.relfilenode</TT
+></TD
+><TD
+>Filenode number of the relation</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>reltablespace</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>pg_tablespace.oid</TT
+></TD
+><TD
+>Tablespace OID of the relation</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>reldatabase</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>oid</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>pg_database.oid</TT
+></TD
+><TD
+>Database OID of the relation</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>relforknumber</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>smallint</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Fork number within the relation;  see
+      <TT
+CLASS="FILENAME"
+>include/common/relpath.h</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>relblocknumber</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Page number within the relation</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>isdirty</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Is the page dirty?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>usagecount</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>smallint</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Clock-sweep access count</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="STRUCTFIELD"
+>pinning_backends</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>&nbsp;</TD
+><TD
+>Number of backends pinning this buffer</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   There is one row for each buffer in the shared cache. Unused buffers are
+   shown with all fields null except <TT
+CLASS="STRUCTFIELD"
+>bufferid</TT
+>.  Shared system
+   catalogs are shown as belonging to database zero.
+  </P
+><P
+>   Because the cache is shared by all the databases, there will normally be
+   pages from relations not belonging to the current database.  This means
+   that there may not be matching join rows in <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+> for
+   some rows, or that there could even be incorrect joins.  If you are
+   trying to join against <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+>, it's a good idea to
+   restrict the join to rows having <TT
+CLASS="STRUCTFIELD"
+>reldatabase</TT
+> equal to
+   the current database's OID or zero.
+  </P
+><P
+>   When the <TT
+CLASS="STRUCTNAME"
+>pg_buffercache</TT
+> view is accessed, internal buffer
+   manager locks are taken for long enough to copy all the buffer state
+   data that the view will display.
+   This ensures that the view produces a consistent set of results, while not
+   blocking normal buffer activity longer than necessary.  Nonetheless there
+   could be some impact on database performance if this view is read often.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN172908"
+>F.23.2. Sample Output</A
+></H2
+><PRE
+CLASS="SCREEN"
+>regression=# SELECT c.relname, count(*) AS buffers
+             FROM pg_buffercache b INNER JOIN pg_class c
+             ON b.relfilenode = pg_relation_filenode(c.oid) AND
+                b.reldatabase IN (0, (SELECT oid FROM pg_database
+                                      WHERE datname = current_database()))
+             GROUP BY c.relname
+             ORDER BY 2 DESC
+             LIMIT 10;
+
+             relname             | buffers
+---------------------------------+---------
+ tenk2                           |     345
+ tenk1                           |     141
+ pg_proc                         |      46
+ pg_class                        |      45
+ pg_attribute                    |      43
+ pg_class_relname_nsp_index      |      30
+ pg_proc_proname_args_nsp_index  |      28
+ pg_attribute_relid_attnam_index |      26
+ pg_depend                       |      22
+ pg_depend_reference_index       |      20
+(10 rows)</PRE
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN172911"
+>F.23.3. Authors</A
+></H2
+><P
+>   Mark Kirkwood <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:markir@paradise.net.nz"
+>markir@paradise.net.nz</A
+>&#62;</CODE
+>
+  </P
+><P
+>   Design suggestions: Neil Conway <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:neilc@samurai.com"
+>neilc@samurai.com</A
+>&#62;</CODE
+>
+  </P
+><P
+>   Debugging advice: Tom Lane <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:tgl@sss.pgh.pa.us"
+>tgl@sss.pgh.pa.us</A
+>&#62;</CODE
+>
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="passwordcheck.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="pgcrypto.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>passwordcheck</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>pgcrypto</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,396 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.3.9</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.3.10"
+HREF="release-9-3-10.html"><LINK
+REL="NEXT"
+TITLE="Release 9.3.8"
+HREF="release-9-3-8.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.3.10"
+HREF="release-9-3-10.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.3.8"
+HREF="release-9-3-8.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-3-9"
+>E.21. Release 9.3.9</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2015-06-12</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a small number of fixes from 9.3.8.
+   For information about new features in the 9.3 major release, see
+   <A
+HREF="release-9-3.html"
+>Section E.30</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN131470"
+>E.21.1. Migration to Version 9.3.9</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.3.X.
+   </P
+><P
+>    However, if you are upgrading an installation that was previously
+    upgraded using a <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> version between 9.3.0 and
+    9.3.4 inclusive, see the first changelog entry below.
+   </P
+><P
+>    Also, if you are upgrading from a version earlier than 9.3.7,
+    see <A
+HREF="release-9-3-7.html"
+>Section E.23</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN131477"
+>E.21.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix possible failure to recover from an inconsistent database state
+      (Robert Haas)
+     </P
+><P
+>      Recent <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> releases introduced mechanisms to
+      protect against multixact wraparound, but some of that code did not
+      account for the possibility that it would need to run during crash
+      recovery, when the database may not be in a consistent state.  This
+      could result in failure to restart after a crash, or failure to start
+      up a secondary server.  The lingering effects of a previously-fixed
+      bug in <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> could also cause such a failure, in
+      installations that had used <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> versions
+      between 9.3.0 and 9.3.4.
+     </P
+><P
+>      The <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> bug in question was that it would
+      set <TT
+CLASS="LITERAL"
+>oldestMultiXid</TT
+> to 1 in <TT
+CLASS="FILENAME"
+>pg_control</TT
+> even
+      if the true value should be higher.  With the fixes introduced in
+      this release, such a situation will result in immediate emergency
+      autovacuuming until a correct <TT
+CLASS="LITERAL"
+>oldestMultiXid</TT
+> value can be
+      determined.  If that would pose a hardship, users can avoid it by
+      doing manual vacuuming <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>before</I
+></SPAN
+> upgrading to this release.
+      In detail:
+
+      <P
+></P
+></P><OL
+TYPE="1"
+><LI
+><P
+>         Check whether <SPAN
+CLASS="APPLICATION"
+>pg_controldata</SPAN
+> reports <SPAN
+CLASS="QUOTE"
+>"Latest
+         checkpoint's oldestMultiXid"</SPAN
+> to be 1.  If not, there's nothing
+         to do.
+        </P
+></LI
+><LI
+><P
+>         Look in <TT
+CLASS="FILENAME"
+>PGDATA/pg_multixact/offsets</TT
+> to see if there's a
+         file named <TT
+CLASS="FILENAME"
+>0000</TT
+>.  If there is, there's nothing to do.
+        </P
+></LI
+><LI
+><P
+>         Otherwise, for each table that has
+         <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>relminmxid</TT
+> equal to 1,
+         <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> that table with
+         both <A
+HREF="runtime-config-client.html#GUC-VACUUM-MULTIXACT-FREEZE-MIN-AGE"
+>vacuum_multixact_freeze_min_age</A
+>
+         and <A
+HREF="runtime-config-client.html#GUC-VACUUM-MULTIXACT-FREEZE-TABLE-AGE"
+>vacuum_multixact_freeze_table_age</A
+> set to
+         zero.  (You can use the vacuum cost delay parameters described
+         in <A
+HREF="runtime-config-resource.html#RUNTIME-CONFIG-RESOURCE-VACUUM-COST"
+>Section 18.4.4</A
+> to reduce
+         the performance consequences for concurrent sessions.)  You must
+         use <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 9.3.5 or later to perform this step.
+        </P
+></LI
+></OL
+><P>
+     </P
+></LI
+><LI
+><P
+>      Fix rare failure to invalidate relation cache init file (Tom Lane)
+     </P
+><P
+>      With just the wrong timing of concurrent activity, a <TT
+CLASS="COMMAND"
+>VACUUM
+      FULL</TT
+> on a system catalog might fail to update the <SPAN
+CLASS="QUOTE"
+>"init file"</SPAN
+>
+      that's used to avoid cache-loading work for new sessions.  This would
+      result in later sessions being unable to access that catalog at all.
+      This is a very ancient bug, but it's so hard to trigger that no
+      reproducible case had been seen until recently.
+     </P
+></LI
+><LI
+><P
+>      Avoid deadlock between incoming sessions and <TT
+CLASS="LITERAL"
+>CREATE/DROP
+      DATABASE</TT
+> (Tom Lane)
+     </P
+><P
+>      A new session starting in a database that is the target of
+      a <TT
+CLASS="COMMAND"
+>DROP DATABASE</TT
+> command, or is the template for
+      a <TT
+CLASS="COMMAND"
+>CREATE DATABASE</TT
+> command, could cause the command to wait
+      for five seconds and then fail, even if the new session would have
+      exited before that.
+     </P
+></LI
+><LI
+><P
+>      Improve planner's cost estimates for semi-joins and anti-joins with
+      inner indexscans (Tom Lane, Tomas Vondra)
+     </P
+><P
+>      This type of plan is quite cheap when all the join clauses are used
+      as index scan conditions, even if the inner scan would nominally
+      fetch many rows, because the executor will stop after obtaining one
+      row.  The planner only partially accounted for that effect, and would
+      therefore overestimate the cost, leading it to possibly choose some
+      other much less efficient plan type.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-3-10.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-3-8.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.3.10</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.3.8</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

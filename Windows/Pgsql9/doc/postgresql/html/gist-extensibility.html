@@ -1,0 +1,1142 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Extensibility</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="GiST Indexes"
+HREF="gist.html"><LINK
+REL="PREVIOUS"
+TITLE="Built-in Operator Classes"
+HREF="gist-builtin-opclasses.html"><LINK
+REL="NEXT"
+TITLE="Implementation"
+HREF="gist-implementation.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Built-in Operator Classes"
+HREF="gist-builtin-opclasses.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="gist.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 59. GiST Indexes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Implementation"
+HREF="gist-implementation.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="GIST-EXTENSIBILITY"
+>59.3. Extensibility</A
+></H1
+><P
+>   Traditionally, implementing a new index access method meant a lot of
+   difficult work.  It was necessary to understand the inner workings of the
+   database, such as the lock manager and Write-Ahead Log.  The
+   <ACRONYM
+CLASS="ACRONYM"
+>GiST</ACRONYM
+> interface has a high level of abstraction,
+   requiring the access method implementer only to implement the semantics of
+   the data type being accessed.  The <ACRONYM
+CLASS="ACRONYM"
+>GiST</ACRONYM
+> layer itself
+   takes care of concurrency, logging and searching the tree structure.
+ </P
+><P
+>   This extensibility should not be confused with the extensibility of the
+   other standard search trees in terms of the data they can handle.  For
+   example, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> supports extensible B-trees
+   and hash indexes. That means that you can use
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> to build a B-tree or hash over any
+   data type you want. But B-trees only support range predicates
+   (<TT
+CLASS="LITERAL"
+>&lt;</TT
+>, <TT
+CLASS="LITERAL"
+>=</TT
+>, <TT
+CLASS="LITERAL"
+>&gt;</TT
+>),
+   and hash indexes only support equality queries.
+ </P
+><P
+>   So if you index, say, an image collection with a
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> B-tree, you can only issue queries
+   such as <SPAN
+CLASS="QUOTE"
+>"is imagex equal to imagey"</SPAN
+>, <SPAN
+CLASS="QUOTE"
+>"is imagex less
+   than imagey"</SPAN
+> and <SPAN
+CLASS="QUOTE"
+>"is imagex greater than imagey"</SPAN
+>.
+   Depending on how you define <SPAN
+CLASS="QUOTE"
+>"equals"</SPAN
+>, <SPAN
+CLASS="QUOTE"
+>"less than"</SPAN
+>
+   and <SPAN
+CLASS="QUOTE"
+>"greater than"</SPAN
+> in this context, this could be useful.
+   However, by using a <ACRONYM
+CLASS="ACRONYM"
+>GiST</ACRONYM
+> based index, you could create
+   ways to ask domain-specific questions, perhaps <SPAN
+CLASS="QUOTE"
+>"find all images of
+   horses"</SPAN
+> or <SPAN
+CLASS="QUOTE"
+>"find all over-exposed images"</SPAN
+>.
+ </P
+><P
+>   All it takes to get a <ACRONYM
+CLASS="ACRONYM"
+>GiST</ACRONYM
+> access method up and running
+   is to implement several user-defined methods, which define the behavior of
+   keys in the tree. Of course these methods have to be pretty fancy to
+   support fancy queries, but for all the standard queries (B-trees,
+   R-trees, etc.) they're relatively straightforward. In short,
+   <ACRONYM
+CLASS="ACRONYM"
+>GiST</ACRONYM
+> combines extensibility along with generality, code
+   reuse, and a clean interface.
+  </P
+><P
+>   There are seven methods that an index operator class for
+   <ACRONYM
+CLASS="ACRONYM"
+>GiST</ACRONYM
+> must provide, and two that are optional.
+   Correctness of the index is ensured
+   by proper implementation of the <CODE
+CLASS="FUNCTION"
+>same</CODE
+>, <CODE
+CLASS="FUNCTION"
+>consistent</CODE
+>
+   and <CODE
+CLASS="FUNCTION"
+>union</CODE
+> methods, while efficiency (size and speed) of the
+   index will depend on the <CODE
+CLASS="FUNCTION"
+>penalty</CODE
+> and <CODE
+CLASS="FUNCTION"
+>picksplit</CODE
+>
+   methods.
+   The remaining two basic methods are <CODE
+CLASS="FUNCTION"
+>compress</CODE
+> and
+   <CODE
+CLASS="FUNCTION"
+>decompress</CODE
+>, which allow an index to have internal tree data of
+   a different type than the data it indexes. The leaves are to be of the
+   indexed data type, while the other tree nodes can be of any C struct (but
+   you still have to follow <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> data type rules here,
+   see about <TT
+CLASS="LITERAL"
+>varlena</TT
+> for variable sized data). If the tree's
+   internal data type exists at the SQL level, the <TT
+CLASS="LITERAL"
+>STORAGE</TT
+> option
+   of the <TT
+CLASS="COMMAND"
+>CREATE OPERATOR CLASS</TT
+> command can be used.
+   The optional eighth method is <CODE
+CLASS="FUNCTION"
+>distance</CODE
+>, which is needed
+   if the operator class wishes to support ordered scans (nearest-neighbor
+   searches). The optional ninth method <CODE
+CLASS="FUNCTION"
+>fetch</CODE
+> is needed if the
+   operator class wishes to support index-only scans.
+ </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><CODE
+CLASS="FUNCTION"
+>consistent</CODE
+></DT
+><DD
+><P
+>       Given an index entry <TT
+CLASS="LITERAL"
+>p</TT
+> and a query value <TT
+CLASS="LITERAL"
+>q</TT
+>,
+       this function determines whether the index entry is
+       <SPAN
+CLASS="QUOTE"
+>"consistent"</SPAN
+> with the query; that is, could the predicate
+       <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="REPLACEABLE"
+><I
+>indexed_column</I
+></TT
+>
+       <TT
+CLASS="REPLACEABLE"
+><I
+>indexable_operator</I
+></TT
+> <TT
+CLASS="LITERAL"
+>q</TT
+>"</SPAN
+> be true for
+       any row represented by the index entry?  For a leaf index entry this is
+       equivalent to testing the indexable condition, while for an internal
+       tree node this determines whether it is necessary to scan the subtree
+       of the index represented by the tree node.  When the result is
+       <TT
+CLASS="LITERAL"
+>true</TT
+>, a <TT
+CLASS="LITERAL"
+>recheck</TT
+> flag must also be returned.
+       This indicates whether the predicate is certainly true or only possibly
+       true.  If <TT
+CLASS="LITERAL"
+>recheck</TT
+> = <TT
+CLASS="LITERAL"
+>false</TT
+> then the index has
+       tested the predicate condition exactly, whereas if <TT
+CLASS="LITERAL"
+>recheck</TT
+>
+       = <TT
+CLASS="LITERAL"
+>true</TT
+> the row is only a candidate match.  In that case the
+       system will automatically evaluate the
+       <TT
+CLASS="REPLACEABLE"
+><I
+>indexable_operator</I
+></TT
+> against the actual row value to see
+       if it is really a match.  This convention allows
+       <ACRONYM
+CLASS="ACRONYM"
+>GiST</ACRONYM
+> to support both lossless and lossy index
+       structures.
+      </P
+><P
+>        The <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> declaration of the function must look like this:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE OR REPLACE FUNCTION my_consistent(internal, data_type, smallint, oid, internal)
+RETURNS bool
+AS 'MODULE_PATHNAME'
+LANGUAGE C STRICT;</PRE
+><P>
+
+        And the matching code in the C module could then follow this skeleton:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>PG_FUNCTION_INFO_V1(my_consistent);
+
+Datum
+my_consistent(PG_FUNCTION_ARGS)
+{
+    GISTENTRY  *entry = (GISTENTRY *) PG_GETARG_POINTER(0);
+    data_type  *query = PG_GETARG_DATA_TYPE_P(1);
+    StrategyNumber strategy = (StrategyNumber) PG_GETARG_UINT16(2);
+    /* Oid subtype = PG_GETARG_OID(3); */
+    bool       *recheck = (bool *) PG_GETARG_POINTER(4);
+    data_type  *key = DatumGetDataType(entry-&gt;key);
+    bool        retval;
+
+    /*
+     * determine return value as a function of strategy, key and query.
+     *
+     * Use GIST_LEAF(entry) to know where you're called in the index tree,
+     * which comes handy when supporting the = operator for example (you could
+     * check for non empty union() in non-leaf nodes and equality in leaf
+     * nodes).
+     */
+
+    *recheck = true;        /* or false if check is exact */
+
+    PG_RETURN_BOOL(retval);
+}</PRE
+><P>
+
+       Here, <TT
+CLASS="VARNAME"
+>key</TT
+> is an element in the index and <TT
+CLASS="VARNAME"
+>query</TT
+>
+       the value being looked up in the index. The <TT
+CLASS="LITERAL"
+>StrategyNumber</TT
+>
+       parameter indicates which operator of your operator class is being
+       applied &mdash; it matches one of the operator numbers in the
+       <TT
+CLASS="COMMAND"
+>CREATE OPERATOR CLASS</TT
+> command.  Depending on what operators
+       you have included in the class, the data type of <TT
+CLASS="VARNAME"
+>query</TT
+> could
+       vary with the operator, but the above skeleton assumes it doesn't.
+      </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>union</CODE
+></DT
+><DD
+><P
+>       This method consolidates information in the tree.  Given a set of
+       entries, this function generates a new index entry that represents
+       all the given entries.
+      </P
+><P
+>        The <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> declaration of the function must look like this:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE OR REPLACE FUNCTION my_union(internal, internal)
+RETURNS internal
+AS 'MODULE_PATHNAME'
+LANGUAGE C STRICT;</PRE
+><P>
+
+        And the matching code in the C module could then follow this skeleton:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>PG_FUNCTION_INFO_V1(my_union);
+
+Datum
+my_union(PG_FUNCTION_ARGS)
+{
+    GistEntryVector *entryvec = (GistEntryVector *) PG_GETARG_POINTER(0);
+    GISTENTRY  *ent = entryvec-&gt;vector;
+    data_type  *out,
+               *tmp,
+               *old;
+    int         numranges,
+                i = 0;
+
+    numranges = entryvec-&gt;n;
+    tmp = DatumGetDataType(ent[0].key);
+    out = tmp;
+
+    if (numranges == 1)
+    {
+        out = data_type_deep_copy(tmp);
+
+        PG_RETURN_DATA_TYPE_P(out);
+    }
+
+    for (i = 1; i &lt; numranges; i++)
+    {
+        old = out;
+        tmp = DatumGetDataType(ent[i].key);
+        out = my_union_implementation(out, tmp);
+    }
+
+    PG_RETURN_DATA_TYPE_P(out);
+}</PRE
+><P>
+      </P
+><P
+>        As you can see, in this skeleton we're dealing with a data type
+        where <TT
+CLASS="LITERAL"
+>union(X, Y, Z) = union(union(X, Y), Z)</TT
+>. It's easy
+        enough to support data types where this is not the case, by
+        implementing the proper union algorithm in this
+        <ACRONYM
+CLASS="ACRONYM"
+>GiST</ACRONYM
+> support method.
+      </P
+><P
+>        The <CODE
+CLASS="FUNCTION"
+>union</CODE
+> implementation function should return a
+        pointer to newly <CODE
+CLASS="FUNCTION"
+>palloc()</CODE
+>ed memory. You can't just
+        return whatever the input is.
+      </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>compress</CODE
+></DT
+><DD
+><P
+>       Converts the data item into a format suitable for physical storage in
+       an index page.
+      </P
+><P
+>        The <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> declaration of the function must look like this:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE OR REPLACE FUNCTION my_compress(internal)
+RETURNS internal
+AS 'MODULE_PATHNAME'
+LANGUAGE C STRICT;</PRE
+><P>
+
+        And the matching code in the C module could then follow this skeleton:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>PG_FUNCTION_INFO_V1(my_compress);
+
+Datum
+my_compress(PG_FUNCTION_ARGS)
+{
+    GISTENTRY  *entry = (GISTENTRY *) PG_GETARG_POINTER(0);
+    GISTENTRY  *retval;
+
+    if (entry-&gt;leafkey)
+    {
+        /* replace entry-&gt;key with a compressed version */
+        compressed_data_type *compressed_data = palloc(sizeof(compressed_data_type));
+
+        /* fill *compressed_data from entry-&gt;key ... */
+
+        retval = palloc(sizeof(GISTENTRY));
+        gistentryinit(*retval, PointerGetDatum(compressed_data),
+                      entry-&gt;rel, entry-&gt;page, entry-&gt;offset, FALSE);
+    }
+    else
+    {
+        /* typically we needn't do anything with non-leaf entries */
+        retval = entry;
+    }
+
+    PG_RETURN_POINTER(retval);
+}</PRE
+><P>
+      </P
+><P
+>       You have to adapt <TT
+CLASS="REPLACEABLE"
+><I
+>compressed_data_type</I
+></TT
+> to the specific
+       type you're converting to in order to compress your leaf nodes, of
+       course.
+      </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>decompress</CODE
+></DT
+><DD
+><P
+>       The reverse of the <CODE
+CLASS="FUNCTION"
+>compress</CODE
+> method.  Converts the
+       index representation of the data item into a format that can be
+       manipulated by the other GiST methods in the operator class.
+      </P
+><P
+>        The <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> declaration of the function must look like this:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE OR REPLACE FUNCTION my_decompress(internal)
+RETURNS internal
+AS 'MODULE_PATHNAME'
+LANGUAGE C STRICT;</PRE
+><P>
+
+        And the matching code in the C module could then follow this skeleton:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>PG_FUNCTION_INFO_V1(my_decompress);
+
+Datum
+my_decompress(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_POINTER(PG_GETARG_POINTER(0));
+}</PRE
+><P>
+
+        The above skeleton is suitable for the case where no decompression
+        is needed.
+      </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>penalty</CODE
+></DT
+><DD
+><P
+>       Returns a value indicating the <SPAN
+CLASS="QUOTE"
+>"cost"</SPAN
+> of inserting the new
+       entry into a particular branch of the tree.  Items will be inserted
+       down the path of least <CODE
+CLASS="FUNCTION"
+>penalty</CODE
+> in the tree.
+       Values returned by <CODE
+CLASS="FUNCTION"
+>penalty</CODE
+> should be non-negative.
+       If a negative value is returned, it will be treated as zero.
+      </P
+><P
+>        The <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> declaration of the function must look like this:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE OR REPLACE FUNCTION my_penalty(internal, internal, internal)
+RETURNS internal
+AS 'MODULE_PATHNAME'
+LANGUAGE C STRICT;  -- in some cases penalty functions need not be strict</PRE
+><P>
+
+        And the matching code in the C module could then follow this skeleton:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>PG_FUNCTION_INFO_V1(my_penalty);
+
+Datum
+my_penalty(PG_FUNCTION_ARGS)
+{
+    GISTENTRY  *origentry = (GISTENTRY *) PG_GETARG_POINTER(0);
+    GISTENTRY  *newentry = (GISTENTRY *) PG_GETARG_POINTER(1);
+    float      *penalty = (float *) PG_GETARG_POINTER(2);
+    data_type  *orig = DatumGetDataType(origentry-&gt;key);
+    data_type  *new = DatumGetDataType(newentry-&gt;key);
+
+    *penalty = my_penalty_implementation(orig, new);
+    PG_RETURN_POINTER(penalty);
+}</PRE
+><P>
+      </P
+><P
+>        The <CODE
+CLASS="FUNCTION"
+>penalty</CODE
+> function is crucial to good performance of
+        the index. It'll get used at insertion time to determine which branch
+        to follow when choosing where to add the new entry in the tree. At
+        query time, the more balanced the index, the quicker the lookup.
+      </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>picksplit</CODE
+></DT
+><DD
+><P
+>       When an index page split is necessary, this function decides which
+       entries on the page are to stay on the old page, and which are to move
+       to the new page.
+      </P
+><P
+>        The <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> declaration of the function must look like this:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE OR REPLACE FUNCTION my_picksplit(internal, internal)
+RETURNS internal
+AS 'MODULE_PATHNAME'
+LANGUAGE C STRICT;</PRE
+><P>
+
+        And the matching code in the C module could then follow this skeleton:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>PG_FUNCTION_INFO_V1(my_picksplit);
+
+Datum
+my_picksplit(PG_FUNCTION_ARGS)
+{
+    GistEntryVector *entryvec = (GistEntryVector *) PG_GETARG_POINTER(0);
+    OffsetNumber maxoff = entryvec-&gt;n - 1;
+    GISTENTRY  *ent = entryvec-&gt;vector;
+    GIST_SPLITVEC *v = (GIST_SPLITVEC *) PG_GETARG_POINTER(1);
+    int         i,
+                nbytes;
+    OffsetNumber *left,
+               *right;
+    data_type  *tmp_union;
+    data_type  *unionL;
+    data_type  *unionR;
+    GISTENTRY **raw_entryvec;
+
+    maxoff = entryvec-&gt;n - 1;
+    nbytes = (maxoff + 1) * sizeof(OffsetNumber);
+
+    v-&gt;spl_left = (OffsetNumber *) palloc(nbytes);
+    left = v-&gt;spl_left;
+    v-&gt;spl_nleft = 0;
+
+    v-&gt;spl_right = (OffsetNumber *) palloc(nbytes);
+    right = v-&gt;spl_right;
+    v-&gt;spl_nright = 0;
+
+    unionL = NULL;
+    unionR = NULL;
+
+    /* Initialize the raw entry vector. */
+    raw_entryvec = (GISTENTRY **) malloc(entryvec-&gt;n * sizeof(void *));
+    for (i = FirstOffsetNumber; i &lt;= maxoff; i = OffsetNumberNext(i))
+        raw_entryvec[i] = &amp;(entryvec-&gt;vector[i]);
+
+    for (i = FirstOffsetNumber; i &lt;= maxoff; i = OffsetNumberNext(i))
+    {
+        int         real_index = raw_entryvec[i] - entryvec-&gt;vector;
+
+        tmp_union = DatumGetDataType(entryvec-&gt;vector[real_index].key);
+        Assert(tmp_union != NULL);
+
+        /*
+         * Choose where to put the index entries and update unionL and unionR
+         * accordingly. Append the entries to either v_spl_left or
+         * v_spl_right, and care about the counters.
+         */
+
+        if (my_choice_is_left(unionL, curl, unionR, curr))
+        {
+            if (unionL == NULL)
+                unionL = tmp_union;
+            else
+                unionL = my_union_implementation(unionL, tmp_union);
+
+            *left = real_index;
+            ++left;
+            ++(v-&gt;spl_nleft);
+        }
+        else
+        {
+            /*
+             * Same on the right
+             */
+        }
+    }
+
+    v-&gt;spl_ldatum = DataTypeGetDatum(unionL);
+    v-&gt;spl_rdatum = DataTypeGetDatum(unionR);
+    PG_RETURN_POINTER(v);
+}</PRE
+><P>
+      </P
+><P
+>        Like <CODE
+CLASS="FUNCTION"
+>penalty</CODE
+>, the <CODE
+CLASS="FUNCTION"
+>picksplit</CODE
+> function
+        is crucial to good performance of the index.  Designing suitable
+        <CODE
+CLASS="FUNCTION"
+>penalty</CODE
+> and <CODE
+CLASS="FUNCTION"
+>picksplit</CODE
+> implementations
+        is where the challenge of implementing well-performing
+        <ACRONYM
+CLASS="ACRONYM"
+>GiST</ACRONYM
+> indexes lies.
+      </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>same</CODE
+></DT
+><DD
+><P
+>       Returns true if two index entries are identical, false otherwise.
+      </P
+><P
+>        The <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> declaration of the function must look like this:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE OR REPLACE FUNCTION my_same(internal, internal, internal)
+RETURNS internal
+AS 'MODULE_PATHNAME'
+LANGUAGE C STRICT;</PRE
+><P>
+
+        And the matching code in the C module could then follow this skeleton:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>PG_FUNCTION_INFO_V1(my_same);
+
+Datum
+my_same(PG_FUNCTION_ARGS)
+{
+    prefix_range *v1 = PG_GETARG_PREFIX_RANGE_P(0);
+    prefix_range *v2 = PG_GETARG_PREFIX_RANGE_P(1);
+    bool       *result = (bool *) PG_GETARG_POINTER(2);
+
+    *result = my_eq(v1, v2);
+    PG_RETURN_POINTER(result);
+}</PRE
+><P>
+
+        For historical reasons, the <CODE
+CLASS="FUNCTION"
+>same</CODE
+> function doesn't
+        just return a Boolean result; instead it has to store the flag
+        at the location indicated by the third argument.
+      </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>distance</CODE
+></DT
+><DD
+><P
+>       Given an index entry <TT
+CLASS="LITERAL"
+>p</TT
+> and a query value <TT
+CLASS="LITERAL"
+>q</TT
+>,
+       this function determines the index entry's
+       <SPAN
+CLASS="QUOTE"
+>"distance"</SPAN
+> from the query value.  This function must be
+       supplied if the operator class contains any ordering operators.
+       A query using the ordering operator will be implemented by returning
+       index entries with the smallest <SPAN
+CLASS="QUOTE"
+>"distance"</SPAN
+> values first,
+       so the results must be consistent with the operator's semantics.
+       For a leaf index entry the result just represents the distance to
+       the index entry; for an internal tree node, the result must be the
+       smallest distance that any child entry could have.
+      </P
+><P
+>        The <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> declaration of the function must look like this:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE OR REPLACE FUNCTION my_distance(internal, data_type, smallint, oid)
+RETURNS float8
+AS 'MODULE_PATHNAME'
+LANGUAGE C STRICT;</PRE
+><P>
+
+        And the matching code in the C module could then follow this skeleton:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>PG_FUNCTION_INFO_V1(my_distance);
+
+Datum
+my_distance(PG_FUNCTION_ARGS)
+{
+    GISTENTRY  *entry = (GISTENTRY *) PG_GETARG_POINTER(0);
+    data_type  *query = PG_GETARG_DATA_TYPE_P(1);
+    StrategyNumber strategy = (StrategyNumber) PG_GETARG_UINT16(2);
+    /* Oid subtype = PG_GETARG_OID(3); */
+    /* bool *recheck = (bool *) PG_GETARG_POINTER(4); */
+    data_type  *key = DatumGetDataType(entry-&gt;key);
+    double      retval;
+
+    /*
+     * determine return value as a function of strategy, key and query.
+     */
+
+    PG_RETURN_FLOAT8(retval);
+}</PRE
+><P>
+
+       The arguments to the <CODE
+CLASS="FUNCTION"
+>distance</CODE
+> function are identical to
+       the arguments of the <CODE
+CLASS="FUNCTION"
+>consistent</CODE
+> function.
+      </P
+><P
+>       Some approximation is allowed when determining the distance, so long
+       as the result is never greater than the entry's actual distance. Thus,
+       for example, distance to a bounding box is usually sufficient in
+       geometric applications.  For an internal tree node, the distance
+       returned must not be greater than the distance to any of the child
+       nodes. If the returned distance is not exact, the function must set
+       <TT
+CLASS="LITERAL"
+>*recheck</TT
+> to true. (This is not necessary for internal tree
+       nodes; for them, the calculation is always assumed to be inexact.) In
+       this case the executor will calculate the accurate distance after
+       fetching the tuple from the heap, and reorder the tuples if necessary.
+      </P
+><P
+>       If the distance function returns <TT
+CLASS="LITERAL"
+>*recheck = true</TT
+> for any
+       leaf node, the original ordering operator's return type must
+       be <TT
+CLASS="TYPE"
+>float8</TT
+> or <TT
+CLASS="TYPE"
+>float4</TT
+>, and the distance function's
+       result values must be comparable to those of the original ordering
+       operator, since the executor will sort using both distance function
+       results and recalculated ordering-operator results.  Otherwise, the
+       distance function's result values can be any finite <TT
+CLASS="TYPE"
+>float8</TT
+>
+       values, so long as the relative order of the result values matches the
+       order returned by the ordering operator.  (Infinity and minus infinity
+       are used internally to handle cases such as nulls, so it is not
+       recommended that <CODE
+CLASS="FUNCTION"
+>distance</CODE
+> functions return these values.)
+      </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>fetch</CODE
+></DT
+><DD
+><P
+>       Converts the compressed index representation of the data item into the
+       original data type, for index-only scans. The returned data must be an
+       exact, non-lossy copy of the originally indexed value.
+      </P
+><P
+>        The <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> declaration of the function must look like this:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE OR REPLACE FUNCTION my_fetch(internal)
+RETURNS internal
+AS 'MODULE_PATHNAME'
+LANGUAGE C STRICT;</PRE
+><P>
+
+        The argument is a pointer to a <TT
+CLASS="STRUCTNAME"
+>GISTENTRY</TT
+> struct. On
+        entry, its 'key' field contains a non-NULL leaf datum in its
+        compressed form. The return value is another <TT
+CLASS="STRUCTNAME"
+>GISTENTRY</TT
+>
+        struct, whose 'key' field contains the same datum in the original,
+        uncompressed form. If the opclass' compress function does nothing for
+        leaf entries, the fetch method can return the argument as is.
+       </P
+><P
+>        The matching code in the C module could then follow this skeleton:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>PG_FUNCTION_INFO_V1(my_fetch);
+
+Datum
+my_fetch(PG_FUNCTION_ARGS)
+{
+    GISTENTRY  *entry = (GISTENTRY *) PG_GETARG_POINTER(0);
+    input_data_type *in = DatumGetP(entry-&#62;key);
+    fetched_data_type *fetched_data;
+    GISTENTRY  *retval;
+
+    retval = palloc(sizeof(GISTENTRY));
+    fetched_data = palloc(sizeof(fetched_data_type));
+
+    /*
+     * Convert 'fetched_data' into the a Datum of the original datatype.
+     */
+
+    /* fill *retval from fetch_data. */
+    gistentryinit(*retval, PointerGetDatum(converted_datum),
+                  entry-&#62;rel, entry-&#62;page, entry-&#62;offset, FALSE);
+
+    PG_RETURN_POINTER(retval);
+}</PRE
+><P>
+      </P
+><P
+>       If the compress method is lossy for leaf entries, the operator class
+       cannot support index-only scans, and must not define a 'fetch'
+       function.
+      </P
+></DD
+></DL
+></DIV
+><P
+>   All the GiST support methods are normally called in short-lived memory
+   contexts; that is, <TT
+CLASS="VARNAME"
+>CurrentMemoryContext</TT
+> will get reset after
+   each tuple is processed.  It is therefore not very important to worry about
+   pfree'ing everything you palloc.  However, in some cases it's useful for a
+   support method to cache data across repeated calls.  To do that, allocate
+   the longer-lived data in <TT
+CLASS="LITERAL"
+>fcinfo-&gt;flinfo-&gt;fn_mcxt</TT
+>, and
+   keep a pointer to it in <TT
+CLASS="LITERAL"
+>fcinfo-&gt;flinfo-&gt;fn_extra</TT
+>.  Such
+   data will survive for the life of the index operation (e.g., a single GiST
+   index scan, index build, or index tuple insertion).  Be careful to pfree
+   the previous value when replacing a <TT
+CLASS="LITERAL"
+>fn_extra</TT
+> value, or the leak
+   will accumulate for the duration of the operation.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="gist-builtin-opclasses.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="gist-implementation.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Built-in Operator Classes</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="gist.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Implementation</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

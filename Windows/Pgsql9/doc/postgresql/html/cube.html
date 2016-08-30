@@ -1,0 +1,986 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>cube</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="citext"
+HREF="citext.html"><LINK
+REL="NEXT"
+TITLE="dblink"
+HREF="dblink.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="citext"
+HREF="citext.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="dblink"
+HREF="dblink.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="CUBE"
+>F.8. cube</A
+></H1
+><P
+>  This module implements a data type <TT
+CLASS="TYPE"
+>cube</TT
+> for
+  representing multidimensional cubes.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN169322"
+>F.8.1. Syntax</A
+></H2
+><P
+>   <A
+HREF="cube.html#CUBE-REPR-TABLE"
+>Table F-1</A
+> shows the valid external
+   representations for the <TT
+CLASS="TYPE"
+>cube</TT
+>
+   type.  <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+>, etc. denote
+   floating-point numbers.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="CUBE-REPR-TABLE"
+></A
+><P
+><B
+>Table F-1. Cube External Representations</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+></TT
+></TD
+><TD
+>A one-dimensional point
+       (or, zero-length one-dimensional interval)
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+>)</TT
+></TD
+><TD
+>Same as above</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+>,<TT
+CLASS="REPLACEABLE"
+><I
+>x2</I
+></TT
+>,...,<TT
+CLASS="REPLACEABLE"
+><I
+>xn</I
+></TT
+></TT
+></TD
+><TD
+>A point in n-dimensional space, represented internally as a
+      zero-volume cube
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+>,<TT
+CLASS="REPLACEABLE"
+><I
+>x2</I
+></TT
+>,...,<TT
+CLASS="REPLACEABLE"
+><I
+>xn</I
+></TT
+>)</TT
+></TD
+><TD
+>Same as above</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+>),(<TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+>)</TT
+></TD
+><TD
+>A one-dimensional interval starting at <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> and ending at <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+> or vice versa; the
+       order does not matter
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>[(<TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+>),(<TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+>)]</TT
+></TD
+><TD
+>Same as above</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+>,...,<TT
+CLASS="REPLACEABLE"
+><I
+>xn</I
+></TT
+>),(<TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+>,...,<TT
+CLASS="REPLACEABLE"
+><I
+>yn</I
+></TT
+>)</TT
+></TD
+><TD
+>An n-dimensional cube represented by a pair of its diagonally
+       opposite corners
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>[(<TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+>,...,<TT
+CLASS="REPLACEABLE"
+><I
+>xn</I
+></TT
+>),(<TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+>,...,<TT
+CLASS="REPLACEABLE"
+><I
+>yn</I
+></TT
+>)]</TT
+></TD
+><TD
+>Same as above</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   It does not matter which order the opposite corners of a cube are
+   entered in.  The <TT
+CLASS="TYPE"
+>cube</TT
+> functions
+   automatically swap values if needed to create a uniform
+   <SPAN
+CLASS="QUOTE"
+>"lower left &mdash; upper right"</SPAN
+> internal representation.
+  </P
+><P
+>   White space is ignored, so <TT
+CLASS="LITERAL"
+>[(<TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+>),(<TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+>)]</TT
+> is the same as
+   <TT
+CLASS="LITERAL"
+>[ ( <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> ), ( <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+> ) ]</TT
+>.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN169397"
+>F.8.2. Precision</A
+></H2
+><P
+>   Values are stored internally as 64-bit floating point numbers. This means
+   that numbers with more than about 16 significant digits will be truncated.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN169400"
+>F.8.3. Usage</A
+></H2
+><P
+>   The <TT
+CLASS="FILENAME"
+>cube</TT
+> module includes a GiST index operator class for
+   <TT
+CLASS="TYPE"
+>cube</TT
+> values.
+   The operators supported by the GiST operator class are shown in <A
+HREF="cube.html#CUBE-GIST-OPERATORS"
+>Table F-2</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="CUBE-GIST-OPERATORS"
+></A
+><P
+><B
+>Table F-2. Cube GiST Operators</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>Operator</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>a = b</TT
+></TD
+><TD
+>The cubes a and b are identical.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>a &amp;&amp; b</TT
+></TD
+><TD
+>The cubes a and b overlap.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>a @&gt; b</TT
+></TD
+><TD
+>The cube a contains the cube b.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>a &lt;@ b</TT
+></TD
+><TD
+>The cube a is contained in the cube b.</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   (Before PostgreSQL 8.2, the containment operators <TT
+CLASS="LITERAL"
+>@&gt;</TT
+> and <TT
+CLASS="LITERAL"
+>&lt;@</TT
+> were
+   respectively called <TT
+CLASS="LITERAL"
+>@</TT
+> and <TT
+CLASS="LITERAL"
+>~</TT
+>.  These names are still available, but are
+   deprecated and will eventually be retired.  Notice that the old names
+   are reversed from the convention formerly followed by the core geometric
+   data types!)
+  </P
+><P
+>   The standard B-tree operators are also provided, for example
+
+   <DIV
+CLASS="INFORMALTABLE"
+><P
+></P
+><A
+NAME="AEN169436"
+></A
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>Operator</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>[a, b] &lt; [c, d]</TT
+></TD
+><TD
+>Less than</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>[a, b] &gt; [c, d]</TT
+></TD
+><TD
+>Greater than</TD
+></TR
+></TBODY
+></TABLE
+><P
+></P
+></DIV
+>
+
+   These operators do not make a lot of sense for any practical
+   purpose but sorting. These operators first compare (a) to (c),
+   and if these are equal, compare (b) to (d). That results in
+   reasonably good sorting in most cases, which is useful if
+   you want to use ORDER BY with this type.
+  </P
+><P
+>   <A
+HREF="cube.html#CUBE-FUNCTIONS-TABLE"
+>Table F-3</A
+> shows the available functions.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="CUBE-FUNCTIONS-TABLE"
+></A
+><P
+><B
+>Table F-3. Cube Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>cube(float8) returns cube</TT
+></TD
+><TD
+>Makes a one dimensional cube with both coordinates the same.
+       <TT
+CLASS="LITERAL"
+>cube(1) == '(1)'</TT
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>cube(float8, float8) returns cube</TT
+></TD
+><TD
+>Makes a one dimensional cube.
+       <TT
+CLASS="LITERAL"
+>cube(1,2) == '(1),(2)'</TT
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>cube(float8[]) returns cube</TT
+></TD
+><TD
+>Makes a zero-volume cube using the coordinates
+       defined by the array.
+       <TT
+CLASS="LITERAL"
+>cube(ARRAY[1,2]) == '(1,2)'</TT
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>cube(float8[], float8[]) returns cube</TT
+></TD
+><TD
+>Makes a cube with upper right and lower left
+       coordinates as defined by the two arrays, which must be of the
+       same length.
+       <TT
+CLASS="LITERAL"
+>cube('{1,2}'::float[], '{3,4}'::float[]) == '(1,2),(3,4)'
+       </TT
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>cube(cube, float8) returns cube</TT
+></TD
+><TD
+>Makes a new cube by adding a dimension on to an
+       existing cube with the same values for both parts of the new coordinate.
+       This is useful for building cubes piece by piece from calculated values.
+       <TT
+CLASS="LITERAL"
+>cube('(1)',2) == '(1,2),(1,2)'</TT
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>cube(cube, float8, float8) returns cube</TT
+></TD
+><TD
+>Makes a new cube by adding a dimension on to an
+       existing cube. This is useful for building cubes piece by piece from
+       calculated values. <TT
+CLASS="LITERAL"
+>cube('(1,2)',3,4) == '(1,3),(2,4)'</TT
+>
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>cube_dim(cube) returns int</TT
+></TD
+><TD
+>Returns the number of dimensions of the cube
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>cube_ll_coord(cube, int) returns double </TT
+></TD
+><TD
+>Returns the n'th coordinate value for the lower left
+       corner of a cube
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>cube_ur_coord(cube, int) returns double
+      </TT
+></TD
+><TD
+>Returns the n'th coordinate value for the
+       upper right corner of a cube
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>cube_is_point(cube) returns bool</TT
+></TD
+><TD
+>Returns true if a cube is a point, that is,
+       the two defining corners are the same.</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>cube_distance(cube, cube) returns double</TT
+></TD
+><TD
+>Returns the distance between two cubes. If both
+       cubes are points, this is the normal distance function.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>cube_subset(cube, int[]) returns cube
+      </TT
+></TD
+><TD
+>Makes a new cube from an existing cube, using a list of
+       dimension indexes from an array. Can be used to find both the LL and UR
+       coordinates of a single dimension, e.g.
+       <TT
+CLASS="LITERAL"
+>cube_subset(cube('(1,3,5),(6,7,8)'), ARRAY[2]) = '(3),(7)'</TT
+>.
+       Or can be used to drop dimensions, or reorder them as desired, e.g.
+       <TT
+CLASS="LITERAL"
+>cube_subset(cube('(1,3,5),(6,7,8)'), ARRAY[3,2,1,1]) = '(5, 3,
+       1, 1),(8, 7, 6, 6)'</TT
+>.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>cube_union(cube, cube) returns cube</TT
+></TD
+><TD
+>Produces the union of two cubes
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>cube_inter(cube, cube) returns cube</TT
+></TD
+><TD
+>Produces the intersection of two cubes
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>cube_enlarge(cube c, double r, int n) returns cube</TT
+></TD
+><TD
+>Increases the size of a cube by a specified radius in at least
+       n dimensions. If the radius is negative the cube is shrunk instead. This
+       is useful for creating bounding boxes around a point for searching for
+       nearby points. All defined dimensions are changed by the radius r.
+       LL coordinates are decreased by r and UR coordinates are increased by r.
+       If a LL coordinate is increased to larger than the corresponding UR
+       coordinate (this can only happen when r &lt; 0) than both coordinates
+       are set to their average.  If n is greater than the number of defined
+       dimensions and the cube is being increased (r &gt;= 0) then 0 is used
+       as the base for the extra coordinates.
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN169525"
+>F.8.4. Defaults</A
+></H2
+><P
+>   I believe this union:
+  </P
+><PRE
+CLASS="PROGRAMLISTING"
+>select cube_union('(0,5,2),(2,3,1)', '0');
+cube_union
+-------------------
+(0, 0, 0),(2, 5, 2)
+(1 row)</PRE
+><P
+>    does not contradict common sense, neither does the intersection
+   </P
+><PRE
+CLASS="PROGRAMLISTING"
+>select cube_inter('(0,-1),(1,1)', '(-2),(2)');
+cube_inter
+-------------
+(0, 0),(1, 0)
+(1 row)</PRE
+><P
+>    In all binary operations on differently-dimensioned cubes, I assume the
+    lower-dimensional one to be a Cartesian projection, i. e., having zeroes
+    in place of coordinates omitted in the string representation. The above
+    examples are equivalent to:
+   </P
+><PRE
+CLASS="PROGRAMLISTING"
+>cube_union('(0,5,2),(2,3,1)','(0,0,0),(0,0,0)');
+cube_inter('(0,-1),(1,1)','(-2,0),(2,0)');</PRE
+><P
+>    The following containment predicate uses the point syntax,
+    while in fact the second argument is internally represented by a box.
+    This syntax makes it unnecessary to define a separate point type
+    and functions for (box,point) predicates.
+   </P
+><PRE
+CLASS="PROGRAMLISTING"
+>select cube_contains('(0,0),(1,1)', '0.5,0.5');
+cube_contains
+--------------
+t
+(1 row)</PRE
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN169535"
+>F.8.5. Notes</A
+></H2
+><P
+>   For examples of usage, see the regression test <TT
+CLASS="FILENAME"
+>sql/cube.sql</TT
+>.
+  </P
+><P
+>   To make it harder for people to break things, there
+   is a limit of 100 on the number of dimensions of cubes. This is set
+   in <TT
+CLASS="FILENAME"
+>cubedata.h</TT
+> if you need something bigger.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN169541"
+>F.8.6. Credits</A
+></H2
+><P
+>   Original author: Gene Selkov, Jr. <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:selkovjr@mcs.anl.gov"
+>selkovjr@mcs.anl.gov</A
+>&#62;</CODE
+>,
+   Mathematics and Computer Science Division, Argonne National Laboratory.
+  </P
+><P
+>   My thanks are primarily to Prof. Joe Hellerstein
+   (<A
+HREF="http://db.cs.berkeley.edu/jmh/"
+TARGET="_top"
+>http://db.cs.berkeley.edu/jmh/</A
+>) for elucidating the
+   gist of the GiST (<A
+HREF="http://gist.cs.berkeley.edu/"
+TARGET="_top"
+>http://gist.cs.berkeley.edu/</A
+>), and
+   to his former student Andy Dong for his example written for Illustra.
+   I am also grateful to all Postgres developers, present and past, for
+   enabling myself to create my own world and live undisturbed in it. And I
+   would like to acknowledge my gratitude to Argonne Lab and to the
+   U.S. Department of Energy for the years of faithful support of my database
+   research.
+  </P
+><P
+>   Minor updates to this package were made by Bruno Wolff III
+   <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:bruno@wolff.to"
+>bruno@wolff.to</A
+>&#62;</CODE
+> in August/September of 2002. These include
+   changing the precision from single precision to double precision and adding
+   some new functions.
+  </P
+><P
+>   Additional updates were made by Joshua Reich <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:josh@root.net"
+>josh@root.net</A
+>&#62;</CODE
+> in
+   July 2006. These include <TT
+CLASS="LITERAL"
+>cube(float8[], float8[])</TT
+> and
+   cleaning up the code to use the V1 call protocol instead of the deprecated
+   V0 protocol.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="citext.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="dblink.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>citext</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>dblink</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

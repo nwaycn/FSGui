@@ -1,0 +1,448 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.3.19</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.3.20"
+HREF="release-8-3-20.html"><LINK
+REL="NEXT"
+TITLE="Release 8.3.18"
+HREF="release-8-3-18.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.3.20"
+HREF="release-8-3-20.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.3.18"
+HREF="release-8-3-18.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-3-19"
+>E.125. Release 8.3.19</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2012-06-04</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.3.18.
+   For information about new features in the 8.3 major release, see
+   <A
+HREF="release-8-3.html"
+>Section E.144</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN151857"
+>E.125.1. Migration to Version 8.3.19</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.3.X.
+   </P
+><P
+>    However, if you are upgrading from a version earlier than 8.3.17,
+    see <A
+HREF="release-8-3-17.html"
+>Section E.127</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN151862"
+>E.125.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix incorrect password transformation in
+      <TT
+CLASS="FILENAME"
+>contrib/pgcrypto</TT
+>'s DES <CODE
+CLASS="FUNCTION"
+>crypt()</CODE
+> function
+      (Solar Designer)
+     </P
+><P
+>      If a password string contained the byte value <TT
+CLASS="LITERAL"
+>0x80</TT
+>, the
+      remainder of the password was ignored, causing the password to be much
+      weaker than it appeared.  With this fix, the rest of the string is
+      properly included in the DES hash.  Any stored password values that are
+      affected by this bug will thus no longer match, so the stored values may
+      need to be updated.  (CVE-2012-2143)
+     </P
+></LI
+><LI
+><P
+>      Ignore <TT
+CLASS="LITERAL"
+>SECURITY DEFINER</TT
+> and <TT
+CLASS="LITERAL"
+>SET</TT
+> attributes for
+      a procedural language's call handler (Tom Lane)
+     </P
+><P
+>      Applying such attributes to a call handler could crash the server.
+      (CVE-2012-2655)
+     </P
+></LI
+><LI
+><P
+>      Allow numeric timezone offsets in <TT
+CLASS="TYPE"
+>timestamp</TT
+> input to be up to
+      16 hours away from UTC (Tom Lane)
+     </P
+><P
+>      Some historical time zones have offsets larger than 15 hours, the
+      previous limit.  This could result in dumped data values being rejected
+      during reload.
+     </P
+></LI
+><LI
+><P
+>      Fix timestamp conversion to cope when the given time is exactly the
+      last DST transition time for the current timezone (Tom Lane)
+     </P
+><P
+>      This oversight has been there a long time, but was not noticed
+      previously because most DST-using zones are presumed to have an
+      indefinite sequence of future DST transitions.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="TYPE"
+>text</TT
+> to <TT
+CLASS="TYPE"
+>name</TT
+> and <TT
+CLASS="TYPE"
+>char</TT
+> to <TT
+CLASS="TYPE"
+>name</TT
+>
+      casts to perform string truncation correctly in multibyte encodings
+      (Karl Schnaitter)
+     </P
+></LI
+><LI
+><P
+>      Fix memory copying bug in <CODE
+CLASS="FUNCTION"
+>to_tsquery()</CODE
+> (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Fix slow session startup when <TT
+CLASS="STRUCTNAME"
+>pg_attribute</TT
+> is very large
+      (Tom Lane)
+     </P
+><P
+>      If <TT
+CLASS="STRUCTNAME"
+>pg_attribute</TT
+> exceeds one-fourth of
+      <TT
+CLASS="VARNAME"
+>shared_buffers</TT
+>, cache rebuilding code that is sometimes
+      needed during session start would trigger the synchronized-scan logic,
+      causing it to take many times longer than normal.  The problem was
+      particularly acute if many new sessions were starting at once.
+     </P
+></LI
+><LI
+><P
+>      Ensure sequential scans check for query cancel reasonably often (Merlin
+      Moncure)
+     </P
+><P
+>      A scan encountering many consecutive pages that contain no live tuples
+      would not respond to interrupts meanwhile.
+     </P
+></LI
+><LI
+><P
+>      Ensure the Windows implementation of <CODE
+CLASS="FUNCTION"
+>PGSemaphoreLock()</CODE
+>
+      clears <TT
+CLASS="VARNAME"
+>ImmediateInterruptOK</TT
+> before returning (Tom Lane)
+     </P
+><P
+>      This oversight meant that a query-cancel interrupt received later
+      in the same query could be accepted at an unsafe time, with
+      unpredictable but not good consequences.
+     </P
+></LI
+><LI
+><P
+>      Show whole-row variables safely when printing views or rules
+      (Abbas Butt, Tom Lane)
+     </P
+><P
+>      Corner cases involving ambiguous names (that is, the name could be
+      either a table or column name of the query) were printed in an
+      ambiguous way, risking that the view or rule would be interpreted
+      differently after dump and reload.  Avoid the ambiguous case by
+      attaching a no-op cast.
+     </P
+></LI
+><LI
+><P
+>      Ensure autovacuum worker processes perform stack depth checking
+      properly (Heikki Linnakangas)
+     </P
+><P
+>      Previously, infinite recursion in a function invoked by
+      auto-<TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> could crash worker processes.
+     </P
+></LI
+><LI
+><P
+>      Fix logging collector to not lose log coherency under high load (Andrew
+      Dunstan)
+     </P
+><P
+>      The collector previously could fail to reassemble large messages if it
+      got too busy.
+     </P
+></LI
+><LI
+><P
+>      Fix logging collector to ensure it will restart file rotation
+      after receiving <SPAN
+CLASS="SYSTEMITEM"
+>SIGHUP</SPAN
+> (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix PL/pgSQL's <TT
+CLASS="COMMAND"
+>GET DIAGNOSTICS</TT
+> command when the target
+      is the function's first variable (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix several performance problems in <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> when
+      the database contains many objects (Jeff Janes, Tom Lane)
+     </P
+><P
+>      <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> could get very slow if the database contained
+      many schemas, or if many objects are in dependency loops, or if there
+      are many owned sequences.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="FILENAME"
+>contrib/dblink</TT
+>'s <CODE
+CLASS="FUNCTION"
+>dblink_exec()</CODE
+> to not leak
+      temporary database connections upon error (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2012c
+      for DST law changes in Antarctica, Armenia, Chile, Cuba, Falkland
+      Islands, Gaza, Haiti, Hebron, Morocco, Syria, and Tokelau Islands;
+      also historical corrections for Canada.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-3-20.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-3-18.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.3.20</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.3.18</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

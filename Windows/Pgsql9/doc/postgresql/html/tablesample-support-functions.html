@@ -1,0 +1,529 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Sampling Method Support Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Writing A Table Sampling Method"
+HREF="tablesample-method.html"><LINK
+REL="PREVIOUS"
+TITLE="Writing A Table Sampling Method"
+HREF="tablesample-method.html"><LINK
+REL="NEXT"
+TITLE="Writing A Custom Scan Provider"
+HREF="custom-scan.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Writing A Table Sampling Method"
+HREF="tablesample-method.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="tablesample-method.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 55. Writing A Table Sampling Method</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Writing A Custom Scan Provider"
+HREF="custom-scan.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="TABLESAMPLE-SUPPORT-FUNCTIONS"
+>55.1. Sampling Method Support Functions</A
+></H1
+><P
+>   The TSM handler function returns a palloc'd <TT
+CLASS="TYPE"
+>TsmRoutine</TT
+> struct
+   containing pointers to the support functions described below.  Most of
+   the functions are required, but some are optional, and those pointers can
+   be NULL.
+  </P
+><P
+></P><PRE
+CLASS="PROGRAMLISTING"
+>void
+SampleScanGetSampleSize (PlannerInfo *root,
+                         RelOptInfo *baserel,
+                         List *paramexprs,
+                         BlockNumber *pages,
+                         double *tuples);</PRE
+><P>
+
+   This function is called during planning.  It must estimate the number of
+   relation pages that will be read during a sample scan, and the number of
+   tuples that will be selected by the scan.  (For example, these might be
+   determined by estimating the sampling fraction, and then multiplying
+   the <TT
+CLASS="LITERAL"
+>baserel-&gt;pages</TT
+> and <TT
+CLASS="LITERAL"
+>baserel-&gt;tuples</TT
+>
+   numbers by that, being sure to round the results to integral values.)
+   The <TT
+CLASS="LITERAL"
+>paramexprs</TT
+> list holds the expression(s) that are
+   parameters to the <TT
+CLASS="LITERAL"
+>TABLESAMPLE</TT
+> clause.  It is recommended to
+   use <CODE
+CLASS="FUNCTION"
+>estimate_expression_value()</CODE
+> to try to reduce these
+   expressions to constants, if their values are needed for estimation
+   purposes; but the function must provide size estimates even if they cannot
+   be reduced, and it should not fail even if the values appear invalid
+   (remember that they're only estimates of what the run-time values will be).
+   The <TT
+CLASS="LITERAL"
+>pages</TT
+> and <TT
+CLASS="LITERAL"
+>tuples</TT
+> parameters are outputs.
+  </P
+><P
+></P><PRE
+CLASS="PROGRAMLISTING"
+>void
+InitSampleScan (SampleScanState *node,
+                int eflags);</PRE
+><P>
+
+   Initialize for execution of a SampleScan plan node.
+   This is called during executor startup.
+   It should perform any initialization needed before processing can start.
+   The <TT
+CLASS="STRUCTNAME"
+>SampleScanState</TT
+> node has already been created, but
+   its <TT
+CLASS="STRUCTFIELD"
+>tsm_state</TT
+> field is NULL.
+   The <CODE
+CLASS="FUNCTION"
+>InitSampleScan</CODE
+> function can palloc whatever internal
+   state data is needed by the sampling method, and store a pointer to
+   it in <TT
+CLASS="LITERAL"
+>node-&gt;tsm_state</TT
+>.
+   Information about the table to scan is accessible through other fields
+   of the <TT
+CLASS="STRUCTNAME"
+>SampleScanState</TT
+> node (but note that the
+   <TT
+CLASS="LITERAL"
+>node-&gt;ss.ss_currentScanDesc</TT
+> scan descriptor is not set
+   up yet).
+   <TT
+CLASS="LITERAL"
+>eflags</TT
+> contains flag bits describing the executor's
+   operating mode for this plan node.
+  </P
+><P
+>   When <TT
+CLASS="LITERAL"
+>(eflags &amp; EXEC_FLAG_EXPLAIN_ONLY)</TT
+> is true,
+   the scan will not actually be performed, so this function should only do
+   the minimum required to make the node state valid for <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+>
+   and <CODE
+CLASS="FUNCTION"
+>EndSampleScan</CODE
+>.
+  </P
+><P
+>   This function can be omitted (set the pointer to NULL), in which case
+   <CODE
+CLASS="FUNCTION"
+>BeginSampleScan</CODE
+> must perform all initialization needed
+   by the sampling method.
+  </P
+><P
+></P><PRE
+CLASS="PROGRAMLISTING"
+>void
+BeginSampleScan (SampleScanState *node,
+                 Datum *params,
+                 int nparams,
+                 uint32 seed);</PRE
+><P>
+
+   Begin execution of a sampling scan.
+   This is called just before the first attempt to fetch a tuple, and
+   may be called again if the scan needs to be restarted.
+   Information about the table to scan is accessible through fields
+   of the <TT
+CLASS="STRUCTNAME"
+>SampleScanState</TT
+> node (but note that the
+   <TT
+CLASS="LITERAL"
+>node-&gt;ss.ss_currentScanDesc</TT
+> scan descriptor is not set
+   up yet).
+   The <TT
+CLASS="LITERAL"
+>params</TT
+> array, of length <TT
+CLASS="LITERAL"
+>nparams</TT
+>, contains the
+   values of the parameters supplied in the <TT
+CLASS="LITERAL"
+>TABLESAMPLE</TT
+> clause.
+   These will have the number and types specified in the sampling
+   method's <TT
+CLASS="LITERAL"
+>parameterTypes</TT
+> list, and have been checked
+   to not be null.
+   <TT
+CLASS="LITERAL"
+>seed</TT
+> contains a seed to use for any random numbers generated
+   within the sampling method; it is either a hash derived from the
+   <TT
+CLASS="LITERAL"
+>REPEATABLE</TT
+> value if one was given, or the result
+   of <TT
+CLASS="LITERAL"
+>random()</TT
+> if not.
+  </P
+><P
+>   This function may adjust the fields <TT
+CLASS="LITERAL"
+>node-&gt;use_bulkread</TT
+>
+   and <TT
+CLASS="LITERAL"
+>node-&gt;use_pagemode</TT
+>.
+   If <TT
+CLASS="LITERAL"
+>node-&gt;use_bulkread</TT
+> is <TT
+CLASS="LITERAL"
+>true</TT
+>, which it is by
+   default, the scan will use a buffer access strategy that encourages
+   recycling buffers after use.  It might be reasonable to set this
+   to <TT
+CLASS="LITERAL"
+>false</TT
+> if the scan will visit only a small fraction of the
+   table's pages.
+   If <TT
+CLASS="LITERAL"
+>node-&gt;use_pagemode</TT
+> is <TT
+CLASS="LITERAL"
+>true</TT
+>, which it is by
+   default, the scan will perform visibility checking in a single pass for
+   all tuples on each visited page.  It might be reasonable to set this
+   to <TT
+CLASS="LITERAL"
+>false</TT
+> if the scan will select only a small fraction of the
+   tuples on each visited page.  That will result in fewer tuple visibility
+   checks being performed, though each one will be more expensive because it
+   will require more locking.
+  </P
+><P
+>   If the sampling method is
+   marked <TT
+CLASS="LITERAL"
+>repeatable_across_scans</TT
+>, it must be able to
+   select the same set of tuples during a rescan as it did originally, that is
+   a fresh call of <CODE
+CLASS="FUNCTION"
+>BeginSampleScan</CODE
+> must lead to selecting the
+   same tuples as before (if the <TT
+CLASS="LITERAL"
+>TABLESAMPLE</TT
+> parameters
+   and seed don't change).
+  </P
+><P
+></P><PRE
+CLASS="PROGRAMLISTING"
+>BlockNumber
+NextSampleBlock (SampleScanState *node);</PRE
+><P>
+
+   Returns the block number of the next page to be scanned, or
+   <TT
+CLASS="LITERAL"
+>InvalidBlockNumber</TT
+> if no pages remain to be scanned.
+  </P
+><P
+>   This function can be omitted (set the pointer to NULL), in which case
+   the core code will perform a sequential scan of the entire relation.
+   Such a scan can use synchronized scanning, so that the sampling method
+   cannot assume that the relation pages are visited in the same order on
+   each scan.
+  </P
+><P
+></P><PRE
+CLASS="PROGRAMLISTING"
+>OffsetNumber
+NextSampleTuple (SampleScanState *node,
+                 BlockNumber blockno,
+                 OffsetNumber maxoffset);</PRE
+><P>
+
+   Returns the offset number of the next tuple to be sampled on the
+   specified page, or <TT
+CLASS="LITERAL"
+>InvalidOffsetNumber</TT
+> if no tuples remain to
+   be sampled.  <TT
+CLASS="LITERAL"
+>maxoffset</TT
+> is the largest offset number in use
+   on the page.
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    <CODE
+CLASS="FUNCTION"
+>NextSampleTuple</CODE
+> is not explicitly told which of the offset
+    numbers in the range <TT
+CLASS="LITERAL"
+>1 .. maxoffset</TT
+> actually contain valid
+    tuples.  This is not normally a problem since the core code ignores
+    requests to sample missing or invisible tuples; that should not result in
+    any bias in the sample.  However, if necessary, the function can
+    examine <TT
+CLASS="LITERAL"
+>node-&gt;ss.ss_currentScanDesc-&gt;rs_vistuples[]</TT
+>
+    to identify which tuples are valid and visible.  (This
+    requires <TT
+CLASS="LITERAL"
+>node-&gt;use_pagemode</TT
+> to be <TT
+CLASS="LITERAL"
+>true</TT
+>.)
+   </P
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    <CODE
+CLASS="FUNCTION"
+>NextSampleTuple</CODE
+> must <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+> assume
+    that <TT
+CLASS="LITERAL"
+>blockno</TT
+> is the same page number returned by the most
+    recent <CODE
+CLASS="FUNCTION"
+>NextSampleBlock</CODE
+> call.  It was returned by some
+    previous <CODE
+CLASS="FUNCTION"
+>NextSampleBlock</CODE
+> call, but the core code is allowed
+    to call <CODE
+CLASS="FUNCTION"
+>NextSampleBlock</CODE
+> in advance of actually scanning
+    pages, so as to support prefetching.  It is OK to assume that once
+    sampling of a given page begins, successive <CODE
+CLASS="FUNCTION"
+>NextSampleTuple</CODE
+>
+    calls all refer to the same page until <TT
+CLASS="LITERAL"
+>InvalidOffsetNumber</TT
+> is
+    returned.
+   </P
+></BLOCKQUOTE
+></DIV
+><P
+></P><PRE
+CLASS="PROGRAMLISTING"
+>void
+EndSampleScan (SampleScanState *node);</PRE
+><P>
+
+   End the scan and release resources.  It is normally not important
+   to release palloc'd memory, but any externally-visible resources
+   should be cleaned up.
+   This function can be omitted (set the pointer to NULL) in the common
+   case where no such resources exist.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="tablesample-method.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="custom-scan.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Writing A Table Sampling Method</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="tablesample-method.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Writing A Custom Scan Provider</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

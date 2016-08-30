@@ -1,0 +1,384 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>dict_xsyn</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="dict_int"
+HREF="dict-int.html"><LINK
+REL="NEXT"
+TITLE="earthdistance"
+HREF="earthdistance.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="dict_int"
+HREF="dict-int.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="earthdistance"
+HREF="earthdistance.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="DICT-XSYN"
+>F.11. dict_xsyn</A
+></H1
+><P
+>  <TT
+CLASS="FILENAME"
+>dict_xsyn</TT
+> (Extended Synonym Dictionary) is an example of an
+  add-on dictionary template for full-text search.  This dictionary type
+  replaces words with groups of their synonyms, and so makes it possible to
+  search for a word using any of its synonyms.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN170442"
+>F.11.1. Configuration</A
+></H2
+><P
+>   A <TT
+CLASS="LITERAL"
+>dict_xsyn</TT
+> dictionary accepts the following options:
+  </P
+><P
+></P
+><UL
+><LI
+><P
+>     <TT
+CLASS="LITERAL"
+>matchorig</TT
+> controls whether the original word is accepted by
+     the dictionary. Default is <TT
+CLASS="LITERAL"
+>true</TT
+>.
+    </P
+></LI
+><LI
+><P
+>     <TT
+CLASS="LITERAL"
+>matchsynonyms</TT
+> controls whether the synonyms are
+     accepted by the dictionary. Default is <TT
+CLASS="LITERAL"
+>false</TT
+>.
+    </P
+></LI
+><LI
+><P
+>     <TT
+CLASS="LITERAL"
+>keeporig</TT
+> controls whether the original word is included in
+     the dictionary's output. Default is <TT
+CLASS="LITERAL"
+>true</TT
+>.
+    </P
+></LI
+><LI
+><P
+>     <TT
+CLASS="LITERAL"
+>keepsynonyms</TT
+> controls whether the synonyms are included in
+     the dictionary's output. Default is <TT
+CLASS="LITERAL"
+>true</TT
+>.
+    </P
+></LI
+><LI
+><P
+>     <TT
+CLASS="LITERAL"
+>rules</TT
+> is the base name of the file containing the list of
+     synonyms.  This file must be stored in
+     <TT
+CLASS="FILENAME"
+>$SHAREDIR/tsearch_data/</TT
+> (where <TT
+CLASS="LITERAL"
+>$SHAREDIR</TT
+> means
+     the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> installation's shared-data directory).
+     Its name must end in <TT
+CLASS="LITERAL"
+>.rules</TT
+> (which is not to be included in
+     the <TT
+CLASS="LITERAL"
+>rules</TT
+> parameter).
+    </P
+></LI
+></UL
+><P
+>   The rules file has the following format:
+  </P
+><P
+></P
+><UL
+><LI
+><P
+>     Each line represents a group of synonyms for a single word, which is
+     given first on the line. Synonyms are separated by whitespace, thus:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>word syn1 syn2 syn3</PRE
+><P>
+    </P
+></LI
+><LI
+><P
+>     The sharp (<TT
+CLASS="LITERAL"
+>#</TT
+>) sign is a comment delimiter. It may appear at
+     any position in a line.  The rest of the line will be skipped.
+    </P
+></LI
+></UL
+><P
+>   Look at <TT
+CLASS="FILENAME"
+>xsyn_sample.rules</TT
+>, which is installed in
+   <TT
+CLASS="FILENAME"
+>$SHAREDIR/tsearch_data/</TT
+>, for an example.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN170482"
+>F.11.2. Usage</A
+></H2
+><P
+>   Installing the <TT
+CLASS="LITERAL"
+>dict_xsyn</TT
+> extension creates a text search
+   template <TT
+CLASS="LITERAL"
+>xsyn_template</TT
+> and a dictionary <TT
+CLASS="LITERAL"
+>xsyn</TT
+>
+   based on it, with default parameters.  You can alter the
+   parameters, for example
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>mydb# ALTER TEXT SEARCH DICTIONARY xsyn (RULES='my_rules', KEEPORIG=false);
+ALTER TEXT SEARCH DICTIONARY</PRE
+><P>
+
+   or create new dictionaries based on the template.
+  </P
+><P
+>   To test the dictionary, you can try
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>mydb=# SELECT ts_lexize('xsyn', 'word');
+      ts_lexize
+-----------------------
+ {syn1,syn2,syn3}
+
+mydb# ALTER TEXT SEARCH DICTIONARY xsyn (RULES='my_rules', KEEPORIG=true);
+ALTER TEXT SEARCH DICTIONARY
+
+mydb=# SELECT ts_lexize('xsyn', 'word');
+      ts_lexize
+-----------------------
+ {word,syn1,syn2,syn3}
+
+mydb# ALTER TEXT SEARCH DICTIONARY xsyn (RULES='my_rules', KEEPORIG=false, MATCHSYNONYMS=true);
+ALTER TEXT SEARCH DICTIONARY
+
+mydb=# SELECT ts_lexize('xsyn', 'syn1');
+      ts_lexize
+-----------------------
+ {syn1,syn2,syn3}
+
+mydb# ALTER TEXT SEARCH DICTIONARY xsyn (RULES='my_rules', KEEPORIG=true, MATCHORIG=false, KEEPSYNONYMS=false);
+ALTER TEXT SEARCH DICTIONARY
+
+mydb=# SELECT ts_lexize('xsyn', 'syn1');
+      ts_lexize
+-----------------------
+ {word}</PRE
+><P>
+
+   Real-world usage will involve including it in a text search
+   configuration as described in <A
+HREF="textsearch.html"
+>Chapter 12</A
+>.
+   That might look like this:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TEXT SEARCH CONFIGURATION english
+    ALTER MAPPING FOR word, asciiword WITH xsyn, english_stem;</PRE
+><P>
+
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="dict-int.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="earthdistance.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>dict_int</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>earthdistance</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,469 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Rules and Privileges</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="The Rule System"
+HREF="rules.html"><LINK
+REL="PREVIOUS"
+TITLE="Rules on INSERT, UPDATE, and DELETE"
+HREF="rules-update.html"><LINK
+REL="NEXT"
+TITLE="Rules and Command Status"
+HREF="rules-status.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Rules on INSERT, UPDATE, and DELETE"
+HREF="rules-update.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="rules.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 38. The Rule System</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Rules and Command Status"
+HREF="rules-status.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RULES-PRIVILEGES"
+>38.5. Rules and Privileges</A
+></H1
+><P
+>    Due to rewriting of queries by the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+    rule system, other tables/views than those used in the original
+    query get accessed. When update rules are used, this can include write access
+    to tables.</P
+><P
+>    Rewrite rules don't have a separate owner. The owner of
+    a relation (table or view) is automatically the owner of the
+    rewrite rules that are defined for it.
+    The <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> rule system changes the
+    behavior of the default access control system. Relations that
+    are used due to rules get checked against the
+    privileges of the rule owner, not the user invoking the rule.
+    This means that a user only needs the required privileges
+    for the tables/views that he names explicitly in his queries.</P
+><P
+>    For example: A user has a list of phone numbers where some of
+    them are private, the others are of interest for the secretary of the office.
+    He can construct the following:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE phone_data (person text, phone text, private boolean);
+CREATE VIEW phone_number AS
+    SELECT person, CASE WHEN NOT private THEN phone END AS phone
+    FROM phone_data;
+GRANT SELECT ON phone_number TO secretary;</PRE
+><P>
+
+    Nobody except him (and the database superusers) can access the
+    <TT
+CLASS="LITERAL"
+>phone_data</TT
+> table. But because of the <TT
+CLASS="COMMAND"
+>GRANT</TT
+>,
+    the secretary can run a <TT
+CLASS="COMMAND"
+>SELECT</TT
+> on the
+    <TT
+CLASS="LITERAL"
+>phone_number</TT
+> view. The rule system will rewrite the
+    <TT
+CLASS="COMMAND"
+>SELECT</TT
+> from <TT
+CLASS="LITERAL"
+>phone_number</TT
+> into a
+    <TT
+CLASS="COMMAND"
+>SELECT</TT
+> from <TT
+CLASS="LITERAL"
+>phone_data</TT
+>.
+    Since the user is the owner of
+    <TT
+CLASS="LITERAL"
+>phone_number</TT
+> and therefore the owner of the rule, the
+    read access to <TT
+CLASS="LITERAL"
+>phone_data</TT
+> is now checked against his
+    privileges and the query is permitted. The check for accessing
+    <TT
+CLASS="LITERAL"
+>phone_number</TT
+> is also performed, but this is done
+    against the invoking user, so nobody but the user and the
+    secretary can use it.</P
+><P
+>    The privileges are checked rule by rule. So the secretary is for now the
+    only one who can see the public phone numbers. But the secretary can setup
+    another view and grant access to that to the public. Then, anyone
+    can see the <TT
+CLASS="LITERAL"
+>phone_number</TT
+> data through the secretary's view.
+    What the secretary cannot do is to create a view that directly
+    accesses <TT
+CLASS="LITERAL"
+>phone_data</TT
+>.  (Actually he can, but it will not work since
+    every access will be denied during the permission checks.)
+    And as soon as the user will notice, that the secretary opened
+    his <TT
+CLASS="LITERAL"
+>phone_number</TT
+> view, he can revoke his access. Immediately, any
+    access to the secretary's view would fail.</P
+><P
+>    One might think that this rule-by-rule checking is a security
+    hole, but in fact it isn't.   But if it did not work this way, the secretary
+    could set up a table with the same columns as <TT
+CLASS="LITERAL"
+>phone_number</TT
+> and
+    copy the data to there once per day. Then it's his own data and
+    he can grant access to everyone he wants. A
+    <TT
+CLASS="COMMAND"
+>GRANT</TT
+> command means, <SPAN
+CLASS="QUOTE"
+>"I trust you"</SPAN
+>.
+    If someone you trust does the thing above, it's time to
+    think it over and then use <TT
+CLASS="COMMAND"
+>REVOKE</TT
+>.</P
+><P
+>    Note that while views can be used to hide the contents of certain
+    columns using the technique shown above, they cannot be used to reliably
+    conceal the data in unseen rows unless the
+    <TT
+CLASS="LITERAL"
+>security_barrier</TT
+> flag has been set.  For example,
+    the following view is insecure:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE VIEW phone_number AS
+    SELECT person, phone FROM phone_data WHERE phone NOT LIKE '412%';</PRE
+><P>
+    This view might seem secure, since the rule system will rewrite any
+    <TT
+CLASS="COMMAND"
+>SELECT</TT
+> from <TT
+CLASS="LITERAL"
+>phone_number</TT
+> into a
+    <TT
+CLASS="COMMAND"
+>SELECT</TT
+> from <TT
+CLASS="LITERAL"
+>phone_data</TT
+> and add the
+    qualification that only entries where <TT
+CLASS="LITERAL"
+>phone</TT
+> does not begin
+    with 412 are wanted.  But if the user can create his or her own functions,
+    it is not difficult to convince the planner to execute the user-defined
+    function prior to the <CODE
+CLASS="FUNCTION"
+>NOT LIKE</CODE
+> expression.
+    For example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION tricky(text, text) RETURNS bool AS $$
+BEGIN
+    RAISE NOTICE '% =&#62; %', $1, $2;
+    RETURN true;
+END
+$$ LANGUAGE plpgsql COST 0.0000000000000000000001;
+
+SELECT * FROM phone_number WHERE tricky(person, phone);</PRE
+><P>
+    Every person and phone number in the <TT
+CLASS="LITERAL"
+>phone_data</TT
+> table will be
+    printed as a <TT
+CLASS="LITERAL"
+>NOTICE</TT
+>, because the planner will choose to
+    execute the inexpensive <CODE
+CLASS="FUNCTION"
+>tricky</CODE
+> function before the
+    more expensive <CODE
+CLASS="FUNCTION"
+>NOT LIKE</CODE
+>.  Even if the user is
+    prevented from defining new functions, built-in functions can be used in
+    similar attacks.  (For example, most casting functions include their
+    input values in the error messages they produce.)</P
+><P
+>    Similar considerations apply to update rules. In the examples of
+    the previous section, the owner of the tables in the example
+    database could grant the privileges <TT
+CLASS="LITERAL"
+>SELECT</TT
+>,
+    <TT
+CLASS="LITERAL"
+>INSERT</TT
+>, <TT
+CLASS="LITERAL"
+>UPDATE</TT
+>, and <TT
+CLASS="LITERAL"
+>DELETE</TT
+> on
+    the <TT
+CLASS="LITERAL"
+>shoelace</TT
+> view to someone else, but only
+    <TT
+CLASS="LITERAL"
+>SELECT</TT
+> on <TT
+CLASS="LITERAL"
+>shoelace_log</TT
+>. The rule action to
+    write log entries will still be executed successfully, and that
+    other user could see the log entries.  But he cannot create fake
+    entries, nor could he manipulate or remove existing ones.  In this
+    case, there is no possibility of subverting the rules by convincing
+    the planner to alter the order of operations, because the only rule
+    which references <TT
+CLASS="LITERAL"
+>shoelace_log</TT
+> is an unqualified
+    <TT
+CLASS="LITERAL"
+>INSERT</TT
+>.  This might not be true in more complex scenarios.</P
+><P
+>    When it is necessary for a view to provide row level security, the
+    <TT
+CLASS="LITERAL"
+>security_barrier</TT
+> attribute should be applied to
+    the view.  This prevents maliciously-chosen functions and operators from
+    being passed values from rows until after the view has done its work.  For
+    example, if the view shown above had been created like this, it would
+    be secure:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE VIEW phone_number WITH (security_barrier) AS
+    SELECT person, phone FROM phone_data WHERE phone NOT LIKE '412%';</PRE
+><P>
+    Views created with the <TT
+CLASS="LITERAL"
+>security_barrier</TT
+> may perform
+    far worse than views created without this option.  In general, there is
+    no way to avoid this: the fastest possible plan must be rejected
+    if it may compromise security.  For this reason, this option is not
+    enabled by default.</P
+><P
+>    The query planner has more flexibility when dealing with functions that
+    have no side effects.  Such functions are referred to as <TT
+CLASS="LITERAL"
+>LEAKPROOF</TT
+>, and
+    include many simple, commonly used operators, such as many equality
+    operators.  The query planner can safely allow such functions to be evaluated
+    at any point in the query execution process, since invoking them on rows
+    invisible to the user will not leak any information about the unseen rows.
+    Further, functions which do not take arguments or which are not passed any
+    arguments from the security barrier view do not have to be marked as
+    <TT
+CLASS="LITERAL"
+>LEAKPROOF</TT
+> to be pushed down, as they never receive data
+    from the view.  In contrast, a function that might throw an error depending
+    on the values received as arguments (such as one that throws an error in the
+    event of overflow or division by zero) is not leak-proof, and could provide
+    significant information about the unseen rows if applied before the security
+    view's row filters.</P
+><P
+>    It is important to understand that even a view created with the
+    <TT
+CLASS="LITERAL"
+>security_barrier</TT
+> option is intended to be secure only
+    in the limited sense that the contents of the invisible tuples will not be
+    passed to possibly-insecure functions.  The user may well have other means
+    of making inferences about the unseen data; for example, they can see the
+    query plan using <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+>, or measure the run time of
+    queries against the view.  A malicious attacker might be able to infer
+    something about the amount of unseen data, or even gain some information
+    about the data distribution or most common values (since these things may
+    affect the run time of the plan; or even, since they are also reflected in
+    the optimizer statistics, the choice of plan).  If these types of "covert
+    channel" attacks are of concern, it is probably unwise to grant any access
+    to the data at all.</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="rules-update.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="rules-status.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Rules on <TT
+CLASS="COMMAND"
+>INSERT</TT
+>, <TT
+CLASS="COMMAND"
+>UPDATE</TT
+>, and <TT
+CLASS="COMMAND"
+>DELETE</TT
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="rules.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Rules and Command Status</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,732 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>oid2name</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Client Applications"
+HREF="contrib-prog-client.html"><LINK
+REL="PREVIOUS"
+TITLE="Client Applications"
+HREF="contrib-prog-client.html"><LINK
+REL="NEXT"
+TITLE="vacuumlo"
+HREF="vacuumlo.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Client Applications"
+HREF="contrib-prog-client.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib-prog-client.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="vacuumlo"
+HREF="vacuumlo.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="OID2NAME"
+></A
+>oid2name</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN176551"
+></A
+><H2
+>Name</H2
+>oid2name&nbsp;--&nbsp;resolve OIDs and file nodes in a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> data directory</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN176555"
+></A
+><H2
+>Synopsis</H2
+><P
+><TT
+CLASS="COMMAND"
+>oid2name</TT
+> [<TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+>...]</P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN176560"
+></A
+><H2
+>Description</H2
+><P
+>  <SPAN
+CLASS="APPLICATION"
+>oid2name</SPAN
+> is a utility program that helps administrators to
+  examine the file structure used by PostgreSQL.  To make use of it, you need
+  to be familiar with the database file structure, which is described in
+  <A
+HREF="storage.html"
+>Chapter 63</A
+>.
+ </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>   The name <SPAN
+CLASS="QUOTE"
+>"oid2name"</SPAN
+> is historical, and is actually rather
+   misleading, since most of the time when you use it, you will really
+   be concerned with tables' filenode numbers (which are the file names
+   visible in the database directories).  Be sure you understand the
+   difference between table OIDs and table filenodes!
+  </P
+></BLOCKQUOTE
+></DIV
+><P
+>   <SPAN
+CLASS="APPLICATION"
+>oid2name</SPAN
+> connects to a target database and
+   extracts OID, filenode, and/or table name information.  You can also have
+   it show database OIDs or tablespace OIDs.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN176570"
+></A
+><H2
+>Options</H2
+><P
+>   <SPAN
+CLASS="APPLICATION"
+>oid2name</SPAN
+> accepts the following command-line arguments:
+
+   <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-f</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>filenode</I
+></TT
+></DT
+><DD
+><P
+>show info for table with filenode <TT
+CLASS="REPLACEABLE"
+><I
+>filenode</I
+></TT
+></P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-i</TT
+></DT
+><DD
+><P
+>include indexes and sequences in the listing</P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-o</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>oid</I
+></TT
+></DT
+><DD
+><P
+>show info for table with OID <TT
+CLASS="REPLACEABLE"
+><I
+>oid</I
+></TT
+></P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-q</TT
+></DT
+><DD
+><P
+>omit headers (useful for scripting)</P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-s</TT
+></DT
+><DD
+><P
+>show tablespace OIDs</P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-S</TT
+></DT
+><DD
+><P
+>include system objects (those in
+      <TT
+CLASS="OPTION"
+>information_schema</TT
+>, <TT
+CLASS="OPTION"
+>pg_toast</TT
+>
+      and <TT
+CLASS="OPTION"
+>pg_catalog</TT
+> schemas)
+     </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-t</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>tablename_pattern</I
+></TT
+></DT
+><DD
+><P
+>show info for table(s) matching <TT
+CLASS="REPLACEABLE"
+><I
+>tablename_pattern</I
+></TT
+></P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-V</TT
+><BR><TT
+CLASS="OPTION"
+>--version</TT
+></DT
+><DD
+><P
+>       Print the <SPAN
+CLASS="APPLICATION"
+>oid2name</SPAN
+> version and exit.
+      </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-x</TT
+></DT
+><DD
+><P
+>display more information about each object shown: tablespace name,
+      schema name, and OID
+     </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-?</TT
+><BR><TT
+CLASS="OPTION"
+>--help</TT
+></DT
+><DD
+><P
+>       Show help about <SPAN
+CLASS="APPLICATION"
+>oid2name</SPAN
+> command line
+       arguments, and exit.
+      </P
+></DD
+></DL
+></DIV
+><P>
+  </P
+><P
+>   <SPAN
+CLASS="APPLICATION"
+>oid2name</SPAN
+> also accepts the following command-line
+   arguments for connection parameters:
+
+   <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-d</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>database</I
+></TT
+></DT
+><DD
+><P
+>database to connect to</P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-H</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>host</I
+></TT
+></DT
+><DD
+><P
+>database server's host</P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-p</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>port</I
+></TT
+></DT
+><DD
+><P
+>database server's port</P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-U</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>username</I
+></TT
+></DT
+><DD
+><P
+>user name to connect as</P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-P</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>password</I
+></TT
+></DT
+><DD
+><P
+>password (deprecated &mdash; putting this on the command line
+      is a security hazard)</P
+></DD
+></DL
+></DIV
+><P>
+  </P
+><P
+>   To display specific tables, select which tables to show by
+   using <TT
+CLASS="OPTION"
+>-o</TT
+>, <TT
+CLASS="OPTION"
+>-f</TT
+> and/or <TT
+CLASS="OPTION"
+>-t</TT
+>.
+   <TT
+CLASS="OPTION"
+>-o</TT
+> takes an OID,
+   <TT
+CLASS="OPTION"
+>-f</TT
+> takes a filenode,
+   and <TT
+CLASS="OPTION"
+>-t</TT
+> takes a table name (actually, it's a <TT
+CLASS="LITERAL"
+>LIKE</TT
+>
+   pattern, so you can use things like <TT
+CLASS="LITERAL"
+>foo%</TT
+>).
+   You can use as many
+   of these options as you like, and the listing will include all objects
+   matched by any of the options.  But note that these options can only
+   show objects in the database given by <TT
+CLASS="OPTION"
+>-d</TT
+>.
+  </P
+><P
+>   If you don't give any of <TT
+CLASS="OPTION"
+>-o</TT
+>, <TT
+CLASS="OPTION"
+>-f</TT
+> or <TT
+CLASS="OPTION"
+>-t</TT
+>,
+   but do give <TT
+CLASS="OPTION"
+>-d</TT
+>, it will list all tables in the database
+   named by <TT
+CLASS="OPTION"
+>-d</TT
+>.  In this mode, the <TT
+CLASS="OPTION"
+>-S</TT
+> and
+   <TT
+CLASS="OPTION"
+>-i</TT
+> options control what gets listed.
+  </P
+><P
+>   If you don't give <TT
+CLASS="OPTION"
+>-d</TT
+> either, it will show a listing of database
+   OIDs.  Alternatively you can give <TT
+CLASS="OPTION"
+>-s</TT
+> to get a tablespace
+   listing.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN176694"
+></A
+><H2
+>Notes</H2
+><P
+>   <SPAN
+CLASS="APPLICATION"
+>oid2name</SPAN
+> requires a running database server with
+   non-corrupt system catalogs.  It is therefore of only limited use
+   for recovering from catastrophic database corruption situations.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN176698"
+></A
+><H2
+>Examples</H2
+><PRE
+CLASS="SCREEN"
+>$ # what's in this database server, anyway?
+$ oid2name
+All databases:
+    Oid  Database Name  Tablespace
+----------------------------------
+  17228       alvherre  pg_default
+  17255     regression  pg_default
+  17227      template0  pg_default
+      1      template1  pg_default
+
+$ oid2name -s
+All tablespaces:
+     Oid  Tablespace Name
+-------------------------
+    1663       pg_default
+    1664        pg_global
+  155151         fastdisk
+  155152          bigdisk
+
+$ # OK, let's look into database alvherre
+$ cd $PGDATA/base/17228
+
+$ # get top 10 db objects in the default tablespace, ordered by size
+$ ls -lS * | head -10
+-rw-------  1 alvherre alvherre 136536064 sep 14 09:51 155173
+-rw-------  1 alvherre alvherre  17965056 sep 14 09:51 1155291
+-rw-------  1 alvherre alvherre   1204224 sep 14 09:51 16717
+-rw-------  1 alvherre alvherre    581632 sep  6 17:51 1255
+-rw-------  1 alvherre alvherre    237568 sep 14 09:50 16674
+-rw-------  1 alvherre alvherre    212992 sep 14 09:51 1249
+-rw-------  1 alvherre alvherre    204800 sep 14 09:51 16684
+-rw-------  1 alvherre alvherre    196608 sep 14 09:50 16700
+-rw-------  1 alvherre alvherre    163840 sep 14 09:50 16699
+-rw-------  1 alvherre alvherre    122880 sep  6 17:51 16751
+
+$ # I wonder what file 155173 is ...
+$ oid2name -d alvherre -f 155173
+From database "alvherre":
+  Filenode  Table Name
+----------------------
+    155173    accounts
+
+$ # you can ask for more than one object
+$ oid2name -d alvherre -f 155173 -f 1155291
+From database "alvherre":
+  Filenode     Table Name
+-------------------------
+    155173       accounts
+   1155291  accounts_pkey
+
+$ # you can mix the options, and get more details with -x
+$ oid2name -d alvherre -t accounts -f 1155291 -x
+From database "alvherre":
+  Filenode     Table Name      Oid  Schema  Tablespace
+------------------------------------------------------
+    155173       accounts   155173  public  pg_default
+   1155291  accounts_pkey  1155291  public  pg_default
+
+$ # show disk space for every db object
+$ du [0-9]* |
+&#62; while read SIZE FILENODE
+&#62; do
+&#62;   echo "$SIZE       `oid2name -q -d alvherre -i -f $FILENODE`"
+&#62; done
+16            1155287  branches_pkey
+16            1155289  tellers_pkey
+17561            1155291  accounts_pkey
+...
+
+$ # same, but sort by size
+$ du [0-9]* | sort -rn | while read SIZE FN
+&#62; do
+&#62;   echo "$SIZE   `oid2name -q -d alvherre -f $FN`"
+&#62; done
+133466             155173    accounts
+17561            1155291  accounts_pkey
+1177              16717  pg_proc_proname_args_nsp_index
+...
+
+$ # If you want to see what's in tablespaces, use the pg_tblspc directory
+$ cd $PGDATA/pg_tblspc
+$ oid2name -s
+All tablespaces:
+     Oid  Tablespace Name
+-------------------------
+    1663       pg_default
+    1664        pg_global
+  155151         fastdisk
+  155152          bigdisk
+
+$ # what databases have objects in tablespace "fastdisk"?
+$ ls -d 155151/*
+155151/17228/  155151/PG_VERSION
+
+$ # Oh, what was database 17228 again?
+$ oid2name
+All databases:
+    Oid  Database Name  Tablespace
+----------------------------------
+  17228       alvherre  pg_default
+  17255     regression  pg_default
+  17227      template0  pg_default
+      1      template1  pg_default
+
+$ # Let's see what objects does this database have in the tablespace.
+$ cd 155151/17228
+$ ls -l
+total 0
+-rw-------  1 postgres postgres 0 sep 13 23:20 155156
+
+$ # OK, this is a pretty small table ... but which one is it?
+$ oid2name -d alvherre -f 155156
+From database "alvherre":
+  Filenode  Table Name
+----------------------
+    155156         foo</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN176701"
+></A
+><H2
+>Author</H2
+><P
+>   B. Palmer <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:bpalmer@crimelabs.net"
+>bpalmer@crimelabs.net</A
+>&#62;</CODE
+>
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib-prog-client.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="vacuumlo.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Client Applications</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib-prog-client.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><SPAN
+CLASS="APPLICATION"
+>vacuumlo</SPAN
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

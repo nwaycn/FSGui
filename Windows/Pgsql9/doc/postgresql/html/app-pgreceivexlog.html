@@ -1,0 +1,843 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_receivexlog</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="PostgreSQL Client Applications"
+HREF="reference-client.html"><LINK
+REL="PREVIOUS"
+TITLE="pg_isready"
+HREF="app-pg-isready.html"><LINK
+REL="NEXT"
+TITLE="pg_recvlogical"
+HREF="app-pgrecvlogical.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pg_isready"
+HREF="app-pg-isready.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="reference-client.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pg_recvlogical"
+HREF="app-pgrecvlogical.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="APP-PGRECEIVEXLOG"
+></A
+>pg_receivexlog</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN93479"
+></A
+><H2
+>Name</H2
+>pg_receivexlog&nbsp;--&nbsp;stream transaction logs from a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> server</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN93483"
+></A
+><H2
+>Synopsis</H2
+><P
+><TT
+CLASS="COMMAND"
+>pg_receivexlog</TT
+> [<TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+>...]</P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN93488"
+></A
+><H2
+>   Description
+  </H2
+><P
+>   <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+> is used to stream the transaction log
+   from a running <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> cluster. The transaction
+   log is streamed using the streaming replication protocol, and is written
+   to a local directory of files. This directory can be used as the archive
+   location for doing a restore using point-in-time recovery (see
+   <A
+HREF="continuous-archiving.html"
+>Section 24.3</A
+>).
+  </P
+><P
+>   <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+> streams the transaction
+   log in real time as it's being generated on the server, and does not wait
+   for segments to complete like <A
+HREF="runtime-config-wal.html#GUC-ARCHIVE-COMMAND"
+>archive_command</A
+> does.
+   For this reason, it is not necessary to set
+   <A
+HREF="runtime-config-wal.html#GUC-ARCHIVE-TIMEOUT"
+>archive_timeout</A
+> when using
+    <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+>.
+  </P
+><P
+>   Unlike the WAL receiver of a PostgreSQL standby server, <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+>
+   by default flushes WAL data only when a WAL file is closed.
+   The option <TT
+CLASS="OPTION"
+>--synchronous</TT
+> must be specified to flush WAL data
+   in real time.
+  </P
+><P
+>   The transaction log is streamed over a regular
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> connection and uses the replication
+   protocol. The connection must be made with a superuser or a user
+   having <TT
+CLASS="LITERAL"
+>REPLICATION</TT
+> permissions (see
+   <A
+HREF="role-attributes.html"
+>Section 20.2</A
+>), and <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+>
+   must permit the replication connection. The server must also be
+   configured with <A
+HREF="runtime-config-replication.html#GUC-MAX-WAL-SENDERS"
+>max_wal_senders</A
+> set high enough to
+   leave at least one session available for the stream.
+  </P
+><P
+>   If the connection is lost, or if it cannot be initially established,
+   with a non-fatal error, <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+> will
+   retry the connection indefinitely, and reestablish streaming as soon
+   as possible. To avoid this behavior, use the <TT
+CLASS="LITERAL"
+>-n</TT
+>
+   parameter.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN93511"
+></A
+><H2
+>Options</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-D <TT
+CLASS="REPLACEABLE"
+><I
+>directory</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--directory=<TT
+CLASS="REPLACEABLE"
+><I
+>directory</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Directory to write the output to.
+       </P
+><P
+>        This parameter is required.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>--if-not-exists</TT
+></DT
+><DD
+><P
+>        Do not error out when <TT
+CLASS="OPTION"
+>--create-slot</TT
+> is specified
+        and a slot with the specified name already exists.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-n</TT
+><BR><TT
+CLASS="OPTION"
+>--no-loop</TT
+></DT
+><DD
+><P
+>        Don't loop on connection errors. Instead, exit right away with
+        an error.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-s <TT
+CLASS="REPLACEABLE"
+><I
+>interval</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--status-interval=<TT
+CLASS="REPLACEABLE"
+><I
+>interval</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Specifies the number of seconds between status packets sent back to the
+        server. This allows for easier monitoring of the progress from server.
+        A value of zero disables the periodic status updates completely,
+        although an update will still be sent when requested by the server, to
+        avoid timeout disconnect. The default value is 10 seconds.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-S <TT
+CLASS="REPLACEABLE"
+><I
+>slotname</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--slot=<TT
+CLASS="REPLACEABLE"
+><I
+>slotname</I
+></TT
+></TT
+></DT
+><DD
+><P
+>         Require <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+> to use an existing
+         replication slot (see <A
+HREF="warm-standby.html#STREAMING-REPLICATION-SLOTS"
+>Section 25.2.6</A
+>).
+         When this option is used, <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+> will report
+         a flush position to the server, indicating when each segment has been
+         synchronized to disk so that the server can remove that segment if it
+         is not otherwise needed.
+        </P
+><P
+>         When the replication client
+         of <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+> is configured on the
+         server as a synchronous standby, then using a replication slot will
+         report the flush position to the server, but only when a WAL file is
+         closed.  Therefore, that configuration will cause transactions on the
+         primary to wait for a long time and effectively not work
+         satisfactorily.  The option <TT
+CLASS="LITERAL"
+>--synchronous</TT
+> (see
+         below) must be specified in addition to make this work correctly.
+        </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>--synchronous</TT
+></DT
+><DD
+><P
+>        Flush the WAL data to disk immediately after it has been received. Also
+        send a status packet back to the server immediately after flushing,
+        regardless of <TT
+CLASS="LITERAL"
+>--status-interval</TT
+>.
+       </P
+><P
+>        This option should be specified if the replication client
+        of <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+> is configured on the
+        server as a synchronous standby, to ensure that timely feedback is
+        sent to the server.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-v</TT
+><BR><TT
+CLASS="OPTION"
+>--verbose</TT
+></DT
+><DD
+><P
+>        Enables verbose mode.
+       </P
+></DD
+></DL
+></DIV
+><P
+>    The following command-line options control the database connection parameters.
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-d <TT
+CLASS="REPLACEABLE"
+><I
+>connstr</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--dbname=<TT
+CLASS="REPLACEABLE"
+><I
+>connstr</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Specifies parameters used to connect to the server, as a connection
+        string. See <A
+HREF="libpq-connect.html#LIBPQ-CONNSTRING"
+>Section 31.1.1</A
+> for more information.
+       </P
+><P
+>        The option is called <TT
+CLASS="LITERAL"
+>--dbname</TT
+> for consistency with other
+        client applications, but because <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+>
+        doesn't connect to any particular database in the cluster, database
+        name in the connection string will be ignored.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-h <TT
+CLASS="REPLACEABLE"
+><I
+>host</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--host=<TT
+CLASS="REPLACEABLE"
+><I
+>host</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Specifies the host name of the machine on which the server is
+        running.  If the value begins with a slash, it is used as the
+        directory for the Unix domain socket. The default is taken
+        from the <TT
+CLASS="ENVAR"
+>PGHOST</TT
+> environment variable, if set,
+        else a Unix domain socket connection is attempted.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-p <TT
+CLASS="REPLACEABLE"
+><I
+>port</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--port=<TT
+CLASS="REPLACEABLE"
+><I
+>port</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        Specifies the TCP port or local Unix domain socket file
+        extension on which the server is listening for connections.
+        Defaults to the <TT
+CLASS="ENVAR"
+>PGPORT</TT
+> environment variable, if
+        set, or a compiled-in default.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-U <TT
+CLASS="REPLACEABLE"
+><I
+>username</I
+></TT
+></TT
+><BR><TT
+CLASS="OPTION"
+>--username=<TT
+CLASS="REPLACEABLE"
+><I
+>username</I
+></TT
+></TT
+></DT
+><DD
+><P
+>        User name to connect as.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-w</TT
+><BR><TT
+CLASS="OPTION"
+>--no-password</TT
+></DT
+><DD
+><P
+>        Never issue a password prompt.  If the server requires
+        password authentication and a password is not available by
+        other means such as a <TT
+CLASS="FILENAME"
+>.pgpass</TT
+> file, the
+        connection attempt will fail.  This option can be useful in
+        batch jobs and scripts where no user is present to enter a
+        password.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-W</TT
+><BR><TT
+CLASS="OPTION"
+>--password</TT
+></DT
+><DD
+><P
+>        Force <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+> to prompt for a
+        password before connecting to a database.
+       </P
+><P
+>        This option is never essential, since
+        <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+> will automatically prompt
+        for a password if the server demands password authentication.
+        However, <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+> will waste a
+        connection attempt finding out that the server wants a password.
+        In some cases it is worth typing <TT
+CLASS="OPTION"
+>-W</TT
+> to avoid the extra
+        connection attempt.
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+><P
+>    <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+> can perform one of the two
+    following actions in order to control physical replication slots:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>--create-slot</TT
+></DT
+><DD
+><P
+>        Create a new physical replication slot with the name specified in
+        <TT
+CLASS="OPTION"
+>--slot</TT
+>, then exit.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>--drop-slot</TT
+></DT
+><DD
+><P
+>        Drop the replication slot with the name specified in
+        <TT
+CLASS="OPTION"
+>--slot</TT
+>, then exit.
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+><P
+>    Other options are also available:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-V</TT
+><BR><TT
+CLASS="OPTION"
+>--version</TT
+></DT
+><DD
+><P
+>       Print the <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+> version and exit.
+       </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-?</TT
+><BR><TT
+CLASS="OPTION"
+>--help</TT
+></DT
+><DD
+><P
+>       Show help about <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+> command line
+       arguments, and exit.
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN93673"
+></A
+><H2
+>Environment</H2
+><P
+>   This utility, like most other <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> utilities,
+   uses the environment variables supported by <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>
+   (see <A
+HREF="libpq-envars.html"
+>Section 31.14</A
+>).
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN93679"
+></A
+><H2
+>Notes</H2
+><P
+>   When using <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+> instead of
+   <A
+HREF="runtime-config-wal.html#GUC-ARCHIVE-COMMAND"
+>archive_command</A
+> as the main WAL backup method, it is
+   strongly recommended to use replication slots.  Otherwise, the server is
+   free to recycle or remove transaction log files before they are backed up,
+   because it does not have any information, either
+   from <A
+HREF="runtime-config-wal.html#GUC-ARCHIVE-COMMAND"
+>archive_command</A
+> or the replication slots, about
+   how far the WAL stream has been archived.  Note, however, that a
+   replication slot will fill up the server's disk space if the receiver does
+   not keep up with fetching the WAL data.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN93685"
+></A
+><H2
+>Examples</H2
+><P
+>   To stream the transaction log from the server at
+   <TT
+CLASS="LITERAL"
+>mydbserver</TT
+> and store it in the local directory
+   <TT
+CLASS="FILENAME"
+>/usr/local/pgsql/archive</TT
+>:
+</P><PRE
+CLASS="SCREEN"
+><SAMP
+CLASS="PROMPT"
+>$</SAMP
+> <KBD
+CLASS="USERINPUT"
+>pg_receivexlog -h mydbserver -D /usr/local/pgsql/archive</KBD
+></PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN93693"
+></A
+><H2
+>See Also</H2
+><A
+HREF="app-pgbasebackup.html"
+>pg_basebackup</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="app-pg-isready.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="app-pgrecvlogical.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><SPAN
+CLASS="APPLICATION"
+>pg_isready</SPAN
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="reference-client.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><SPAN
+CLASS="APPLICATION"
+>pg_recvlogical</SPAN
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

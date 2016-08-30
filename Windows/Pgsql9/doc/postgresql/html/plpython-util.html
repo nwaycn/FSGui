@@ -1,0 +1,330 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Utility Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="PL/Python - Python Procedural Language"
+HREF="plpython.html"><LINK
+REL="PREVIOUS"
+TITLE="Explicit Subtransactions"
+HREF="plpython-subtransaction.html"><LINK
+REL="NEXT"
+TITLE="Environment Variables"
+HREF="plpython-envar.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Explicit Subtransactions"
+HREF="plpython-subtransaction.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plpython.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 43. PL/Python - Python Procedural Language</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Environment Variables"
+HREF="plpython-envar.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PLPYTHON-UTIL"
+>43.9. Utility Functions</A
+></H1
+><P
+>   The <TT
+CLASS="LITERAL"
+>plpy</TT
+> module also provides the functions
+   <TT
+CLASS="LITERAL"
+>plpy.debug(<TT
+CLASS="REPLACEABLE"
+><I
+>msg</I
+></TT
+>)</TT
+>,
+   <TT
+CLASS="LITERAL"
+>plpy.log(<TT
+CLASS="REPLACEABLE"
+><I
+>msg</I
+></TT
+>)</TT
+>,
+   <TT
+CLASS="LITERAL"
+>plpy.info(<TT
+CLASS="REPLACEABLE"
+><I
+>msg</I
+></TT
+>)</TT
+>,
+   <TT
+CLASS="LITERAL"
+>plpy.notice(<TT
+CLASS="REPLACEABLE"
+><I
+>msg</I
+></TT
+>)</TT
+>,
+   <TT
+CLASS="LITERAL"
+>plpy.warning(<TT
+CLASS="REPLACEABLE"
+><I
+>msg</I
+></TT
+>)</TT
+>,
+   <TT
+CLASS="LITERAL"
+>plpy.error(<TT
+CLASS="REPLACEABLE"
+><I
+>msg</I
+></TT
+>)</TT
+>, and
+   <TT
+CLASS="LITERAL"
+>plpy.fatal(<TT
+CLASS="REPLACEABLE"
+><I
+>msg</I
+></TT
+>)</TT
+>.
+   <CODE
+CLASS="FUNCTION"
+>plpy.error</CODE
+> and
+   <CODE
+CLASS="FUNCTION"
+>plpy.fatal</CODE
+> actually raise a Python exception
+   which, if uncaught, propagates out to the calling query, causing
+   the current transaction or subtransaction to be aborted.
+   <TT
+CLASS="LITERAL"
+>raise plpy.Error(<TT
+CLASS="REPLACEABLE"
+><I
+>msg</I
+></TT
+>)</TT
+> and
+   <TT
+CLASS="LITERAL"
+>raise plpy.Fatal(<TT
+CLASS="REPLACEABLE"
+><I
+>msg</I
+></TT
+>)</TT
+> are
+   equivalent to calling
+   <CODE
+CLASS="FUNCTION"
+>plpy.error</CODE
+> and
+   <CODE
+CLASS="FUNCTION"
+>plpy.fatal</CODE
+>, respectively.
+   The other functions only generate messages of different
+   priority levels.
+   Whether messages of a particular priority are reported to the client,
+   written to the server log, or both is controlled by the
+   <A
+HREF="runtime-config-logging.html#GUC-LOG-MIN-MESSAGES"
+>log_min_messages</A
+> and
+   <A
+HREF="runtime-config-logging.html#GUC-CLIENT-MIN-MESSAGES"
+>client_min_messages</A
+> configuration
+   variables. See <A
+HREF="runtime-config.html"
+>Chapter 18</A
+> for more information.
+  </P
+><P
+>   Another set of utility functions are
+   <TT
+CLASS="LITERAL"
+>plpy.quote_literal(<TT
+CLASS="REPLACEABLE"
+><I
+>string</I
+></TT
+>)</TT
+>,
+   <TT
+CLASS="LITERAL"
+>plpy.quote_nullable(<TT
+CLASS="REPLACEABLE"
+><I
+>string</I
+></TT
+>)</TT
+>, and
+   <TT
+CLASS="LITERAL"
+>plpy.quote_ident(<TT
+CLASS="REPLACEABLE"
+><I
+>string</I
+></TT
+>)</TT
+>.  They
+   are equivalent to the built-in quoting functions described in <A
+HREF="functions-string.html"
+>Section 9.4</A
+>.  They are useful when constructing
+   ad-hoc queries.  A PL/Python equivalent of dynamic SQL from <A
+HREF="plpgsql-statements.html#PLPGSQL-QUOTE-LITERAL-EXAMPLE"
+>Example 40-1</A
+> would be:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>plpy.execute("UPDATE tbl SET %s = %s WHERE key = %s" % (
+    plpy.quote_ident(colname),
+    plpy.quote_nullable(newvalue),
+    plpy.quote_literal(keyvalue)))</PRE
+><P>
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plpython-subtransaction.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="plpython-envar.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Explicit Subtransactions</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="plpython.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Environment Variables</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

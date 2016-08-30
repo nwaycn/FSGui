@@ -1,0 +1,331 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>DROP OWNED</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="DROP OPERATOR FAMILY"
+HREF="sql-dropopfamily.html"><LINK
+REL="NEXT"
+TITLE="DROP POLICY"
+HREF="sql-droppolicy.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="DROP OPERATOR FAMILY"
+HREF="sql-dropopfamily.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="DROP POLICY"
+HREF="sql-droppolicy.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-DROP-OWNED"
+></A
+>DROP OWNED</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN82783"
+></A
+><H2
+>Name</H2
+>DROP OWNED&nbsp;--&nbsp;remove database objects owned by a database role</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN82786"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>DROP OWNED BY { <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> | CURRENT_USER | SESSION_USER } [, ...] [ CASCADE | RESTRICT ]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN82789"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>DROP OWNED</TT
+> drops all the objects within the current
+   database that are owned by one of the specified roles. Any
+   privileges granted to the given roles on objects in the current
+   database and on shared objects (databases, tablespaces) will also be
+   revoked.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN82793"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></DT
+><DD
+><P
+>      The name of a role whose objects will be dropped, and whose
+      privileges will be revoked.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>CASCADE</TT
+></DT
+><DD
+><P
+>      Automatically drop objects that depend on the affected objects.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>RESTRICT</TT
+></DT
+><DD
+><P
+>      Refuse to drop the objects owned by a role if any other database
+      objects depend on one of the affected objects. This is the default.
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN82811"
+></A
+><H2
+>Notes</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>DROP OWNED</TT
+> is often used to prepare for the
+   removal of one or more roles. Because <TT
+CLASS="COMMAND"
+>DROP OWNED</TT
+>
+   only affects the objects in the current database, it is usually
+   necessary to execute this command in each database that contains
+   objects owned by a role that is to be removed.
+  </P
+><P
+>   Using the <TT
+CLASS="LITERAL"
+>CASCADE</TT
+> option might make the command
+   recurse to objects owned by other users.
+  </P
+><P
+>   The <A
+HREF="sql-reassign-owned.html"
+>REASSIGN OWNED</A
+> command is an alternative that
+   reassigns the ownership of all the database objects owned by one or
+   more roles.  However, <TT
+CLASS="COMMAND"
+>REASSIGN OWNED</TT
+> does not deal with
+   privileges for other objects.
+  </P
+><P
+>   Databases and tablespaces owned by the role(s) will not be removed.
+  </P
+><P
+>   See <A
+HREF="role-removal.html"
+>Section 20.4</A
+> for more discussion.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN82824"
+></A
+><H2
+>Compatibility</H2
+><P
+>   The <TT
+CLASS="COMMAND"
+>DROP OWNED</TT
+> command is a
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> extension.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN82829"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-reassign-owned.html"
+>REASSIGN OWNED</A
+>, <A
+HREF="sql-droprole.html"
+>DROP ROLE</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-dropopfamily.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-droppolicy.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>DROP OPERATOR FAMILY</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>DROP POLICY</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

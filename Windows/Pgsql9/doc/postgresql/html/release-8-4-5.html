@@ -1,0 +1,786 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.4.5</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.4.6"
+HREF="release-8-4-6.html"><LINK
+REL="NEXT"
+TITLE="Release 8.4.4"
+HREF="release-8-4-4.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.4.6"
+HREF="release-8-4-6.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.4.4"
+HREF="release-8-4-4.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-4-5"
+>E.115. Release 8.4.5</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2010-10-04</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.4.4.
+   For information about new features in the 8.4 major release, see
+   <A
+HREF="release-8-4.html"
+>Section E.120</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN149152"
+>E.115.1. Migration to Version 8.4.5</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.4.X.
+    However, if you are upgrading from a version earlier than 8.4.2,
+    see <A
+HREF="release-8-4-2.html"
+>Section E.118</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN149156"
+>E.115.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Use a separate interpreter for each calling SQL userid in PL/Perl and
+      PL/Tcl (Tom Lane)
+     </P
+><P
+>      This change prevents security problems that can be caused by subverting
+      Perl or Tcl code that will be executed later in the same session under
+      another SQL user identity (for example, within a <TT
+CLASS="LITERAL"
+>SECURITY
+      DEFINER</TT
+> function).  Most scripting languages offer numerous ways that
+      that might be done, such as redefining standard functions or operators
+      called by the target function.  Without this change, any SQL user with
+      Perl or Tcl language usage rights can do essentially anything with the
+      SQL privileges of the target function's owner.
+     </P
+><P
+>      The cost of this change is that intentional communication among Perl
+      and Tcl functions becomes more difficult.  To provide an escape hatch,
+      PL/PerlU and PL/TclU functions continue to use only one interpreter
+      per session.  This is not considered a security issue since all such
+      functions execute at the trust level of a database superuser already.
+     </P
+><P
+>      It is likely that third-party procedural languages that claim to offer
+      trusted execution have similar security issues.  We advise contacting
+      the authors of any PL you are depending on for security-critical
+      purposes.
+     </P
+><P
+>      Our thanks to Tim Bunce for pointing out this issue (CVE-2010-3433).
+     </P
+></LI
+><LI
+><P
+>      Prevent possible crashes in <CODE
+CLASS="FUNCTION"
+>pg_get_expr()</CODE
+> by disallowing
+      it from being called with an argument that is not one of the system
+      catalog columns it's intended to be used with
+      (Heikki Linnakangas, Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Treat exit code 128 (<TT
+CLASS="LITERAL"
+>ERROR_WAIT_NO_CHILDREN</TT
+>) as non-fatal on
+      Windows (Magnus Hagander)
+     </P
+><P
+>      Under high load, Windows processes will sometimes fail at startup with
+      this error code.  Formerly the postmaster treated this as a panic
+      condition and restarted the whole database, but that seems to be
+      an overreaction.
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect placement of placeholder evaluation (Tom Lane)
+     </P
+><P
+>      This bug could result in query outputs being non-null when they
+      should be null, in cases where the inner side of an outer join
+      is a sub-select with non-strict expressions in its output list.
+     </P
+></LI
+><LI
+><P
+>      Fix possible duplicate scans of <TT
+CLASS="LITERAL"
+>UNION ALL</TT
+> member relations
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="QUOTE"
+>"cannot handle unplanned sub-select"</SPAN
+> error (Tom Lane)
+     </P
+><P
+>      This occurred when a sub-select contains a join alias reference that
+      expands into an expression containing another sub-select.
+     </P
+></LI
+><LI
+><P
+>      Fix mishandling of whole-row Vars that reference a view or sub-select
+      and appear within a nested sub-select (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix mishandling of cross-type <TT
+CLASS="LITERAL"
+>IN</TT
+> comparisons (Tom Lane)
+     </P
+><P
+>      This could result in failures if the planner tried to implement an
+      <TT
+CLASS="LITERAL"
+>IN</TT
+> join with a sort-then-unique-then-plain-join plan.
+     </P
+></LI
+><LI
+><P
+>      Fix computation of <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> statistics for <TT
+CLASS="TYPE"
+>tsvector</TT
+>
+      columns (Jan Urbanski)
+     </P
+><P
+>      The original coding could produce incorrect statistics, leading to
+      poor plan choices later.
+     </P
+></LI
+><LI
+><P
+>      Improve planner's estimate of memory used by <CODE
+CLASS="FUNCTION"
+>array_agg()</CODE
+>,
+      <CODE
+CLASS="FUNCTION"
+>string_agg()</CODE
+>, and similar aggregate functions
+      (Hitoshi Harada)
+     </P
+><P
+>      The previous drastic underestimate could lead to out-of-memory failures
+      due to inappropriate choice of a hash-aggregation plan.
+     </P
+></LI
+><LI
+><P
+>      Fix failure to mark cached plans as transient (Tom Lane)
+     </P
+><P
+>      If a plan is prepared while <TT
+CLASS="COMMAND"
+>CREATE INDEX CONCURRENTLY</TT
+> is
+      in progress for one of the referenced tables, it is supposed to be
+      re-planned once the index is ready for use.  This was not happening
+      reliably.
+     </P
+></LI
+><LI
+><P
+>      Reduce PANIC to ERROR in some occasionally-reported btree failure cases,
+      and provide additional detail in the resulting error messages
+      (Tom Lane)
+     </P
+><P
+>      This should improve the system's robustness with corrupted indexes.
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect search logic for partial-match queries with GIN indexes
+      (Tom Lane)
+     </P
+><P
+>      Cases involving AND/OR combination of several GIN index conditions
+      didn't always give the right answer, and were sometimes much slower
+      than necessary.
+     </P
+></LI
+><LI
+><P
+>      Prevent show_session_authorization() from crashing within autovacuum
+      processes (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Defend against functions returning setof record where not all the
+      returned rows are actually of the same rowtype (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix possible corruption of pending trigger event lists during
+      subtransaction rollback (Tom Lane)
+     </P
+><P
+>      This could lead to a crash or incorrect firing of triggers.
+     </P
+></LI
+><LI
+><P
+>      Fix possible failure when hashing a pass-by-reference function result
+      (Tao Ma, Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Improve merge join's handling of NULLs in the join columns (Tom Lane)
+     </P
+><P
+>      A merge join can now stop entirely upon reaching the first NULL,
+      if the sort order is such that NULLs sort high.
+     </P
+></LI
+><LI
+><P
+>      Take care to fsync the contents of lockfiles (both
+      <TT
+CLASS="FILENAME"
+>postmaster.pid</TT
+> and the socket lockfile) while writing them
+      (Tom Lane)
+     </P
+><P
+>      This omission could result in corrupted lockfile contents if the
+      machine crashes shortly after postmaster start.  That could in turn
+      prevent subsequent attempts to start the postmaster from succeeding,
+      until the lockfile is manually removed.
+     </P
+></LI
+><LI
+><P
+>      Avoid recursion while assigning XIDs to heavily-nested
+      subtransactions (Andres Freund, Robert Haas)
+     </P
+><P
+>      The original coding could result in a crash if there was limited
+      stack space.
+     </P
+></LI
+><LI
+><P
+>      Avoid holding open old WAL segments in the walwriter process
+      (Magnus Hagander, Heikki Linnakangas)
+     </P
+><P
+>      The previous coding would prevent removal of no-longer-needed segments.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="VARNAME"
+>log_line_prefix</TT
+>'s <TT
+CLASS="LITERAL"
+>%i</TT
+> escape,
+      which could produce junk early in backend startup (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Prevent misinterpretation of partially-specified relation options
+      for TOAST tables (Itagaki Takahiro)
+     </P
+><P
+>      In particular, <TT
+CLASS="LITERAL"
+>fillfactor</TT
+> would be read as zero if any
+      other reloption had been set for the table, leading to serious bloat.
+     </P
+></LI
+><LI
+><P
+>      Fix inheritance count tracking in <TT
+CLASS="COMMAND"
+>ALTER TABLE ... ADD
+      CONSTRAINT</TT
+> (Robert Haas)
+     </P
+></LI
+><LI
+><P
+>      Fix possible data corruption in <TT
+CLASS="COMMAND"
+>ALTER TABLE ... SET
+      TABLESPACE</TT
+> when archiving is enabled (Jeff Davis)
+     </P
+></LI
+><LI
+><P
+>      Allow <TT
+CLASS="COMMAND"
+>CREATE DATABASE</TT
+> and <TT
+CLASS="COMMAND"
+>ALTER DATABASE ... SET
+      TABLESPACE</TT
+> to be interrupted by query-cancel (Guillaume Lelarge)
+     </P
+></LI
+><LI
+><P
+>      Improve <TT
+CLASS="COMMAND"
+>CREATE INDEX</TT
+>'s checking of whether proposed index
+      expressions are immutable (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>REASSIGN OWNED</TT
+> to handle operator classes and families
+      (Asko Tiidumaa)
+     </P
+></LI
+><LI
+><P
+>      Fix possible core dump when comparing two empty <TT
+CLASS="TYPE"
+>tsquery</TT
+> values
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="LITERAL"
+>LIKE</TT
+>'s handling of patterns containing <TT
+CLASS="LITERAL"
+>%</TT
+>
+      followed by <TT
+CLASS="LITERAL"
+>_</TT
+> (Tom Lane)
+     </P
+><P
+>      We've fixed this before, but there were still some incorrectly-handled
+      cases.
+     </P
+></LI
+><LI
+><P
+>      Re-allow input of Julian dates prior to 0001-01-01 AD (Tom Lane)
+     </P
+><P
+>      Input such as <TT
+CLASS="LITERAL"
+>'J100000'::date</TT
+> worked before 8.4,
+      but was unintentionally broken by added error-checking.
+     </P
+></LI
+><LI
+><P
+>      Fix PL/pgSQL to throw an error, not crash, if a cursor is closed within
+      a <TT
+CLASS="LITERAL"
+>FOR</TT
+> loop that is iterating over that cursor
+      (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      In PL/Python, defend against null pointer results from
+      <CODE
+CLASS="FUNCTION"
+>PyCObject_AsVoidPtr</CODE
+> and <CODE
+CLASS="FUNCTION"
+>PyCObject_FromVoidPtr</CODE
+>
+      (Peter Eisentraut)
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>, fix full SSL certificate verification for the
+      case where both <TT
+CLASS="LITERAL"
+>host</TT
+> and <TT
+CLASS="LITERAL"
+>hostaddr</TT
+> are specified
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Make psql recognize <TT
+CLASS="COMMAND"
+>DISCARD ALL</TT
+> as a command that should
+      not be encased in a transaction block in autocommit-off mode
+      (Itagaki Takahiro)
+     </P
+></LI
+><LI
+><P
+>      Fix some issues in <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>'s handling of SQL/MED objects
+      (Tom Lane)
+     </P
+><P
+>      Notably, <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> would always fail if run by a
+      non-superuser, which was not intended.
+     </P
+></LI
+><LI
+><P
+>      Improve <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> and <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+>'s
+      handling of non-seekable archive files (Tom Lane, Robert Haas)
+     </P
+><P
+>      This is important for proper functioning of parallel restore.
+     </P
+></LI
+><LI
+><P
+>      Improve parallel pg_restore's ability to cope with selective restore
+      (<TT
+CLASS="LITERAL"
+>-L</TT
+> option) (Tom Lane)
+     </P
+><P
+>      The original code tended to fail if the <TT
+CLASS="LITERAL"
+>-L</TT
+> file commanded
+      a non-default restore ordering.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+> to process data from <TT
+CLASS="LITERAL"
+>RETURNING</TT
+>
+      clauses correctly (Michael Meskes)
+     </P
+></LI
+><LI
+><P
+>      Fix some memory leaks in <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+> (Zoltan Boszormenyi)
+     </P
+></LI
+><LI
+><P
+>      Improve <TT
+CLASS="FILENAME"
+>contrib/dblink</TT
+>'s handling of tables containing
+      dropped columns (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix connection leak after <SPAN
+CLASS="QUOTE"
+>"duplicate connection name"</SPAN
+>
+      errors in <TT
+CLASS="FILENAME"
+>contrib/dblink</TT
+> (Itagaki Takahiro)
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="FILENAME"
+>contrib/dblink</TT
+> to handle connection names longer than
+      62 bytes correctly (Itagaki Takahiro)
+     </P
+></LI
+><LI
+><P
+>      Add <CODE
+CLASS="FUNCTION"
+>hstore(text, text)</CODE
+>
+      function to <TT
+CLASS="FILENAME"
+>contrib/hstore</TT
+> (Robert Haas)
+     </P
+><P
+>      This function is the recommended substitute for the now-deprecated
+      <TT
+CLASS="LITERAL"
+>=&gt;</TT
+> operator.  It was back-patched so that future-proofed
+      code can be used with older server versions.  Note that the patch will
+      be effective only after <TT
+CLASS="FILENAME"
+>contrib/hstore</TT
+> is installed or
+      reinstalled in a particular database.  Users might prefer to execute
+      the <TT
+CLASS="COMMAND"
+>CREATE FUNCTION</TT
+> command by hand, instead.
+     </P
+></LI
+><LI
+><P
+>      Update build infrastructure and documentation to reflect the source code
+      repository's move from CVS to Git (Magnus Hagander and others)
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2010l
+      for DST law changes in Egypt and Palestine; also historical corrections
+      for Finland.
+     </P
+><P
+>      This change also adds new names for two Micronesian timezones:
+      Pacific/Chuuk is now preferred over Pacific/Truk (and the preferred
+      abbreviation is CHUT not TRUT) and Pacific/Pohnpei is preferred over
+      Pacific/Ponape.
+     </P
+></LI
+><LI
+><P
+>      Make Windows' <SPAN
+CLASS="QUOTE"
+>"N. Central Asia Standard Time"</SPAN
+> timezone map to
+      Asia/Novosibirsk, not Asia/Almaty (Magnus Hagander)
+     </P
+><P
+>      Microsoft changed the DST behavior of this zone in the timezone update
+      from KB976098. Asia/Novosibirsk is a better match to its new behavior.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-4-6.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-4-4.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.4.6</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.4.4</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,317 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.4.14</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.4.15"
+HREF="release-8-4-15.html"><LINK
+REL="NEXT"
+TITLE="Release 8.4.13"
+HREF="release-8-4-13.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.4.15"
+HREF="release-8-4-15.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.4.13"
+HREF="release-8-4-13.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-4-14"
+>E.106. Release 8.4.14</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2012-09-24</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.4.13.
+   For information about new features in the 8.4 major release, see
+   <A
+HREF="release-8-4.html"
+>Section E.120</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN148185"
+>E.106.1. Migration to Version 8.4.14</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.4.X.
+   </P
+><P
+>    However, if you are upgrading from a version earlier than 8.4.10,
+    see <A
+HREF="release-8-4-10.html"
+>Section E.110</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN148190"
+>E.106.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix planner's assignment of executor parameters, and fix executor's
+      rescan logic for CTE plan nodes (Tom Lane)
+     </P
+><P
+>      These errors could result in wrong answers from queries that scan the
+      same <TT
+CLASS="LITERAL"
+>WITH</TT
+> subquery multiple times.
+     </P
+></LI
+><LI
+><P
+>      Improve page-splitting decisions in GiST indexes (Alexander Korotkov,
+      Robert Haas, Tom Lane)
+     </P
+><P
+>      Multi-column GiST indexes might suffer unexpected bloat due to this
+      error.
+     </P
+></LI
+><LI
+><P
+>      Fix cascading privilege revoke to stop if privileges are still held
+      (Tom Lane)
+     </P
+><P
+>      If we revoke a grant option from some role <TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>, but
+      <TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+> still holds that option via a grant from someone
+      else, we should not recursively revoke the corresponding privilege
+      from role(s) <TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+> that <TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+> had granted it
+      to.
+     </P
+></LI
+><LI
+><P
+>      Fix handling of <TT
+CLASS="LITERAL"
+>SIGFPE</TT
+> when PL/Perl is in use (Andres Freund)
+     </P
+><P
+>      Perl resets the process's <TT
+CLASS="LITERAL"
+>SIGFPE</TT
+> handler to
+      <TT
+CLASS="LITERAL"
+>SIG_IGN</TT
+>, which could result in crashes later on.  Restore
+      the normal Postgres signal handler after initializing PL/Perl.
+     </P
+></LI
+><LI
+><P
+>      Prevent PL/Perl from crashing if a recursive PL/Perl function is
+      redefined while being executed (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Work around possible misoptimization in PL/Perl (Tom Lane)
+     </P
+><P
+>      Some Linux distributions contain an incorrect version of
+      <TT
+CLASS="FILENAME"
+>pthread.h</TT
+> that results in incorrect compiled code in
+      PL/Perl, leading to crashes if a PL/Perl function calls another one
+      that throws an error.
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2012f
+      for DST law changes in Fiji
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-4-15.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-4-13.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.4.15</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.4.13</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

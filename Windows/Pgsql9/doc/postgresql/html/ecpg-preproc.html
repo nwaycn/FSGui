@@ -1,0 +1,602 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Preprocessor Directives</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="ECPG - Embedded SQL in C"
+HREF="ecpg.html"><LINK
+REL="PREVIOUS"
+TITLE="Error Handling"
+HREF="ecpg-errors.html"><LINK
+REL="NEXT"
+TITLE="Processing Embedded SQL Programs"
+HREF="ecpg-process.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Error Handling"
+HREF="ecpg-errors.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ecpg.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 33. <SPAN
+CLASS="APPLICATION"
+>ECPG</SPAN
+> - Embedded <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> in C</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Processing Embedded SQL Programs"
+HREF="ecpg-process.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="ECPG-PREPROC"
+>33.9. Preprocessor Directives</A
+></H1
+><P
+>   Several preprocessor directives are available that modify how
+   the <TT
+CLASS="COMMAND"
+>ecpg</TT
+> preprocessor parses and processes a
+   file.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="ECPG-INCLUDE"
+>33.9.1. Including Files</A
+></H2
+><P
+>    To include an external file into your embedded SQL program, use:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL INCLUDE <TT
+CLASS="REPLACEABLE"
+><I
+>filename</I
+></TT
+>;
+EXEC SQL INCLUDE &lt;<TT
+CLASS="REPLACEABLE"
+><I
+>filename</I
+></TT
+>&gt;;
+EXEC SQL INCLUDE "<TT
+CLASS="REPLACEABLE"
+><I
+>filename</I
+></TT
+>";</PRE
+><P>
+    The embedded SQL preprocessor will look for a file named
+    <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>filename</I
+></TT
+>.h</TT
+>,
+    preprocess it, and include it in the resulting C output.  Thus,
+    embedded SQL statements in the included file are handled correctly.
+   </P
+><P
+>    The <TT
+CLASS="COMMAND"
+>ecpg</TT
+> preprocessor will search a file at
+    several directories in following order:
+
+    <P
+></P
+></P><UL
+><LI
+><P
+>current directory</P
+></LI
+><LI
+><P
+><TT
+CLASS="FILENAME"
+>/usr/local/include</TT
+></P
+></LI
+><LI
+><P
+>PostgreSQL include directory, defined at build time (e.g., <TT
+CLASS="FILENAME"
+>/usr/local/pgsql/include</TT
+>)</P
+></LI
+><LI
+><P
+><TT
+CLASS="FILENAME"
+>/usr/include</TT
+></P
+></LI
+></UL
+><P>
+
+    But when <TT
+CLASS="LITERAL"
+>EXEC SQL INCLUDE
+    "<TT
+CLASS="REPLACEABLE"
+><I
+>filename</I
+></TT
+>"</TT
+> is used, only the
+    current directory is searched.
+   </P
+><P
+>    In each directory, the preprocessor will first look for the file
+    name as given, and if not found will append <TT
+CLASS="LITERAL"
+>.h</TT
+>
+    to the file name and try again (unless the specified file name
+    already has that suffix).
+   </P
+><P
+>    Note that <TT
+CLASS="COMMAND"
+>EXEC SQL INCLUDE</TT
+> is <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+> the same as:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>#include &lt;<TT
+CLASS="REPLACEABLE"
+><I
+>filename</I
+></TT
+>.h&gt;</PRE
+><P>
+    because this file would not be subject to SQL command preprocessing.
+    Naturally, you can continue to use the C
+    <TT
+CLASS="LITERAL"
+>#include</TT
+> directive to include other header
+    files.
+   </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>     The include file name is case-sensitive, even though the rest of
+     the <TT
+CLASS="LITERAL"
+>EXEC SQL INCLUDE</TT
+> command follows the normal
+     SQL case-sensitivity rules.
+    </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="ECPG-DEFINE"
+>33.9.2. The define and undef Directives</A
+></H2
+><P
+>    Similar to the directive <TT
+CLASS="LITERAL"
+>#define</TT
+> that is known from C,
+    embedded SQL has a similar concept:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL DEFINE <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>;
+EXEC SQL DEFINE <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>;</PRE
+><P>
+    So you can define a name:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL DEFINE HAVE_FEATURE;</PRE
+><P>
+    And you can also define constants:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL DEFINE MYNUMBER 12;
+EXEC SQL DEFINE MYSTRING 'abc';</PRE
+><P>
+    Use <TT
+CLASS="LITERAL"
+>undef</TT
+> to remove a previous definition:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL UNDEF MYNUMBER;</PRE
+><P>
+   </P
+><P
+>    Of course you can continue to use the C versions <TT
+CLASS="LITERAL"
+>#define</TT
+>
+    and <TT
+CLASS="LITERAL"
+>#undef</TT
+> in your embedded SQL program. The difference
+    is where your defined values get evaluated. If you use <TT
+CLASS="LITERAL"
+>EXEC SQL
+    DEFINE</TT
+> then the <TT
+CLASS="COMMAND"
+>ecpg</TT
+> preprocessor evaluates the defines and substitutes
+    the values. For example if you write:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL DEFINE MYNUMBER 12;
+...
+EXEC SQL UPDATE Tbl SET col = MYNUMBER;</PRE
+><P>
+    then <TT
+CLASS="COMMAND"
+>ecpg</TT
+> will already do the substitution and your C compiler will never
+    see any name or identifier <TT
+CLASS="LITERAL"
+>MYNUMBER</TT
+>. Note that you cannot use
+    <TT
+CLASS="LITERAL"
+>#define</TT
+> for a constant that you are going to use in an
+    embedded SQL query because in this case the embedded SQL precompiler is not
+    able to see this declaration.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="ECPG-IFDEF"
+>33.9.3. ifdef, ifndef, else, elif, and endif Directives</A
+></H2
+><P
+>   You can use the following directives to compile code sections conditionally:
+
+   <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>EXEC SQL ifdef <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>;</TT
+></DT
+><DD
+><P
+>      Checks a <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> and processes subsequent lines if
+      <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> has been created with <TT
+CLASS="LITERAL"
+>EXEC SQL define
+      <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></TT
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>EXEC SQL ifndef <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>;</TT
+></DT
+><DD
+><P
+>      Checks a <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> and processes subsequent lines if
+      <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> has <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+> been created with
+      <TT
+CLASS="LITERAL"
+>EXEC SQL define <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></TT
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>EXEC SQL else;</TT
+></DT
+><DD
+><P
+>      Starts processing an alternative section to a section introduced by
+      either <TT
+CLASS="LITERAL"
+>EXEC SQL ifdef <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></TT
+> or
+      <TT
+CLASS="LITERAL"
+>EXEC SQL ifndef <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></TT
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>EXEC SQL elif <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>;</TT
+></DT
+><DD
+><P
+>      Checks <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> and starts an alternative section if
+      <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> has been created with <TT
+CLASS="LITERAL"
+>EXEC SQL define
+      <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></TT
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>EXEC SQL endif;</TT
+></DT
+><DD
+><P
+>      Ends an alternative section.
+     </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+><P
+>    Example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>EXEC SQL ifndef TZVAR;
+EXEC SQL SET TIMEZONE TO 'GMT';
+EXEC SQL elif TZNAME;
+EXEC SQL SET TIMEZONE TO TZNAME;
+EXEC SQL else;
+EXEC SQL SET TIMEZONE TO TZVAR;
+EXEC SQL endif;</PRE
+><P>
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ecpg-errors.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="ecpg-process.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Error Handling</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="ecpg.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Processing Embedded SQL Programs</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

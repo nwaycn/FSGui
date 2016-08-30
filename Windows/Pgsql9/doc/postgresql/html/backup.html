@@ -1,0 +1,291 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Backup and Restore</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Administration"
+HREF="admin.html"><LINK
+REL="PREVIOUS"
+TITLE="Log File Maintenance"
+HREF="logfile-maintenance.html"><LINK
+REL="NEXT"
+TITLE="SQL Dump"
+HREF="backup-dump.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="CHAPTER"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Log File Maintenance"
+HREF="logfile-maintenance.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="admin.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="SQL Dump"
+HREF="backup-dump.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="BACKUP"
+></A
+>Chapter 24. Backup and Restore</H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+>24.1. <A
+HREF="backup-dump.html"
+><ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Dump</A
+></DT
+><DD
+><DL
+><DT
+>24.1.1. <A
+HREF="backup-dump.html#BACKUP-DUMP-RESTORE"
+>Restoring the Dump</A
+></DT
+><DT
+>24.1.2. <A
+HREF="backup-dump.html#BACKUP-DUMP-ALL"
+>Using <SPAN
+CLASS="APPLICATION"
+>pg_dumpall</SPAN
+></A
+></DT
+><DT
+>24.1.3. <A
+HREF="backup-dump.html#BACKUP-DUMP-LARGE"
+>Handling Large Databases</A
+></DT
+></DL
+></DD
+><DT
+>24.2. <A
+HREF="backup-file.html"
+>File System Level Backup</A
+></DT
+><DT
+>24.3. <A
+HREF="continuous-archiving.html"
+>Continuous Archiving and Point-in-Time Recovery (PITR)</A
+></DT
+><DD
+><DL
+><DT
+>24.3.1. <A
+HREF="continuous-archiving.html#BACKUP-ARCHIVING-WAL"
+>Setting Up WAL Archiving</A
+></DT
+><DT
+>24.3.2. <A
+HREF="continuous-archiving.html#BACKUP-BASE-BACKUP"
+>Making a Base Backup</A
+></DT
+><DT
+>24.3.3. <A
+HREF="continuous-archiving.html#BACKUP-LOWLEVEL-BASE-BACKUP"
+>Making a Base Backup Using the Low Level API</A
+></DT
+><DT
+>24.3.4. <A
+HREF="continuous-archiving.html#BACKUP-PITR-RECOVERY"
+>Recovering Using a Continuous Archive Backup</A
+></DT
+><DT
+>24.3.5. <A
+HREF="continuous-archiving.html#BACKUP-TIMELINES"
+>Timelines</A
+></DT
+><DT
+>24.3.6. <A
+HREF="continuous-archiving.html#BACKUP-TIPS"
+>Tips and Examples</A
+></DT
+><DT
+>24.3.7. <A
+HREF="continuous-archiving.html#CONTINUOUS-ARCHIVING-CAVEATS"
+>Caveats</A
+></DT
+></DL
+></DD
+></DL
+></DIV
+><P
+>  As with everything that contains valuable data, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+  databases should be backed up regularly. While the procedure is
+  essentially simple, it is important to have a clear understanding of
+  the underlying techniques and assumptions.
+ </P
+><P
+>  There are three fundamentally different approaches to backing up
+  <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> data:
+  <P
+></P
+></P><UL
+><LI
+><P
+><ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> dump</P
+></LI
+><LI
+><P
+>File system level backup</P
+></LI
+><LI
+><P
+>Continuous archiving</P
+></LI
+></UL
+><P>
+  Each has its own strengths and weaknesses; each is discussed in turn
+  in the following sections.
+ </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="logfile-maintenance.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="backup-dump.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Log File Maintenance</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="admin.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Dump</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

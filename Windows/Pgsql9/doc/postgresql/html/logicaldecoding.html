@@ -1,0 +1,330 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Logical Decoding</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Programming"
+HREF="server-programming.html"><LINK
+REL="PREVIOUS"
+TITLE="Background Worker Processes"
+HREF="bgworker.html"><LINK
+REL="NEXT"
+TITLE="Logical Decoding Examples"
+HREF="logicaldecoding-example.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="CHAPTER"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Background Worker Processes"
+HREF="bgworker.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="server-programming.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Logical Decoding Examples"
+HREF="logicaldecoding-example.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="LOGICALDECODING"
+></A
+>Chapter 46. Logical Decoding</H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+>46.1. <A
+HREF="logicaldecoding-example.html"
+>Logical Decoding Examples</A
+></DT
+><DT
+>46.2. <A
+HREF="logicaldecoding-explanation.html"
+>Logical Decoding Concepts</A
+></DT
+><DD
+><DL
+><DT
+>46.2.1. <A
+HREF="logicaldecoding-explanation.html#AEN68613"
+>Logical Decoding</A
+></DT
+><DT
+>46.2.2. <A
+HREF="logicaldecoding-explanation.html#AEN68621"
+>Replication Slots</A
+></DT
+><DT
+>46.2.3. <A
+HREF="logicaldecoding-explanation.html#AEN68638"
+>Output Plugins</A
+></DT
+><DT
+>46.2.4. <A
+HREF="logicaldecoding-explanation.html#AEN68641"
+>Exported Snapshots</A
+></DT
+></DL
+></DD
+><DT
+>46.3. <A
+HREF="logicaldecoding-walsender.html"
+>Streaming Replication Protocol Interface</A
+></DT
+><DT
+>46.4. <A
+HREF="logicaldecoding-sql.html"
+>Logical Decoding <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Interface</A
+></DT
+><DT
+>46.5. <A
+HREF="logicaldecoding-catalogs.html"
+>System Catalogs Related to Logical Decoding</A
+></DT
+><DT
+>46.6. <A
+HREF="logicaldecoding-output-plugin.html"
+>Logical Decoding Output Plugins</A
+></DT
+><DD
+><DL
+><DT
+>46.6.1. <A
+HREF="logicaldecoding-output-plugin.html#LOGICALDECODING-OUTPUT-INIT"
+>Initialization Function</A
+></DT
+><DT
+>46.6.2. <A
+HREF="logicaldecoding-output-plugin.html#LOGICALDECODING-CAPABILITIES"
+>Capabilities</A
+></DT
+><DT
+>46.6.3. <A
+HREF="logicaldecoding-output-plugin.html#LOGICALDECODING-OUTPUT-MODE"
+>Output Modes</A
+></DT
+><DT
+>46.6.4. <A
+HREF="logicaldecoding-output-plugin.html#LOGICALDECODING-OUTPUT-PLUGIN-CALLBACKS"
+>Output Plugin Callbacks</A
+></DT
+><DT
+>46.6.5. <A
+HREF="logicaldecoding-output-plugin.html#LOGICALDECODING-OUTPUT-PLUGIN-OUTPUT"
+>Functions for Producing Output</A
+></DT
+></DL
+></DD
+><DT
+>46.7. <A
+HREF="logicaldecoding-writer.html"
+>Logical Decoding Output Writers</A
+></DT
+><DT
+>46.8. <A
+HREF="logicaldecoding-synchronous.html"
+>Synchronous Replication Support for Logical Decoding</A
+></DT
+></DL
+></DIV
+><P
+>   PostgreSQL provides infrastructure to stream the modifications performed
+   via SQL to external consumers.  This functionality can be used for a
+   variety of purposes, including replication solutions and auditing.
+  </P
+><P
+>   Changes are sent out in streams identified by logical replication slots.
+   Each stream outputs each change exactly once.
+  </P
+><P
+>   The format in which those changes are streamed is determined by the output
+   plugin used.  An example plugin is provided in the PostgreSQL distribution.
+   Additional plugins can be
+   written to extend the choice of available formats without modifying any
+   core code.
+   Every output plugin has access to each individual new row produced
+   by <TT
+CLASS="COMMAND"
+>INSERT</TT
+> and the new row version created
+   by <TT
+CLASS="COMMAND"
+>UPDATE</TT
+>.  Availability of old row versions for
+   <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> and <TT
+CLASS="COMMAND"
+>DELETE</TT
+> depends on
+   the configured replica identity (see <A
+HREF="sql-altertable.html#SQL-CREATETABLE-REPLICA-IDENTITY"
+><I
+CLASS="TERM"
+><TT
+CLASS="LITERAL"
+>REPLICA IDENTITY</TT
+></I
+></A
+>).
+  </P
+><P
+>   Changes can be consumed either using the streaming replication protocol
+   (see <A
+HREF="protocol-replication.html"
+>Section 50.3</A
+> and
+   <A
+HREF="logicaldecoding-walsender.html"
+>Section 46.3</A
+>), or by calling functions
+   via SQL (see <A
+HREF="logicaldecoding-sql.html"
+>Section 46.4</A
+>). It is also possible
+   to write additional methods of consuming the output of a replication slot
+   without modifying core code
+   (see <A
+HREF="logicaldecoding-writer.html"
+>Section 46.7</A
+>).
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="bgworker.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="logicaldecoding-example.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Background Worker Processes</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="server-programming.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Logical Decoding Examples</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

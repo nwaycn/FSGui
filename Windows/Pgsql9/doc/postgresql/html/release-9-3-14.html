@@ -1,0 +1,832 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.3.14</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.4"
+HREF="release-9-4.html"><LINK
+REL="NEXT"
+TITLE="Release 9.3.13"
+HREF="release-9-3-13.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.4"
+HREF="release-9-4.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.3.13"
+HREF="release-9-3-13.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-3-14"
+>E.16. Release 9.3.14</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2016-08-11</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 9.3.13.
+   For information about new features in the 9.3 major release, see
+   <A
+HREF="release-9-3.html"
+>Section E.30</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN130592"
+>E.16.1. Migration to Version 9.3.14</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.3.X.
+   </P
+><P
+>    However, if you are upgrading from a version earlier than 9.3.9,
+    see <A
+HREF="release-9-3-9.html"
+>Section E.21</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN130597"
+>E.16.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix possible mis-evaluation of
+      nested <TT
+CLASS="LITERAL"
+>CASE</TT
+>-<TT
+CLASS="LITERAL"
+>WHEN</TT
+> expressions (Heikki
+      Linnakangas, Michael Paquier, Tom Lane)
+     </P
+><P
+>      A <TT
+CLASS="LITERAL"
+>CASE</TT
+> expression appearing within the test value
+      subexpression of another <TT
+CLASS="LITERAL"
+>CASE</TT
+> could become confused about
+      whether its own test value was null or not.  Also, inlining of a SQL
+      function implementing the equality operator used by
+      a <TT
+CLASS="LITERAL"
+>CASE</TT
+> expression could result in passing the wrong test
+      value to functions called within a <TT
+CLASS="LITERAL"
+>CASE</TT
+> expression in the
+      SQL function's body.  If the test values were of different data
+      types, a crash might result; moreover such situations could be abused
+      to allow disclosure of portions of server memory.  (CVE-2016-5423)
+     </P
+></LI
+><LI
+><P
+>      Fix client programs' handling of special characters in database and
+      role names (Noah Misch, Nathan Bossart, Michael Paquier)
+     </P
+><P
+>      Numerous places in <SPAN
+CLASS="APPLICATION"
+>vacuumdb</SPAN
+> and other client programs
+      could become confused by database and role names containing double
+      quotes or backslashes.  Tighten up quoting rules to make that safe.
+      Also, ensure that when a conninfo string is used as a database name
+      parameter to these programs, it is correctly treated as such throughout.
+     </P
+><P
+>      Fix handling of paired double quotes
+      in <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s <TT
+CLASS="COMMAND"
+>\connect</TT
+>
+      and <TT
+CLASS="COMMAND"
+>\password</TT
+> commands to match the documentation.
+     </P
+><P
+>      Introduce a new <TT
+CLASS="OPTION"
+>-reuse-previous</TT
+> option
+      in <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>'s <TT
+CLASS="COMMAND"
+>\connect</TT
+> command to allow
+      explicit control of whether to re-use connection parameters from a
+      previous connection.  (Without this, the choice is based on whether
+      the database name looks like a conninfo string, as before.)  This
+      allows secure handling of database names containing special
+      characters in <SPAN
+CLASS="APPLICATION"
+>pg_dumpall</SPAN
+> scripts.
+     </P
+><P
+>      <SPAN
+CLASS="APPLICATION"
+>pg_dumpall</SPAN
+> now refuses to deal with database and role
+      names containing carriage returns or newlines, as it seems impractical
+      to quote those characters safely on Windows.  In future we may reject
+      such names on the server side, but that step has not been taken yet.
+     </P
+><P
+>      These are considered security fixes because crafted object names
+      containing special characters could have been used to execute
+      commands with superuser privileges the next time a superuser
+      executes <SPAN
+CLASS="APPLICATION"
+>pg_dumpall</SPAN
+> or other routine maintenance
+      operations.  (CVE-2016-5424)
+     </P
+></LI
+><LI
+><P
+>      Fix corner-case misbehaviors for <TT
+CLASS="LITERAL"
+>IS NULL</TT
+>/<TT
+CLASS="LITERAL"
+>IS NOT
+      NULL</TT
+> applied to nested composite values (Andrew Gierth, Tom Lane)
+     </P
+><P
+>      The SQL standard specifies that <TT
+CLASS="LITERAL"
+>IS NULL</TT
+> should return
+      TRUE for a row of all null values (thus <TT
+CLASS="LITERAL"
+>ROW(NULL,NULL) IS
+      NULL</TT
+> yields TRUE), but this is not meant to apply recursively
+      (thus <TT
+CLASS="LITERAL"
+>ROW(NULL, ROW(NULL,NULL)) IS NULL</TT
+> yields FALSE).
+      The core executor got this right, but certain planner optimizations
+      treated the test as recursive (thus producing TRUE in both cases),
+      and <TT
+CLASS="FILENAME"
+>contrib/postgres_fdw</TT
+> could produce remote queries
+      that misbehaved similarly.
+     </P
+></LI
+><LI
+><P
+>      Make the <TT
+CLASS="TYPE"
+>inet</TT
+> and <TT
+CLASS="TYPE"
+>cidr</TT
+> data types properly reject
+      IPv6 addresses with too many colon-separated fields (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Prevent crash in <CODE
+CLASS="FUNCTION"
+>close_ps()</CODE
+>
+      (the <TT
+CLASS="TYPE"
+>point</TT
+> <TT
+CLASS="LITERAL"
+>##</TT
+> <TT
+CLASS="TYPE"
+>lseg</TT
+> operator)
+      for NaN input coordinates (Tom Lane)
+     </P
+><P
+>      Make it return NULL instead of crashing.
+     </P
+></LI
+><LI
+><P
+>      Avoid possible crash in <CODE
+CLASS="FUNCTION"
+>pg_get_expr()</CODE
+> when inconsistent
+      values are passed to it (Michael Paquier, Thomas Munro)
+     </P
+></LI
+><LI
+><P
+>      Fix several one-byte buffer over-reads in <CODE
+CLASS="FUNCTION"
+>to_number()</CODE
+>
+      (Peter Eisentraut)
+     </P
+><P
+>      In several cases the <CODE
+CLASS="FUNCTION"
+>to_number()</CODE
+> function would read one
+      more character than it should from the input string.  There is a
+      small chance of a crash, if the input happens to be adjacent to the
+      end of memory.
+     </P
+></LI
+><LI
+><P
+>      Do not run the planner on the query contained in <TT
+CLASS="LITERAL"
+>CREATE
+      MATERIALIZED VIEW</TT
+> or <TT
+CLASS="LITERAL"
+>CREATE TABLE AS</TT
+>
+      when <TT
+CLASS="LITERAL"
+>WITH NO DATA</TT
+> is specified (Michael Paquier,
+      Tom Lane)
+     </P
+><P
+>      This avoids some unnecessary failure conditions, for example if a
+      stable function invoked by the materialized view depends on a table
+      that doesn't exist yet.
+     </P
+></LI
+><LI
+><P
+>      Avoid unsafe intermediate state during expensive paths
+      through <CODE
+CLASS="FUNCTION"
+>heap_update()</CODE
+> (Masahiko Sawada, Andres Freund)
+     </P
+><P
+>      Previously, these cases locked the target tuple (by setting its XMAX)
+      but did not WAL-log that action, thus risking data integrity problems
+      if the page were spilled to disk and then a database crash occurred
+      before the tuple update could be completed.
+     </P
+></LI
+><LI
+><P
+>      Fix hint bit update during WAL replay of row locking operations
+      (Andres Freund)
+     </P
+><P
+>      The only known consequence of this problem is that row locks held by
+      a prepared, but uncommitted, transaction might fail to be enforced
+      after a crash and restart.
+     </P
+></LI
+><LI
+><P
+>      Avoid unnecessary <SPAN
+CLASS="QUOTE"
+>"could not serialize access"</SPAN
+> errors when
+      acquiring <TT
+CLASS="LITERAL"
+>FOR KEY SHARE</TT
+> row locks in serializable mode
+      (&Aacute;lvaro Herrera)
+     </P
+></LI
+><LI
+><P
+>      Avoid crash in <TT
+CLASS="LITERAL"
+>postgres -C</TT
+> when the specified variable
+      has a null string value (Michael Paquier)
+     </P
+></LI
+><LI
+><P
+>      Ensure that backends see up-to-date statistics for shared catalogs
+      (Tom Lane)
+     </P
+><P
+>      The statistics collector failed to update the statistics file for
+      shared catalogs after a request from a regular backend.  This problem
+      was partially masked because the autovacuum launcher regularly makes
+      requests that did cause such updates; however, it became obvious with
+      autovacuum disabled.
+     </P
+></LI
+><LI
+><P
+>      Avoid redundant writes of the statistics files when multiple
+      backends request updates close together (Tom Lane, Tomas Vondra)
+     </P
+></LI
+><LI
+><P
+>      Avoid consuming a transaction ID during <TT
+CLASS="COMMAND"
+>VACUUM</TT
+>
+      (Alexander Korotkov)
+     </P
+><P
+>      Some cases in <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> unnecessarily caused an XID to be
+      assigned to the current transaction.  Normally this is negligible,
+      but if one is up against the XID wraparound limit, consuming more
+      XIDs during anti-wraparound vacuums is a very bad thing.
+     </P
+></LI
+><LI
+><P
+>      Avoid canceling hot-standby queries during <TT
+CLASS="COMMAND"
+>VACUUM FREEZE</TT
+>
+      (Simon Riggs, &Aacute;lvaro Herrera)
+     </P
+><P
+>      <TT
+CLASS="COMMAND"
+>VACUUM FREEZE</TT
+> on an otherwise-idle master server could
+      result in unnecessary cancellations of queries on its standby
+      servers.
+     </P
+></LI
+><LI
+><P
+>      Prevent possible failure when vacuuming multixact IDs in an
+      installation that has been pg_upgrade'd from pre-9.3 (Andrew Gierth,
+      &Aacute;lvaro Herrera)
+     </P
+><P
+>      The usual symptom of this bug is errors
+      like <SPAN
+CLASS="QUOTE"
+>"MultiXactId <TT
+CLASS="REPLACEABLE"
+><I
+>NNN</I
+></TT
+> has not been created
+      yet -- apparent wraparound"</SPAN
+>.
+     </P
+></LI
+><LI
+><P
+>      When a manual <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> specifies a column list, don't
+      reset the table's <TT
+CLASS="LITERAL"
+>changes_since_analyze</TT
+> counter
+      (Tom Lane)
+     </P
+><P
+>      If we're only analyzing some columns, we should not prevent routine
+      auto-analyze from happening for the other columns.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+>'s overestimation of <TT
+CLASS="LITERAL"
+>n_distinct</TT
+>
+      for a unique or nearly-unique column with many null entries (Tom
+      Lane)
+     </P
+><P
+>      The nulls could get counted as though they were themselves distinct
+      values, leading to serious planner misestimates in some types of
+      queries.
+     </P
+></LI
+><LI
+><P
+>      Prevent autovacuum from starting multiple workers for the same shared
+      catalog (&Aacute;lvaro Herrera)
+     </P
+><P
+>      Normally this isn't much of a problem because the vacuum doesn't take
+      long anyway; but in the case of a severely bloated catalog, it could
+      result in all but one worker uselessly waiting instead of doing
+      useful work on other tables.
+     </P
+></LI
+><LI
+><P
+>      Prevent infinite loop in GiST index build for geometric columns
+      containing NaN component values (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="FILENAME"
+>contrib/btree_gin</TT
+> to handle the smallest
+      possible <TT
+CLASS="TYPE"
+>bigint</TT
+> value correctly (Peter Eisentraut)
+     </P
+></LI
+><LI
+><P
+>      Teach libpq to correctly decode server version from future servers
+      (Peter Eisentraut)
+     </P
+><P
+>      It's planned to switch to two-part instead of three-part server
+      version numbers for releases after 9.6.  Make sure
+      that <CODE
+CLASS="FUNCTION"
+>PQserverVersion()</CODE
+> returns the correct value for
+      such cases.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>'s code for <TT
+CLASS="LITERAL"
+>unsigned long long</TT
+>
+      array elements (Michael Meskes)
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> with both <TT
+CLASS="OPTION"
+>-c</TT
+> and <TT
+CLASS="OPTION"
+>-C</TT
+>
+      options, avoid emitting an unwanted <TT
+CLASS="LITERAL"
+>CREATE SCHEMA public</TT
+>
+      command (David Johnston, Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Improve handling of <SPAN
+CLASS="SYSTEMITEM"
+>SIGTERM</SPAN
+>/control-C in
+      parallel <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> and <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> (Tom
+      Lane)
+     </P
+><P
+>      Make sure that the worker processes will exit promptly, and also arrange
+      to send query-cancel requests to the connected backends, in case they
+      are doing something long-running such as a <TT
+CLASS="COMMAND"
+>CREATE INDEX</TT
+>.
+     </P
+></LI
+><LI
+><P
+>      Fix error reporting in parallel <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>
+      and <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> (Tom Lane)
+     </P
+><P
+>      Previously, errors reported by <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>
+      or <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> worker processes might never make it to
+      the user's console, because the messages went through the master
+      process, and there were various deadlock scenarios that would prevent
+      the master process from passing on the messages.  Instead, just print
+      everything to <TT
+CLASS="LITERAL"
+>stderr</TT
+>.  In some cases this will result in
+      duplicate messages (for instance, if all the workers report a server
+      shutdown), but that seems better than no message.
+     </P
+></LI
+><LI
+><P
+>      Ensure that parallel <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>
+      or <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> on Windows will shut down properly
+      after an error (Kyotaro Horiguchi)
+     </P
+><P
+>      Previously, it would report the error, but then just sit until
+      manually stopped by the user.
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> behave better when built without zlib
+      support (Kyotaro Horiguchi)
+     </P
+><P
+>      It didn't work right for parallel dumps, and emitted some rather
+      pointless warnings in other cases.
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>pg_basebackup</SPAN
+> accept <TT
+CLASS="LITERAL"
+>-Z 0</TT
+> as
+      specifying no compression (Fujii Masao)
+     </P
+></LI
+><LI
+><P
+>      Fix makefiles' rule for building AIX shared libraries to be safe for
+      parallel make (Noah Misch)
+     </P
+></LI
+><LI
+><P
+>      Fix TAP tests and MSVC scripts to work when build directory's path
+      name contains spaces (Michael Paquier, Kyotaro Horiguchi)
+     </P
+></LI
+><LI
+><P
+>      Be more predictable about reporting <SPAN
+CLASS="QUOTE"
+>"statement timeout"</SPAN
+>
+      versus <SPAN
+CLASS="QUOTE"
+>"lock timeout"</SPAN
+> (Tom Lane)
+     </P
+><P
+>      On heavily loaded machines, the regression tests sometimes failed due
+      to reporting <SPAN
+CLASS="QUOTE"
+>"lock timeout"</SPAN
+> even though the statement timeout
+      should have occurred first.
+     </P
+></LI
+><LI
+><P
+>      Make regression tests safe for Danish and Welsh locales (Jeff Janes,
+      Tom Lane)
+     </P
+><P
+>      Change some test data that triggered the unusual sorting rules of
+      these locales.
+     </P
+></LI
+><LI
+><P
+>      Update our copy of the timezone code to match
+      IANA's <SPAN
+CLASS="APPLICATION"
+>tzcode</SPAN
+> release 2016c (Tom Lane)
+     </P
+><P
+>      This is needed to cope with anticipated future changes in the time
+      zone data files.  It also fixes some corner-case bugs in coping with
+      unusual time zones.
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2016f
+      for DST law changes in Kemerovo and Novosibirsk, plus historical
+      corrections for Azerbaijan, Belarus, and Morocco.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-4.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-3-13.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.4</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.3.13</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

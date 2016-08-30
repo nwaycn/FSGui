@@ -1,0 +1,811 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pg_trgm</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="pgstattuple"
+HREF="pgstattuple.html"><LINK
+REL="NEXT"
+TITLE="postgres_fdw"
+HREF="postgres-fdw.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="pgstattuple"
+HREF="pgstattuple.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="postgres_fdw"
+HREF="postgres-fdw.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PGTRGM"
+>F.30. pg_trgm</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>pg_trgm</TT
+> module provides functions and operators
+  for determining the similarity of
+  alphanumeric text based on trigram matching, as
+  well as index operator classes that support fast searching for similar
+  strings.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174489"
+>F.30.1. Trigram (or Trigraph) Concepts</A
+></H2
+><P
+>   A trigram is a group of three consecutive characters taken
+   from a string.  We can measure the similarity of two strings by
+   counting the number of trigrams they share.  This simple idea
+   turns out to be very effective for measuring the similarity of
+   words in many natural languages.
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    <TT
+CLASS="FILENAME"
+>pg_trgm</TT
+> ignores non-word characters
+    (non-alphanumerics) when extracting trigrams from a string.
+    Each word is considered to have two spaces
+    prefixed and one space suffixed when determining the set
+    of trigrams contained in the string.
+    For example, the set of trigrams in the string
+    <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="LITERAL"
+>cat</TT
+>"</SPAN
+> is
+    <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="LITERAL"
+>  c</TT
+>"</SPAN
+>,
+    <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="LITERAL"
+> ca</TT
+>"</SPAN
+>,
+    <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="LITERAL"
+>cat</TT
+>"</SPAN
+>, and
+    <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="LITERAL"
+>at </TT
+>"</SPAN
+>.
+    The set of trigrams in the string
+    <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="LITERAL"
+>foo|bar</TT
+>"</SPAN
+> is
+    <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="LITERAL"
+>  f</TT
+>"</SPAN
+>,
+    <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="LITERAL"
+> fo</TT
+>"</SPAN
+>,
+    <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="LITERAL"
+>foo</TT
+>"</SPAN
+>,
+    <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="LITERAL"
+>oo </TT
+>"</SPAN
+>,
+    <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="LITERAL"
+>  b</TT
+>"</SPAN
+>,
+    <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="LITERAL"
+> ba</TT
+>"</SPAN
+>,
+    <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="LITERAL"
+>bar</TT
+>"</SPAN
+>, and
+    <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="LITERAL"
+>ar </TT
+>"</SPAN
+>.
+   </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174523"
+>F.30.2. Functions and Operators</A
+></H2
+><P
+>   The functions provided by the <TT
+CLASS="FILENAME"
+>pg_trgm</TT
+> module
+   are shown in <A
+HREF="pgtrgm.html#PGTRGM-FUNC-TABLE"
+>Table F-23</A
+>, the operators
+   in <A
+HREF="pgtrgm.html#PGTRGM-OP-TABLE"
+>Table F-24</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="PGTRGM-FUNC-TABLE"
+></A
+><P
+><B
+>Table F-23. <TT
+CLASS="FILENAME"
+>pg_trgm</TT
+> Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Returns</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>similarity(text, text)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>real</TT
+></TD
+><TD
+>       Returns a number that indicates how similar the two arguments are.
+       The range of the result is zero (indicating that the two strings are
+       completely dissimilar) to one (indicating that the two strings are
+       identical).
+      </TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>show_trgm(text)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text[]</TT
+></TD
+><TD
+>       Returns an array of all the trigrams in the given string.
+       (In practice this is seldom useful except for debugging.)
+      </TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>show_limit()</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>real</TT
+></TD
+><TD
+>       Returns the current similarity threshold used by the <TT
+CLASS="LITERAL"
+>%</TT
+>
+       operator.  This sets the minimum similarity between
+       two words for them to be considered similar enough to
+       be misspellings of each other, for example.
+      </TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>set_limit(real)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>real</TT
+></TD
+><TD
+>       Sets the current similarity threshold that is used by the <TT
+CLASS="LITERAL"
+>%</TT
+>
+       operator.  The threshold must be between 0 and 1 (default is 0.3).
+       Returns the same value passed in.
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><DIV
+CLASS="TABLE"
+><A
+NAME="PGTRGM-OP-TABLE"
+></A
+><P
+><B
+>Table F-24. <TT
+CLASS="FILENAME"
+>pg_trgm</TT
+> Operators</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Operator</TH
+><TH
+>Returns</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+> <TT
+CLASS="LITERAL"
+>%</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>       Returns <TT
+CLASS="LITERAL"
+>true</TT
+> if its arguments have a similarity that is
+       greater than the current similarity threshold set by
+       <CODE
+CLASS="FUNCTION"
+>set_limit</CODE
+>.
+      </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+> <TT
+CLASS="LITERAL"
+>&lt;-&gt;</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>real</TT
+></TD
+><TD
+>       Returns the <SPAN
+CLASS="QUOTE"
+>"distance"</SPAN
+> between the arguments, that is
+       one minus the <CODE
+CLASS="FUNCTION"
+>similarity()</CODE
+> value.
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174603"
+>F.30.3. Index Support</A
+></H2
+><P
+>   The <TT
+CLASS="FILENAME"
+>pg_trgm</TT
+> module provides GiST and GIN index
+   operator classes that allow you to create an index over a text column for
+   the purpose of very fast similarity searches.  These index types support
+   the above-described similarity operators, and additionally support
+   trigram-based index searches for <TT
+CLASS="LITERAL"
+>LIKE</TT
+>, <TT
+CLASS="LITERAL"
+>ILIKE</TT
+>,
+   <TT
+CLASS="LITERAL"
+>~</TT
+> and <TT
+CLASS="LITERAL"
+>~*</TT
+> queries.  (These indexes do not
+   support equality nor simple comparison operators, so you may need a
+   regular B-tree index too.)
+  </P
+><P
+>   Example:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE test_trgm (t text);
+CREATE INDEX trgm_idx ON test_trgm USING GIST (t gist_trgm_ops);</PRE
+><P>
+or
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE INDEX trgm_idx ON test_trgm USING GIN (t gin_trgm_ops);</PRE
+><P>
+  </P
+><P
+>   At this point, you will have an index on the <TT
+CLASS="STRUCTFIELD"
+>t</TT
+> column that
+   you can use for similarity searching.  A typical query is
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT t, similarity(t, '<TT
+CLASS="REPLACEABLE"
+><I
+>word</I
+></TT
+>') AS sml
+  FROM test_trgm
+  WHERE t % '<TT
+CLASS="REPLACEABLE"
+><I
+>word</I
+></TT
+>'
+  ORDER BY sml DESC, t;</PRE
+><P>
+   This will return all values in the text column that are sufficiently
+   similar to <TT
+CLASS="REPLACEABLE"
+><I
+>word</I
+></TT
+>, sorted from best match to worst.  The
+   index will be used to make this a fast operation even over very large data
+   sets.
+  </P
+><P
+>   A variant of the above query is
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT t, t &lt;-&gt; '<TT
+CLASS="REPLACEABLE"
+><I
+>word</I
+></TT
+>' AS dist
+  FROM test_trgm
+  ORDER BY dist LIMIT 10;</PRE
+><P>
+   This can be implemented quite efficiently by GiST indexes, but not
+   by GIN indexes.  It will usually beat the first formulation when only
+   a small number of the closest matches is wanted.
+  </P
+><P
+>   Beginning in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 9.1, these index types also support
+   index searches for <TT
+CLASS="LITERAL"
+>LIKE</TT
+> and <TT
+CLASS="LITERAL"
+>ILIKE</TT
+>, for example
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT * FROM test_trgm WHERE t LIKE '%foo%bar';</PRE
+><P>
+   The index search works by extracting trigrams from the search string
+   and then looking these up in the index.  The more trigrams in the search
+   string, the more effective the index search is.  Unlike B-tree based
+   searches, the search string need not be left-anchored.
+  </P
+><P
+>   Beginning in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 9.3, these index types also support
+   index searches for regular-expression matches
+   (<TT
+CLASS="LITERAL"
+>~</TT
+> and <TT
+CLASS="LITERAL"
+>~*</TT
+> operators), for example
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT * FROM test_trgm WHERE t ~ '(foo|bar)';</PRE
+><P>
+   The index search works by extracting trigrams from the regular expression
+   and then looking these up in the index.  The more trigrams that can be
+   extracted from the regular expression, the more effective the index search
+   is.  Unlike B-tree based searches, the search string need not be
+   left-anchored.
+  </P
+><P
+>   For both <TT
+CLASS="LITERAL"
+>LIKE</TT
+> and regular-expression searches, keep in mind
+   that a pattern with no extractable trigrams will degenerate to a full-index
+   scan.
+  </P
+><P
+>   The choice between GiST and GIN indexing depends on the relative
+   performance characteristics of GiST and GIN, which are discussed elsewhere.
+   As a rule of thumb, a GIN index is faster to search than a GiST index, but
+   slower to build or update; so GIN is better suited for static data and GiST
+   for often-updated data.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174636"
+>F.30.4. Text Search Integration</A
+></H2
+><P
+>   Trigram matching is a very useful tool when used in conjunction
+   with a full text index.  In particular it can help to recognize
+   misspelled input words that will not be matched directly by the
+   full text search mechanism.
+  </P
+><P
+>   The first step is to generate an auxiliary table containing all
+   the unique words in the documents:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE words AS SELECT word FROM
+        ts_stat('SELECT to_tsvector(''simple'', bodytext) FROM documents');</PRE
+><P>
+
+   where <TT
+CLASS="STRUCTNAME"
+>documents</TT
+> is a table that has a text field
+   <TT
+CLASS="STRUCTFIELD"
+>bodytext</TT
+> that we wish to search.  The reason for using
+   the <TT
+CLASS="LITERAL"
+>simple</TT
+> configuration with the <CODE
+CLASS="FUNCTION"
+>to_tsvector</CODE
+>
+   function, instead of using a language-specific configuration,
+   is that we want a list of the original (unstemmed) words.
+  </P
+><P
+>   Next, create a trigram index on the word column:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE INDEX words_idx ON words USING GIN (word gin_trgm_ops);</PRE
+><P>
+
+   Now, a <TT
+CLASS="COMMAND"
+>SELECT</TT
+> query similar to the previous example can
+   be used to suggest spellings for misspelled words in user search terms.
+   A useful extra test is to require that the selected words are also of
+   similar length to the misspelled word.
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    Since the <TT
+CLASS="STRUCTNAME"
+>words</TT
+> table has been generated as a separate,
+    static table, it will need to be periodically regenerated so that
+    it remains reasonably up-to-date with the document collection.
+    Keeping it exactly current is usually unnecessary.
+   </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174651"
+>F.30.5. References</A
+></H2
+><P
+>   GiST Development Site
+   <A
+HREF="http://www.sai.msu.su/~megera/postgres/gist/"
+TARGET="_top"
+>http://www.sai.msu.su/~megera/postgres/gist/</A
+>
+  </P
+><P
+>   Tsearch2 Development Site
+   <A
+HREF="http://www.sai.msu.su/~megera/postgres/gist/tsearch/V2/"
+TARGET="_top"
+>http://www.sai.msu.su/~megera/postgres/gist/tsearch/V2/</A
+>
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN174657"
+>F.30.6. Authors</A
+></H2
+><P
+>   Oleg Bartunov <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:oleg@sai.msu.su"
+>oleg@sai.msu.su</A
+>&#62;</CODE
+>, Moscow, Moscow University, Russia
+  </P
+><P
+>   Teodor Sigaev <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:teodor@sigaev.ru"
+>teodor@sigaev.ru</A
+>&#62;</CODE
+>, Moscow, Delta-Soft Ltd.,Russia
+  </P
+><P
+>   Documentation: Christopher Kings-Lynne
+  </P
+><P
+>   This module is sponsored by Delta-Soft Ltd., Moscow, Russia.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="pgstattuple.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="postgres-fdw.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>pgstattuple</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>postgres_fdw</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

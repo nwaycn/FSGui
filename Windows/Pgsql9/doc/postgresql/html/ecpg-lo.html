@@ -1,0 +1,311 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Large Objects</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="ECPG - Embedded SQL in C"
+HREF="ecpg.html"><LINK
+REL="PREVIOUS"
+TITLE="Library Functions"
+HREF="ecpg-library.html"><LINK
+REL="NEXT"
+TITLE="C++ Applications"
+HREF="ecpg-cpp.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Library Functions"
+HREF="ecpg-library.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ecpg.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 33. <SPAN
+CLASS="APPLICATION"
+>ECPG</SPAN
+> - Embedded <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> in C</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="C++ Applications"
+HREF="ecpg-cpp.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="ECPG-LO"
+>33.12. Large Objects</A
+></H1
+><P
+>   Large objects are not directly supported by ECPG, but ECPG
+   application can manipulate large objects through the libpq large
+   object functions, obtaining the necessary <TT
+CLASS="TYPE"
+>PGconn</TT
+>
+   object by calling the <CODE
+CLASS="FUNCTION"
+>ECPGget_PGconn()</CODE
+>
+   function.  (However, use of
+   the <CODE
+CLASS="FUNCTION"
+>ECPGget_PGconn()</CODE
+> function and touching
+   <TT
+CLASS="TYPE"
+>PGconn</TT
+> objects directly should be done very carefully
+   and ideally not mixed with other ECPG database access calls.)
+  </P
+><P
+>   For more details about the <CODE
+CLASS="FUNCTION"
+>ECPGget_PGconn()</CODE
+>, see
+   <A
+HREF="ecpg-library.html"
+>Section 33.11</A
+>.  For information about the large
+   object function interface, see <A
+HREF="largeobjects.html"
+>Chapter 32</A
+>.
+  </P
+><P
+>   Large object functions have to be called in a transaction block, so
+   when autocommit is off, <TT
+CLASS="COMMAND"
+>BEGIN</TT
+> commands have to
+   be issued explicitly.
+  </P
+><P
+>   <A
+HREF="ecpg-lo.html#ECPG-LO-EXAMPLE"
+>Example 33-2</A
+> shows an example program that
+   illustrates how to create, write, and read a large object in an
+   ECPG application.
+  </P
+><DIV
+CLASS="EXAMPLE"
+><A
+NAME="ECPG-LO-EXAMPLE"
+></A
+><P
+><B
+>Example 33-2. ECPG Program Accessing Large Objects</B
+></P
+><PRE
+CLASS="PROGRAMLISTING"
+>#include &#60;stdio.h&#62;
+#include &#60;stdlib.h&#62;
+#include &#60;libpq-fe.h&#62;
+#include &#60;libpq/libpq-fs.h&#62;
+
+EXEC SQL WHENEVER SQLERROR STOP;
+
+int
+main(void)
+{
+    PGconn     *conn;
+    Oid         loid;
+    int         fd;
+    char        buf[256];
+    int         buflen = 256;
+    char        buf2[256];
+    int         rc;
+
+    memset(buf, 1, buflen);
+
+    EXEC SQL CONNECT TO testdb AS con1;
+
+    conn = ECPGget_PGconn("con1");
+    printf("conn = %p\n", conn);
+
+    /* create */
+    loid = lo_create(conn, 0);
+    if (loid &#38;lt; 0)
+        printf("lo_create() failed: %s", PQerrorMessage(conn));
+
+    printf("loid = %d\n", loid);
+
+    /* write test */
+    fd = lo_open(conn, loid, INV_READ|INV_WRITE);
+    if (fd &#38;lt; 0)
+        printf("lo_open() failed: %s", PQerrorMessage(conn));
+
+    printf("fd = %d\n", fd);
+
+    rc = lo_write(conn, fd, buf, buflen);
+    if (rc &#38;lt; 0)
+        printf("lo_write() failed\n");
+
+    rc = lo_close(conn, fd);
+    if (rc &#38;lt; 0)
+        printf("lo_close() failed: %s", PQerrorMessage(conn));
+
+    /* read test */
+    fd = lo_open(conn, loid, INV_READ);
+    if (fd &#38;lt; 0)
+        printf("lo_open() failed: %s", PQerrorMessage(conn));
+
+    printf("fd = %d\n", fd);
+
+    rc = lo_read(conn, fd, buf2, buflen);
+    if (rc &#38;lt; 0)
+        printf("lo_read() failed\n");
+
+    rc = lo_close(conn, fd);
+    if (rc &#38;lt; 0)
+        printf("lo_close() failed: %s", PQerrorMessage(conn));
+
+    /* check */
+    rc = memcmp(buf, buf2, buflen);
+    printf("memcmp() = %d\n", rc);
+
+    /* cleanup */
+    rc = lo_unlink(conn, loid);
+    if (rc &#38;lt; 0)
+        printf("lo_unlink() failed: %s", PQerrorMessage(conn));
+
+    EXEC SQL COMMIT;
+    EXEC SQL DISCONNECT ALL;
+    return 0;
+}</PRE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ecpg-library.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="ecpg-cpp.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Library Functions</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="ecpg.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><ACRONYM
+CLASS="ACRONYM"
+>C++</ACRONYM
+> Applications</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

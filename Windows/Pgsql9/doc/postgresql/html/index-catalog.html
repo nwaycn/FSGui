@@ -1,0 +1,381 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Catalog Entries for Indexes</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Index Access Method Interface Definition"
+HREF="indexam.html"><LINK
+REL="PREVIOUS"
+TITLE="Index Access Method Interface Definition"
+HREF="indexam.html"><LINK
+REL="NEXT"
+TITLE="Index Access Method Functions"
+HREF="index-functions.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Index Access Method Interface Definition"
+HREF="indexam.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="indexam.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 58. Index Access Method Interface Definition</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Index Access Method Functions"
+HREF="index-functions.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="INDEX-CATALOG"
+>58.1. Catalog Entries for Indexes</A
+></H1
+><P
+>   Each index access method is described by a row in the
+   <TT
+CLASS="STRUCTNAME"
+>pg_am</TT
+> system catalog (see
+   <A
+HREF="catalog-pg-am.html"
+>Section 49.3</A
+>).  The principal contents of a
+   <TT
+CLASS="STRUCTNAME"
+>pg_am</TT
+> row are references to
+   <A
+HREF="catalog-pg-proc.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_proc</TT
+></A
+>
+   entries that identify the index access
+   functions supplied by the access method.  The APIs for these functions
+   are defined later in this chapter.  In addition, the
+   <TT
+CLASS="STRUCTNAME"
+>pg_am</TT
+> row specifies a few fixed properties of
+   the access method, such as whether it can support multicolumn indexes.
+   There is not currently any special support
+   for creating or deleting <TT
+CLASS="STRUCTNAME"
+>pg_am</TT
+> entries;
+   anyone able to write a new access method is expected to be competent
+   to insert an appropriate row for themselves.
+  </P
+><P
+>   To be useful, an index access method must also have one or more
+   <I
+CLASS="FIRSTTERM"
+>operator families</I
+> and
+   <I
+CLASS="FIRSTTERM"
+>operator classes</I
+> defined in
+   <A
+HREF="catalog-pg-opfamily.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_opfamily</TT
+></A
+>,
+   <A
+HREF="catalog-pg-opclass.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_opclass</TT
+></A
+>,
+   <A
+HREF="catalog-pg-amop.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_amop</TT
+></A
+>, and
+   <A
+HREF="catalog-pg-amproc.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_amproc</TT
+></A
+>.
+   These entries allow the planner
+   to determine what kinds of query qualifications can be used with
+   indexes of this access method.  Operator families and classes are described
+   in <A
+HREF="xindex.html"
+>Section 35.14</A
+>, which is prerequisite material for reading
+   this chapter.
+  </P
+><P
+>   An individual index is defined by a
+   <A
+HREF="catalog-pg-class.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+></A
+>
+   entry that describes it as a physical relation, plus a
+   <A
+HREF="catalog-pg-index.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_index</TT
+></A
+>
+   entry that shows the logical content of the index &mdash; that is, the set
+   of index columns it has and the semantics of those columns, as captured by
+   the associated operator classes.  The index columns (key values) can be
+   either simple columns of the underlying table or expressions over the table
+   rows.  The index access method normally has no interest in where the index
+   key values come from (it is always handed precomputed key values) but it
+   will be very interested in the operator class information in
+   <TT
+CLASS="STRUCTNAME"
+>pg_index</TT
+>.  Both of these catalog entries can be
+   accessed as part of the <TT
+CLASS="STRUCTNAME"
+>Relation</TT
+> data structure that is
+   passed to all operations on the index.
+  </P
+><P
+>   Some of the flag columns of <TT
+CLASS="STRUCTNAME"
+>pg_am</TT
+> have nonobvious
+   implications.  The requirements of <TT
+CLASS="STRUCTFIELD"
+>amcanunique</TT
+>
+   are discussed in <A
+HREF="index-unique-checks.html"
+>Section 58.5</A
+>.
+   The <TT
+CLASS="STRUCTFIELD"
+>amcanmulticol</TT
+> flag asserts that the
+   access method supports multicolumn indexes, while
+   <TT
+CLASS="STRUCTFIELD"
+>amoptionalkey</TT
+> asserts that it allows scans
+   where no indexable restriction clause is given for the first index column.
+   When <TT
+CLASS="STRUCTFIELD"
+>amcanmulticol</TT
+> is false,
+   <TT
+CLASS="STRUCTFIELD"
+>amoptionalkey</TT
+> essentially says whether the
+   access method supports full-index scans without any restriction clause.
+   Access methods that support multiple index columns <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>must</I
+></SPAN
+>
+   support scans that omit restrictions on any or all of the columns after
+   the first; however they are permitted to require some restriction to
+   appear for the first index column, and this is signaled by setting
+   <TT
+CLASS="STRUCTFIELD"
+>amoptionalkey</TT
+> false.
+   One reason that an index AM might set
+   <TT
+CLASS="STRUCTFIELD"
+>amoptionalkey</TT
+> false is if it doesn't index
+   null values.  Since most indexable operators are
+   strict and hence cannot return true for null inputs,
+   it is at first sight attractive to not store index entries for null values:
+   they could never be returned by an index scan anyway.  However, this
+   argument fails when an index scan has no restriction clause for a given
+   index column.  In practice this means that
+   indexes that have <TT
+CLASS="STRUCTFIELD"
+>amoptionalkey</TT
+> true must
+   index nulls, since the planner might decide to use such an index
+   with no scan keys at all.  A related restriction is that an index
+   access method that supports multiple index columns <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>must</I
+></SPAN
+>
+   support indexing null values in columns after the first, because the planner
+   will assume the index can be used for queries that do not restrict
+   these columns.  For example, consider an index on (a,b) and a query with
+   <TT
+CLASS="LITERAL"
+>WHERE a = 4</TT
+>.  The system will assume the index can be
+   used to scan for rows with <TT
+CLASS="LITERAL"
+>a = 4</TT
+>, which is wrong if the
+   index omits rows where <TT
+CLASS="LITERAL"
+>b</TT
+> is null.
+   It is, however, OK to omit rows where the first indexed column is null.
+   An index access method that does index nulls may also set
+   <TT
+CLASS="STRUCTFIELD"
+>amsearchnulls</TT
+>, indicating that it supports
+   <TT
+CLASS="LITERAL"
+>IS NULL</TT
+> and <TT
+CLASS="LITERAL"
+>IS NOT NULL</TT
+> clauses as search
+   conditions.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="indexam.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="index-functions.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Index Access Method Interface Definition</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="indexam.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Index Access Method Functions</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

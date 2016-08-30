@@ -1,0 +1,444 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>fuzzystrmatch</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="file_fdw"
+HREF="file-fdw.html"><LINK
+REL="NEXT"
+TITLE="hstore"
+HREF="hstore.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="file_fdw"
+HREF="file-fdw.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="hstore"
+HREF="hstore.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="FUZZYSTRMATCH"
+>F.14. fuzzystrmatch</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>fuzzystrmatch</TT
+> module provides several
+  functions to determine similarities and distance between strings.
+ </P
+><DIV
+CLASS="CAUTION"
+><P
+></P
+><TABLE
+CLASS="CAUTION"
+BORDER="1"
+WIDTH="100%"
+><TR
+><TD
+ALIGN="CENTER"
+><B
+>Caution</B
+></TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+><P
+>   At present, the <CODE
+CLASS="FUNCTION"
+>soundex</CODE
+>, <CODE
+CLASS="FUNCTION"
+>metaphone</CODE
+>,
+   <CODE
+CLASS="FUNCTION"
+>dmetaphone</CODE
+>, and <CODE
+CLASS="FUNCTION"
+>dmetaphone_alt</CODE
+> functions do
+   not work well with multibyte encodings (such as UTF-8).
+  </P
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN170746"
+>F.14.1. Soundex</A
+></H2
+><P
+>   The Soundex system is a method of matching similar-sounding names
+   by converting them to the same code.  It was initially used by the
+   United States Census in 1880, 1900, and 1910.  Note that Soundex
+   is not very useful for non-English names.
+  </P
+><P
+>   The <TT
+CLASS="FILENAME"
+>fuzzystrmatch</TT
+> module provides two functions
+   for working with Soundex codes:
+  </P
+><PRE
+CLASS="SYNOPSIS"
+>soundex(text) returns text
+difference(text, text) returns int</PRE
+><P
+>   The <CODE
+CLASS="FUNCTION"
+>soundex</CODE
+> function converts a string to its Soundex code.
+   The <CODE
+CLASS="FUNCTION"
+>difference</CODE
+> function converts two strings to their Soundex
+   codes and then reports the number of matching code positions.  Since
+   Soundex codes have four characters, the result ranges from zero to four,
+   with zero being no match and four being an exact match.  (Thus, the
+   function is misnamed &mdash; <CODE
+CLASS="FUNCTION"
+>similarity</CODE
+> would have been
+   a better name.)
+  </P
+><P
+>   Here are some usage examples:
+  </P
+><PRE
+CLASS="PROGRAMLISTING"
+>SELECT soundex('hello world!');
+
+SELECT soundex('Anne'), soundex('Ann'), difference('Anne', 'Ann');
+SELECT soundex('Anne'), soundex('Andrew'), difference('Anne', 'Andrew');
+SELECT soundex('Anne'), soundex('Margaret'), difference('Anne', 'Margaret');
+
+CREATE TABLE s (nm text);
+
+INSERT INTO s VALUES ('john');
+INSERT INTO s VALUES ('joan');
+INSERT INTO s VALUES ('wobbly');
+INSERT INTO s VALUES ('jack');
+
+SELECT * FROM s WHERE soundex(nm) = soundex('john');
+
+SELECT * FROM s WHERE difference(s.nm, 'john') &gt; 2;</PRE
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN170762"
+>F.14.2. Levenshtein</A
+></H2
+><P
+>   This function calculates the Levenshtein distance between two strings:
+  </P
+><PRE
+CLASS="SYNOPSIS"
+>levenshtein(text source, text target, int ins_cost, int del_cost, int sub_cost) returns int
+levenshtein(text source, text target) returns int
+levenshtein_less_equal(text source, text target, int ins_cost, int del_cost, int sub_cost, int max_d) returns int
+levenshtein_less_equal(text source, text target, int max_d) returns int</PRE
+><P
+>   Both <TT
+CLASS="LITERAL"
+>source</TT
+> and <TT
+CLASS="LITERAL"
+>target</TT
+> can be any
+   non-null string, with a maximum of 255 characters.  The cost parameters
+   specify how much to charge for a character insertion, deletion, or
+   substitution, respectively.  You can omit the cost parameters, as in
+   the second version of the function; in that case they all default to 1.
+  </P
+><P
+>   <CODE
+CLASS="FUNCTION"
+>levenshtein_less_equal</CODE
+> is an accelerated version of the
+   Levenshtein function for use when only small distances are of interest.
+   If the actual distance is less than or equal to <TT
+CLASS="LITERAL"
+>max_d</TT
+>,
+   then <CODE
+CLASS="FUNCTION"
+>levenshtein_less_equal</CODE
+> returns the correct
+   distance; otherwise it returns some value greater than <TT
+CLASS="LITERAL"
+>max_d</TT
+>.
+   If <TT
+CLASS="LITERAL"
+>max_d</TT
+> is negative then the behavior is the same as
+   <CODE
+CLASS="FUNCTION"
+>levenshtein</CODE
+>.
+  </P
+><P
+>   Examples:
+  </P
+><PRE
+CLASS="SCREEN"
+>test=# SELECT levenshtein('GUMBO', 'GAMBOL');
+ levenshtein
+-------------
+           2
+(1 row)
+
+test=# SELECT levenshtein('GUMBO', 'GAMBOL', 2,1,1);
+ levenshtein
+-------------
+           3
+(1 row)
+
+test=# SELECT levenshtein_less_equal('extensive', 'exhaustive',2);
+ levenshtein_less_equal
+------------------------
+                      3
+(1 row)
+
+test=# SELECT levenshtein_less_equal('extensive', 'exhaustive',4);
+ levenshtein_less_equal
+------------------------
+                      4
+(1 row)</PRE
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN170782"
+>F.14.3. Metaphone</A
+></H2
+><P
+>   Metaphone, like Soundex, is based on the idea of constructing a
+   representative code for an input string.  Two strings are then
+   deemed similar if they have the same codes.
+  </P
+><P
+>   This function calculates the metaphone code of an input string:
+  </P
+><PRE
+CLASS="SYNOPSIS"
+>metaphone(text source, int max_output_length) returns text</PRE
+><P
+>   <TT
+CLASS="LITERAL"
+>source</TT
+> has to be a non-null string with a maximum of
+   255 characters.  <TT
+CLASS="LITERAL"
+>max_output_length</TT
+> sets the maximum
+   length of the output metaphone code; if longer, the output is truncated
+   to this length.
+  </P
+><P
+>   Example:
+  </P
+><PRE
+CLASS="SCREEN"
+>test=# SELECT metaphone('GUMBO', 4);
+ metaphone
+-----------
+ KM
+(1 row)</PRE
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN170794"
+>F.14.4. Double Metaphone</A
+></H2
+><P
+>   The Double Metaphone system computes two <SPAN
+CLASS="QUOTE"
+>"sounds like"</SPAN
+> strings
+   for a given input string &mdash; a <SPAN
+CLASS="QUOTE"
+>"primary"</SPAN
+> and an
+   <SPAN
+CLASS="QUOTE"
+>"alternate"</SPAN
+>.  In most cases they are the same, but for non-English
+   names especially they can be a bit different, depending on pronunciation.
+   These functions compute the primary and alternate codes:
+  </P
+><PRE
+CLASS="SYNOPSIS"
+>dmetaphone(text source) returns text
+dmetaphone_alt(text source) returns text</PRE
+><P
+>   There is no length limit on the input strings.
+  </P
+><P
+>   Example:
+  </P
+><PRE
+CLASS="SCREEN"
+>test=# select dmetaphone('gumbo');
+ dmetaphone
+------------
+ KMP
+(1 row)</PRE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="file-fdw.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="hstore.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>file_fdw</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>hstore</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

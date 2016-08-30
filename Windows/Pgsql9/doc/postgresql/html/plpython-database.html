@@ -1,0 +1,784 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Database Access</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="PL/Python - Python Procedural Language"
+HREF="plpython.html"><LINK
+REL="PREVIOUS"
+TITLE="Trigger Functions"
+HREF="plpython-trigger.html"><LINK
+REL="NEXT"
+TITLE="Explicit Subtransactions"
+HREF="plpython-subtransaction.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Trigger Functions"
+HREF="plpython-trigger.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plpython.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 43. PL/Python - Python Procedural Language</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Explicit Subtransactions"
+HREF="plpython-subtransaction.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PLPYTHON-DATABASE"
+>43.7. Database Access</A
+></H1
+><P
+>   The PL/Python language module automatically imports a Python module
+   called <TT
+CLASS="LITERAL"
+>plpy</TT
+>.  The functions and constants in
+   this module are available to you in the Python code as
+   <TT
+CLASS="LITERAL"
+>plpy.<TT
+CLASS="REPLACEABLE"
+><I
+>foo</I
+></TT
+></TT
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN65744"
+>43.7.1. Database Access Functions</A
+></H2
+><P
+>   The <TT
+CLASS="LITERAL"
+>plpy</TT
+> module provides several functions to execute
+   database commands:
+  </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>plpy.<CODE
+CLASS="FUNCTION"
+>execute</CODE
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>query</I
+></TT
+> [, <TT
+CLASS="REPLACEABLE"
+><I
+>max-rows</I
+></TT
+>])</TT
+></DT
+><DD
+><P
+>      Calling <CODE
+CLASS="FUNCTION"
+>plpy.execute</CODE
+> with a query string and an
+      optional row limit argument causes that query to be run and the result to
+      be returned in a result object.
+     </P
+><P
+>      The result object emulates a list or dictionary object.  The result
+      object can be accessed by row number and column name.  For example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>rv = plpy.execute("SELECT * FROM my_table", 5)</PRE
+><P>
+      returns up to 5 rows from <TT
+CLASS="LITERAL"
+>my_table</TT
+>.  If
+      <TT
+CLASS="LITERAL"
+>my_table</TT
+> has a column
+      <TT
+CLASS="LITERAL"
+>my_column</TT
+>, it would be accessed as:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>foo = rv[i]["my_column"]</PRE
+><P>
+      The number of rows returned can be obtained using the built-in
+      <CODE
+CLASS="FUNCTION"
+>len</CODE
+> function.
+     </P
+><P
+>      The result object has these additional methods:
+      <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>nrows</CODE
+>()</TT
+></DT
+><DD
+><P
+>          Returns the number of rows processed by the command.  Note that this
+          is not necessarily the same as the number of rows returned.  For
+          example, an <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> command will set this value but
+          won't return any rows (unless <TT
+CLASS="LITERAL"
+>RETURNING</TT
+> is used).
+         </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>status</CODE
+>()</TT
+></DT
+><DD
+><P
+>          The <CODE
+CLASS="FUNCTION"
+>SPI_execute()</CODE
+> return value.
+         </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>colnames</CODE
+>()</TT
+><BR><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>coltypes</CODE
+>()</TT
+><BR><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>coltypmods</CODE
+>()</TT
+></DT
+><DD
+><P
+>          Return a list of column names, list of column type OIDs, and list of
+          type-specific type modifiers for the columns, respectively.
+         </P
+><P
+>          These methods raise an exception when called on a result object from
+          a command that did not produce a result set, e.g.,
+          <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> without <TT
+CLASS="LITERAL"
+>RETURNING</TT
+>, or
+          <TT
+CLASS="COMMAND"
+>DROP TABLE</TT
+>.  But it is OK to use these methods on
+          a result set containing zero rows.
+         </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>__str__</CODE
+>()</TT
+></DT
+><DD
+><P
+>          The standard <TT
+CLASS="LITERAL"
+>__str__</TT
+> method is defined so that it
+          is possible for example to debug query execution results
+          using <TT
+CLASS="LITERAL"
+>plpy.debug(rv)</TT
+>.
+         </P
+></DD
+></DL
+></DIV
+><P>
+     </P
+><P
+>      The result object can be modified.
+     </P
+><P
+>      Note that calling <TT
+CLASS="LITERAL"
+>plpy.execute</TT
+> will cause the entire
+      result set to be read into memory.  Only use that function when you are
+      sure that the result set will be relatively small.  If you don't want to
+      risk excessive memory usage when fetching large results,
+      use <TT
+CLASS="LITERAL"
+>plpy.cursor</TT
+> rather
+      than <TT
+CLASS="LITERAL"
+>plpy.execute</TT
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>plpy.<CODE
+CLASS="FUNCTION"
+>prepare</CODE
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>query</I
+></TT
+> [, <TT
+CLASS="REPLACEABLE"
+><I
+>argtypes</I
+></TT
+>])</TT
+><BR><TT
+CLASS="LITERAL"
+>plpy.<CODE
+CLASS="FUNCTION"
+>execute</CODE
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>plan</I
+></TT
+> [, <TT
+CLASS="REPLACEABLE"
+><I
+>arguments</I
+></TT
+> [, <TT
+CLASS="REPLACEABLE"
+><I
+>max-rows</I
+></TT
+>]])</TT
+></DT
+><DD
+><P
+>      
+      <CODE
+CLASS="FUNCTION"
+>plpy.prepare</CODE
+> prepares the execution plan for a
+      query.  It is called with a query string and a list of parameter types,
+      if you have parameter references in the query.  For example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>plan = plpy.prepare("SELECT last_name FROM my_users WHERE first_name = $1", ["text"])</PRE
+><P>
+      <TT
+CLASS="LITERAL"
+>text</TT
+> is the type of the variable you will be passing
+      for <TT
+CLASS="LITERAL"
+>$1</TT
+>.  The second argument is optional if you don't
+      want to pass any parameters to the query.
+     </P
+><P
+>      After preparing a statement, you use a variant of the
+      function <CODE
+CLASS="FUNCTION"
+>plpy.execute</CODE
+> to run it:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>rv = plpy.execute(plan, ["name"], 5)</PRE
+><P>
+      Pass the plan as the first argument (instead of the query string), and a
+      list of values to substitute into the query as the second argument.  The
+      second argument is optional if the query does not expect any parameters.
+      The third argument is the optional row limit as before.
+     </P
+><P
+>      Query parameters and result row fields are converted between PostgreSQL
+      and Python data types as described in <A
+HREF="plpython-data.html"
+>Section 43.3</A
+>.
+     </P
+><P
+>      When you prepare a plan using the PL/Python module it is automatically
+      saved.  Read the SPI documentation (<A
+HREF="spi.html"
+>Chapter 44</A
+>) for a
+      description of what this means.  In order to make effective use of this
+      across function calls one needs to use one of the persistent storage
+      dictionaries <TT
+CLASS="LITERAL"
+>SD</TT
+> or <TT
+CLASS="LITERAL"
+>GD</TT
+> (see
+      <A
+HREF="plpython-sharing.html"
+>Section 43.4</A
+>). For example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION usesavedplan() RETURNS trigger AS $$
+    if "plan" in SD:
+        plan = SD["plan"]
+    else:
+        plan = plpy.prepare("SELECT 1")
+        SD["plan"] = plan
+    # rest of function
+$$ LANGUAGE plpythonu;</PRE
+><P>
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>plpy.<CODE
+CLASS="FUNCTION"
+>cursor</CODE
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>query</I
+></TT
+>)</TT
+><BR><TT
+CLASS="LITERAL"
+>plpy.<CODE
+CLASS="FUNCTION"
+>cursor</CODE
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>plan</I
+></TT
+> [, <TT
+CLASS="REPLACEABLE"
+><I
+>arguments</I
+></TT
+>])</TT
+></DT
+><DD
+><P
+>      The <TT
+CLASS="LITERAL"
+>plpy.cursor</TT
+> function accepts the same arguments
+      as <TT
+CLASS="LITERAL"
+>plpy.execute</TT
+> (except for the row limit) and returns
+      a cursor object, which allows you to process large result sets in smaller
+      chunks.  As with <TT
+CLASS="LITERAL"
+>plpy.execute</TT
+>, either a query string
+      or a plan object along with a list of arguments can be used.
+     </P
+><P
+>      The cursor object provides a <TT
+CLASS="LITERAL"
+>fetch</TT
+> method that accepts
+      an integer parameter and returns a result object.  Each time you
+      call <TT
+CLASS="LITERAL"
+>fetch</TT
+>, the returned object will contain the next
+      batch of rows, never larger than the parameter value.  Once all rows are
+      exhausted, <TT
+CLASS="LITERAL"
+>fetch</TT
+> starts returning an empty result
+      object.  Cursor objects also provide an
+      <A
+HREF="http://docs.python.org/library/stdtypes.html#iterator-types"
+TARGET="_top"
+>iterator
+      interface</A
+>, yielding one row at a time until all rows are
+      exhausted.  Data fetched that way is not returned as result objects, but
+      rather as dictionaries, each dictionary corresponding to a single result
+      row.
+     </P
+><P
+>      An example of two ways of processing data from a large table is:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION count_odd_iterator() RETURNS integer AS $$
+odd = 0
+for row in plpy.cursor("select num from largetable"):
+    if row['num'] % 2:
+         odd += 1
+return odd
+$$ LANGUAGE plpythonu;
+
+CREATE FUNCTION count_odd_fetch(batch_size integer) RETURNS integer AS $$
+odd = 0
+cursor = plpy.cursor("select num from largetable")
+while True:
+    rows = cursor.fetch(batch_size)
+    if not rows:
+        break
+    for row in rows:
+        if row['num'] % 2:
+            odd += 1
+return odd
+$$ LANGUAGE plpythonu;
+
+CREATE FUNCTION count_odd_prepared() RETURNS integer AS $$
+odd = 0
+plan = plpy.prepare("select num from largetable where num % $1 &lt;&gt; 0", ["integer"])
+rows = list(plpy.cursor(plan, [2]))
+
+return len(rows)
+$$ LANGUAGE plpythonu;</PRE
+><P>
+     </P
+><P
+>      Cursors are automatically disposed of.  But if you want to explicitly
+      release all resources held by a cursor, use the <TT
+CLASS="LITERAL"
+>close</TT
+>
+      method.  Once closed, a cursor cannot be fetched from anymore.
+     </P
+><DIV
+CLASS="TIP"
+><BLOCKQUOTE
+CLASS="TIP"
+><P
+><B
+>Tip: </B
+>        Do not confuse objects created by <TT
+CLASS="LITERAL"
+>plpy.cursor</TT
+> with
+        DB-API cursors as defined by
+        the <A
+HREF="http://www.python.org/dev/peps/pep-0249/"
+TARGET="_top"
+>Python
+        Database API specification</A
+>.  They don't have anything in common
+        except for the name.
+      </P
+></BLOCKQUOTE
+></DIV
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="PLPYTHON-TRAPPING"
+>43.7.2. Trapping Errors</A
+></H2
+><P
+>    Functions accessing the database might encounter errors, which
+    will cause them to abort and raise an exception.  Both
+    <CODE
+CLASS="FUNCTION"
+>plpy.execute</CODE
+> and
+    <CODE
+CLASS="FUNCTION"
+>plpy.prepare</CODE
+> can raise an instance of a subclass of
+    <TT
+CLASS="LITERAL"
+>plpy.SPIError</TT
+>, which by default will terminate
+    the function.  This error can be handled just like any other
+    Python exception, by using the <TT
+CLASS="LITERAL"
+>try/except</TT
+>
+    construct.  For example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION try_adding_joe() RETURNS text AS $$
+    try:
+        plpy.execute("INSERT INTO users(username) VALUES ('joe')")
+    except plpy.SPIError:
+        return "something went wrong"
+    else:
+        return "Joe added"
+$$ LANGUAGE plpythonu;</PRE
+><P>
+   </P
+><P
+>    The actual class of the exception being raised corresponds to the
+    specific condition that caused the error.  Refer
+    to <A
+HREF="errcodes-appendix.html#ERRCODES-TABLE"
+>Table A-1</A
+> for a list of possible
+    conditions.  The module
+    <TT
+CLASS="LITERAL"
+>plpy.spiexceptions</TT
+> defines an exception class
+    for each <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> condition, deriving
+    their names from the condition name.  For
+    instance, <TT
+CLASS="LITERAL"
+>division_by_zero</TT
+>
+    becomes <TT
+CLASS="LITERAL"
+>DivisionByZero</TT
+>, <TT
+CLASS="LITERAL"
+>unique_violation</TT
+>
+    becomes <TT
+CLASS="LITERAL"
+>UniqueViolation</TT
+>, <TT
+CLASS="LITERAL"
+>fdw_error</TT
+>
+    becomes <TT
+CLASS="LITERAL"
+>FdwError</TT
+>, and so on.  Each of these
+    exception classes inherits from <TT
+CLASS="LITERAL"
+>SPIError</TT
+>.  This
+    separation makes it easier to handle specific errors, for
+    instance:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION insert_fraction(numerator int, denominator int) RETURNS text AS $$
+from plpy import spiexceptions
+try:
+    plan = plpy.prepare("INSERT INTO fractions (frac) VALUES ($1 / $2)", ["int", "int"])
+    plpy.execute(plan, [numerator, denominator])
+except spiexceptions.DivisionByZero:
+    return "denominator cannot equal zero"
+except spiexceptions.UniqueViolation:
+    return "already have that fraction"
+except plpy.SPIError, e:
+    return "other error, SQLSTATE %s" % e.sqlstate
+else:
+    return "fraction inserted"
+$$ LANGUAGE plpythonu;</PRE
+><P>
+    Note that because all exceptions from
+    the <TT
+CLASS="LITERAL"
+>plpy.spiexceptions</TT
+> module inherit
+    from <TT
+CLASS="LITERAL"
+>SPIError</TT
+>, an <TT
+CLASS="LITERAL"
+>except</TT
+>
+    clause handling it will catch any database access error.
+   </P
+><P
+>    As an alternative way of handling different error conditions, you
+    can catch the <TT
+CLASS="LITERAL"
+>SPIError</TT
+> exception and determine
+    the specific error condition inside the <TT
+CLASS="LITERAL"
+>except</TT
+>
+    block by looking at the <TT
+CLASS="LITERAL"
+>sqlstate</TT
+> attribute of
+    the exception object.  This attribute is a string value containing
+    the <SPAN
+CLASS="QUOTE"
+>"SQLSTATE"</SPAN
+> error code.  This approach provides
+    approximately the same functionality
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plpython-trigger.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="plpython-subtransaction.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Trigger Functions</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="plpython.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Explicit Subtransactions</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

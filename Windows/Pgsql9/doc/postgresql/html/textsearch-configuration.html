@@ -1,0 +1,331 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Configuration Example</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Full Text Search"
+HREF="textsearch.html"><LINK
+REL="PREVIOUS"
+TITLE="Dictionaries"
+HREF="textsearch-dictionaries.html"><LINK
+REL="NEXT"
+TITLE="Testing and Debugging Text Search"
+HREF="textsearch-debugging.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Dictionaries"
+HREF="textsearch-dictionaries.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="textsearch.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 12. Full Text Search</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Testing and Debugging Text Search"
+HREF="textsearch-debugging.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="TEXTSEARCH-CONFIGURATION"
+>12.7. Configuration Example</A
+></H1
+><P
+>    A text search configuration specifies all options necessary to transform a
+    document into a <TT
+CLASS="TYPE"
+>tsvector</TT
+>: the parser to use to break text
+    into tokens, and the dictionaries to use to transform each token into a
+    lexeme.  Every call of
+    <CODE
+CLASS="FUNCTION"
+>to_tsvector</CODE
+> or <CODE
+CLASS="FUNCTION"
+>to_tsquery</CODE
+>
+    needs a text search configuration to perform its processing.
+    The configuration parameter
+    <A
+HREF="runtime-config-client.html#GUC-DEFAULT-TEXT-SEARCH-CONFIG"
+>default_text_search_config</A
+>
+    specifies the name of the default configuration, which is the
+    one used by text search functions if an explicit configuration
+    parameter is omitted.
+    It can be set in <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>, or set for an
+    individual session using the <TT
+CLASS="COMMAND"
+>SET</TT
+> command.
+   </P
+><P
+>    Several predefined text search configurations are available, and
+    you can create custom configurations easily.  To facilitate management
+    of text search objects, a set of <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> commands
+    is available, and there are several <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> commands that display information
+    about text search objects (<A
+HREF="textsearch-psql.html"
+>Section 12.10</A
+>).
+   </P
+><P
+>    As an example we will create a configuration
+    <TT
+CLASS="LITERAL"
+>pg</TT
+>, starting by duplicating the built-in
+    <TT
+CLASS="LITERAL"
+>english</TT
+> configuration:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TEXT SEARCH CONFIGURATION public.pg ( COPY = pg_catalog.english );</PRE
+><P>
+   </P
+><P
+>    We will use a PostgreSQL-specific synonym list
+    and store it in <TT
+CLASS="FILENAME"
+>$SHAREDIR/tsearch_data/pg_dict.syn</TT
+>.
+    The file contents look like:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>postgres    pg
+pgsql       pg
+postgresql  pg</PRE
+><P>
+
+    We define the synonym dictionary like this:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TEXT SEARCH DICTIONARY pg_dict (
+    TEMPLATE = synonym,
+    SYNONYMS = pg_dict
+);</PRE
+><P>
+
+    Next we register the <SPAN
+CLASS="PRODUCTNAME"
+>Ispell</SPAN
+> dictionary
+    <TT
+CLASS="LITERAL"
+>english_ispell</TT
+>, which has its own configuration files:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TEXT SEARCH DICTIONARY english_ispell (
+    TEMPLATE = ispell,
+    DictFile = english,
+    AffFile = english,
+    StopWords = english
+);</PRE
+><P>
+
+    Now we can set up the mappings for words in configuration
+    <TT
+CLASS="LITERAL"
+>pg</TT
+>:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TEXT SEARCH CONFIGURATION pg
+    ALTER MAPPING FOR asciiword, asciihword, hword_asciipart,
+                      word, hword, hword_part
+    WITH pg_dict, english_ispell, english_stem;</PRE
+><P>
+
+    We choose not to index or search some token types that the built-in
+    configuration does handle:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TEXT SEARCH CONFIGURATION pg
+    DROP MAPPING FOR email, url, url_path, sfloat, float;</PRE
+><P>
+   </P
+><P
+>    Now we can test our configuration:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT * FROM ts_debug('public.pg', '
+PostgreSQL, the highly scalable, SQL compliant, open source object-relational
+database management system, is now undergoing beta testing of the next
+version of our software.
+');</PRE
+><P>
+   </P
+><P
+>    The next step is to set the session to use the new configuration, which was
+    created in the <TT
+CLASS="LITERAL"
+>public</TT
+> schema:
+
+</P><PRE
+CLASS="SCREEN"
+>=&gt; \dF
+   List of text search configurations
+ Schema  | Name | Description
+---------+------+-------------
+ public  | pg   |
+
+SET default_text_search_config = 'public.pg';
+SET
+
+SHOW default_text_search_config;
+ default_text_search_config
+----------------------------
+ public.pg</PRE
+><P>
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="textsearch-dictionaries.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="textsearch-debugging.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Dictionaries</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="textsearch.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Testing and Debugging Text Search</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

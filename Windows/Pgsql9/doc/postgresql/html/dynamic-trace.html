@@ -1,0 +1,1210 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Dynamic Tracing</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Monitoring Database Activity"
+HREF="monitoring.html"><LINK
+REL="PREVIOUS"
+TITLE="Viewing Locks"
+HREF="monitoring-locks.html"><LINK
+REL="NEXT"
+TITLE="Monitoring Disk Usage"
+HREF="diskusage.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Viewing Locks"
+HREF="monitoring-locks.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="monitoring.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 27. Monitoring Database Activity</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Monitoring Disk Usage"
+HREF="diskusage.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="DYNAMIC-TRACE"
+>27.4. Dynamic Tracing</A
+></H1
+><P
+>   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> provides facilities to support
+   dynamic tracing of the database server. This allows an external
+   utility to be called at specific points in the code and thereby trace
+   execution.
+  </P
+><P
+>   A number of probes or trace points are already inserted into the source
+   code. These probes are intended to be used by database developers and
+   administrators. By default the probes are not compiled into
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>; the user needs to explicitly tell
+   the configure script to make the probes available.
+  </P
+><P
+>   Currently, the
+   <A
+HREF="https://en.wikipedia.org/wiki/DTrace"
+TARGET="_top"
+>DTrace</A
+>
+   utility is supported, which, at the time of this writing, is available
+   on Solaris, OS X, FreeBSD, NetBSD, and Oracle Linux.  The
+   <A
+HREF="http://sourceware.org/systemtap/"
+TARGET="_top"
+>SystemTap</A
+> project
+   for Linux provides a DTrace equivalent and can also be used.  Supporting other dynamic
+   tracing utilities is theoretically possible by changing the definitions for
+   the macros in <TT
+CLASS="FILENAME"
+>src/include/utils/probes.h</TT
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="COMPILING-FOR-TRACE"
+>27.4.1. Compiling for Dynamic Tracing</A
+></H2
+><P
+>   By default, probes are not available, so you will need to
+   explicitly tell the configure script to make the probes available
+   in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>. To include DTrace support
+   specify <TT
+CLASS="OPTION"
+>--enable-dtrace</TT
+> to configure.  See <A
+HREF="install-procedure.html"
+>Section 15.4</A
+> for further information.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="TRACE-POINTS"
+>27.4.2. Built-in Probes</A
+></H2
+><P
+>   A number of standard probes are provided in the source code,
+   as shown in <A
+HREF="dynamic-trace.html#DTRACE-PROBE-POINT-TABLE"
+>Table 27-18</A
+>;
+   <A
+HREF="dynamic-trace.html#TYPEDEFS-TABLE"
+>Table 27-19</A
+>
+   shows the types used in the probes.  More probes can certainly be
+   added to enhance <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>'s observability.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="DTRACE-PROBE-POINT-TABLE"
+></A
+><P
+><B
+>Table 27-18. Built-in DTrace Probes</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Parameters</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>transaction-start</TD
+><TD
+>(LocalTransactionId)</TD
+><TD
+>Probe that fires at the start of a new transaction.
+      arg0 is the transaction ID.</TD
+></TR
+><TR
+><TD
+>transaction-commit</TD
+><TD
+>(LocalTransactionId)</TD
+><TD
+>Probe that fires when a transaction completes successfully.
+      arg0 is the transaction ID.</TD
+></TR
+><TR
+><TD
+>transaction-abort</TD
+><TD
+>(LocalTransactionId)</TD
+><TD
+>Probe that fires when a transaction completes unsuccessfully.
+      arg0 is the transaction ID.</TD
+></TR
+><TR
+><TD
+>query-start</TD
+><TD
+>(const char *)</TD
+><TD
+>Probe that fires when the processing of a query is started.
+      arg0 is the query string.</TD
+></TR
+><TR
+><TD
+>query-done</TD
+><TD
+>(const char *)</TD
+><TD
+>Probe that fires when the processing of a query is complete.
+      arg0 is the query string.</TD
+></TR
+><TR
+><TD
+>query-parse-start</TD
+><TD
+>(const char *)</TD
+><TD
+>Probe that fires when the parsing of a query is started.
+      arg0 is the query string.</TD
+></TR
+><TR
+><TD
+>query-parse-done</TD
+><TD
+>(const char *)</TD
+><TD
+>Probe that fires when the parsing of a query is complete.
+      arg0 is the query string.</TD
+></TR
+><TR
+><TD
+>query-rewrite-start</TD
+><TD
+>(const char *)</TD
+><TD
+>Probe that fires when the rewriting of a query is started.
+      arg0 is the query string.</TD
+></TR
+><TR
+><TD
+>query-rewrite-done</TD
+><TD
+>(const char *)</TD
+><TD
+>Probe that fires when the rewriting of a query is complete.
+      arg0 is the query string.</TD
+></TR
+><TR
+><TD
+>query-plan-start</TD
+><TD
+>()</TD
+><TD
+>Probe that fires when the planning of a query is started.</TD
+></TR
+><TR
+><TD
+>query-plan-done</TD
+><TD
+>()</TD
+><TD
+>Probe that fires when the planning of a query is complete.</TD
+></TR
+><TR
+><TD
+>query-execute-start</TD
+><TD
+>()</TD
+><TD
+>Probe that fires when the execution of a query is started.</TD
+></TR
+><TR
+><TD
+>query-execute-done</TD
+><TD
+>()</TD
+><TD
+>Probe that fires when the execution of a query is complete.</TD
+></TR
+><TR
+><TD
+>statement-status</TD
+><TD
+>(const char *)</TD
+><TD
+>Probe that fires anytime the server process updates its
+      <TT
+CLASS="STRUCTNAME"
+>pg_stat_activity</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>status</TT
+>.
+      arg0 is the new status string.</TD
+></TR
+><TR
+><TD
+>checkpoint-start</TD
+><TD
+>(int)</TD
+><TD
+>Probe that fires when a checkpoint is started.
+      arg0 holds the bitwise flags used to distinguish different checkpoint
+      types, such as shutdown, immediate or force.</TD
+></TR
+><TR
+><TD
+>checkpoint-done</TD
+><TD
+>(int, int, int, int, int)</TD
+><TD
+>Probe that fires when a checkpoint is complete.
+      (The probes listed next fire in sequence during checkpoint processing.)
+      arg0 is the number of buffers written. arg1 is the total number of
+      buffers. arg2, arg3 and arg4 contain the number of xlog file(s) added,
+      removed and recycled respectively.</TD
+></TR
+><TR
+><TD
+>clog-checkpoint-start</TD
+><TD
+>(bool)</TD
+><TD
+>Probe that fires when the CLOG portion of a checkpoint is started.
+      arg0 is true for normal checkpoint, false for shutdown
+      checkpoint.</TD
+></TR
+><TR
+><TD
+>clog-checkpoint-done</TD
+><TD
+>(bool)</TD
+><TD
+>Probe that fires when the CLOG portion of a checkpoint is
+      complete. arg0 has the same meaning as for clog-checkpoint-start.</TD
+></TR
+><TR
+><TD
+>subtrans-checkpoint-start</TD
+><TD
+>(bool)</TD
+><TD
+>Probe that fires when the SUBTRANS portion of a checkpoint is
+      started.
+      arg0 is true for normal checkpoint, false for shutdown
+      checkpoint.</TD
+></TR
+><TR
+><TD
+>subtrans-checkpoint-done</TD
+><TD
+>(bool)</TD
+><TD
+>Probe that fires when the SUBTRANS portion of a checkpoint is
+      complete. arg0 has the same meaning as for
+      subtrans-checkpoint-start.</TD
+></TR
+><TR
+><TD
+>multixact-checkpoint-start</TD
+><TD
+>(bool)</TD
+><TD
+>Probe that fires when the MultiXact portion of a checkpoint is
+      started.
+      arg0 is true for normal checkpoint, false for shutdown
+      checkpoint.</TD
+></TR
+><TR
+><TD
+>multixact-checkpoint-done</TD
+><TD
+>(bool)</TD
+><TD
+>Probe that fires when the MultiXact portion of a checkpoint is
+      complete. arg0 has the same meaning as for
+      multixact-checkpoint-start.</TD
+></TR
+><TR
+><TD
+>buffer-checkpoint-start</TD
+><TD
+>(int)</TD
+><TD
+>Probe that fires when the buffer-writing portion of a checkpoint
+      is started.
+      arg0 holds the bitwise flags used to distinguish different checkpoint
+      types, such as shutdown, immediate or force.</TD
+></TR
+><TR
+><TD
+>buffer-sync-start</TD
+><TD
+>(int, int)</TD
+><TD
+>Probe that fires when we begin to write dirty buffers during
+      checkpoint (after identifying which buffers must be written).
+      arg0 is the total number of buffers.
+      arg1 is the number that are currently dirty and need to be written.</TD
+></TR
+><TR
+><TD
+>buffer-sync-written</TD
+><TD
+>(int)</TD
+><TD
+>Probe that fires after each buffer is written during checkpoint.
+      arg0 is the ID number of the buffer.</TD
+></TR
+><TR
+><TD
+>buffer-sync-done</TD
+><TD
+>(int, int, int)</TD
+><TD
+>Probe that fires when all dirty buffers have been written.
+      arg0 is the total number of buffers.
+      arg1 is the number of buffers actually written by the checkpoint process.
+      arg2 is the number that were expected to be written (arg1 of
+      buffer-sync-start); any difference reflects other processes flushing
+      buffers during the checkpoint.</TD
+></TR
+><TR
+><TD
+>buffer-checkpoint-sync-start</TD
+><TD
+>()</TD
+><TD
+>Probe that fires after dirty buffers have been written to the
+      kernel, and before starting to issue fsync requests.</TD
+></TR
+><TR
+><TD
+>buffer-checkpoint-done</TD
+><TD
+>()</TD
+><TD
+>Probe that fires when syncing of buffers to disk is
+      complete.</TD
+></TR
+><TR
+><TD
+>twophase-checkpoint-start</TD
+><TD
+>()</TD
+><TD
+>Probe that fires when the two-phase portion of a checkpoint is
+      started.</TD
+></TR
+><TR
+><TD
+>twophase-checkpoint-done</TD
+><TD
+>()</TD
+><TD
+>Probe that fires when the two-phase portion of a checkpoint is
+      complete.</TD
+></TR
+><TR
+><TD
+>buffer-read-start</TD
+><TD
+>(ForkNumber, BlockNumber, Oid, Oid, Oid, int, bool)</TD
+><TD
+>Probe that fires when a buffer read is started.
+      arg0 and arg1 contain the fork and block numbers of the page (but
+      arg1 will be -1 if this is a relation extension request).
+      arg2, arg3, and arg4 contain the tablespace, database, and relation OIDs
+      identifying the relation.
+      arg5 is the ID of the backend which created the temporary relation for a
+      local buffer, or InvalidBackendId (-1) for a shared buffer.
+      arg6 is true for a relation extension request, false for normal
+      read.</TD
+></TR
+><TR
+><TD
+>buffer-read-done</TD
+><TD
+>(ForkNumber, BlockNumber, Oid, Oid, Oid, int, bool, bool)</TD
+><TD
+>Probe that fires when a buffer read is complete.
+      arg0 and arg1 contain the fork and block numbers of the page (if this
+      is a relation extension request, arg1 now contains the block number
+      of the newly added block).
+      arg2, arg3, and arg4 contain the tablespace, database, and relation OIDs
+      identifying the relation.
+      arg5 is the ID of the backend which created the temporary relation for a
+      local buffer, or InvalidBackendId (-1) for a shared buffer.
+      arg6 is true for a relation extension request, false for normal
+      read.
+      arg7 is true if the buffer was found in the pool, false if not.</TD
+></TR
+><TR
+><TD
+>buffer-flush-start</TD
+><TD
+>(ForkNumber, BlockNumber, Oid, Oid, Oid)</TD
+><TD
+>Probe that fires before issuing any write request for a shared
+      buffer.
+      arg0 and arg1 contain the fork and block numbers of the page.
+      arg2, arg3, and arg4 contain the tablespace, database, and relation OIDs
+      identifying the relation.</TD
+></TR
+><TR
+><TD
+>buffer-flush-done</TD
+><TD
+>(ForkNumber, BlockNumber, Oid, Oid, Oid)</TD
+><TD
+>Probe that fires when a write request is complete.  (Note
+      that this just reflects the time to pass the data to the kernel;
+      it's typically not actually been written to disk yet.)
+      The arguments are the same as for buffer-flush-start.</TD
+></TR
+><TR
+><TD
+>buffer-write-dirty-start</TD
+><TD
+>(ForkNumber, BlockNumber, Oid, Oid, Oid)</TD
+><TD
+>Probe that fires when a server process begins to write a dirty
+      buffer.  (If this happens often, it implies that
+      <A
+HREF="runtime-config-resource.html#GUC-SHARED-BUFFERS"
+>shared_buffers</A
+> is too
+      small or the bgwriter control parameters need adjustment.)
+      arg0 and arg1 contain the fork and block numbers of the page.
+      arg2, arg3, and arg4 contain the tablespace, database, and relation OIDs
+      identifying the relation.</TD
+></TR
+><TR
+><TD
+>buffer-write-dirty-done</TD
+><TD
+>(ForkNumber, BlockNumber, Oid, Oid, Oid)</TD
+><TD
+>Probe that fires when a dirty-buffer write is complete.
+      The arguments are the same as for buffer-write-dirty-start.</TD
+></TR
+><TR
+><TD
+>wal-buffer-write-dirty-start</TD
+><TD
+>()</TD
+><TD
+>Probe that fires when a server process begins to write a
+      dirty WAL buffer because no more WAL buffer space is available.
+      (If this happens often, it implies that
+      <A
+HREF="runtime-config-wal.html#GUC-WAL-BUFFERS"
+>wal_buffers</A
+> is too small.)</TD
+></TR
+><TR
+><TD
+>wal-buffer-write-dirty-done</TD
+><TD
+>()</TD
+><TD
+>Probe that fires when a dirty WAL buffer write is complete.</TD
+></TR
+><TR
+><TD
+>xlog-insert</TD
+><TD
+>(unsigned char, unsigned char)</TD
+><TD
+>Probe that fires when a WAL record is inserted.
+      arg0 is the resource manager (rmid) for the record.
+      arg1 contains the info flags.</TD
+></TR
+><TR
+><TD
+>xlog-switch</TD
+><TD
+>()</TD
+><TD
+>Probe that fires when a WAL segment switch is requested.</TD
+></TR
+><TR
+><TD
+>smgr-md-read-start</TD
+><TD
+>(ForkNumber, BlockNumber, Oid, Oid, Oid, int)</TD
+><TD
+>Probe that fires when beginning to read a block from a relation.
+      arg0 and arg1 contain the fork and block numbers of the page.
+      arg2, arg3, and arg4 contain the tablespace, database, and relation OIDs
+      identifying the relation.
+      arg5 is the ID of the backend which created the temporary relation for a
+      local buffer, or InvalidBackendId (-1) for a shared buffer.</TD
+></TR
+><TR
+><TD
+>smgr-md-read-done</TD
+><TD
+>(ForkNumber, BlockNumber, Oid, Oid, Oid, int, int, int)</TD
+><TD
+>Probe that fires when a block read is complete.
+      arg0 and arg1 contain the fork and block numbers of the page.
+      arg2, arg3, and arg4 contain the tablespace, database, and relation OIDs
+      identifying the relation.
+      arg5 is the ID of the backend which created the temporary relation for a
+      local buffer, or InvalidBackendId (-1) for a shared buffer.
+      arg6 is the number of bytes actually read, while arg7 is the number
+      requested (if these are different it indicates trouble).</TD
+></TR
+><TR
+><TD
+>smgr-md-write-start</TD
+><TD
+>(ForkNumber, BlockNumber, Oid, Oid, Oid, int)</TD
+><TD
+>Probe that fires when beginning to write a block to a relation.
+      arg0 and arg1 contain the fork and block numbers of the page.
+      arg2, arg3, and arg4 contain the tablespace, database, and relation OIDs
+      identifying the relation.
+      arg5 is the ID of the backend which created the temporary relation for a
+      local buffer, or InvalidBackendId (-1) for a shared buffer.</TD
+></TR
+><TR
+><TD
+>smgr-md-write-done</TD
+><TD
+>(ForkNumber, BlockNumber, Oid, Oid, Oid, int, int, int)</TD
+><TD
+>Probe that fires when a block write is complete.
+      arg0 and arg1 contain the fork and block numbers of the page.
+      arg2, arg3, and arg4 contain the tablespace, database, and relation OIDs
+      identifying the relation.
+      arg5 is the ID of the backend which created the temporary relation for a
+      local buffer, or InvalidBackendId (-1) for a shared buffer.
+      arg6 is the number of bytes actually written, while arg7 is the number
+      requested (if these are different it indicates trouble).</TD
+></TR
+><TR
+><TD
+>sort-start</TD
+><TD
+>(int, bool, int, int, bool)</TD
+><TD
+>Probe that fires when a sort operation is started.
+      arg0 indicates heap, index or datum sort.
+      arg1 is true for unique-value enforcement.
+      arg2 is the number of key columns.
+      arg3 is the number of kilobytes of work memory allowed.
+      arg4 is true if random access to the sort result is required.</TD
+></TR
+><TR
+><TD
+>sort-done</TD
+><TD
+>(bool, long)</TD
+><TD
+>Probe that fires when a sort is complete.
+      arg0 is true for external sort, false for internal sort.
+      arg1 is the number of disk blocks used for an external sort,
+      or kilobytes of memory used for an internal sort.</TD
+></TR
+><TR
+><TD
+>lwlock-acquire</TD
+><TD
+>(char *, int, LWLockMode)</TD
+><TD
+>Probe that fires when an LWLock has been acquired.
+      arg0 is the LWLock's tranche.
+      arg1 is the LWLock's offset within its tranche.
+      arg2 is the requested lock mode, either exclusive or shared.</TD
+></TR
+><TR
+><TD
+>lwlock-release</TD
+><TD
+>(char *, int)</TD
+><TD
+>Probe that fires when an LWLock has been released (but note
+      that any released waiters have not yet been awakened).
+      arg0 is the LWLock's tranche.
+      arg1 is the LWLock's offset within its tranche.</TD
+></TR
+><TR
+><TD
+>lwlock-wait-start</TD
+><TD
+>(char *, int, LWLockMode)</TD
+><TD
+>Probe that fires when an LWLock was not immediately available and
+      a server process has begun to wait for the lock to become available.
+      arg0 is the LWLock's tranche.
+      arg1 is the LWLock's offset within its tranche.
+      arg2 is the requested lock mode, either exclusive or shared.</TD
+></TR
+><TR
+><TD
+>lwlock-wait-done</TD
+><TD
+>(char *, int, LWLockMode)</TD
+><TD
+>Probe that fires when a server process has been released from its
+      wait for an LWLock (it does not actually have the lock yet).
+      arg0 is the LWLock's tranche.
+      arg1 is the LWLock's offset within its tranche.
+      arg2 is the requested lock mode, either exclusive or shared.</TD
+></TR
+><TR
+><TD
+>lwlock-condacquire</TD
+><TD
+>(char *, int, LWLockMode)</TD
+><TD
+>Probe that fires when an LWLock was successfully acquired when the
+      caller specified no waiting.
+      arg0 is the LWLock's tranche.
+      arg1 is the LWLock's offset within its tranche.
+      arg2 is the requested lock mode, either exclusive or shared.</TD
+></TR
+><TR
+><TD
+>lwlock-condacquire-fail</TD
+><TD
+>(char *, int, LWLockMode)</TD
+><TD
+>Probe that fires when an LWLock was not successfully acquired when
+      the caller specified no waiting.
+      arg0 is the LWLock's tranche.
+      arg1 is the LWLock's offset within its tranche.
+      arg2 is the requested lock mode, either exclusive or shared.</TD
+></TR
+><TR
+><TD
+>lock-wait-start</TD
+><TD
+>(unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, LOCKMODE)</TD
+><TD
+>Probe that fires when a request for a heavyweight lock (lmgr lock)
+      has begun to wait because the lock is not available.
+      arg0 through arg3 are the tag fields identifying the object being
+      locked.  arg4 indicates the type of object being locked.
+      arg5 indicates the lock type being requested.</TD
+></TR
+><TR
+><TD
+>lock-wait-done</TD
+><TD
+>(unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, LOCKMODE)</TD
+><TD
+>Probe that fires when a request for a heavyweight lock (lmgr lock)
+      has finished waiting (i.e., has acquired the lock).
+      The arguments are the same as for lock-wait-start.</TD
+></TR
+><TR
+><TD
+>deadlock-found</TD
+><TD
+>()</TD
+><TD
+>Probe that fires when a deadlock is found by the deadlock
+      detector.</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><DIV
+CLASS="TABLE"
+><A
+NAME="TYPEDEFS-TABLE"
+></A
+><P
+><B
+>Table 27-19. Defined Types Used in Probe Parameters</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>Type</TH
+><TH
+>Definition</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>LocalTransactionId</TD
+><TD
+>unsigned int</TD
+></TR
+><TR
+><TD
+>LWLockMode</TD
+><TD
+>int</TD
+></TR
+><TR
+><TD
+>LOCKMODE</TD
+><TD
+>int</TD
+></TR
+><TR
+><TD
+>BlockNumber</TD
+><TD
+>unsigned int</TD
+></TR
+><TR
+><TD
+>Oid</TD
+><TD
+>unsigned int</TD
+></TR
+><TR
+><TD
+>ForkNumber</TD
+><TD
+>int</TD
+></TR
+><TR
+><TD
+>bool</TD
+><TD
+>char</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="USING-TRACE-POINTS"
+>27.4.3. Using Probes</A
+></H2
+><P
+>   The example below shows a DTrace script for analyzing transaction
+   counts in the system, as an alternative to snapshotting
+   <TT
+CLASS="STRUCTNAME"
+>pg_stat_database</TT
+> before and after a performance test:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>#!/usr/sbin/dtrace -qs
+
+postgresql$1:::transaction-start
+{
+      @start["Start"] = count();
+      self-&#62;ts  = timestamp;
+}
+
+postgresql$1:::transaction-abort
+{
+      @abort["Abort"] = count();
+}
+
+postgresql$1:::transaction-commit
+/self-&#62;ts/
+{
+      @commit["Commit"] = count();
+      @time["Total time (ns)"] = sum(timestamp - self-&#62;ts);
+      self-&#62;ts=0;
+}</PRE
+><P>
+   When executed, the example D script gives output such as:
+</P><PRE
+CLASS="SCREEN"
+># ./txn_count.d `pgrep -n postgres` or ./txn_count.d &lt;PID&gt;
+^C
+
+Start                                          71
+Commit                                         70
+Total time (ns)                        2312105013</PRE
+><P>
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    SystemTap uses a different notation for trace scripts than DTrace does,
+    even though the underlying trace points are compatible.  One point worth
+    noting is that at this writing, SystemTap scripts must reference probe
+    names using double underscores in place of hyphens.  This is expected to
+    be fixed in future SystemTap releases.
+   </P
+></BLOCKQUOTE
+></DIV
+><P
+>   You should remember that DTrace scripts need to be carefully written and
+   debugged, otherwise the trace information collected might
+   be meaningless. In most cases where problems are found it is the
+   instrumentation that is at fault, not the underlying system. When
+   discussing information found using dynamic tracing, be sure to enclose
+   the script used to allow that too to be checked and discussed.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="DEFINING-TRACE-POINTS"
+>27.4.4. Defining New Probes</A
+></H2
+><P
+>   New probes can be defined within the code wherever the developer
+   desires, though this will require a recompilation. Below are the steps
+   for inserting new probes:
+  </P
+><DIV
+CLASS="PROCEDURE"
+><OL
+TYPE="1"
+><LI
+CLASS="STEP"
+><P
+>     Decide on probe names and data to be made available through the probes
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+>     Add the probe definitions to <TT
+CLASS="FILENAME"
+>src/backend/utils/probes.d</TT
+>
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+>     Include <TT
+CLASS="FILENAME"
+>pg_trace.h</TT
+> if it is not already present in the
+     module(s) containing the probe points, and insert
+     <TT
+CLASS="LITERAL"
+>TRACE_POSTGRESQL</TT
+> probe macros at the desired locations
+     in the source code
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+>     Recompile and verify that the new probes are available
+    </P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="FORMALPARA"
+><P
+><B
+>Example: </B
+>    Here is an example of how you would add a probe to trace all new
+    transactions by transaction ID.
+   </P
+></DIV
+><DIV
+CLASS="PROCEDURE"
+><OL
+TYPE="1"
+><LI
+CLASS="STEP"
+><P
+>     Decide that the probe will be named <TT
+CLASS="LITERAL"
+>transaction-start</TT
+> and
+     requires a parameter of type LocalTransactionId
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+>     Add the probe definition to <TT
+CLASS="FILENAME"
+>src/backend/utils/probes.d</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>probe transaction__start(LocalTransactionId);</PRE
+><P>
+     Note the use of the double underline in the probe name. In a DTrace
+     script using the probe, the double underline needs to be replaced with a
+     hyphen, so <TT
+CLASS="LITERAL"
+>transaction-start</TT
+> is the name to document for
+     users.
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+>     At compile time, <TT
+CLASS="LITERAL"
+>transaction__start</TT
+> is converted to a macro
+     called <TT
+CLASS="LITERAL"
+>TRACE_POSTGRESQL_TRANSACTION_START</TT
+> (notice the
+     underscores are single here), which is available by including
+     <TT
+CLASS="FILENAME"
+>pg_trace.h</TT
+>.  Add the macro call to the appropriate location
+     in the source code.  In this case, it looks like the following:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>TRACE_POSTGRESQL_TRANSACTION_START(vxid.localTransactionId);</PRE
+><P>
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+>     After recompiling and running the new binary, check that your newly added
+     probe is available by executing the following DTrace command.  You
+     should see similar output:
+</P><PRE
+CLASS="SCREEN"
+># dtrace -ln transaction-start
+   ID    PROVIDER          MODULE           FUNCTION NAME
+18705 postgresql49878     postgres     StartTransactionCommand transaction-start
+18755 postgresql49877     postgres     StartTransactionCommand transaction-start
+18805 postgresql49876     postgres     StartTransactionCommand transaction-start
+18855 postgresql49875     postgres     StartTransactionCommand transaction-start
+18986 postgresql49873     postgres     StartTransactionCommand transaction-start</PRE
+><P>
+    </P
+></LI
+></OL
+></DIV
+><P
+>   There are a few things to be careful about when adding trace macros
+   to the C code:
+
+   <P
+></P
+></P><UL
+><LI
+><P
+>      You should take care that the data types specified for a probe's
+      parameters match the data types of the variables used in the macro.
+      Otherwise, you will get compilation errors.
+     </P
+></LI
+><LI
+><P
+>      On most platforms, if <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> is
+      built with <TT
+CLASS="OPTION"
+>--enable-dtrace</TT
+>, the arguments to a trace
+      macro will be evaluated whenever control passes through the
+      macro, <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>even if no tracing is being done</I
+></SPAN
+>.  This is
+      usually not worth worrying about if you are just reporting the
+      values of a few local variables.  But beware of putting expensive
+      function calls into the arguments.  If you need to do that,
+      consider protecting the macro with a check to see if the trace
+      is actually enabled:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>if (TRACE_POSTGRESQL_TRANSACTION_START_ENABLED())
+    TRACE_POSTGRESQL_TRANSACTION_START(some_function(...));</PRE
+><P>
+
+      Each trace macro has a corresponding <TT
+CLASS="LITERAL"
+>ENABLED</TT
+> macro.
+     </P
+></LI
+></UL
+><P>
+
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="monitoring-locks.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="diskusage.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Viewing Locks</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="monitoring.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Monitoring Disk Usage</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

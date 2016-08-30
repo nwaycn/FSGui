@@ -1,0 +1,773 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Event Trigger Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Functions and Operators"
+HREF="functions.html"><LINK
+REL="PREVIOUS"
+TITLE="Trigger Functions"
+HREF="functions-trigger.html"><LINK
+REL="NEXT"
+TITLE="Type Conversion"
+HREF="typeconv.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Trigger Functions"
+HREF="functions-trigger.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 9. Functions and Operators</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Type Conversion"
+HREF="typeconv.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="FUNCTIONS-EVENT-TRIGGERS"
+>9.28. Event Trigger Functions</A
+></H1
+><P
+>    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> provides these helper functions
+    to retrieve information from event triggers.
+   </P
+><P
+>    For more information about event triggers,
+    see <A
+HREF="event-triggers.html"
+>Chapter 37</A
+>.
+   </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="PG-EVENT-TRIGGER-DDL-COMMAND-END-FUNCTIONS"
+>9.28.1. Capturing Changes at Command End</A
+></H2
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_event_trigger_ddl_commands</CODE
+> returns a list of
+    <ACRONYM
+CLASS="ACRONYM"
+>DDL</ACRONYM
+> commands executed by each user action,
+    when invoked in a function attached to a
+    <TT
+CLASS="LITERAL"
+>ddl_command_end</TT
+> event trigger.  If called in any other
+    context, an error is raised.
+    <CODE
+CLASS="FUNCTION"
+>pg_event_trigger_ddl_commands</CODE
+> returns one row for each
+    base command executed; some commands that are a single SQL sentence
+    may return more than one row.  This function returns the following
+    columns:
+
+    <DIV
+CLASS="INFORMALTABLE"
+><P
+></P
+><A
+NAME="AEN23553"
+></A
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>classid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>Oid</TT
+></TD
+><TD
+>OID of catalog the object belongs in</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>objid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>Oid</TT
+></TD
+><TD
+>OID of the object in the catalog</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>objsubid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>Object sub-id (e.g. attribute number for columns)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>command_tag</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>command tag</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>object_type</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Type of the object</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>schema_name</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>         Name of the schema the object belongs in, if any; otherwise <TT
+CLASS="LITERAL"
+>NULL</TT
+>.
+         No quoting is applied.
+        </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>object_identity</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>         Text rendering of the object identity, schema-qualified. Each and every
+         identifier present in the identity is quoted if necessary.
+        </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>in_extension</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bool</TT
+></TD
+><TD
+>whether the command is part of an extension script</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>command</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>pg_ddl_command</TT
+></TD
+><TD
+>         A complete representation of the command, in internal format.
+         This cannot be output directly, but it can be passed to other
+         functions to obtain different pieces of information about the
+         command.
+        </TD
+></TR
+></TBODY
+></TABLE
+><P
+></P
+></DIV
+>
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="PG-EVENT-TRIGGER-SQL-DROP-FUNCTIONS"
+>9.28.2. Processing Objects Dropped by a DDL Command</A
+></H2
+><P
+>    <CODE
+CLASS="FUNCTION"
+>pg_event_trigger_dropped_objects</CODE
+> returns a list of all objects
+    dropped by the command in whose <TT
+CLASS="LITERAL"
+>sql_drop</TT
+> event it is called.
+    If called in any other context,
+    <CODE
+CLASS="FUNCTION"
+>pg_event_trigger_dropped_objects</CODE
+> raises an error.
+    <CODE
+CLASS="FUNCTION"
+>pg_event_trigger_dropped_objects</CODE
+> returns the following columns:
+
+    <DIV
+CLASS="INFORMALTABLE"
+><P
+></P
+><A
+NAME="AEN23625"
+></A
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>classid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>Oid</TT
+></TD
+><TD
+>OID of catalog the object belonged in</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>objid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>Oid</TT
+></TD
+><TD
+>OID the object had within the catalog</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>objsubid</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int32</TT
+></TD
+><TD
+>Object sub-id (e.g. attribute number for columns)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>original</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bool</TT
+></TD
+><TD
+>Flag used to identify the root object(s) of the deletion</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>normal</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bool</TT
+></TD
+><TD
+>         Flag indicating that there's a normal dependency relationship
+         in the dependency graph leading to this object
+        </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>is_temporary</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>bool</TT
+></TD
+><TD
+>         Flag indicating that the object was a temporary object.
+        </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>object_type</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Type of the object</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>schema_name</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>         Name of the schema the object belonged in, if any; otherwise <TT
+CLASS="LITERAL"
+>NULL</TT
+>.
+         No quoting is applied.
+        </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>object_name</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>         Name of the object, if the combination of schema and name can be
+         used as a unique identifier for the object; otherwise <TT
+CLASS="LITERAL"
+>NULL</TT
+>.
+         No quoting is applied, and name is never schema-qualified.
+        </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>object_identity</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>         Text rendering of the object identity, schema-qualified. Each and every
+         identifier present in the identity is quoted if necessary.
+        </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>address_names</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text[]</TT
+></TD
+><TD
+>         An array that, together with <TT
+CLASS="LITERAL"
+>object_type</TT
+> and
+         <TT
+CLASS="LITERAL"
+>address_args</TT
+>,
+         can be used by the <CODE
+CLASS="FUNCTION"
+>pg_get_object_address()</CODE
+> to
+         recreate the object address in a remote server containing an
+         identically named object of the same kind.
+        </TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>address_args</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text[]</TT
+></TD
+><TD
+>         Complement for <TT
+CLASS="LITERAL"
+>address_names</TT
+> above.
+        </TD
+></TR
+></TBODY
+></TABLE
+><P
+></P
+></DIV
+>
+   </P
+><P
+>    The <CODE
+CLASS="FUNCTION"
+>pg_event_trigger_dropped_objects</CODE
+> function can be used
+    in an event trigger like this:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION test_event_trigger_for_drops()
+        RETURNS event_trigger LANGUAGE plpgsql AS $$
+DECLARE
+    obj record;
+BEGIN
+    FOR obj IN SELECT * FROM pg_event_trigger_dropped_objects()
+    LOOP
+        RAISE NOTICE '% dropped object: % %.% %',
+                     tg_tag,
+                     obj.object_type,
+                     obj.schema_name,
+                     obj.object_name,
+                     obj.object_identity;
+    END LOOP;
+END
+$$;
+CREATE EVENT TRIGGER test_event_trigger_for_drops
+   ON sql_drop
+   EXECUTE PROCEDURE test_event_trigger_for_drops();</PRE
+><P>
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="PG-EVENT-TRIGGER-TABLE-REWRITE-FUNCTIONS"
+>9.28.3. Handling a Table Rewrite Event</A
+></H2
+><P
+>    The functions shown in
+    <A
+HREF="functions-event-triggers.html#FUNCTIONS-EVENT-TRIGGER-TABLE-REWRITE"
+>Table 9-78</A
+>
+    provide information about a table for which a
+    <TT
+CLASS="LITERAL"
+>table_rewrite</TT
+> event has just been called.
+    If called in any other context, an error is raised.
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-EVENT-TRIGGER-TABLE-REWRITE"
+></A
+><P
+><B
+>Table 9-78. Table Rewrite information</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_event_trigger_table_rewrite_oid()</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>Oid</TT
+></TD
+><TD
+>The OID of the table about to be rewritten.</TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_event_trigger_table_rewrite_reason()</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+><TD
+>        The reason code(s) explaining the reason for rewriting. The exact
+        meaning of the codes is release dependent.
+       </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    The <CODE
+CLASS="FUNCTION"
+>pg_event_trigger_table_rewrite_oid</CODE
+> function can be used
+    in an event trigger like this:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION test_event_trigger_table_rewrite_oid()
+ RETURNS event_trigger
+ LANGUAGE plpgsql AS
+$$
+BEGIN
+  RAISE NOTICE 'rewriting table % for reason %',
+                pg_event_trigger_table_rewrite_oid()::regclass,
+                pg_event_trigger_table_rewrite_reason();
+END;
+$$;
+
+CREATE EVENT TRIGGER test_table_rewrite_oid
+                  ON table_rewrite
+   EXECUTE PROCEDURE test_event_trigger_table_rewrite_oid();</PRE
+><P>
+    </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions-trigger.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="typeconv.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Trigger Functions</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Type Conversion</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,1201 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Geometric Types</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Data Types"
+HREF="datatype.html"><LINK
+REL="PREVIOUS"
+TITLE="Enumerated Types"
+HREF="datatype-enum.html"><LINK
+REL="NEXT"
+TITLE="Network Address Types"
+HREF="datatype-net-types.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Enumerated Types"
+HREF="datatype-enum.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="datatype.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 8. Data Types</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Network Address Types"
+HREF="datatype-net-types.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="DATATYPE-GEOMETRIC"
+>8.8. Geometric Types</A
+></H1
+><P
+>    Geometric data types represent two-dimensional spatial
+    objects. <A
+HREF="datatype-geometric.html#DATATYPE-GEO-TABLE"
+>Table 8-20</A
+> shows the geometric
+    types available in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>.
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="DATATYPE-GEO-TABLE"
+></A
+><P
+><B
+>Table 8-20. Geometric Types</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Storage Size</TH
+><TH
+>Description</TH
+><TH
+>Representation</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>point</TT
+></TD
+><TD
+>16 bytes</TD
+><TD
+>Point on a plane</TD
+><TD
+>(x,y)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>line</TT
+></TD
+><TD
+>32 bytes</TD
+><TD
+>Infinite line</TD
+><TD
+>{A,B,C}</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>lseg</TT
+></TD
+><TD
+>32 bytes</TD
+><TD
+>Finite line segment</TD
+><TD
+>((x1,y1),(x2,y2))</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>box</TT
+></TD
+><TD
+>32 bytes</TD
+><TD
+>Rectangular box</TD
+><TD
+>((x1,y1),(x2,y2))</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>path</TT
+></TD
+><TD
+>16+16n bytes</TD
+><TD
+>Closed path (similar to polygon)</TD
+><TD
+>((x1,y1),...)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>path</TT
+></TD
+><TD
+>16+16n bytes</TD
+><TD
+>Open path</TD
+><TD
+>[(x1,y1),...]</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>polygon</TT
+></TD
+><TD
+>40+16n bytes</TD
+><TD
+>Polygon (similar to closed path)</TD
+><TD
+>((x1,y1),...)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>circle</TT
+></TD
+><TD
+>24 bytes</TD
+><TD
+>Circle</TD
+><TD
+>&lt;(x,y),r&gt; (center point and radius)</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    A rich set of functions and operators is available to perform various geometric
+    operations such as scaling, translation, rotation, and determining
+    intersections.  They are explained in <A
+HREF="functions-geometry.html"
+>Section 9.11</A
+>.
+   </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN6909"
+>8.8.1. Points</A
+></H2
+><P
+>     Points are the fundamental two-dimensional building block for geometric
+     types.  Values of type <TT
+CLASS="TYPE"
+>point</TT
+> are specified using either of
+     the following syntaxes:
+
+</P><PRE
+CLASS="SYNOPSIS"
+>( <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+> )
+  <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+></PRE
+><P>
+
+     where <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> and <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+> are the respective
+     coordinates, as floating-point numbers.
+    </P
+><P
+>     Points are output using the first syntax.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="DATATYPE-LINE"
+>8.8.2. Lines</A
+></H2
+><P
+>     Lines are represented by the linear
+     equation <TT
+CLASS="REPLACEABLE"
+><I
+>A</I
+></TT
+>x + <TT
+CLASS="REPLACEABLE"
+><I
+>B</I
+></TT
+>y + <TT
+CLASS="REPLACEABLE"
+><I
+>C</I
+></TT
+> = 0,
+     where <TT
+CLASS="REPLACEABLE"
+><I
+>A</I
+></TT
+> and <TT
+CLASS="REPLACEABLE"
+><I
+>B</I
+></TT
+> are not both zero.  Values
+     of type <TT
+CLASS="TYPE"
+>line</TT
+> are input and output in the following form:
+</P><PRE
+CLASS="SYNOPSIS"
+>{ <TT
+CLASS="REPLACEABLE"
+><I
+>A</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>B</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>C</I
+></TT
+> }</PRE
+><P>
+
+     Alternatively, any of the following forms can be used for input:
+
+</P><PRE
+CLASS="SYNOPSIS"
+>[ ( <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+> ) , ( <TT
+CLASS="REPLACEABLE"
+><I
+>x2</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y2</I
+></TT
+> ) ]
+( ( <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+> ) , ( <TT
+CLASS="REPLACEABLE"
+><I
+>x2</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y2</I
+></TT
+> ) )
+  ( <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+> ) , ( <TT
+CLASS="REPLACEABLE"
+><I
+>x2</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y2</I
+></TT
+> )
+    <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+>   ,   <TT
+CLASS="REPLACEABLE"
+><I
+>x2</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y2</I
+></TT
+></PRE
+><P>
+
+     where
+     <TT
+CLASS="LITERAL"
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+>,<TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+>)</TT
+>
+     and
+     <TT
+CLASS="LITERAL"
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>x2</I
+></TT
+>,<TT
+CLASS="REPLACEABLE"
+><I
+>y2</I
+></TT
+>)</TT
+>
+     are two different points on the line.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="DATATYPE-LSEG"
+>8.8.3. Line Segments</A
+></H2
+><P
+>     Line segments are represented by pairs of points that are the endpoints
+     of the segment.  Values of type <TT
+CLASS="TYPE"
+>lseg</TT
+> are specified using any
+     of the following syntaxes:
+
+</P><PRE
+CLASS="SYNOPSIS"
+>[ ( <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+> ) , ( <TT
+CLASS="REPLACEABLE"
+><I
+>x2</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y2</I
+></TT
+> ) ]
+( ( <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+> ) , ( <TT
+CLASS="REPLACEABLE"
+><I
+>x2</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y2</I
+></TT
+> ) )
+  ( <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+> ) , ( <TT
+CLASS="REPLACEABLE"
+><I
+>x2</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y2</I
+></TT
+> )
+    <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+>   ,   <TT
+CLASS="REPLACEABLE"
+><I
+>x2</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y2</I
+></TT
+></PRE
+><P>
+
+     where
+     <TT
+CLASS="LITERAL"
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+>,<TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+>)</TT
+>
+     and
+     <TT
+CLASS="LITERAL"
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>x2</I
+></TT
+>,<TT
+CLASS="REPLACEABLE"
+><I
+>y2</I
+></TT
+>)</TT
+>
+     are the end points of the line segment.
+    </P
+><P
+>     Line segments are output using the first syntax.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN6993"
+>8.8.4. Boxes</A
+></H2
+><P
+>     Boxes are represented by pairs of points that are opposite
+     corners of the box.
+     Values of type <TT
+CLASS="TYPE"
+>box</TT
+> are specified using any of the following
+     syntaxes:
+
+</P><PRE
+CLASS="SYNOPSIS"
+>( ( <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+> ) , ( <TT
+CLASS="REPLACEABLE"
+><I
+>x2</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y2</I
+></TT
+> ) )
+  ( <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+> ) , ( <TT
+CLASS="REPLACEABLE"
+><I
+>x2</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y2</I
+></TT
+> )
+    <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+>   ,   <TT
+CLASS="REPLACEABLE"
+><I
+>x2</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y2</I
+></TT
+></PRE
+><P>
+
+     where
+     <TT
+CLASS="LITERAL"
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+>,<TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+>)</TT
+>
+     and
+     <TT
+CLASS="LITERAL"
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>x2</I
+></TT
+>,<TT
+CLASS="REPLACEABLE"
+><I
+>y2</I
+></TT
+>)</TT
+>
+     are any two opposite corners of the box.
+    </P
+><P
+>     Boxes are output using the second syntax.
+    </P
+><P
+>     Any two opposite corners can be supplied on input, but the values
+     will be reordered as needed to store the
+     upper right and lower left corners, in that order.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN7022"
+>8.8.5. Paths</A
+></H2
+><P
+>     Paths are represented by lists of connected points. Paths can be
+     <I
+CLASS="FIRSTTERM"
+>open</I
+>, where
+     the first and last points in the list are considered not connected, or
+     <I
+CLASS="FIRSTTERM"
+>closed</I
+>,
+     where the first and last points are considered connected.
+    </P
+><P
+>     Values of type <TT
+CLASS="TYPE"
+>path</TT
+> are specified using any of the following
+     syntaxes:
+
+</P><PRE
+CLASS="SYNOPSIS"
+>[ ( <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+> ) , ... , ( <TT
+CLASS="REPLACEABLE"
+><I
+>xn</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>yn</I
+></TT
+> ) ]
+( ( <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+> ) , ... , ( <TT
+CLASS="REPLACEABLE"
+><I
+>xn</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>yn</I
+></TT
+> ) )
+  ( <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+> ) , ... , ( <TT
+CLASS="REPLACEABLE"
+><I
+>xn</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>yn</I
+></TT
+> )
+  ( <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+>   , ... ,   <TT
+CLASS="REPLACEABLE"
+><I
+>xn</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>yn</I
+></TT
+> )
+    <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+>   , ... ,   <TT
+CLASS="REPLACEABLE"
+><I
+>xn</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>yn</I
+></TT
+></PRE
+><P>
+
+     where the points are the end points of the line segments
+     comprising the path.  Square brackets (<TT
+CLASS="LITERAL"
+>[]</TT
+>) indicate
+     an open path, while parentheses (<TT
+CLASS="LITERAL"
+>()</TT
+>) indicate a
+     closed path.  When the outermost parentheses are omitted, as
+     in the third through fifth syntaxes, a closed path is assumed.
+    </P
+><P
+>     Paths are output using the first or second syntax, as appropriate.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="DATATYPE-POLYGON"
+>8.8.6. Polygons</A
+></H2
+><P
+>     Polygons are represented by lists of points (the vertexes of the
+     polygon). Polygons are very similar to closed paths, but are
+     stored differently and have their own set of support routines.
+    </P
+><P
+>     Values of type <TT
+CLASS="TYPE"
+>polygon</TT
+> are specified using any of the
+     following syntaxes:
+
+</P><PRE
+CLASS="SYNOPSIS"
+>( ( <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+> ) , ... , ( <TT
+CLASS="REPLACEABLE"
+><I
+>xn</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>yn</I
+></TT
+> ) )
+  ( <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+> ) , ... , ( <TT
+CLASS="REPLACEABLE"
+><I
+>xn</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>yn</I
+></TT
+> )
+  ( <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+>   , ... ,   <TT
+CLASS="REPLACEABLE"
+><I
+>xn</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>yn</I
+></TT
+> )
+    <TT
+CLASS="REPLACEABLE"
+><I
+>x1</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y1</I
+></TT
+>   , ... ,   <TT
+CLASS="REPLACEABLE"
+><I
+>xn</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>yn</I
+></TT
+></PRE
+><P>
+
+     where the points are the end points of the line segments
+     comprising the boundary of the polygon.
+    </P
+><P
+>     Polygons are output using the first syntax.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="DATATYPE-CIRCLE"
+>8.8.7. Circles</A
+></H2
+><P
+>     Circles are represented by a center point and radius.
+     Values of type <TT
+CLASS="TYPE"
+>circle</TT
+> are specified using any of the
+     following syntaxes:
+
+</P><PRE
+CLASS="SYNOPSIS"
+>&lt; ( <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+> ) , <TT
+CLASS="REPLACEABLE"
+><I
+>r</I
+></TT
+> &gt;
+( ( <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+> ) , <TT
+CLASS="REPLACEABLE"
+><I
+>r</I
+></TT
+> )
+  ( <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+> ) , <TT
+CLASS="REPLACEABLE"
+><I
+>r</I
+></TT
+>
+    <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> , <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+>   , <TT
+CLASS="REPLACEABLE"
+><I
+>r</I
+></TT
+></PRE
+><P>
+
+     where
+     <TT
+CLASS="LITERAL"
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+>,<TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+>)</TT
+>
+     is the center point and <TT
+CLASS="REPLACEABLE"
+><I
+>r</I
+></TT
+> is the radius of the
+     circle.
+    </P
+><P
+>     Circles are output using the first syntax.
+    </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="datatype-enum.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="datatype-net-types.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Enumerated Types</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="datatype.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Network Address Types</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

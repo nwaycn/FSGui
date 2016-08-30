@@ -1,0 +1,227 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Routine Reindexing</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Routine Database Maintenance Tasks"
+HREF="maintenance.html"><LINK
+REL="PREVIOUS"
+TITLE="Routine Vacuuming"
+HREF="routine-vacuuming.html"><LINK
+REL="NEXT"
+TITLE="Log File Maintenance"
+HREF="logfile-maintenance.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Routine Vacuuming"
+HREF="routine-vacuuming.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="maintenance.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 23. Routine Database Maintenance Tasks</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Log File Maintenance"
+HREF="logfile-maintenance.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="ROUTINE-REINDEX"
+>23.2. Routine Reindexing</A
+></H1
+><P
+>   In some situations it is worthwhile to rebuild indexes periodically
+   with the <A
+HREF="sql-reindex.html"
+>REINDEX</A
+> command or a series of individual
+   rebuilding steps.
+
+  </P
+><P
+>   B-tree index pages that have become completely empty are reclaimed for
+   re-use.  However, there is still a possibility
+   of inefficient use of space: if all but a few index keys on a page have
+   been deleted, the page remains allocated.  Therefore, a usage
+   pattern in which most, but not all, keys in each range are eventually
+   deleted will see poor use of space.  For such usage patterns,
+   periodic reindexing is recommended.
+  </P
+><P
+>   The potential for bloat in non-B-tree indexes has not been well
+   researched.  It is a good idea to periodically monitor the index's physical
+   size when using any non-B-tree index type.
+  </P
+><P
+>   Also, for B-tree indexes, a freshly-constructed index is slightly faster to
+   access than one that has been updated many times because logically
+   adjacent pages are usually also physically adjacent in a newly built index.
+   (This consideration does not apply to non-B-tree indexes.)  It
+   might be worthwhile to reindex periodically just to improve access speed.
+  </P
+><P
+>   <A
+HREF="sql-reindex.html"
+>REINDEX</A
+> can be used safely and easily in all cases.
+   But since the command requires an exclusive table lock, it is
+   often preferable to execute an index rebuild with a sequence of
+   creation and replacement steps.  Index types that support
+   <A
+HREF="sql-createindex.html"
+>CREATE INDEX</A
+> with the <TT
+CLASS="LITERAL"
+>CONCURRENTLY</TT
+>
+   option can instead be recreated that way. If that is successful and the
+   resulting index is valid, the original index can then be replaced by
+   the newly built one using a combination of <A
+HREF="sql-alterindex.html"
+>ALTER INDEX</A
+>
+   and <A
+HREF="sql-dropindex.html"
+>DROP INDEX</A
+>. When an index is used to enforce
+   uniqueness or other constraints, <A
+HREF="sql-altertable.html"
+>ALTER TABLE</A
+> might
+   be necessary to swap the existing constraint with one enforced by
+   the new index. Review this alternate multistep rebuild approach
+   carefully before using it as there are limitations on which
+   indexes can be reindexed this way, and errors must be handled.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="routine-vacuuming.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="logfile-maintenance.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Routine Vacuuming</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="maintenance.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Log File Maintenance</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

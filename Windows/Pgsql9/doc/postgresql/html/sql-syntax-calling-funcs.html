@@ -1,0 +1,417 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Calling Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Syntax"
+HREF="sql-syntax.html"><LINK
+REL="PREVIOUS"
+TITLE="Value Expressions"
+HREF="sql-expressions.html"><LINK
+REL="NEXT"
+TITLE="Data Definition"
+HREF="ddl.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Value Expressions"
+HREF="sql-expressions.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-syntax.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 4. SQL Syntax</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Data Definition"
+HREF="ddl.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="SQL-SYNTAX-CALLING-FUNCS"
+>4.3. Calling Functions</A
+></H1
+><P
+>    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> allows functions that have named
+    parameters to be called using either <I
+CLASS="FIRSTTERM"
+>positional</I
+> or
+    <I
+CLASS="FIRSTTERM"
+>named</I
+> notation.  Named notation is especially
+    useful for functions that have a large number of parameters, since it
+    makes the associations between parameters and actual arguments more
+    explicit and reliable.
+    In positional notation, a function call is written with
+    its argument values in the same order as they are defined in the function
+    declaration.  In named notation, the arguments are matched to the
+    function parameters by name and can be written in any order.
+   </P
+><P
+>    In either notation, parameters that have default values given in the
+    function declaration need not be written in the call at all.  But this
+    is particularly useful in named notation, since any combination of
+    parameters can be omitted; while in positional notation parameters can
+    only be omitted from right to left.
+   </P
+><P
+>    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> also supports
+    <I
+CLASS="FIRSTTERM"
+>mixed</I
+> notation, which combines positional and
+    named notation.  In this case, positional parameters are written first
+    and named parameters appear after them.
+   </P
+><P
+>    The following examples will illustrate the usage of all three
+    notations, using the following function definition:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION concat_lower_or_upper(a text, b text, uppercase boolean DEFAULT false)
+RETURNS text
+AS
+$$
+ SELECT CASE
+        WHEN $3 THEN UPPER($1 || ' ' || $2)
+        ELSE LOWER($1 || ' ' || $2)
+        END;
+$$
+LANGUAGE SQL IMMUTABLE STRICT;</PRE
+><P>
+    Function <CODE
+CLASS="FUNCTION"
+>concat_lower_or_upper</CODE
+> has two mandatory
+    parameters, <TT
+CLASS="LITERAL"
+>a</TT
+> and <TT
+CLASS="LITERAL"
+>b</TT
+>.  Additionally
+    there is one optional parameter <TT
+CLASS="LITERAL"
+>uppercase</TT
+> which defaults
+    to <TT
+CLASS="LITERAL"
+>false</TT
+>.  The <TT
+CLASS="LITERAL"
+>a</TT
+> and
+    <TT
+CLASS="LITERAL"
+>b</TT
+> inputs will be concatenated, and forced to either
+    upper or lower case depending on the <TT
+CLASS="LITERAL"
+>uppercase</TT
+>
+    parameter.  The remaining details of this function
+    definition are not important here (see <A
+HREF="extend.html"
+>Chapter 35</A
+> for
+    more information).
+   </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="SQL-SYNTAX-CALLING-FUNCS-POSITIONAL"
+>4.3.1. Using Positional Notation</A
+></H2
+><P
+>     Positional notation is the traditional mechanism for passing arguments
+     to functions in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>.  An example is:
+</P><PRE
+CLASS="SCREEN"
+>SELECT concat_lower_or_upper('Hello', 'World', true);
+ concat_lower_or_upper 
+-----------------------
+ HELLO WORLD
+(1 row)</PRE
+><P>
+     All arguments are specified in order.  The result is upper case since
+     <TT
+CLASS="LITERAL"
+>uppercase</TT
+> is specified as <TT
+CLASS="LITERAL"
+>true</TT
+>.
+     Another example is:
+</P><PRE
+CLASS="SCREEN"
+>SELECT concat_lower_or_upper('Hello', 'World');
+ concat_lower_or_upper 
+-----------------------
+ hello world
+(1 row)</PRE
+><P>
+     Here, the <TT
+CLASS="LITERAL"
+>uppercase</TT
+> parameter is omitted, so it
+     receives its default value of <TT
+CLASS="LITERAL"
+>false</TT
+>, resulting in
+     lower case output.  In positional notation, arguments can be omitted
+     from right to left so long as they have defaults.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="SQL-SYNTAX-CALLING-FUNCS-NAMED"
+>4.3.2. Using Named Notation</A
+></H2
+><P
+>     In named notation, each argument's name is specified using
+     <TT
+CLASS="LITERAL"
+>=&#62;</TT
+> to separate it from the argument expression.
+     For example:
+</P><PRE
+CLASS="SCREEN"
+>SELECT concat_lower_or_upper(a =&#62; 'Hello', b =&#62; 'World');
+ concat_lower_or_upper 
+-----------------------
+ hello world
+(1 row)</PRE
+><P>
+     Again, the argument <TT
+CLASS="LITERAL"
+>uppercase</TT
+> was omitted
+     so it is set to <TT
+CLASS="LITERAL"
+>false</TT
+> implicitly.  One advantage of
+     using named notation is that the arguments may be specified in any
+     order, for example:
+</P><PRE
+CLASS="SCREEN"
+>SELECT concat_lower_or_upper(a =&#62; 'Hello', b =&#62; 'World', uppercase =&#62; true);
+ concat_lower_or_upper 
+-----------------------
+ HELLO WORLD
+(1 row)
+
+SELECT concat_lower_or_upper(a =&#62; 'Hello', uppercase =&#62; true, b =&#62; 'World');
+ concat_lower_or_upper 
+-----------------------
+ HELLO WORLD
+(1 row)</PRE
+><P>
+    </P
+><P
+>      An older syntax based on ":=" is supported for backward compatibility:
+</P><PRE
+CLASS="SCREEN"
+>SELECT concat_lower_or_upper(a := 'Hello', uppercase := true, b := 'World');
+ concat_lower_or_upper 
+-----------------------
+ HELLO WORLD
+(1 row)</PRE
+><P>
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="SQL-SYNTAX-CALLING-FUNCS-MIXED"
+>4.3.3. Using Mixed Notation</A
+></H2
+><P
+>    The mixed notation combines positional and named notation. However, as
+    already mentioned, named arguments cannot precede positional arguments.
+    For example:
+</P><PRE
+CLASS="SCREEN"
+>SELECT concat_lower_or_upper('Hello', 'World', uppercase =&#62; true);
+ concat_lower_or_upper 
+-----------------------
+ HELLO WORLD
+(1 row)</PRE
+><P>
+    In the above query, the arguments <TT
+CLASS="LITERAL"
+>a</TT
+> and
+    <TT
+CLASS="LITERAL"
+>b</TT
+> are specified positionally, while
+    <TT
+CLASS="LITERAL"
+>uppercase</TT
+> is specified by name.  In this example,
+    that adds little except documentation.  With a more complex function
+    having numerous parameters that have default values, named or mixed
+    notation can save a great deal of writing and reduce chances for error.
+   </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>     Named and mixed call notations currently cannot be used when calling an
+     aggregate function (but they do work when an aggregate function is used
+     as a window function).
+    </P
+></BLOCKQUOTE
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-expressions.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="ddl.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Value Expressions</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-syntax.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Data Definition</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

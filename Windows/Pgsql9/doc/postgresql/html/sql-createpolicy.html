@@ -1,0 +1,1125 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>CREATE POLICY</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="CREATE OPERATOR FAMILY"
+HREF="sql-createopfamily.html"><LINK
+REL="NEXT"
+TITLE="CREATE ROLE"
+HREF="sql-createrole.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="CREATE OPERATOR FAMILY"
+HREF="sql-createopfamily.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="CREATE ROLE"
+HREF="sql-createrole.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-CREATEPOLICY"
+></A
+>CREATE POLICY</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN77440"
+></A
+><H2
+>Name</H2
+>CREATE POLICY&nbsp;--&nbsp;define a new row level security policy for a table</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN77443"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>CREATE POLICY <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> ON <TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+>
+    [ FOR { ALL | SELECT | INSERT | UPDATE | DELETE } ]
+    [ TO { <TT
+CLASS="REPLACEABLE"
+><I
+>role_name</I
+></TT
+> | PUBLIC | CURRENT_USER | SESSION_USER } [, ...] ]
+    [ USING ( <TT
+CLASS="REPLACEABLE"
+><I
+>using_expression</I
+></TT
+> ) ]
+    [ WITH CHECK ( <TT
+CLASS="REPLACEABLE"
+><I
+>check_expression</I
+></TT
+> ) ]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN77450"
+></A
+><H2
+>Description</H2
+><P
+>   The <TT
+CLASS="COMMAND"
+>CREATE POLICY</TT
+> command defines a new row-level
+   security policy for a table.  Note that row-level security must be
+   enabled on the table (using <TT
+CLASS="COMMAND"
+>ALTER TABLE ... ENABLE ROW LEVEL
+   SECURITY</TT
+>) in order for created policies to be applied.
+  </P
+><P
+>   A policy grants the permission to select, insert, update, or delete rows
+   that match the relevant policy expression.  Existing table rows are
+   checked against the expression specified in <TT
+CLASS="LITERAL"
+>USING</TT
+>,
+   while new rows that would be created via <TT
+CLASS="LITERAL"
+>INSERT</TT
+>
+   or <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> are checked against the expression specified
+   in <TT
+CLASS="LITERAL"
+>WITH CHECK</TT
+>.  When a <TT
+CLASS="LITERAL"
+>USING</TT
+>
+   expression returns true for a given row then that row is visible to the
+   user, while if false or null is returned then the row is not visible.
+   When a <TT
+CLASS="LITERAL"
+>WITH CHECK</TT
+> expression returns true for a row
+   then that row is inserted or updated, while if false or null is returned
+   then an error occurs.
+  </P
+><P
+>   For <TT
+CLASS="COMMAND"
+>INSERT</TT
+> and <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> statements,
+   <TT
+CLASS="LITERAL"
+>WITH CHECK</TT
+> expressions are enforced after
+   <TT
+CLASS="LITERAL"
+>BEFORE</TT
+> triggers are fired, and before any actual data
+   modifications are made.  Thus a <TT
+CLASS="LITERAL"
+>BEFORE ROW</TT
+> trigger may
+   modify the data to be inserted, affecting the result of the security
+   policy check.  <TT
+CLASS="LITERAL"
+>WITH CHECK</TT
+> expressions are enforced
+   before any other constraints.
+  </P
+><P
+>   Policy names are per-table.  Therefore, one policy name can be used for many
+   different tables and have a definition for each table which is appropriate to
+   that table.
+  </P
+><P
+>   Policies can be applied for specific commands or for specific roles.  The
+   default for newly created policies is that they apply for all commands and
+   roles, unless otherwise specified.  If multiple policies apply to a given
+   statement, they will be combined using OR (although <TT
+CLASS="LITERAL"
+>ON CONFLICT DO
+   UPDATE</TT
+> and <TT
+CLASS="LITERAL"
+>INSERT</TT
+> policies are not combined in this way, but
+   rather enforced as noted at each stage of <TT
+CLASS="LITERAL"
+>ON CONFLICT</TT
+> execution).
+  </P
+><P
+>   For commands that can have both <TT
+CLASS="LITERAL"
+>USING</TT
+>
+   and <TT
+CLASS="LITERAL"
+>WITH CHECK</TT
+> policies (<TT
+CLASS="LITERAL"
+>ALL</TT
+>
+   and <TT
+CLASS="LITERAL"
+>UPDATE</TT
+>), if no <TT
+CLASS="LITERAL"
+>WITH CHECK</TT
+>
+   policy is defined, then the <TT
+CLASS="LITERAL"
+>USING</TT
+> policy will be used
+   both for which rows are visible (normal <TT
+CLASS="LITERAL"
+>USING</TT
+> case)
+   and for which rows will be allowed to be added (<TT
+CLASS="LITERAL"
+>WITH
+   CHECK</TT
+> case).
+  </P
+><P
+>   If row-level security is enabled for a table, but no applicable policies
+   exist, a <SPAN
+CLASS="QUOTE"
+>"default deny"</SPAN
+> policy is assumed, so that no rows will
+   be visible or updatable.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN77485"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></DT
+><DD
+><P
+>      The name of the policy to be created.  This must be distinct from the
+      name of any other policy for the table.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+></DT
+><DD
+><P
+>      The name (optionally schema-qualified) of the table the
+      policy applies to.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>command</I
+></TT
+></DT
+><DD
+><P
+>      The command to which the policy applies.  Valid options are
+      <TT
+CLASS="COMMAND"
+>ALL</TT
+>, <TT
+CLASS="COMMAND"
+>SELECT</TT
+>,
+      <TT
+CLASS="COMMAND"
+>INSERT</TT
+>, <TT
+CLASS="COMMAND"
+>UPDATE</TT
+>,
+      and <TT
+CLASS="COMMAND"
+>DELETE</TT
+>.
+      <TT
+CLASS="COMMAND"
+>ALL</TT
+> is the default.
+      See below for specifics regarding how these are applied.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>role_name</I
+></TT
+></DT
+><DD
+><P
+>      The role(s) to which the policy is to be applied.  The default is
+      <TT
+CLASS="LITERAL"
+>PUBLIC</TT
+>, which will apply the policy to all roles.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>using_expression</I
+></TT
+></DT
+><DD
+><P
+>      Any <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> conditional expression (returning
+      <TT
+CLASS="TYPE"
+>boolean</TT
+>).  The conditional expression cannot contain
+      any aggregate or window functions.  This expression will be added
+      to queries that refer to the table if row level security is enabled.
+      Rows for which the expression returns true will be visible.  Any
+      rows for which the expression returns false or null will not be
+      visible to the user (in a <TT
+CLASS="COMMAND"
+>SELECT</TT
+>), and will not be
+      available for modification (in an <TT
+CLASS="COMMAND"
+>UPDATE</TT
+>
+      or <TT
+CLASS="COMMAND"
+>DELETE</TT
+>).  Such rows are silently suppressed; no error
+      is reported.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>check_expression</I
+></TT
+></DT
+><DD
+><P
+>      Any <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> conditional expression (returning
+      <TT
+CLASS="TYPE"
+>boolean</TT
+>).  The conditional expression cannot contain
+      any aggregate or window functions.  This expression will be used in
+      <TT
+CLASS="COMMAND"
+>INSERT</TT
+> and <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> queries against
+      the table if row level security is enabled.  Only rows for which the
+      expression evaluates to true will be allowed.  An error will be thrown
+      if the expression evaluates to false or null for any of the records
+      inserted or any of the records that result from the update.  Note that
+      the <TT
+CLASS="REPLACEABLE"
+><I
+>check_expression</I
+></TT
+> is
+      evaluated against the proposed new contents of the row, not the
+      original contents.
+     </P
+></DD
+></DL
+></DIV
+><DIV
+CLASS="REFSECT2"
+><A
+NAME="AEN77535"
+></A
+><H3
+>Per-Command Policies</H3
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="SQL-CREATEPOLICY-ALL"
+></A
+><TT
+CLASS="LITERAL"
+>ALL</TT
+></DT
+><DD
+><P
+>         Using <TT
+CLASS="LITERAL"
+>ALL</TT
+> for a policy means that it will apply
+         to all commands, regardless of the type of command.  If an
+         <TT
+CLASS="LITERAL"
+>ALL</TT
+> policy exists and more specific policies
+         exist, then both the <TT
+CLASS="LITERAL"
+>ALL</TT
+> policy and the more
+         specific policy (or policies) will be combined using
+         OR, as usual for overlapping policies.
+         Additionally, <TT
+CLASS="LITERAL"
+>ALL</TT
+> policies will be applied to
+         both the selection side of a query and the modification side, using
+         the <TT
+CLASS="LITERAL"
+>USING</TT
+> expression for both cases if only
+         a <TT
+CLASS="LITERAL"
+>USING</TT
+> expression has been defined.
+       </P
+><P
+>         As an example, if an <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> is issued, then the
+         <TT
+CLASS="LITERAL"
+>ALL</TT
+> policy will be applicable both to what the
+         <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> will be able to select as rows to be
+         updated (applying the <TT
+CLASS="LITERAL"
+>USING</TT
+> expression),
+         and to the resulting updated rows, to check if they are permitted
+         to be added to the table (applying the <TT
+CLASS="LITERAL"
+>WITH CHECK</TT
+>
+         expression, if defined, and the <TT
+CLASS="LITERAL"
+>USING</TT
+> expression
+         otherwise).  If an <TT
+CLASS="COMMAND"
+>INSERT</TT
+>
+         or <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> command attempts to add rows to the
+         table that do not pass the <TT
+CLASS="LITERAL"
+>ALL</TT
+>
+         policy's <TT
+CLASS="LITERAL"
+>WITH CHECK</TT
+> expression, the entire
+         command will be aborted.
+       </P
+></DD
+><DT
+><A
+NAME="SQL-CREATEPOLICY-SELECT"
+></A
+><TT
+CLASS="LITERAL"
+>SELECT</TT
+></DT
+><DD
+><P
+>         Using <TT
+CLASS="LITERAL"
+>SELECT</TT
+> for a policy means that it will apply
+         to <TT
+CLASS="LITERAL"
+>SELECT</TT
+> queries and whenever
+         <TT
+CLASS="LITERAL"
+>SELECT</TT
+> permissions are required on the relation the
+         policy is defined for.  The result is that only those records from the
+         relation that pass the <TT
+CLASS="LITERAL"
+>SELECT</TT
+> policy will be
+         returned during a <TT
+CLASS="LITERAL"
+>SELECT</TT
+> query, and that queries
+         that require <TT
+CLASS="LITERAL"
+>SELECT</TT
+> permissions, such as
+         <TT
+CLASS="LITERAL"
+>UPDATE</TT
+>, will also only see those records
+         that are allowed by the <TT
+CLASS="LITERAL"
+>SELECT</TT
+> policy.
+         A <TT
+CLASS="LITERAL"
+>SELECT</TT
+> policy cannot have a <TT
+CLASS="LITERAL"
+>WITH
+         CHECK</TT
+> expression, as it only applies in cases where
+         records are being retrieved from the relation.
+       </P
+></DD
+><DT
+><A
+NAME="SQL-CREATEPOLICY-INSERT"
+></A
+><TT
+CLASS="LITERAL"
+>INSERT</TT
+></DT
+><DD
+><P
+>         Using <TT
+CLASS="LITERAL"
+>INSERT</TT
+> for a policy means that it will apply
+         to <TT
+CLASS="LITERAL"
+>INSERT</TT
+> commands.  Rows being inserted that do
+         not pass this policy will result in a policy violation error, and the
+         entire <TT
+CLASS="LITERAL"
+>INSERT</TT
+> command will be aborted.
+         An <TT
+CLASS="LITERAL"
+>INSERT</TT
+> policy cannot have
+         a <TT
+CLASS="LITERAL"
+>USING</TT
+> expression, as it only applies in cases
+         where records are being added to the relation.
+       </P
+><P
+>         Note that <TT
+CLASS="LITERAL"
+>INSERT</TT
+> with <TT
+CLASS="LITERAL"
+>ON CONFLICT DO
+         UPDATE</TT
+> checks <TT
+CLASS="LITERAL"
+>INSERT</TT
+> policies'
+         <TT
+CLASS="LITERAL"
+>WITH CHECK</TT
+> expressions only for rows appended
+         to the relation by the <TT
+CLASS="LITERAL"
+>INSERT</TT
+> path.
+       </P
+></DD
+><DT
+><A
+NAME="SQL-CREATEPOLICY-UPDATE"
+></A
+><TT
+CLASS="LITERAL"
+>UPDATE</TT
+></DT
+><DD
+><P
+>         Using <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> for a policy means that it will apply
+         to <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> commands (or auxiliary <TT
+CLASS="LITERAL"
+>ON
+         CONFLICT DO UPDATE</TT
+> clauses of <TT
+CLASS="LITERAL"
+>INSERT</TT
+>
+         commands).  Since <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> involves pulling an
+         existing record and then making changes to some portion (but
+         possibly not all) of the record, <TT
+CLASS="LITERAL"
+>UPDATE</TT
+>
+         policies accept both a <TT
+CLASS="LITERAL"
+>USING</TT
+> expression and
+         a <TT
+CLASS="LITERAL"
+>WITH CHECK</TT
+> expression.
+         The <TT
+CLASS="LITERAL"
+>USING</TT
+> expression determines which records
+         the <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> command will see to operate against,
+         while the <TT
+CLASS="LITERAL"
+>WITH CHECK</TT
+> expression defines which
+         modified rows are allowed to be stored back into the relation.
+       </P
+><P
+>         When an <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> command is used with a
+         <TT
+CLASS="LITERAL"
+>WHERE</TT
+> clause or a <TT
+CLASS="LITERAL"
+>RETURNING</TT
+>
+         clause, <TT
+CLASS="LITERAL"
+>SELECT</TT
+> rights are also required on the
+         relation being updated and the appropriate <TT
+CLASS="LITERAL"
+>SELECT</TT
+>
+         and <TT
+CLASS="LITERAL"
+>ALL</TT
+> policies will be combined (using OR for any
+         overlapping <TT
+CLASS="LITERAL"
+>SELECT</TT
+> related policies found) with the
+         <TT
+CLASS="LITERAL"
+>USING</TT
+> clause of the <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> policy
+         using AND.  Therefore, in order for a user to be able to
+         <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> specific rows, the user must have access
+         to the row(s) through a <TT
+CLASS="LITERAL"
+>SELECT</TT
+>
+         or <TT
+CLASS="LITERAL"
+>ALL</TT
+> policy and the row(s) must pass
+         the <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> policy's <TT
+CLASS="LITERAL"
+>USING</TT
+>
+         expression.
+       </P
+><P
+>         Any rows whose updated values do not pass the
+         <TT
+CLASS="LITERAL"
+>WITH CHECK</TT
+> expression will cause an error, and the
+         entire command will be aborted.  If only a <TT
+CLASS="LITERAL"
+>USING</TT
+>
+         clause is specified, then that clause will be used for both
+         <TT
+CLASS="LITERAL"
+>USING</TT
+> and <TT
+CLASS="LITERAL"
+>WITH CHECK</TT
+> cases.
+       </P
+><P
+>         Note, however, that <TT
+CLASS="LITERAL"
+>INSERT</TT
+> with <TT
+CLASS="LITERAL"
+>ON CONFLICT
+         DO UPDATE</TT
+> requires that an <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> policy
+         <TT
+CLASS="LITERAL"
+>USING</TT
+> expression always be enforced as a
+         <TT
+CLASS="LITERAL"
+>WITH CHECK</TT
+> expression.  This
+         <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> policy must always pass when the
+         <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> path is taken.  Any existing row that
+         necessitates that the <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> path be taken must
+         pass the (<TT
+CLASS="LITERAL"
+>UPDATE</TT
+> or <TT
+CLASS="LITERAL"
+>ALL</TT
+>)
+         <TT
+CLASS="LITERAL"
+>USING</TT
+> qualifications (combined using OR), which
+         are always enforced as <TT
+CLASS="LITERAL"
+>WITH CHECK</TT
+>
+         options in this context.  (The <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> path will
+         <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>never</I
+></SPAN
+> be silently avoided; an error will be thrown
+         instead.)  Finally, the final row appended to the relation must pass
+         any <TT
+CLASS="LITERAL"
+>WITH CHECK</TT
+> options that a conventional
+         <TT
+CLASS="LITERAL"
+>UPDATE</TT
+> is required to pass.
+       </P
+></DD
+><DT
+><A
+NAME="SQL-CREATEPOLICY-DELETE"
+></A
+><TT
+CLASS="LITERAL"
+>DELETE</TT
+></DT
+><DD
+><P
+>         Using <TT
+CLASS="LITERAL"
+>DELETE</TT
+> for a policy means that it will apply
+         to <TT
+CLASS="LITERAL"
+>DELETE</TT
+> commands.  Only rows that pass this
+         policy will be seen by a <TT
+CLASS="LITERAL"
+>DELETE</TT
+> command.  There can
+         be rows that are visible through a <TT
+CLASS="LITERAL"
+>SELECT</TT
+> that are
+         not available for deletion, if they do not pass the
+         <TT
+CLASS="LITERAL"
+>USING</TT
+> expression for
+         the <TT
+CLASS="LITERAL"
+>DELETE</TT
+> policy.
+       </P
+><P
+>         When a <TT
+CLASS="LITERAL"
+>DELETE</TT
+> command is used with a
+         <TT
+CLASS="LITERAL"
+>WHERE</TT
+> clause or a <TT
+CLASS="LITERAL"
+>RETURNING</TT
+>
+         clause, <TT
+CLASS="LITERAL"
+>SELECT</TT
+> rights are also required on the
+         relation being updated and the appropriate <TT
+CLASS="LITERAL"
+>SELECT</TT
+>
+         and <TT
+CLASS="LITERAL"
+>ALL</TT
+> policies will be combined (using OR for any
+         overlapping <TT
+CLASS="LITERAL"
+>SELECT</TT
+> related policies found) with the
+         <TT
+CLASS="LITERAL"
+>USING</TT
+> clause of the <TT
+CLASS="LITERAL"
+>DELETE</TT
+> policy
+         using AND.  Therefore, in order for a user to be able to
+         <TT
+CLASS="LITERAL"
+>DELETE</TT
+> specific rows, the user must have access
+         to the row(s) through a <TT
+CLASS="LITERAL"
+>SELECT</TT
+>
+         or <TT
+CLASS="LITERAL"
+>ALL</TT
+> policy and the row(s) must pass
+         the <TT
+CLASS="LITERAL"
+>DELETE</TT
+> policy's <TT
+CLASS="LITERAL"
+>USING</TT
+>
+         expression.
+       </P
+><P
+>         A <TT
+CLASS="LITERAL"
+>DELETE</TT
+> policy cannot have a <TT
+CLASS="LITERAL"
+>WITH
+         CHECK</TT
+> expression, as it only applies in cases where
+         records are being deleted from the relation, so that there is no
+         new row to check.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN77673"
+></A
+><H2
+>Notes</H2
+><P
+>   You must be the owner of a table to create or change policies for it.
+  </P
+><P
+>   While policies will be applied for explicit queries against tables
+   in the database, they are not applied when the system is performing internal
+   referential integrity checks or validating constraints.  This means there are
+   indirect ways to determine that a given value exists.  An example of this is
+   attempting to insert a duplicate value into a column that is a primary key
+   or has a unique constraint.  If the insert fails then the user can infer that
+   the value already exists. (This example assumes that the user is permitted by
+   policy to insert records which they are not allowed to see.)  Another example
+   is where a user is allowed to insert into a table which references another,
+   otherwise hidden table.  Existence can be determined by the user inserting
+   values into the referencing table, where success would indicate that the
+   value exists in the referenced table.  These issues can be addressed by
+   carefully crafting policies to prevent users from being able to insert,
+   delete, or update records at all which might possibly indicate a value they
+   are not otherwise able to see, or by using generated values (e.g., surrogate
+   keys) instead of keys with external meanings.
+  </P
+><P
+>   Generally, the system will enforce filter conditions imposed using
+   security policies prior to qualifications that appear in user queries,
+   in order to prevent inadvertent exposure of the protected data to
+   user-defined functions which might not be trustworthy.  However,
+   functions and operators marked by the system (or the system
+   administrator) as <TT
+CLASS="LITERAL"
+>LEAKPROOF</TT
+> may be evaluated before
+   policy expressions, as they are assumed to be trustworthy.
+  </P
+><P
+>   Since policy expressions
+   are added to the user's query directly, they will be run with the rights of
+   the user running the overall query.  Therefore, users who are using a given
+   policy must be able to access any tables or functions referenced in the
+   expression or they will simply receive a permission denied error when
+   attempting to query the table that has row-level security enabled.
+   This does not change how views
+   work, however.  As with normal queries and views, permission checks and
+   policies for the tables which are referenced by a view will use the view
+   owner's rights and any policies which apply to the view owner.
+  </P
+><P
+>   Additional discussion and practical examples can be found
+   in <A
+HREF="ddl-rowsecurity.html"
+>Section 5.7</A
+>.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN77682"
+></A
+><H2
+>Compatibility</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>CREATE POLICY</TT
+> is a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+   extension.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN77687"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-alterpolicy.html"
+>ALTER POLICY</A
+>, <A
+HREF="sql-droppolicy.html"
+>DROP POLICY</A
+>, <A
+HREF="sql-altertable.html"
+>ALTER TABLE</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-createopfamily.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-createrole.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>CREATE OPERATOR FAMILY</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>CREATE ROLE</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,339 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.0.18</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.0.19"
+HREF="release-8-0-19.html"><LINK
+REL="NEXT"
+TITLE="Release 8.0.17"
+HREF="release-8-0-17.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.0.19"
+HREF="release-8-0-19.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.0.17"
+HREF="release-8-0-17.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-0-18"
+>E.201. Release 8.0.18</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2008-09-22</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.0.17.
+   For information about new features in the 8.0 major release, see
+   <A
+HREF="release-8-0.html"
+>Section E.219</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN160845"
+>E.201.1. Migration to Version 8.0.18</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.0.X.
+    However, if you are upgrading from a version earlier than 8.0.6,
+    see <A
+HREF="release-8-0-6.html"
+>Section E.213</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN160849"
+>E.201.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Widen local lock counters from 32 to 64 bits (Tom)
+     </P
+><P
+>      This responds to reports that the counters could overflow in
+      sufficiently long transactions, leading to unexpected <SPAN
+CLASS="QUOTE"
+>"lock is
+      already held"</SPAN
+> errors.
+     </P
+></LI
+><LI
+><P
+>      Add checks in executor startup to ensure that the tuples produced by an
+      <TT
+CLASS="COMMAND"
+>INSERT</TT
+> or <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> will match the target table's
+      current rowtype (Tom)
+     </P
+><P
+>      <TT
+CLASS="COMMAND"
+>ALTER COLUMN TYPE</TT
+>, followed by re-use of a previously
+      cached plan, could produce this type of situation.  The check protects
+      against data corruption and/or crashes that could ensue.
+     </P
+></LI
+><LI
+><P
+>      Fix datetime input functions to correctly detect integer overflow when
+      running on a 64-bit platform (Tom)
+     </P
+></LI
+><LI
+><P
+>      Improve performance of writing very long log messages to syslog (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix bug in backwards scanning of a cursor on a <TT
+CLASS="LITERAL"
+>SELECT DISTINCT
+      ON</TT
+> query (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix planner to estimate that <TT
+CLASS="LITERAL"
+>GROUP BY</TT
+> expressions yielding
+      boolean results always result in two groups, regardless of the
+      expressions' contents (Tom)
+     </P
+><P
+>      This is very substantially more accurate than the regular <TT
+CLASS="LITERAL"
+>GROUP
+      BY</TT
+> estimate for certain boolean tests like <TT
+CLASS="REPLACEABLE"
+><I
+>col</I
+></TT
+>
+      <TT
+CLASS="LITERAL"
+>IS NULL</TT
+>.
+     </P
+></LI
+><LI
+><P
+>      Fix PL/Tcl to behave correctly with Tcl 8.5, and to be more careful
+      about the encoding of data sent to or from Tcl (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix PL/Python to work with Python 2.5
+     </P
+><P
+>      This is a back-port of fixes made during the 8.2 development cycle.
+     </P
+></LI
+><LI
+><P
+>      Improve <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> and <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+>'s
+      error reporting after failure to send a SQL command (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> to properly preserve postmaster
+      command-line arguments across a <TT
+CLASS="LITERAL"
+>restart</TT
+> (Bruce)
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2008f (for
+      DST law changes in Argentina, Bahamas, Brazil, Mauritius, Morocco,
+      Pakistan, Palestine, and Paraguay)
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-0-19.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-0-17.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.0.19</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.0.17</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

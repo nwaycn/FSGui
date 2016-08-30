@@ -1,0 +1,1225 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Streaming Replication Protocol</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Frontend/Backend Protocol"
+HREF="protocol.html"><LINK
+REL="PREVIOUS"
+TITLE="Message Flow"
+HREF="protocol-flow.html"><LINK
+REL="NEXT"
+TITLE="Message Data Types"
+HREF="protocol-message-types.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Message Flow"
+HREF="protocol-flow.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="protocol.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 50. Frontend/Backend Protocol</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Message Data Types"
+HREF="protocol-message-types.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PROTOCOL-REPLICATION"
+>50.3. Streaming Replication Protocol</A
+></H1
+><P
+>To initiate streaming replication, the frontend sends the
+<TT
+CLASS="LITERAL"
+>replication</TT
+> parameter in the startup message. A Boolean value
+of <TT
+CLASS="LITERAL"
+>true</TT
+> tells the backend to go into walsender mode, wherein a
+small set of replication commands can be issued instead of SQL statements. Only
+the simple query protocol can be used in walsender mode.
+Replication commands are logged in the server log when
+<A
+HREF="runtime-config-logging.html#GUC-LOG-REPLICATION-COMMANDS"
+>log_replication_commands</A
+> is enabled.
+Passing <TT
+CLASS="LITERAL"
+>database</TT
+> as the value instructs walsender to connect to
+the database specified in the <TT
+CLASS="LITERAL"
+>dbname</TT
+> parameter, which will allow
+the connection to be used for logical replication from that database.</P
+><P
+> For the purpose of testing replication commands, you can make a replication
+ connection via <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> or any other <TT
+CLASS="LITERAL"
+>libpq</TT
+>-using
+ tool with a connection string including the <TT
+CLASS="LITERAL"
+>replication</TT
+> option,
+ e.g.:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>psql "dbname=postgres replication=database" -c "IDENTIFY_SYSTEM;"</PRE
+><P>
+ However it is often more useful to use
+ <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+> (for physical replication) or
+ <SPAN
+CLASS="APPLICATION"
+>pg_recvlogical</SPAN
+> (for logical replication).</P
+><P
+>The commands accepted in walsender mode are:
+<P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>IDENTIFY_SYSTEM
+     </DT
+><DD
+><P
+>      Requests the server to identify itself. Server replies with a result
+      set of a single row, containing four fields:
+     </P
+><P
+>      <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>systemid</DT
+><DD
+><P
+>       The unique system identifier identifying the cluster. This
+       can be used to check that the base backup used to initialize the
+       standby came from the same cluster.
+      </P
+></DD
+><DT
+>timeline</DT
+><DD
+><P
+>       Current TimelineID. Also useful to check that the standby is
+       consistent with the master.
+      </P
+></DD
+><DT
+>xlogpos</DT
+><DD
+><P
+>       Current xlog flush location. Useful to get a known location in the
+       transaction log where streaming can start.
+      </P
+></DD
+><DT
+>dbname</DT
+><DD
+><P
+>       Database connected to or NULL.
+      </P
+></DD
+></DL
+></DIV
+><P>
+     </P
+></DD
+><DT
+>TIMELINE_HISTORY <TT
+CLASS="REPLACEABLE"
+><I
+>tli</I
+></TT
+>
+     </DT
+><DD
+><P
+>      Requests the server to send over the timeline history file for timeline
+      <TT
+CLASS="REPLACEABLE"
+><I
+>tli</I
+></TT
+>.  Server replies with a
+      result set of a single row, containing two fields:
+     </P
+><P
+>      <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>filename</DT
+><DD
+><P
+>       Filename of the timeline history file, e.g <TT
+CLASS="FILENAME"
+>00000002.history</TT
+>.
+      </P
+></DD
+><DT
+>content</DT
+><DD
+><P
+>       Contents of the timeline history file.
+      </P
+></DD
+></DL
+></DIV
+><P>
+     </P
+></DD
+><DT
+>CREATE_REPLICATION_SLOT <TT
+CLASS="REPLACEABLE"
+><I
+>slot_name</I
+></TT
+> { <TT
+CLASS="LITERAL"
+>PHYSICAL</TT
+> | <TT
+CLASS="LITERAL"
+>LOGICAL</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>output_plugin</I
+></TT
+> }
+     </DT
+><DD
+><P
+>      Create a physical or logical replication
+      slot. See <A
+HREF="warm-standby.html#STREAMING-REPLICATION-SLOTS"
+>Section 25.2.6</A
+> for more about
+      replication slots.
+     </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>slot_name</I
+></TT
+></DT
+><DD
+><P
+>          The name of the slot to create. Must be a valid replication slot
+          name (see <A
+HREF="warm-standby.html#STREAMING-REPLICATION-SLOTS-MANIPULATION"
+>Section 25.2.6.1</A
+>).
+         </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>output_plugin</I
+></TT
+></DT
+><DD
+><P
+>          The name of the output plugin used for logical decoding
+          (see <A
+HREF="logicaldecoding-output-plugin.html"
+>Section 46.6</A
+>).
+         </P
+></DD
+></DL
+></DIV
+></DD
+><DT
+>START_REPLICATION [<TT
+CLASS="LITERAL"
+>SLOT</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>slot_name</I
+></TT
+>] [<TT
+CLASS="LITERAL"
+>PHYSICAL</TT
+>] <TT
+CLASS="REPLACEABLE"
+><I
+>XXX/XXX</I
+></TT
+> [<TT
+CLASS="LITERAL"
+>TIMELINE</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>tli</I
+></TT
+>]
+     </DT
+><DD
+><P
+>      Instructs server to start streaming WAL, starting at
+      WAL position <TT
+CLASS="REPLACEABLE"
+><I
+>XXX/XXX</I
+></TT
+>.
+      If <TT
+CLASS="LITERAL"
+>TIMELINE</TT
+> option is specified,
+      streaming starts on timeline <TT
+CLASS="REPLACEABLE"
+><I
+>tli</I
+></TT
+>;
+      otherwise, the server's current timeline is selected. The server can
+      reply with an error, e.g. if the requested section of WAL has already
+      been recycled. On success, server responds with a CopyBothResponse
+      message, and then starts to stream WAL to the frontend.
+     </P
+><P
+>      If a slot's name is provided
+      via <TT
+CLASS="REPLACEABLE"
+><I
+>slot_name</I
+></TT
+>, it will be updated
+      as replication progresses so that the server knows which WAL segments,
+      and if <TT
+CLASS="VARNAME"
+>hot_standby_feedback</TT
+> is on which transactions,
+      are still needed by the standby.
+     </P
+><P
+>      If the client requests a timeline that's not the latest, but is part of
+      the history of the server, the server will stream all the WAL on that
+      timeline starting from the requested startpoint, up to the point where
+      the server switched to another timeline. If the client requests
+      streaming at exactly the end of an old timeline, the server responds
+      immediately with CommandComplete without entering COPY mode.
+     </P
+><P
+>      After streaming all the WAL on a timeline that is not the latest one,
+      the server will end streaming by exiting the COPY mode. When the client
+      acknowledges this by also exiting COPY mode, the server sends a result
+      set with one row and two columns, indicating the next timeline in this
+      server's history. The first column is the next timeline's ID, and the
+      second column is the XLOG position where the switch happened. Usually,
+      the switch position is the end of the WAL that was streamed, but there
+      are corner cases where the server can send some WAL from the old
+      timeline that it has not itself replayed before promoting. Finally, the
+      server sends CommandComplete message, and is ready to accept a new
+      command.
+     </P
+><P
+>      WAL data is sent as a series of CopyData messages.  (This allows
+      other information to be intermixed; in particular the server can send
+      an ErrorResponse message if it encounters a failure after beginning
+      to stream.)  The payload of each CopyData message from server to the
+      client contains a message of one of the following formats:
+     </P
+><P
+>      <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>XLogData (B)</DT
+><DD
+><P
+>      <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>Byte1('w')</DT
+><DD
+><P
+>          Identifies the message as WAL data.
+      </P
+></DD
+><DT
+>Int64</DT
+><DD
+><P
+>          The starting point of the WAL data in this message.
+      </P
+></DD
+><DT
+>Int64</DT
+><DD
+><P
+>          The current end of WAL on the server.
+      </P
+></DD
+><DT
+>Int64</DT
+><DD
+><P
+>          The server's system clock at the time of transmission, as
+          microseconds since midnight on 2000-01-01.
+      </P
+></DD
+><DT
+>Byte<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+></DT
+><DD
+><P
+>          A section of the WAL data stream.
+      </P
+><P
+>          A single WAL record is never split across two XLogData messages.
+          When a WAL record crosses a WAL page boundary, and is therefore
+          already split using continuation records, it can be split at the page
+          boundary. In other words, the first main WAL record and its
+          continuation records can be sent in different XLogData messages.
+      </P
+></DD
+></DL
+></DIV
+><P>
+      </P
+></DD
+><DT
+>Primary keepalive message (B)</DT
+><DD
+><P
+>      <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>Byte1('k')</DT
+><DD
+><P
+>          Identifies the message as a sender keepalive.
+      </P
+></DD
+><DT
+>Int64</DT
+><DD
+><P
+>          The current end of WAL on the server.
+      </P
+></DD
+><DT
+>Int64</DT
+><DD
+><P
+>          The server's system clock at the time of transmission, as
+          microseconds since midnight on 2000-01-01.
+      </P
+></DD
+><DT
+>Byte1</DT
+><DD
+><P
+>          1 means that the client should reply to this message as soon as
+          possible, to avoid a timeout disconnect. 0 otherwise.
+      </P
+></DD
+></DL
+></DIV
+><P>
+      </P
+></DD
+></DL
+></DIV
+><P>
+     </P
+><P
+>       The receiving process can send replies back to the sender at any time,
+       using one of the following message formats (also in the payload of a
+       CopyData message):
+     </P
+><P
+>      <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>Standby status update (F)</DT
+><DD
+><P
+>      <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>Byte1('r')</DT
+><DD
+><P
+>          Identifies the message as a receiver status update.
+      </P
+></DD
+><DT
+>Int64</DT
+><DD
+><P
+>          The location of the last WAL byte + 1 received and written to disk
+          in the standby.
+      </P
+></DD
+><DT
+>Int64</DT
+><DD
+><P
+>          The location of the last WAL byte + 1 flushed to disk in
+          the standby.
+      </P
+></DD
+><DT
+>Int64</DT
+><DD
+><P
+>          The location of the last WAL byte + 1 applied in the standby.
+      </P
+></DD
+><DT
+>Int64</DT
+><DD
+><P
+>          The client's system clock at the time of transmission, as
+          microseconds since midnight on 2000-01-01.
+      </P
+></DD
+><DT
+>Byte1</DT
+><DD
+><P
+>          If 1, the client requests the server to reply to this message
+          immediately. This can be used to ping the server, to test if
+          the connection is still healthy.
+      </P
+></DD
+></DL
+></DIV
+><P>
+      </P
+></DD
+></DL
+></DIV
+><P>
+     </P
+><P
+>      <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>Hot Standby feedback message (F)</DT
+><DD
+><P
+>      <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>Byte1('h')</DT
+><DD
+><P
+>          Identifies the message as a Hot Standby feedback message.
+      </P
+></DD
+><DT
+>Int64</DT
+><DD
+><P
+>          The client's system clock at the time of transmission, as
+          microseconds since midnight on 2000-01-01.
+      </P
+></DD
+><DT
+>Int32</DT
+><DD
+><P
+>          The standby's current xmin. This may be 0, if the standby is
+          sending notification that Hot Standby feedback will no longer
+          be sent on this connection. Later non-zero messages may
+          reinitiate the feedback mechanism.
+      </P
+></DD
+><DT
+>Int32</DT
+><DD
+><P
+>          The standby's current epoch.
+      </P
+></DD
+></DL
+></DIV
+><P>
+      </P
+></DD
+></DL
+></DIV
+><P>
+     </P
+></DD
+><DT
+>START_REPLICATION <TT
+CLASS="LITERAL"
+>SLOT</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>slot_name</I
+></TT
+> <TT
+CLASS="LITERAL"
+>LOGICAL</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>XXX/XXX</I
+></TT
+> [ ( <TT
+CLASS="REPLACEABLE"
+><I
+>option_name</I
+></TT
+> [<TT
+CLASS="REPLACEABLE"
+><I
+>option_value</I
+></TT
+>] [, ... ] ) ]</DT
+><DD
+><P
+>      Instructs server to start streaming WAL for logical replication, starting
+      at WAL position <TT
+CLASS="REPLACEABLE"
+><I
+>XXX/XXX</I
+></TT
+>. The server can
+      reply with an error, e.g. if the requested section of WAL has already
+      been recycled. On success, server responds with a CopyBothResponse
+      message, and then starts to stream WAL to the frontend.
+     </P
+><P
+>      The messages inside the CopyBothResponse messages are of the same format
+      documented for <TT
+CLASS="LITERAL"
+>START_REPLICATION ... PHYSICAL</TT
+>.
+     </P
+><P
+>      The output plugin associated with the selected slot is used
+      to process the output for streaming.
+     </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>SLOT</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>slot_name</I
+></TT
+></DT
+><DD
+><P
+>          The name of the slot to stream changes from. This parameter is required,
+          and must correspond to an existing logical replication slot created
+          with <TT
+CLASS="LITERAL"
+>CREATE_REPLICATION_SLOT</TT
+> in
+          <TT
+CLASS="LITERAL"
+>LOGICAL</TT
+> mode.
+         </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>XXX/XXX</I
+></TT
+></DT
+><DD
+><P
+>         The WAL position to begin streaming at.
+        </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>option_name</I
+></TT
+></DT
+><DD
+><P
+>         The name of an option passed to the slot's logical decoding plugin.
+        </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>option_value</I
+></TT
+></DT
+><DD
+><P
+>         Optional value, in the form of a string constant, associated with the
+         specified option.
+        </P
+></DD
+></DL
+></DIV
+></DD
+><DT
+>DROP_REPLICATION_SLOT <TT
+CLASS="REPLACEABLE"
+><I
+>slot_name</I
+></TT
+>
+     </DT
+><DD
+><P
+>      Drops a replication slot, freeing any reserved server-side resources. If
+      the slot is currently in use by an active connection, this command fails.
+     </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>slot_name</I
+></TT
+></DT
+><DD
+><P
+>          The name of the slot to drop.
+         </P
+></DD
+></DL
+></DIV
+></DD
+><DT
+>BASE_BACKUP [<TT
+CLASS="LITERAL"
+>LABEL</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>'label'</I
+></TT
+>] [<TT
+CLASS="LITERAL"
+>PROGRESS</TT
+>] [<TT
+CLASS="LITERAL"
+>FAST</TT
+>] [<TT
+CLASS="LITERAL"
+>WAL</TT
+>] [<TT
+CLASS="LITERAL"
+>NOWAIT</TT
+>] [<TT
+CLASS="LITERAL"
+>MAX_RATE</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>rate</I
+></TT
+>] [<TT
+CLASS="LITERAL"
+>TABLESPACE_MAP</TT
+>]
+     </DT
+><DD
+><P
+>      Instructs the server to start streaming a base backup.
+      The system will automatically be put in backup mode before the backup
+      is started, and taken out of it when the backup is complete. The
+      following options are accepted:
+      <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>LABEL</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>'label'</I
+></TT
+></DT
+><DD
+><P
+>          Sets the label of the backup. If none is specified, a backup label
+          of <TT
+CLASS="LITERAL"
+>base backup</TT
+> will be used. The quoting rules
+          for the label are the same as a standard SQL string with
+          <A
+HREF="runtime-config-compatible.html#GUC-STANDARD-CONFORMING-STRINGS"
+>standard_conforming_strings</A
+> turned on.
+         </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>PROGRESS</TT
+></DT
+><DD
+><P
+>          Request information required to generate a progress report. This will
+          send back an approximate size in the header of each tablespace, which
+          can be used to calculate how far along the stream is done. This is
+          calculated by enumerating all the file sizes once before the transfer
+          is even started, and may as such have a negative impact on the
+          performance - in particular it may take longer before the first data
+          is streamed. Since the database files can change during the backup,
+          the size is only approximate and may both grow and shrink between
+          the time of approximation and the sending of the actual files.
+         </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>FAST</TT
+></DT
+><DD
+><P
+>          Request a fast checkpoint.
+         </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>WAL</TT
+></DT
+><DD
+><P
+>          Include the necessary WAL segments in the backup. This will include
+          all the files between start and stop backup in the
+          <TT
+CLASS="FILENAME"
+>pg_xlog</TT
+> directory of the base directory tar
+          file.
+         </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>NOWAIT</TT
+></DT
+><DD
+><P
+>          By default, the backup will wait until the last required xlog
+          segment has been archived, or emit a warning if log archiving is
+          not enabled. Specifying <TT
+CLASS="LITERAL"
+>NOWAIT</TT
+> disables both
+          the waiting and the warning, leaving the client responsible for
+          ensuring the required log is available.
+         </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>MAX_RATE</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>rate</I
+></TT
+></DT
+><DD
+><P
+>          Limit (throttle) the maximum amount of data transferred from server
+          to client per unit of time.  The expected unit is kilobytes per second.
+          If this option is specified, the value must either be equal to zero
+          or it must fall within the range from 32 kB through 1 GB (inclusive).
+          If zero is passed or the option is not specified, no restriction is
+          imposed on the transfer.
+         </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>TABLESPACE_MAP</TT
+></DT
+><DD
+><P
+>          Include information about symbolic links present in the directory
+          <TT
+CLASS="FILENAME"
+>pg_tblspc</TT
+> in a file named
+          <TT
+CLASS="FILENAME"
+>tablespace_map</TT
+>. The tablespace map file includes
+          each symbolic link name as it exists in the directory
+          <TT
+CLASS="FILENAME"
+>pg_tblspc/</TT
+> and the full path of that symbolic link.
+         </P
+></DD
+></DL
+></DIV
+><P>
+     </P
+><P
+>      When the backup is started, the server will first send two
+      ordinary result sets, followed by one or more CopyResponse
+      results.
+     </P
+><P
+>      The first ordinary result set contains the starting position of the
+      backup, in a single row with two columns. The first column contains
+      the start position given in XLogRecPtr format, and the second column
+      contains the corresponding timeline ID.
+     </P
+><P
+>      The second ordinary result set has one row for each tablespace.
+      The fields in this row are:
+      <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+>spcoid</DT
+><DD
+><P
+>          The oid of the tablespace, or <TT
+CLASS="LITERAL"
+>NULL</TT
+> if it's the base
+          directory.
+         </P
+></DD
+><DT
+>spclocation</DT
+><DD
+><P
+>          The full path of the tablespace directory, or <TT
+CLASS="LITERAL"
+>NULL</TT
+>
+          if it's the base directory.
+         </P
+></DD
+><DT
+>size</DT
+><DD
+><P
+>          The approximate size of the tablespace, if progress report has
+          been requested; otherwise it's <TT
+CLASS="LITERAL"
+>NULL</TT
+>.
+         </P
+></DD
+></DL
+></DIV
+><P>
+     </P
+><P
+>      After the second regular result set, one or more CopyResponse results
+      will be sent, one for PGDATA and one for each additional tablespace other
+      than <TT
+CLASS="LITERAL"
+>pg_default</TT
+> and <TT
+CLASS="LITERAL"
+>pg_global</TT
+>. The data in
+      the CopyResponse results will be a tar format (following the
+      <SPAN
+CLASS="QUOTE"
+>"ustar interchange format"</SPAN
+> specified in the POSIX 1003.1-2008
+      standard) dump of the tablespace contents, except that the two trailing
+      blocks of zeroes specified in the standard are omitted.
+      After the tar data is complete, a final ordinary result set will be sent,
+      containing the WAL end position of the backup, in the same format as
+      the start position.
+     </P
+><P
+>      The tar archive for the data directory and each tablespace will contain
+      all files in the directories, regardless of whether they are
+      <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> files or other files added to the same
+      directory. The only excluded files are:
+      <P
+></P
+></P><UL
+COMPACT="COMPACT"
+><LI
+STYLE="list-style-type: disc"
+><P
+>         <TT
+CLASS="FILENAME"
+>postmaster.pid</TT
+>
+        </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>         <TT
+CLASS="FILENAME"
+>postmaster.opts</TT
+>
+        </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>         various temporary files created during the operation of the PostgreSQL server
+        </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>         <TT
+CLASS="FILENAME"
+>pg_xlog</TT
+>, including subdirectories. If the backup is run
+         with WAL files included, a synthesized version of <TT
+CLASS="FILENAME"
+>pg_xlog</TT
+> will be
+         included, but it will only contain the files necessary for the
+         backup to work, not the rest of the contents.
+        </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>         <TT
+CLASS="FILENAME"
+>pg_replslot</TT
+> is copied as an empty directory.
+        </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>         Files other than regular files and directories, such as symbolic
+         links and special device files, are skipped.  (Symbolic links
+         in <TT
+CLASS="FILENAME"
+>pg_tblspc</TT
+> are maintained.)
+        </P
+></LI
+></UL
+><P>
+      Owner, group and file mode are set if the underlying file system on
+      the server supports it.
+     </P
+><P
+>      Once all tablespaces have been sent, a final regular result set will
+      be sent. This result set contains the end position of the
+      backup, given in XLogRecPtr format as a single column in a single row.
+     </P
+></DD
+></DL
+></DIV
+><P>&#13;</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="protocol-flow.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="protocol-message-types.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Message Flow</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="protocol.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Message Data Types</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

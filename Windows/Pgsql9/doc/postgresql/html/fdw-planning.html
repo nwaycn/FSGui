@@ -1,0 +1,647 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Foreign Data Wrapper Query Planning</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Writing A Foreign Data Wrapper"
+HREF="fdwhandler.html"><LINK
+REL="PREVIOUS"
+TITLE="Foreign Data Wrapper Helper Functions"
+HREF="fdw-helpers.html"><LINK
+REL="NEXT"
+TITLE="Row Locking in Foreign Data Wrappers"
+HREF="fdw-row-locking.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Foreign Data Wrapper Helper Functions"
+HREF="fdw-helpers.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="fdwhandler.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 54. Writing A Foreign Data Wrapper</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Row Locking in Foreign Data Wrappers"
+HREF="fdw-row-locking.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="FDW-PLANNING"
+>54.4. Foreign Data Wrapper Query Planning</A
+></H1
+><P
+>     The FDW callback functions <CODE
+CLASS="FUNCTION"
+>GetForeignRelSize</CODE
+>,
+     <CODE
+CLASS="FUNCTION"
+>GetForeignPaths</CODE
+>, <CODE
+CLASS="FUNCTION"
+>GetForeignPlan</CODE
+>,
+     <CODE
+CLASS="FUNCTION"
+>PlanForeignModify</CODE
+>, and <CODE
+CLASS="FUNCTION"
+>GetForeignJoinPaths</CODE
+>
+     must fit into the workings of the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> planner.
+     Here are some notes about what they must do.
+    </P
+><P
+>     The information in <TT
+CLASS="LITERAL"
+>root</TT
+> and <TT
+CLASS="LITERAL"
+>baserel</TT
+> can be used
+     to reduce the amount of information that has to be fetched from the
+     foreign table (and therefore reduce the cost).
+     <TT
+CLASS="LITERAL"
+>baserel-&gt;baserestrictinfo</TT
+> is particularly interesting, as
+     it contains restriction quals (<TT
+CLASS="LITERAL"
+>WHERE</TT
+> clauses) that should be
+     used to filter the rows to be fetched.  (The FDW itself is not required
+     to enforce these quals, as the core executor can check them instead.)
+     <TT
+CLASS="LITERAL"
+>baserel-&gt;reltargetlist</TT
+> can be used to determine which
+     columns need to be fetched; but note that it only lists columns that
+     have to be emitted by the <TT
+CLASS="STRUCTNAME"
+>ForeignScan</TT
+> plan node, not
+     columns that are used in qual evaluation but not output by the query.
+    </P
+><P
+>     Various private fields are available for the FDW planning functions to
+     keep information in.  Generally, whatever you store in FDW private fields
+     should be palloc'd, so that it will be reclaimed at the end of planning.
+    </P
+><P
+>     <TT
+CLASS="LITERAL"
+>baserel-&gt;fdw_private</TT
+> is a <TT
+CLASS="TYPE"
+>void</TT
+> pointer that is
+     available for FDW planning functions to store information relevant to
+     the particular foreign table.  The core planner does not touch it except
+     to initialize it to NULL when the <TT
+CLASS="LITERAL"
+>RelOptInfo</TT
+> node is created.
+     It is useful for passing information forward from
+     <CODE
+CLASS="FUNCTION"
+>GetForeignRelSize</CODE
+> to <CODE
+CLASS="FUNCTION"
+>GetForeignPaths</CODE
+> and/or
+     <CODE
+CLASS="FUNCTION"
+>GetForeignPaths</CODE
+> to <CODE
+CLASS="FUNCTION"
+>GetForeignPlan</CODE
+>, thereby
+     avoiding recalculation.
+    </P
+><P
+>     <CODE
+CLASS="FUNCTION"
+>GetForeignPaths</CODE
+> can identify the meaning of different
+     access paths by storing private information in the
+     <TT
+CLASS="STRUCTFIELD"
+>fdw_private</TT
+> field of <TT
+CLASS="STRUCTNAME"
+>ForeignPath</TT
+> nodes.
+     <TT
+CLASS="STRUCTFIELD"
+>fdw_private</TT
+> is declared as a <TT
+CLASS="TYPE"
+>List</TT
+> pointer, but
+     could actually contain anything since the core planner does not touch
+     it.  However, best practice is to use a representation that's dumpable
+     by <CODE
+CLASS="FUNCTION"
+>nodeToString</CODE
+>, for use with debugging support available
+     in the backend.
+    </P
+><P
+>     <CODE
+CLASS="FUNCTION"
+>GetForeignPlan</CODE
+> can examine the <TT
+CLASS="STRUCTFIELD"
+>fdw_private</TT
+>
+     field of the selected <TT
+CLASS="STRUCTNAME"
+>ForeignPath</TT
+> node, and can generate
+     <TT
+CLASS="STRUCTFIELD"
+>fdw_exprs</TT
+> and <TT
+CLASS="STRUCTFIELD"
+>fdw_private</TT
+> lists to be
+     placed in the <TT
+CLASS="STRUCTNAME"
+>ForeignScan</TT
+> plan node, where they will be
+     available at execution time.  Both of these lists must be
+     represented in a form that <CODE
+CLASS="FUNCTION"
+>copyObject</CODE
+> knows how to copy.
+     The <TT
+CLASS="STRUCTFIELD"
+>fdw_private</TT
+> list has no other restrictions and is
+     not interpreted by the core backend in any way.  The
+     <TT
+CLASS="STRUCTFIELD"
+>fdw_exprs</TT
+> list, if not NIL, is expected to contain
+     expression trees that are intended to be executed at run time.  These
+     trees will undergo post-processing by the planner to make them fully
+     executable.
+    </P
+><P
+>     In <CODE
+CLASS="FUNCTION"
+>GetForeignPlan</CODE
+>, generally the passed-in target list can
+     be copied into the plan node as-is.  The passed <TT
+CLASS="LITERAL"
+>scan_clauses</TT
+> list
+     contains the same clauses as <TT
+CLASS="LITERAL"
+>baserel-&gt;baserestrictinfo</TT
+>,
+     but may be re-ordered for better execution efficiency.  In simple cases
+     the FDW can just strip <TT
+CLASS="STRUCTNAME"
+>RestrictInfo</TT
+> nodes from the
+     <TT
+CLASS="LITERAL"
+>scan_clauses</TT
+> list (using <CODE
+CLASS="FUNCTION"
+>extract_actual_clauses</CODE
+>) and put
+     all the clauses into the plan node's qual list, which means that all the
+     clauses will be checked by the executor at run time.  More complex FDWs
+     may be able to check some of the clauses internally, in which case those
+     clauses can be removed from the plan node's qual list so that the
+     executor doesn't waste time rechecking them.
+    </P
+><P
+>     As an example, the FDW might identify some restriction clauses of the
+     form <TT
+CLASS="REPLACEABLE"
+><I
+>foreign_variable</I
+></TT
+> <TT
+CLASS="LITERAL"
+>=</TT
+>
+     <TT
+CLASS="REPLACEABLE"
+><I
+>sub_expression</I
+></TT
+>, which it determines can be executed on
+     the remote server given the locally-evaluated value of the
+     <TT
+CLASS="REPLACEABLE"
+><I
+>sub_expression</I
+></TT
+>.  The actual identification of such a
+     clause should happen during <CODE
+CLASS="FUNCTION"
+>GetForeignPaths</CODE
+>, since it would
+     affect the cost estimate for the path.  The path's
+     <TT
+CLASS="STRUCTFIELD"
+>fdw_private</TT
+> field would probably include a pointer to
+     the identified clause's <TT
+CLASS="STRUCTNAME"
+>RestrictInfo</TT
+> node.  Then
+     <CODE
+CLASS="FUNCTION"
+>GetForeignPlan</CODE
+> would remove that clause from <TT
+CLASS="LITERAL"
+>scan_clauses</TT
+>,
+     but add the <TT
+CLASS="REPLACEABLE"
+><I
+>sub_expression</I
+></TT
+> to <TT
+CLASS="STRUCTFIELD"
+>fdw_exprs</TT
+>
+     to ensure that it gets massaged into executable form.  It would probably
+     also put control information into the plan node's
+     <TT
+CLASS="STRUCTFIELD"
+>fdw_private</TT
+> field to tell the execution functions what
+     to do at run time.  The query transmitted to the remote server would
+     involve something like <TT
+CLASS="LITERAL"
+>WHERE <TT
+CLASS="REPLACEABLE"
+><I
+>foreign_variable</I
+></TT
+> =
+     $1</TT
+>, with the parameter value obtained at run time from
+     evaluation of the <TT
+CLASS="STRUCTFIELD"
+>fdw_exprs</TT
+> expression tree.
+    </P
+><P
+>     Any clauses removed from the plan node's qual list must instead be added
+     to <TT
+CLASS="LITERAL"
+>fdw_recheck_quals</TT
+> or rechecked by
+     <TT
+CLASS="LITERAL"
+>RecheckForeignScan</TT
+> in order to ensure correct behavior
+     at the <TT
+CLASS="LITERAL"
+>READ COMMITTED</TT
+> isolation level.  When a concurrent
+     update occurs for some other table involved in the query, the executor
+     may need to verify that all of the original quals are still satisfied for
+     the tuple, possibly against a different set of parameter values.  Using
+     <TT
+CLASS="LITERAL"
+>fdw_recheck_quals</TT
+> is typically easier than implementing checks
+     inside <TT
+CLASS="LITERAL"
+>RecheckForeignScan</TT
+>, but this method will be
+     insufficient when outer joins have been pushed down, since the join tuples
+     in that case might have some fields go to NULL without rejecting the
+     tuple entirely.
+    </P
+><P
+>     Another <TT
+CLASS="STRUCTNAME"
+>ForeignScan</TT
+> field that can be filled by FDWs
+     is <TT
+CLASS="STRUCTFIELD"
+>fdw_scan_tlist</TT
+>, which describes the tuples returned by
+     the FDW for this plan node.  For simple foreign table scans this can be
+     set to <TT
+CLASS="LITERAL"
+>NIL</TT
+>, implying that the returned tuples have the
+     row type declared for the foreign table.  A non-<TT
+CLASS="SYMBOL"
+>NIL</TT
+> value must be a
+     target list (list of <TT
+CLASS="STRUCTNAME"
+>TargetEntry</TT
+>s) containing Vars and/or
+     expressions representing the returned columns.  This might be used, for
+     example, to show that the FDW has omitted some columns that it noticed
+     won't be needed for the query.  Also, if the FDW can compute expressions
+     used by the query more cheaply than can be done locally, it could add
+     those expressions to <TT
+CLASS="STRUCTFIELD"
+>fdw_scan_tlist</TT
+>.  Note that join
+     plans (created from paths made by <CODE
+CLASS="FUNCTION"
+>GetForeignJoinPaths</CODE
+>) must
+     always supply <TT
+CLASS="STRUCTFIELD"
+>fdw_scan_tlist</TT
+> to describe the set of
+     columns they will return.
+    </P
+><P
+>     The FDW should always construct at least one path that depends only on
+     the table's restriction clauses.  In join queries, it might also choose
+     to construct path(s) that depend on join clauses, for example
+     <TT
+CLASS="REPLACEABLE"
+><I
+>foreign_variable</I
+></TT
+> <TT
+CLASS="LITERAL"
+>=</TT
+>
+     <TT
+CLASS="REPLACEABLE"
+><I
+>local_variable</I
+></TT
+>.  Such clauses will not be found in
+     <TT
+CLASS="LITERAL"
+>baserel-&gt;baserestrictinfo</TT
+> but must be sought in the
+     relation's join lists.  A path using such a clause is called a
+     <SPAN
+CLASS="QUOTE"
+>"parameterized path"</SPAN
+>.  It must identify the other relations
+     used in the selected join clause(s) with a suitable value of
+     <TT
+CLASS="LITERAL"
+>param_info</TT
+>; use <CODE
+CLASS="FUNCTION"
+>get_baserel_parampathinfo</CODE
+>
+     to compute that value.  In <CODE
+CLASS="FUNCTION"
+>GetForeignPlan</CODE
+>, the
+     <TT
+CLASS="REPLACEABLE"
+><I
+>local_variable</I
+></TT
+> portion of the join clause would be added
+     to <TT
+CLASS="STRUCTFIELD"
+>fdw_exprs</TT
+>, and then at run time the case works the
+     same as for an ordinary restriction clause.
+    </P
+><P
+>     If an FDW supports remote joins, <CODE
+CLASS="FUNCTION"
+>GetForeignJoinPaths</CODE
+> should
+     produce <TT
+CLASS="STRUCTNAME"
+>ForeignPath</TT
+>s for potential remote joins in much
+     the same way as <CODE
+CLASS="FUNCTION"
+>GetForeignPaths</CODE
+> works for base tables.
+     Information about the intended join can be passed forward
+     to <CODE
+CLASS="FUNCTION"
+>GetForeignPlan</CODE
+> in the same ways described above.
+     However, <TT
+CLASS="STRUCTFIELD"
+>baserestrictinfo</TT
+> is not relevant for join
+     relations; instead, the relevant join clauses for a particular join are
+     passed to <CODE
+CLASS="FUNCTION"
+>GetForeignJoinPaths</CODE
+> as a separate parameter
+     (<TT
+CLASS="LITERAL"
+>extra-&gt;restrictlist</TT
+>).
+    </P
+><P
+>     When planning an <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> or <TT
+CLASS="COMMAND"
+>DELETE</TT
+>,
+     <CODE
+CLASS="FUNCTION"
+>PlanForeignModify</CODE
+> can look up the <TT
+CLASS="STRUCTNAME"
+>RelOptInfo</TT
+>
+     struct for the foreign table and make use of the
+     <TT
+CLASS="LITERAL"
+>baserel-&gt;fdw_private</TT
+> data previously created by the
+     scan-planning functions.  However, in <TT
+CLASS="COMMAND"
+>INSERT</TT
+> the target
+     table is not scanned so there is no <TT
+CLASS="STRUCTNAME"
+>RelOptInfo</TT
+> for it.
+     The <TT
+CLASS="STRUCTNAME"
+>List</TT
+> returned by <CODE
+CLASS="FUNCTION"
+>PlanForeignModify</CODE
+> has
+     the same restrictions as the <TT
+CLASS="STRUCTFIELD"
+>fdw_private</TT
+> list of a
+     <TT
+CLASS="STRUCTNAME"
+>ForeignScan</TT
+> plan node, that is it must contain only
+     structures that <CODE
+CLASS="FUNCTION"
+>copyObject</CODE
+> knows how to copy.
+    </P
+><P
+>     <TT
+CLASS="COMMAND"
+>INSERT</TT
+> with an <TT
+CLASS="LITERAL"
+>ON CONFLICT</TT
+> clause does not
+     support specifying the conflict target, as unique constraints or
+     exclusion constraints on remote tables are not locally known. This
+     in turn implies that <TT
+CLASS="LITERAL"
+>ON CONFLICT DO UPDATE</TT
+> is not supported,
+     since the specification is mandatory there.
+    </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="fdw-helpers.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="fdw-row-locking.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Foreign Data Wrapper Helper Functions</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="fdwhandler.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Row Locking in Foreign Data Wrappers</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

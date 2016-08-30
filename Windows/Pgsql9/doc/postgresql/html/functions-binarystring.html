@@ -1,0 +1,961 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Binary String Functions and Operators</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Functions and Operators"
+HREF="functions.html"><LINK
+REL="PREVIOUS"
+TITLE="String Functions and Operators"
+HREF="functions-string.html"><LINK
+REL="NEXT"
+TITLE="Bit String Functions and Operators"
+HREF="functions-bitstring.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="String Functions and Operators"
+HREF="functions-string.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 9. Functions and Operators</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Bit String Functions and Operators"
+HREF="functions-bitstring.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="FUNCTIONS-BINARYSTRING"
+>9.5. Binary String Functions and Operators</A
+></H1
+><P
+>    This section describes functions and operators for examining and
+    manipulating values of type <TT
+CLASS="TYPE"
+>bytea</TT
+>.
+   </P
+><P
+>    <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> defines some string functions that use
+    key words, rather than commas, to separate
+    arguments.  Details are in
+    <A
+HREF="functions-binarystring.html#FUNCTIONS-BINARYSTRING-SQL"
+>Table 9-9</A
+>.
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> also provides versions of these functions
+    that use the regular function invocation syntax
+    (see <A
+HREF="functions-binarystring.html#FUNCTIONS-BINARYSTRING-OTHER"
+>Table 9-10</A
+>).
+   </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>     The sample results shown on this page assume that the server parameter
+     <A
+HREF="runtime-config-client.html#GUC-BYTEA-OUTPUT"
+><TT
+CLASS="VARNAME"
+>bytea_output</TT
+></A
+> is set
+     to <TT
+CLASS="LITERAL"
+>escape</TT
+> (the traditional PostgreSQL format).
+    </P
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-BINARYSTRING-SQL"
+></A
+><P
+><B
+>Table 9-9. <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Binary String Functions and Operators</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+><TH
+>Example</TH
+><TH
+>Result</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="LITERAL"
+>||</TT
+>
+        <TT
+CLASS="PARAMETER"
+>string</TT
+></TT
+></TD
+><TD
+> <TT
+CLASS="TYPE"
+>bytea</TT
+> </TD
+><TD
+>        String concatenation
+        
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>E'\\\\Post'::bytea || E'\\047gres\\000'::bytea</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>\\Post'gres\000</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>octet_length(<TT
+CLASS="PARAMETER"
+>string</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+><TD
+>Number of bytes in binary string</TD
+><TD
+><TT
+CLASS="LITERAL"
+>octet_length(E'jo\\000se'::bytea)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>5</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>overlay(<TT
+CLASS="PARAMETER"
+>string</TT
+> placing <TT
+CLASS="PARAMETER"
+>string</TT
+> from <TT
+CLASS="TYPE"
+>int</TT
+> [<SPAN
+CLASS="OPTIONAL"
+>for <TT
+CLASS="TYPE"
+>int</TT
+></SPAN
+>])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>bytea</TT
+></TD
+><TD
+>        Replace substring
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>overlay(E'Th\\000omas'::bytea placing E'\\002\\003'::bytea from 2 for 3)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>T\\002\\003mas</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>position(<TT
+CLASS="PARAMETER"
+>substring</TT
+> in <TT
+CLASS="PARAMETER"
+>string</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+><TD
+>Location of specified substring</TD
+><TD
+><TT
+CLASS="LITERAL"
+>position(E'\\000om'::bytea in E'Th\\000omas'::bytea)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>3</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>substring(<TT
+CLASS="PARAMETER"
+>string</TT
+> [<SPAN
+CLASS="OPTIONAL"
+>from <TT
+CLASS="TYPE"
+>int</TT
+></SPAN
+>] [<SPAN
+CLASS="OPTIONAL"
+>for <TT
+CLASS="TYPE"
+>int</TT
+></SPAN
+>])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>bytea</TT
+></TD
+><TD
+>        Extract substring
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>substring(E'Th\\000omas'::bytea from 2 for 3)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>h\000o</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>trim([<SPAN
+CLASS="OPTIONAL"
+>both</SPAN
+>]
+        <TT
+CLASS="PARAMETER"
+>bytes</TT
+> from
+        <TT
+CLASS="PARAMETER"
+>string</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>bytea</TT
+></TD
+><TD
+>        Remove the longest string containing only the bytes in
+        <TT
+CLASS="PARAMETER"
+>bytes</TT
+> from the start
+        and end of <TT
+CLASS="PARAMETER"
+>string</TT
+>
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>trim(E'\\000'::bytea from E'\\000Tom\\000'::bytea)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>Tom</TT
+></TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    Additional binary string manipulation functions are available and
+    are listed in <A
+HREF="functions-binarystring.html#FUNCTIONS-BINARYSTRING-OTHER"
+>Table 9-10</A
+>.  Some
+    of them are used internally to implement the
+    <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+>-standard string functions listed in <A
+HREF="functions-binarystring.html#FUNCTIONS-BINARYSTRING-SQL"
+>Table 9-9</A
+>.
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-BINARYSTRING-OTHER"
+></A
+><P
+><B
+>Table 9-10. Other Binary String Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+><TH
+>Example</TH
+><TH
+>Result</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>btrim(<TT
+CLASS="PARAMETER"
+>string</TT
+>
+        <TT
+CLASS="TYPE"
+>bytea</TT
+>, <TT
+CLASS="PARAMETER"
+>bytes</TT
+> <TT
+CLASS="TYPE"
+>bytea</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>bytea</TT
+></TD
+><TD
+>        Remove the longest string consisting only of bytes
+        in <TT
+CLASS="PARAMETER"
+>bytes</TT
+> from the start and end of
+        <TT
+CLASS="PARAMETER"
+>string</TT
+>
+      </TD
+><TD
+><TT
+CLASS="LITERAL"
+>btrim(E'\\000trim\\000'::bytea, E'\\000'::bytea)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>trim</TT
+></TD
+></TR
+><TR
+><TD
+>        
+       <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>decode(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>,
+       <TT
+CLASS="PARAMETER"
+>format</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+      </TD
+><TD
+><TT
+CLASS="TYPE"
+>bytea</TT
+></TD
+><TD
+>       Decode binary data from textual representation in <TT
+CLASS="PARAMETER"
+>string</TT
+>.
+       Options for <TT
+CLASS="PARAMETER"
+>format</TT
+> are same as in <CODE
+CLASS="FUNCTION"
+>encode</CODE
+>.
+      </TD
+><TD
+><TT
+CLASS="LITERAL"
+>decode(E'123\\000456', 'escape')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>123\000456</TT
+></TD
+></TR
+><TR
+><TD
+>        
+       <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>encode(<TT
+CLASS="PARAMETER"
+>data</TT
+> <TT
+CLASS="TYPE"
+>bytea</TT
+>,
+       <TT
+CLASS="PARAMETER"
+>format</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+      </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>       Encode binary data into a textual representation.  Supported
+       formats are: <TT
+CLASS="LITERAL"
+>base64</TT
+>, <TT
+CLASS="LITERAL"
+>hex</TT
+>, <TT
+CLASS="LITERAL"
+>escape</TT
+>.
+       <TT
+CLASS="LITERAL"
+>escape</TT
+> converts zero bytes and high-bit-set bytes to
+       octal sequences (<TT
+CLASS="LITERAL"
+>\</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>nnn</I
+></TT
+>) and
+       doubles backslashes.
+      </TD
+><TD
+><TT
+CLASS="LITERAL"
+>encode(E'123\\000456'::bytea, 'escape')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>123\000456</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>get_bit(<TT
+CLASS="PARAMETER"
+>string</TT
+>, <TT
+CLASS="PARAMETER"
+>offset</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+><TD
+>        Extract bit from string
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>get_bit(E'Th\\000omas'::bytea, 45)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>1</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>get_byte(<TT
+CLASS="PARAMETER"
+>string</TT
+>, <TT
+CLASS="PARAMETER"
+>offset</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+><TD
+>        Extract byte from string
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>get_byte(E'Th\\000omas'::bytea, 4)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>109</TT
+></TD
+></TR
+><TR
+><TD
+>       
+       <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>length(<TT
+CLASS="PARAMETER"
+>string</TT
+>)</CODE
+></TT
+>
+      </TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+><TD
+>       Length of binary string
+       
+       
+      </TD
+><TD
+><TT
+CLASS="LITERAL"
+>length(E'jo\\000se'::bytea)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>5</TT
+></TD
+></TR
+><TR
+><TD
+>       
+       <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>md5(<TT
+CLASS="PARAMETER"
+>string</TT
+>)</CODE
+></TT
+>
+      </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>       Calculates the MD5 hash of <TT
+CLASS="PARAMETER"
+>string</TT
+>,
+       returning the result in hexadecimal
+      </TD
+><TD
+><TT
+CLASS="LITERAL"
+>md5(E'Th\\000omas'::bytea)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>8ab2d3c9689aaf18 b4958c334c82d8b1</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>set_bit(<TT
+CLASS="PARAMETER"
+>string</TT
+>,
+        <TT
+CLASS="PARAMETER"
+>offset</TT
+>, <TT
+CLASS="PARAMETER"
+>newvalue</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>bytea</TT
+></TD
+><TD
+>        Set bit in string
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>set_bit(E'Th\\000omas'::bytea, 45, 0)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>Th\000omAs</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>set_byte(<TT
+CLASS="PARAMETER"
+>string</TT
+>,
+        <TT
+CLASS="PARAMETER"
+>offset</TT
+>, <TT
+CLASS="PARAMETER"
+>newvalue</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>bytea</TT
+></TD
+><TD
+>        Set byte in string
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>set_byte(E'Th\\000omas'::bytea, 4, 64)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>Th\000o@as</TT
+></TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   <CODE
+CLASS="FUNCTION"
+>get_byte</CODE
+> and <CODE
+CLASS="FUNCTION"
+>set_byte</CODE
+> number the first byte
+   of a binary string as byte 0.
+   <CODE
+CLASS="FUNCTION"
+>get_bit</CODE
+> and <CODE
+CLASS="FUNCTION"
+>set_bit</CODE
+> number bits from the
+   right within each byte; for example bit 0 is the least significant bit of
+   the first byte, and bit 15 is the most significant bit of the second byte.
+  </P
+><P
+>   See also the aggregate function <CODE
+CLASS="FUNCTION"
+>string_agg</CODE
+> in
+   <A
+HREF="functions-aggregate.html"
+>Section 9.20</A
+> and the large object functions
+   in <A
+HREF="lo-funcs.html"
+>Section 32.4</A
+>.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions-string.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="functions-bitstring.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>String Functions and Operators</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Bit String Functions and Operators</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

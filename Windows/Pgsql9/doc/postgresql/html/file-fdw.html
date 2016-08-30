@@ -1,0 +1,520 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>file_fdw</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="earthdistance"
+HREF="earthdistance.html"><LINK
+REL="NEXT"
+TITLE="fuzzystrmatch"
+HREF="fuzzystrmatch.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="earthdistance"
+HREF="earthdistance.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="fuzzystrmatch"
+HREF="fuzzystrmatch.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="FILE-FDW"
+>F.13. file_fdw</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>file_fdw</TT
+> module provides the foreign-data wrapper
+  <CODE
+CLASS="FUNCTION"
+>file_fdw</CODE
+>, which can be used to access data
+  files in the server's file system.  Data files must be in a format
+  that can be read by <TT
+CLASS="COMMAND"
+>COPY FROM</TT
+>;
+  see <A
+HREF="sql-copy.html"
+>COPY</A
+> for details.
+  Access to such data files is currently read-only.
+ </P
+><P
+>  A foreign table created using this wrapper can have the following options:
+ </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>filename</TT
+></DT
+><DD
+><P
+>     Specifies the file to be read.  Required.  Must be an absolute path name.
+    </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>format</TT
+></DT
+><DD
+><P
+>     Specifies the file's format,
+     the same as <TT
+CLASS="COMMAND"
+>COPY</TT
+>'s <TT
+CLASS="LITERAL"
+>FORMAT</TT
+> option.
+    </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>header</TT
+></DT
+><DD
+><P
+>     Specifies whether the file has a header line,
+     the same as <TT
+CLASS="COMMAND"
+>COPY</TT
+>'s <TT
+CLASS="LITERAL"
+>HEADER</TT
+> option.
+    </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>delimiter</TT
+></DT
+><DD
+><P
+>     Specifies the file's delimiter character,
+     the same as <TT
+CLASS="COMMAND"
+>COPY</TT
+>'s <TT
+CLASS="LITERAL"
+>DELIMITER</TT
+> option.
+    </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>quote</TT
+></DT
+><DD
+><P
+>     Specifies the file's quote character,
+     the same as <TT
+CLASS="COMMAND"
+>COPY</TT
+>'s <TT
+CLASS="LITERAL"
+>QUOTE</TT
+> option.
+    </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>escape</TT
+></DT
+><DD
+><P
+>     Specifies the file's escape character,
+     the same as <TT
+CLASS="COMMAND"
+>COPY</TT
+>'s <TT
+CLASS="LITERAL"
+>ESCAPE</TT
+> option.
+    </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>null</TT
+></DT
+><DD
+><P
+>     Specifies the file's null string,
+     the same as <TT
+CLASS="COMMAND"
+>COPY</TT
+>'s <TT
+CLASS="LITERAL"
+>NULL</TT
+> option.
+    </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>encoding</TT
+></DT
+><DD
+><P
+>     Specifies the file's encoding,
+     the same as <TT
+CLASS="COMMAND"
+>COPY</TT
+>'s <TT
+CLASS="LITERAL"
+>ENCODING</TT
+> option.
+    </P
+></DD
+></DL
+></DIV
+><P
+>  Note that while <TT
+CLASS="COMMAND"
+>COPY</TT
+> allows options such as OIDS and HEADER
+  to be specified without a corresponding value, the foreign data wrapper
+  syntax requires a value to be present in all cases.  To activate
+  <TT
+CLASS="COMMAND"
+>COPY</TT
+> options normally supplied without a value, you can
+  instead pass the value TRUE.
+ </P
+><P
+>  A column of a foreign table created using this wrapper can have the
+  following options:
+ </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>force_not_null</TT
+></DT
+><DD
+><P
+>     This is a Boolean option.  If true, it specifies that values of the
+     column should not be matched against the null string (that is, the
+     file-level <TT
+CLASS="LITERAL"
+>null</TT
+> option).  This has the same effect
+     as listing the column in <TT
+CLASS="COMMAND"
+>COPY</TT
+>'s
+     <TT
+CLASS="LITERAL"
+>FORCE_NOT_NULL</TT
+> option.
+    </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>force_null</TT
+></DT
+><DD
+><P
+>     This is a Boolean option.  If true, it specifies that values of the
+     column which match the null string are returned as <TT
+CLASS="LITERAL"
+>NULL</TT
+>
+     even if the value is quoted. Without this option, only unquoted
+     values matching the null string are returned as <TT
+CLASS="LITERAL"
+>NULL</TT
+>.
+     This has the same effect  as listing the column in
+     <TT
+CLASS="COMMAND"
+>COPY</TT
+>'s <TT
+CLASS="LITERAL"
+>FORCE_NULL</TT
+> option.
+    </P
+></DD
+></DL
+></DIV
+><P
+>  <TT
+CLASS="COMMAND"
+>COPY</TT
+>'s <TT
+CLASS="LITERAL"
+>OIDS</TT
+> and
+  <TT
+CLASS="LITERAL"
+>FORCE_QUOTE</TT
+> options are currently not supported by
+  <TT
+CLASS="LITERAL"
+>file_fdw</TT
+>.
+ </P
+><P
+>  These options can only be specified for a foreign table or its columns, not
+  in the options of the <TT
+CLASS="LITERAL"
+>file_fdw</TT
+> foreign-data wrapper, nor in the
+  options of a server or user mapping using the wrapper.
+ </P
+><P
+>  Changing table-level options requires superuser privileges, for security
+  reasons: only a superuser should be able to determine which file is read.
+  In principle non-superusers could be allowed to change the other options,
+  but that's not supported at present.
+ </P
+><P
+>  For a foreign table using <TT
+CLASS="LITERAL"
+>file_fdw</TT
+>, <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+> shows
+  the name of the file to be read.  Unless <TT
+CLASS="LITERAL"
+>COSTS OFF</TT
+> is
+  specified, the file size (in bytes) is shown as well.
+ </P
+><DIV
+CLASS="EXAMPLE"
+><A
+NAME="AEN170721"
+></A
+><P
+><B
+>Example F-1. Create a Foreign Table for PostgreSQL CSV Logs</B
+></P
+><P
+>   One of the obvious uses for the <TT
+CLASS="LITERAL"
+>file_fdw</TT
+> is to make
+   the PostgreSQL activity log available as a table for querying.  To
+   do this, first you must be logging to a CSV file, which here we
+   will call <TT
+CLASS="LITERAL"
+>pglog.csv</TT
+>.  First, install <TT
+CLASS="LITERAL"
+>file_fdw</TT
+>
+   as an extension:
+  </P
+><PRE
+CLASS="PROGRAMLISTING"
+>CREATE EXTENSION file_fdw;</PRE
+><P
+>   Then create a foreign server:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE SERVER pglog FOREIGN DATA WRAPPER file_fdw;</PRE
+><P>
+  </P
+><P
+>   Now you are ready to create the foreign data table.  Using the
+   <TT
+CLASS="COMMAND"
+>CREATE FOREIGN TABLE</TT
+> command, you will need to define
+   the columns for the table, the CSV file name, and its format:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FOREIGN TABLE pglog (
+  log_time timestamp(3) with time zone,
+  user_name text,
+  database_name text,
+  process_id integer,
+  connection_from text,
+  session_id text,
+  session_line_num bigint,
+  command_tag text,
+  session_start_time timestamp with time zone,
+  virtual_transaction_id text,
+  transaction_id bigint,
+  error_severity text,
+  sql_state_code text,
+  message text,
+  detail text,
+  hint text,
+  internal_query text,
+  internal_query_pos integer,
+  context text,
+  query text,
+  query_pos integer,
+  location text,
+  application_name text
+) SERVER pglog
+OPTIONS ( filename '/home/josh/9.1/data/pg_log/pglog.csv', format 'csv' );</PRE
+><P>
+  </P
+><P
+>   That's it &mdash; now you can query your log directly. In production, of
+   course, you would need to define some way to deal with log rotation.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="earthdistance.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="fuzzystrmatch.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>earthdistance</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>fuzzystrmatch</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

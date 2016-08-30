@@ -1,0 +1,698 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Conditional Expressions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Functions and Operators"
+HREF="functions.html"><LINK
+REL="PREVIOUS"
+TITLE="Sequence Manipulation Functions"
+HREF="functions-sequence.html"><LINK
+REL="NEXT"
+TITLE="Array Functions and Operators"
+HREF="functions-array.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Sequence Manipulation Functions"
+HREF="functions-sequence.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 9. Functions and Operators</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Array Functions and Operators"
+HREF="functions-array.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="FUNCTIONS-CONDITIONAL"
+>9.17. Conditional Expressions</A
+></H1
+><P
+>   This section describes the <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+>-compliant conditional expressions
+   available in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>.
+  </P
+><DIV
+CLASS="TIP"
+><BLOCKQUOTE
+CLASS="TIP"
+><P
+><B
+>Tip: </B
+>    If your needs go beyond the capabilities of these conditional
+    expressions, you might want to consider writing a stored procedure
+    in a more expressive programming language.
+   </P
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="FUNCTIONS-CASE"
+>9.17.1. <TT
+CLASS="LITERAL"
+>CASE</TT
+></A
+></H2
+><P
+>   The <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> <TT
+CLASS="TOKEN"
+>CASE</TT
+> expression is a
+   generic conditional expression, similar to if/else statements in
+   other programming languages:
+
+</P><PRE
+CLASS="SYNOPSIS"
+>CASE WHEN <TT
+CLASS="REPLACEABLE"
+><I
+>condition</I
+></TT
+> THEN <TT
+CLASS="REPLACEABLE"
+><I
+>result</I
+></TT
+>
+     [<SPAN
+CLASS="OPTIONAL"
+>WHEN ...</SPAN
+>]
+     [<SPAN
+CLASS="OPTIONAL"
+>ELSE <TT
+CLASS="REPLACEABLE"
+><I
+>result</I
+></TT
+></SPAN
+>]
+END</PRE
+><P>
+
+   <TT
+CLASS="TOKEN"
+>CASE</TT
+> clauses can be used wherever
+   an expression is valid.  Each <TT
+CLASS="REPLACEABLE"
+><I
+>condition</I
+></TT
+> is an
+   expression that returns a <TT
+CLASS="TYPE"
+>boolean</TT
+> result.  If the condition's
+   result is true, the value of the <TT
+CLASS="TOKEN"
+>CASE</TT
+> expression is the
+   <TT
+CLASS="REPLACEABLE"
+><I
+>result</I
+></TT
+> that follows the condition, and the
+   remainder of the <TT
+CLASS="TOKEN"
+>CASE</TT
+> expression is not processed.  If the
+   condition's result is not true, any subsequent <TT
+CLASS="TOKEN"
+>WHEN</TT
+> clauses
+   are examined in the same manner.  If no <TT
+CLASS="TOKEN"
+>WHEN</TT
+>
+   <TT
+CLASS="REPLACEABLE"
+><I
+>condition</I
+></TT
+> yields true, the value of the
+   <TT
+CLASS="TOKEN"
+>CASE</TT
+> expression is the <TT
+CLASS="REPLACEABLE"
+><I
+>result</I
+></TT
+> of the
+   <TT
+CLASS="TOKEN"
+>ELSE</TT
+> clause.  If the <TT
+CLASS="TOKEN"
+>ELSE</TT
+> clause is
+   omitted and no condition is true, the result is null.
+  </P
+><P
+>    An example:
+</P><PRE
+CLASS="SCREEN"
+>SELECT * FROM test;
+
+ a
+---
+ 1
+ 2
+ 3
+
+
+SELECT a,
+       CASE WHEN a=1 THEN 'one'
+            WHEN a=2 THEN 'two'
+            ELSE 'other'
+       END
+    FROM test;
+
+ a | case
+---+-------
+ 1 | one
+ 2 | two
+ 3 | other</PRE
+><P>
+   </P
+><P
+>   The data types of all the <TT
+CLASS="REPLACEABLE"
+><I
+>result</I
+></TT
+>
+   expressions must be convertible to a single output type.
+   See <A
+HREF="typeconv-union-case.html"
+>Section 10.5</A
+> for more details.
+  </P
+><P
+>   There is a <SPAN
+CLASS="QUOTE"
+>"simple"</SPAN
+> form of <TT
+CLASS="TOKEN"
+>CASE</TT
+> expression
+   that is a variant of the general form above:
+
+</P><PRE
+CLASS="SYNOPSIS"
+>CASE <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>
+    WHEN <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> THEN <TT
+CLASS="REPLACEABLE"
+><I
+>result</I
+></TT
+>
+    [<SPAN
+CLASS="OPTIONAL"
+>WHEN ...</SPAN
+>]
+    [<SPAN
+CLASS="OPTIONAL"
+>ELSE <TT
+CLASS="REPLACEABLE"
+><I
+>result</I
+></TT
+></SPAN
+>]
+END</PRE
+><P>
+
+   The first
+   <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+> is computed, then compared to
+   each of the <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> expressions in the
+   <TT
+CLASS="TOKEN"
+>WHEN</TT
+> clauses until one is found that is equal to it.  If
+   no match is found, the <TT
+CLASS="REPLACEABLE"
+><I
+>result</I
+></TT
+> of the
+   <TT
+CLASS="TOKEN"
+>ELSE</TT
+> clause (or a null value) is returned.  This is similar
+   to the <CODE
+CLASS="FUNCTION"
+>switch</CODE
+> statement in C.
+  </P
+><P
+>    The example above can be written using the simple
+    <TT
+CLASS="TOKEN"
+>CASE</TT
+> syntax:
+</P><PRE
+CLASS="SCREEN"
+>SELECT a,
+       CASE a WHEN 1 THEN 'one'
+              WHEN 2 THEN 'two'
+              ELSE 'other'
+       END
+    FROM test;
+
+ a | case
+---+-------
+ 1 | one
+ 2 | two
+ 3 | other</PRE
+><P>
+   </P
+><P
+>    A <TT
+CLASS="TOKEN"
+>CASE</TT
+> expression does not evaluate any subexpressions
+    that are not needed to determine the result.  For example, this is a
+    possible way of avoiding a division-by-zero failure:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT ... WHERE CASE WHEN x &lt;&gt; 0 THEN y/x &gt; 1.5 ELSE false END;</PRE
+><P>
+   </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>     As described in <A
+HREF="sql-expressions.html#SYNTAX-EXPRESS-EVAL"
+>Section 4.2.14</A
+>, there are various
+     situations in which subexpressions of an expression are evaluated at
+     different times, so that the principle that <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="TOKEN"
+>CASE</TT
+>
+     evaluates only necessary subexpressions"</SPAN
+> is not ironclad.  For
+     example a constant <TT
+CLASS="LITERAL"
+>1/0</TT
+> subexpression will usually result in
+     a division-by-zero failure at planning time, even if it's within
+     a <TT
+CLASS="TOKEN"
+>CASE</TT
+> arm that would never be entered at run time.
+    </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="FUNCTIONS-COALESCE-NVL-IFNULL"
+>9.17.2. <TT
+CLASS="LITERAL"
+>COALESCE</TT
+></A
+></H2
+><PRE
+CLASS="SYNOPSIS"
+><CODE
+CLASS="FUNCTION"
+>COALESCE</CODE
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> [<SPAN
+CLASS="OPTIONAL"
+>, ...</SPAN
+>])</PRE
+><P
+>   The <CODE
+CLASS="FUNCTION"
+>COALESCE</CODE
+> function returns the first of its
+   arguments that is not null.  Null is returned only if all arguments
+   are null.  It is often used to substitute a default value for
+   null values when data is retrieved for display, for example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT COALESCE(description, short_description, '(none)') ...</PRE
+><P>
+   This returns <TT
+CLASS="VARNAME"
+>description</TT
+> if it is not null, otherwise
+   <TT
+CLASS="VARNAME"
+>short_description</TT
+> if it is not null, otherwise <TT
+CLASS="LITERAL"
+>(none)</TT
+>.
+  </P
+><P
+>    Like a <TT
+CLASS="TOKEN"
+>CASE</TT
+> expression, <CODE
+CLASS="FUNCTION"
+>COALESCE</CODE
+> only
+    evaluates the arguments that are needed to determine the result;
+    that is, arguments to the right of the first non-null argument are
+    not evaluated.  This SQL-standard function provides capabilities similar
+    to <CODE
+CLASS="FUNCTION"
+>NVL</CODE
+> and <CODE
+CLASS="FUNCTION"
+>IFNULL</CODE
+>, which are used in some other
+    database systems.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="FUNCTIONS-NULLIF"
+>9.17.3. <TT
+CLASS="LITERAL"
+>NULLIF</TT
+></A
+></H2
+><PRE
+CLASS="SYNOPSIS"
+><CODE
+CLASS="FUNCTION"
+>NULLIF</CODE
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>value1</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>value2</I
+></TT
+>)</PRE
+><P
+>   The <CODE
+CLASS="FUNCTION"
+>NULLIF</CODE
+> function returns a null value if
+   <TT
+CLASS="REPLACEABLE"
+><I
+>value1</I
+></TT
+> equals <TT
+CLASS="REPLACEABLE"
+><I
+>value2</I
+></TT
+>;
+   otherwise it returns <TT
+CLASS="REPLACEABLE"
+><I
+>value1</I
+></TT
+>.
+   This can be used to perform the inverse operation of the
+   <CODE
+CLASS="FUNCTION"
+>COALESCE</CODE
+> example given above:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT NULLIF(value, '(none)') ...</PRE
+><P>
+  </P
+><P
+>   In this example, if <TT
+CLASS="LITERAL"
+>value</TT
+> is <TT
+CLASS="LITERAL"
+>(none)</TT
+>,
+   null is returned, otherwise the value of <TT
+CLASS="LITERAL"
+>value</TT
+>
+   is returned.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="FUNCTIONS-GREATEST-LEAST"
+>9.17.4. <TT
+CLASS="LITERAL"
+>GREATEST</TT
+> and <TT
+CLASS="LITERAL"
+>LEAST</TT
+></A
+></H2
+><PRE
+CLASS="SYNOPSIS"
+><CODE
+CLASS="FUNCTION"
+>GREATEST</CODE
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> [<SPAN
+CLASS="OPTIONAL"
+>, ...</SPAN
+>])</PRE
+><PRE
+CLASS="SYNOPSIS"
+><CODE
+CLASS="FUNCTION"
+>LEAST</CODE
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> [<SPAN
+CLASS="OPTIONAL"
+>, ...</SPAN
+>])</PRE
+><P
+>    The <CODE
+CLASS="FUNCTION"
+>GREATEST</CODE
+> and <CODE
+CLASS="FUNCTION"
+>LEAST</CODE
+> functions select the
+    largest or smallest value from a list of any number of expressions.
+    The expressions must all be convertible to a common data type, which
+    will be the type of the result
+    (see <A
+HREF="typeconv-union-case.html"
+>Section 10.5</A
+> for details).  NULL values
+    in the list are ignored.  The result will be NULL only if all the
+    expressions evaluate to NULL.
+   </P
+><P
+>    Note that <CODE
+CLASS="FUNCTION"
+>GREATEST</CODE
+> and <CODE
+CLASS="FUNCTION"
+>LEAST</CODE
+> are not in
+    the SQL standard, but are a common extension.  Some other databases
+    make them return NULL if any argument is NULL, rather than only when
+    all are NULL.
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions-sequence.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="functions-array.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Sequence Manipulation Functions</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Array Functions and Operators</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

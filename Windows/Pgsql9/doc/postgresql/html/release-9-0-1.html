@@ -1,0 +1,314 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.0.1</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.0.2"
+HREF="release-9-0-2.html"><LINK
+REL="NEXT"
+TITLE="Release 9.0"
+HREF="release-9-0.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.0.2"
+HREF="release-9-0-2.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.0"
+HREF="release-9-0.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-0-1"
+>E.96. Release 9.0.1</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2010-10-04</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 9.0.0.
+   For information about new features in the 9.0 major release, see
+   <A
+HREF="release-9-0.html"
+>Section E.97</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN145827"
+>E.96.1. Migration to Version 9.0.1</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.0.X.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN145830"
+>E.96.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Use a separate interpreter for each calling SQL userid in PL/Perl and
+      PL/Tcl (Tom Lane)
+     </P
+><P
+>      This change prevents security problems that can be caused by subverting
+      Perl or Tcl code that will be executed later in the same session under
+      another SQL user identity (for example, within a <TT
+CLASS="LITERAL"
+>SECURITY
+      DEFINER</TT
+> function).  Most scripting languages offer numerous ways that
+      that might be done, such as redefining standard functions or operators
+      called by the target function.  Without this change, any SQL user with
+      Perl or Tcl language usage rights can do essentially anything with the
+      SQL privileges of the target function's owner.
+     </P
+><P
+>      The cost of this change is that intentional communication among Perl
+      and Tcl functions becomes more difficult.  To provide an escape hatch,
+      PL/PerlU and PL/TclU functions continue to use only one interpreter
+      per session.  This is not considered a security issue since all such
+      functions execute at the trust level of a database superuser already.
+     </P
+><P
+>      It is likely that third-party procedural languages that claim to offer
+      trusted execution have similar security issues.  We advise contacting
+      the authors of any PL you are depending on for security-critical
+      purposes.
+     </P
+><P
+>      Our thanks to Tim Bunce for pointing out this issue (CVE-2010-3433).
+     </P
+></LI
+><LI
+><P
+>      Improve <CODE
+CLASS="FUNCTION"
+>pg_get_expr()</CODE
+> security fix so that the function
+      can still be used on the output of a sub-select (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect placement of placeholder evaluation (Tom Lane)
+     </P
+><P
+>      This bug could result in query outputs being non-null when they
+      should be null, in cases where the inner side of an outer join
+      is a sub-select with non-strict expressions in its output list.
+     </P
+></LI
+><LI
+><P
+>      Fix join removal's handling of placeholder expressions (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix possible duplicate scans of <TT
+CLASS="LITERAL"
+>UNION ALL</TT
+> member relations
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Prevent infinite loop in ProcessIncomingNotify() after unlistening
+      (Jeff Davis)
+     </P
+></LI
+><LI
+><P
+>      Prevent show_session_authorization() from crashing within autovacuum
+      processes (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Re-allow input of Julian dates prior to 0001-01-01 AD (Tom Lane)
+     </P
+><P
+>      Input such as <TT
+CLASS="LITERAL"
+>'J100000'::date</TT
+> worked before 8.4,
+      but was unintentionally broken by added error-checking.
+     </P
+></LI
+><LI
+><P
+>      Make psql recognize <TT
+CLASS="COMMAND"
+>DISCARD ALL</TT
+> as a command that should
+      not be encased in a transaction block in autocommit-off mode
+      (Itagaki Takahiro)
+     </P
+></LI
+><LI
+><P
+>      Update build infrastructure and documentation to reflect the source code
+      repository's move from CVS to Git (Magnus Hagander and others)
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-0-2.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-0.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.0.2</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.0</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

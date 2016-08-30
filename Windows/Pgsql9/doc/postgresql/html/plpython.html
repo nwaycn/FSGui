@@ -1,0 +1,366 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>PL/Python - Python Procedural Language</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Programming"
+HREF="server-programming.html"><LINK
+REL="PREVIOUS"
+TITLE="PL/Perl Under the Hood"
+HREF="plperl-under-the-hood.html"><LINK
+REL="NEXT"
+TITLE="Python 2 vs. Python 3"
+HREF="plpython-python23.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="CHAPTER"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="PL/Perl Under the Hood"
+HREF="plperl-under-the-hood.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="server-programming.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Python 2 vs. Python 3"
+HREF="plpython-python23.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="PLPYTHON"
+></A
+>Chapter 43. PL/Python - Python Procedural Language</H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+>43.1. <A
+HREF="plpython-python23.html"
+>Python 2 vs. Python 3</A
+></DT
+><DT
+>43.2. <A
+HREF="plpython-funcs.html"
+>PL/Python Functions</A
+></DT
+><DT
+>43.3. <A
+HREF="plpython-data.html"
+>Data Values</A
+></DT
+><DD
+><DL
+><DT
+>43.3.1. <A
+HREF="plpython-data.html#AEN65498"
+>Data Type Mapping</A
+></DT
+><DT
+>43.3.2. <A
+HREF="plpython-data.html#AEN65560"
+>Null, None</A
+></DT
+><DT
+>43.3.3. <A
+HREF="plpython-data.html#PLPYTHON-ARRAYS"
+>Arrays, Lists</A
+></DT
+><DT
+>43.3.4. <A
+HREF="plpython-data.html#AEN65578"
+>Composite Types</A
+></DT
+><DT
+>43.3.5. <A
+HREF="plpython-data.html#AEN65607"
+>Set-returning Functions</A
+></DT
+></DL
+></DD
+><DT
+>43.4. <A
+HREF="plpython-sharing.html"
+>Sharing Data</A
+></DT
+><DT
+>43.5. <A
+HREF="plpython-do.html"
+>Anonymous Code Blocks</A
+></DT
+><DT
+>43.6. <A
+HREF="plpython-trigger.html"
+>Trigger Functions</A
+></DT
+><DT
+>43.7. <A
+HREF="plpython-database.html"
+>Database Access</A
+></DT
+><DD
+><DL
+><DT
+>43.7.1. <A
+HREF="plpython-database.html#AEN65744"
+>Database Access Functions</A
+></DT
+><DT
+>43.7.2. <A
+HREF="plpython-database.html#PLPYTHON-TRAPPING"
+>Trapping Errors</A
+></DT
+></DL
+></DD
+><DT
+>43.8. <A
+HREF="plpython-subtransaction.html"
+>Explicit Subtransactions</A
+></DT
+><DD
+><DL
+><DT
+>43.8.1. <A
+HREF="plpython-subtransaction.html#AEN65903"
+>Subtransaction Context Managers</A
+></DT
+><DT
+>43.8.2. <A
+HREF="plpython-subtransaction.html#AEN65918"
+>Older Python Versions</A
+></DT
+></DL
+></DD
+><DT
+>43.9. <A
+HREF="plpython-util.html"
+>Utility Functions</A
+></DT
+><DT
+>43.10. <A
+HREF="plpython-envar.html"
+>Environment Variables</A
+></DT
+></DL
+></DIV
+><P
+>  The <SPAN
+CLASS="APPLICATION"
+>PL/Python</SPAN
+> procedural language allows
+  <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> functions to be written in the
+  <A
+HREF="http://www.python.org"
+TARGET="_top"
+>Python language</A
+>.
+ </P
+><P
+>  To install PL/Python in a particular database, use
+  <TT
+CLASS="LITERAL"
+>CREATE EXTENSION plpythonu</TT
+>, or from the shell command line use
+  <TT
+CLASS="LITERAL"
+>createlang plpythonu <TT
+CLASS="REPLACEABLE"
+><I
+>dbname</I
+></TT
+></TT
+> (but
+  see also <A
+HREF="plpython-python23.html"
+>Section 43.1</A
+>).
+ </P
+><DIV
+CLASS="TIP"
+><BLOCKQUOTE
+CLASS="TIP"
+><P
+><B
+>Tip: </B
+>    If a language is installed into <TT
+CLASS="LITERAL"
+>template1</TT
+>, all subsequently
+    created databases will have the language installed automatically.
+   </P
+></BLOCKQUOTE
+></DIV
+><P
+>  PL/Python is only available as an <SPAN
+CLASS="QUOTE"
+>"untrusted"</SPAN
+> language, meaning
+  it does not offer any way of restricting what users can do in it and
+  is therefore named <TT
+CLASS="LITERAL"
+>plpythonu</TT
+>.  A trusted
+  variant <TT
+CLASS="LITERAL"
+>plpython</TT
+> might become available in the future
+  if a secure execution mechanism is developed in Python.  The
+  writer of a function in untrusted PL/Python must take care that the
+  function cannot be used to do anything unwanted, since it will be
+  able to do anything that could be done by a user logged in as the
+  database administrator.  Only superusers can create functions in
+  untrusted languages such as <TT
+CLASS="LITERAL"
+>plpythonu</TT
+>.
+ </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>   Users of source packages must specially enable the build of
+   PL/Python during the installation process.  (Refer to the
+   installation instructions for more information.)  Users of binary
+   packages might find PL/Python in a separate subpackage.
+  </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plperl-under-the-hood.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="plpython-python23.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>PL/Perl Under the Hood</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="server-programming.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Python 2 vs. Python 3</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

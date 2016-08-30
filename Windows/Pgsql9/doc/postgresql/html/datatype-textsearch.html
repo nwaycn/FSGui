@@ -1,0 +1,526 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Text Search Types</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Data Types"
+HREF="datatype.html"><LINK
+REL="PREVIOUS"
+TITLE="Bit String Types"
+HREF="datatype-bit.html"><LINK
+REL="NEXT"
+TITLE="UUID Type"
+HREF="datatype-uuid.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Bit String Types"
+HREF="datatype-bit.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="datatype.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 8. Data Types</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="UUID Type"
+HREF="datatype-uuid.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="DATATYPE-TEXTSEARCH"
+>8.11. Text Search Types</A
+></H1
+><P
+>    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> provides two data types that
+    are designed to support full text search, which is the activity of
+    searching through a collection of natural-language <I
+CLASS="FIRSTTERM"
+>documents</I
+>
+    to locate those that best match a <I
+CLASS="FIRSTTERM"
+>query</I
+>.
+    The <TT
+CLASS="TYPE"
+>tsvector</TT
+> type represents a document in a form optimized
+    for text search; the <TT
+CLASS="TYPE"
+>tsquery</TT
+> type similarly represents
+    a text query.
+    <A
+HREF="textsearch.html"
+>Chapter 12</A
+> provides a detailed explanation of this
+    facility, and <A
+HREF="functions-textsearch.html"
+>Section 9.13</A
+> summarizes the
+    related functions and operators.
+   </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="DATATYPE-TSVECTOR"
+>8.11.1. <TT
+CLASS="TYPE"
+>tsvector</TT
+></A
+></H2
+><P
+>     A <TT
+CLASS="TYPE"
+>tsvector</TT
+> value is a sorted list of distinct
+     <I
+CLASS="FIRSTTERM"
+>lexemes</I
+>, which are words that have been
+     <I
+CLASS="FIRSTTERM"
+>normalized</I
+> to merge different variants of the same word
+     (see <A
+HREF="textsearch.html"
+>Chapter 12</A
+> for details).  Sorting and
+     duplicate-elimination are done automatically during input, as shown in
+     this example:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT 'a fat cat sat on a mat and ate a fat rat'::tsvector;
+                      tsvector
+----------------------------------------------------
+ 'a' 'and' 'ate' 'cat' 'fat' 'mat' 'on' 'rat' 'sat'</PRE
+><P>
+
+     To represent
+     lexemes containing whitespace or punctuation, surround them with quotes:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT $$the lexeme '    ' contains spaces$$::tsvector;
+                 tsvector                  
+-------------------------------------------
+ '    ' 'contains' 'lexeme' 'spaces' 'the'</PRE
+><P>
+
+     (We use dollar-quoted string literals in this example and the next one
+     to avoid the confusion of having to double quote marks within the
+     literals.)  Embedded quotes and backslashes must be doubled:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT $$the lexeme 'Joe''s' contains a quote$$::tsvector;
+                    tsvector                    
+------------------------------------------------
+ 'Joe''s' 'a' 'contains' 'lexeme' 'quote' 'the'</PRE
+><P>
+
+     Optionally, integer <I
+CLASS="FIRSTTERM"
+>positions</I
+>
+     can be attached to lexemes:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT 'a:1 fat:2 cat:3 sat:4 on:5 a:6 mat:7 and:8 ate:9 a:10 fat:11 rat:12'::tsvector;
+                                  tsvector
+-------------------------------------------------------------------------------
+ 'a':1,6,10 'and':8 'ate':9 'cat':3 'fat':2,11 'mat':7 'on':5 'rat':12 'sat':4</PRE
+><P>
+
+     A position normally indicates the source word's location in the
+     document.  Positional information can be used for
+     <I
+CLASS="FIRSTTERM"
+>proximity ranking</I
+>.  Position values can
+     range from 1 to 16383; larger numbers are silently set to 16383.
+     Duplicate positions for the same lexeme are discarded.
+    </P
+><P
+>     Lexemes that have positions can further be labeled with a
+     <I
+CLASS="FIRSTTERM"
+>weight</I
+>, which can be <TT
+CLASS="LITERAL"
+>A</TT
+>,
+     <TT
+CLASS="LITERAL"
+>B</TT
+>, <TT
+CLASS="LITERAL"
+>C</TT
+>, or <TT
+CLASS="LITERAL"
+>D</TT
+>.
+     <TT
+CLASS="LITERAL"
+>D</TT
+> is the default and hence is not shown on output:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT 'a:1A fat:2B,4C cat:5D'::tsvector;
+          tsvector          
+----------------------------
+ 'a':1A 'cat':5 'fat':2B,4C</PRE
+><P>
+
+     Weights are typically used to reflect document structure, for example
+     by marking title words differently from body words.  Text search
+     ranking functions can assign different priorities to the different
+     weight markers.
+    </P
+><P
+>     It is important to understand that the
+     <TT
+CLASS="TYPE"
+>tsvector</TT
+> type itself does not perform any normalization;
+     it assumes the words it is given are normalized appropriately
+     for the application.  For example,
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>select 'The Fat Rats'::tsvector;
+      tsvector      
+--------------------
+ 'Fat' 'Rats' 'The'</PRE
+><P>
+
+     For most English-text-searching applications the above words would
+     be considered non-normalized, but <TT
+CLASS="TYPE"
+>tsvector</TT
+> doesn't care.
+     Raw document text should usually be passed through
+     <CODE
+CLASS="FUNCTION"
+>to_tsvector</CODE
+> to normalize the words appropriately
+     for searching:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT to_tsvector('english', 'The Fat Rats');
+   to_tsvector   
+-----------------
+ 'fat':2 'rat':3</PRE
+><P>
+
+     Again, see <A
+HREF="textsearch.html"
+>Chapter 12</A
+> for more detail.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="DATATYPE-TSQUERY"
+>8.11.2. <TT
+CLASS="TYPE"
+>tsquery</TT
+></A
+></H2
+><P
+>     A <TT
+CLASS="TYPE"
+>tsquery</TT
+> value stores lexemes that are to be
+     searched for, and combines them honoring the Boolean operators
+     <TT
+CLASS="LITERAL"
+>&amp;</TT
+> (AND), <TT
+CLASS="LITERAL"
+>|</TT
+> (OR), and
+     <TT
+CLASS="LITERAL"
+>!</TT
+> (NOT).  Parentheses can be used to enforce grouping
+     of the operators:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT 'fat &amp; rat'::tsquery;
+    tsquery    
+---------------
+ 'fat' &amp; 'rat'
+
+SELECT 'fat &amp; (rat | cat)'::tsquery;
+          tsquery          
+---------------------------
+ 'fat' &amp; ( 'rat' | 'cat' )
+
+SELECT 'fat &amp; rat &amp; ! cat'::tsquery;
+        tsquery         
+------------------------
+ 'fat' &amp; 'rat' &amp; !'cat'</PRE
+><P>
+
+     In the absence of parentheses, <TT
+CLASS="LITERAL"
+>!</TT
+> (NOT) binds most tightly,
+     and <TT
+CLASS="LITERAL"
+>&amp;</TT
+> (AND) binds more tightly than
+     <TT
+CLASS="LITERAL"
+>|</TT
+> (OR).
+    </P
+><P
+>     Optionally, lexemes in a <TT
+CLASS="TYPE"
+>tsquery</TT
+> can be labeled with
+     one or more weight letters, which restricts them to match only
+     <TT
+CLASS="TYPE"
+>tsvector</TT
+> lexemes with matching weights:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT 'fat:ab &amp; cat'::tsquery;
+    tsquery
+------------------
+ 'fat':AB &amp; 'cat'</PRE
+><P>
+    </P
+><P
+>     Also, lexemes in a <TT
+CLASS="TYPE"
+>tsquery</TT
+> can be labeled with <TT
+CLASS="LITERAL"
+>*</TT
+>
+     to specify prefix matching:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT 'super:*'::tsquery;
+  tsquery  
+-----------
+ 'super':*</PRE
+><P>
+     This query will match any word in a <TT
+CLASS="TYPE"
+>tsvector</TT
+> that begins
+     with <SPAN
+CLASS="QUOTE"
+>"super"</SPAN
+>.  Note that prefixes are first processed by
+     text search configurations, which means this comparison returns
+     true:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT to_tsvector( 'postgraduate' ) @@ to_tsquery( 'postgres:*' );
+ ?column? 
+----------
+ t
+(1 row)</PRE
+><P>
+     because <TT
+CLASS="LITERAL"
+>postgres</TT
+> gets stemmed to <TT
+CLASS="LITERAL"
+>postgr</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT to_tsquery('postgres:*');
+ to_tsquery 
+------------
+ 'postgr':*
+(1 row)</PRE
+><P>
+     which then matches <TT
+CLASS="LITERAL"
+>postgraduate</TT
+>.
+    </P
+><P
+>     Quoting rules for lexemes are the same as described previously for
+     lexemes in <TT
+CLASS="TYPE"
+>tsvector</TT
+>; and, as with <TT
+CLASS="TYPE"
+>tsvector</TT
+>,
+     any required normalization of words must be done before converting
+     to the <TT
+CLASS="TYPE"
+>tsquery</TT
+> type.  The <CODE
+CLASS="FUNCTION"
+>to_tsquery</CODE
+>
+     function is convenient for performing such normalization:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT to_tsquery('Fat:ab &amp; Cats');
+    to_tsquery    
+------------------
+ 'fat':AB &amp; 'cat'</PRE
+><P>
+    </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="datatype-bit.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="datatype-uuid.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Bit String Types</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="datatype.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><ACRONYM
+CLASS="ACRONYM"
+>UUID</ACRONYM
+> Type</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

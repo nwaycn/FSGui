@@ -1,0 +1,697 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>pageinspect</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="ltree"
+HREF="ltree.html"><LINK
+REL="NEXT"
+TITLE="passwordcheck"
+HREF="passwordcheck.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="ltree"
+HREF="ltree.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="passwordcheck"
+HREF="passwordcheck.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PAGEINSPECT"
+>F.21. pageinspect</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>pageinspect</TT
+> module provides functions that allow you to
+  inspect the contents of database pages at a low level, which is useful for
+  debugging purposes.  All of these functions may be used only by superusers.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN172606"
+>F.21.1. Functions</A
+></H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><CODE
+CLASS="FUNCTION"
+>get_raw_page(relname text, fork text, blkno int) returns bytea</CODE
+>
+     </DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>get_raw_page</CODE
+> reads the specified block of the named
+      relation and returns a copy as a <TT
+CLASS="TYPE"
+>bytea</TT
+> value.  This allows a
+      single time-consistent copy of the block to be obtained.
+      <TT
+CLASS="REPLACEABLE"
+><I
+>fork</I
+></TT
+> should be <TT
+CLASS="LITERAL"
+>'main'</TT
+> for
+      the main data fork, <TT
+CLASS="LITERAL"
+>'fsm'</TT
+> for the free space map,
+      <TT
+CLASS="LITERAL"
+>'vm'</TT
+> for the visibility map, or <TT
+CLASS="LITERAL"
+>'init'</TT
+>
+      for the initialization fork.
+     </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>get_raw_page(relname text, blkno int) returns bytea</CODE
+></DT
+><DD
+><P
+>      A shorthand version of <CODE
+CLASS="FUNCTION"
+>get_raw_page</CODE
+>, for reading
+      from the main fork.  Equivalent to
+      <TT
+CLASS="LITERAL"
+>get_raw_page(relname, 'main', blkno)</TT
+>
+     </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>page_header(page bytea) returns record</CODE
+>
+     </DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>page_header</CODE
+> shows fields that are common to all
+      <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> heap and index pages.
+     </P
+><P
+>      A page image obtained with <CODE
+CLASS="FUNCTION"
+>get_raw_page</CODE
+> should be
+      passed as argument.  For example:
+</P><PRE
+CLASS="SCREEN"
+>test=# SELECT * FROM page_header(get_raw_page('pg_class', 0));
+    lsn    | checksum | flags  | lower | upper | special | pagesize | version | prune_xid
+-----------+----------+--------+-------+-------+---------+----------+---------+-----------
+ 0/24A1B50 |        1 |      1 |   232 |   368 |    8192 |     8192 |       4 |         0</PRE
+><P>
+      The returned columns correspond to the fields in the
+      <TT
+CLASS="STRUCTNAME"
+>PageHeaderData</TT
+> struct.
+      See <TT
+CLASS="FILENAME"
+>src/include/storage/bufpage.h</TT
+> for details.
+    </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>heap_page_items(page bytea) returns setof record</CODE
+>
+     </DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>heap_page_items</CODE
+> shows all line pointers on a heap
+      page.  For those line pointers that are in use, tuple headers are also
+      shown. All tuples are shown, whether or not the tuples were visible to
+      an MVCC snapshot at the time the raw page was copied.
+     </P
+><P
+>      A heap page image obtained with <CODE
+CLASS="FUNCTION"
+>get_raw_page</CODE
+> should
+      be passed as argument.  For example:
+</P><PRE
+CLASS="SCREEN"
+>test=# SELECT * FROM heap_page_items(get_raw_page('pg_class', 0));</PRE
+><P>
+      See <TT
+CLASS="FILENAME"
+>src/include/storage/itemid.h</TT
+> and
+      <TT
+CLASS="FILENAME"
+>src/include/access/htup_details.h</TT
+> for explanations of the fields
+      returned.
+     </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>bt_metap(relname text) returns record</CODE
+>
+     </DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>bt_metap</CODE
+> returns information about a B-tree
+      index's metapage.  For example:
+</P><PRE
+CLASS="SCREEN"
+>test=# SELECT * FROM bt_metap('pg_cast_oid_index');
+-[ RECORD 1 ]-----
+magic     | 340322
+version   | 2
+root      | 1
+level     | 0
+fastroot  | 1
+fastlevel | 0</PRE
+><P>
+     </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>bt_page_stats(relname text, blkno int) returns record</CODE
+>
+     </DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>bt_page_stats</CODE
+> returns summary information about
+      single pages of B-tree indexes.  For example:
+</P><PRE
+CLASS="SCREEN"
+>test=# SELECT * FROM bt_page_stats('pg_cast_oid_index', 1);
+-[ RECORD 1 ]-+-----
+blkno         | 1
+type          | l
+live_items    | 256
+dead_items    | 0
+avg_item_size | 12
+page_size     | 8192
+free_size     | 4056
+btpo_prev     | 0
+btpo_next     | 0
+btpo          | 0
+btpo_flags    | 3</PRE
+><P>
+     </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>bt_page_items(relname text, blkno int) returns setof record</CODE
+>
+     </DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>bt_page_items</CODE
+> returns detailed information about
+      all of the items on a B-tree index page.  For example:
+</P><PRE
+CLASS="SCREEN"
+>test=# SELECT * FROM bt_page_items('pg_cast_oid_index', 1);
+ itemoffset |  ctid   | itemlen | nulls | vars |    data
+------------+---------+---------+-------+------+-------------
+          1 | (0,1)   |      12 | f     | f    | 23 27 00 00
+          2 | (0,2)   |      12 | f     | f    | 24 27 00 00
+          3 | (0,3)   |      12 | f     | f    | 25 27 00 00
+          4 | (0,4)   |      12 | f     | f    | 26 27 00 00
+          5 | (0,5)   |      12 | f     | f    | 27 27 00 00
+          6 | (0,6)   |      12 | f     | f    | 28 27 00 00
+          7 | (0,7)   |      12 | f     | f    | 29 27 00 00
+          8 | (0,8)   |      12 | f     | f    | 2a 27 00 00</PRE
+><P>
+      In a B-tree leaf page, <TT
+CLASS="STRUCTFIELD"
+>ctid</TT
+> points to a heap tuple.
+      In an internal page, the block number part of <TT
+CLASS="STRUCTFIELD"
+>ctid</TT
+>
+      points to another page in the index itself, while the offset part
+      (the second number) is ignored and is usually 1.
+     </P
+><P
+>      Note that the first item on any non-rightmost page (any page with
+      a non-zero value in the <TT
+CLASS="STRUCTFIELD"
+>btpo_next</TT
+> field) is the
+      page's <SPAN
+CLASS="QUOTE"
+>"high key"</SPAN
+>, meaning its <TT
+CLASS="STRUCTFIELD"
+>data</TT
+>
+      serves as an upper bound on all items appearing on the page, while
+      its <TT
+CLASS="STRUCTFIELD"
+>ctid</TT
+> field is meaningless.  Also, on non-leaf
+      pages, the first real data item (the first item that is not a high
+      key) is a <SPAN
+CLASS="QUOTE"
+>"minus infinity"</SPAN
+> item, with no actual value
+      in its <TT
+CLASS="STRUCTFIELD"
+>data</TT
+> field.  Such an item does have a valid
+      downlink in its <TT
+CLASS="STRUCTFIELD"
+>ctid</TT
+> field, however.
+     </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>brin_page_type(page bytea) returns text</CODE
+>
+     </DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>brin_page_type</CODE
+> returns the page type of the given
+      <ACRONYM
+CLASS="ACRONYM"
+>BRIN</ACRONYM
+> index page, or throws an error if the page is
+      not a valid <ACRONYM
+CLASS="ACRONYM"
+>BRIN</ACRONYM
+> page.  For example:
+</P><PRE
+CLASS="SCREEN"
+>test=# SELECT brin_page_type(get_raw_page('brinidx', 0));
+ brin_page_type 
+----------------
+ meta</PRE
+><P>
+     </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>brin_metapage_info(page bytea) returns record</CODE
+>
+     </DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>brin_metapage_info</CODE
+> returns assorted information
+      about a <ACRONYM
+CLASS="ACRONYM"
+>BRIN</ACRONYM
+> index metapage.  For example:
+</P><PRE
+CLASS="SCREEN"
+>test=# SELECT * FROM brin_metapage_info(get_raw_page('brinidx', 0));
+   magic    | version | pagesperrange | lastrevmappage 
+------------+---------+---------------+----------------
+ 0xA8109CFA |       1 |             4 |              2</PRE
+><P>
+     </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>brin_revmap_data(page bytea) returns setof tid</CODE
+>
+     </DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>brin_revmap_data</CODE
+> returns the list of tuple
+      identifiers in a <ACRONYM
+CLASS="ACRONYM"
+>BRIN</ACRONYM
+> index range map page.
+      For example:
+</P><PRE
+CLASS="SCREEN"
+>test=# SELECT * FROM brin_revmap_data(get_raw_page('brinidx', 2)) limit 5;
+  pages  
+---------
+ (6,137)
+ (6,138)
+ (6,139)
+ (6,140)
+ (6,141)</PRE
+><P>
+     </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>brin_page_items(page bytea, index oid) returns setof record</CODE
+>
+     </DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>brin_page_items</CODE
+> returns the data stored in the
+      <ACRONYM
+CLASS="ACRONYM"
+>BRIN</ACRONYM
+> data page.  For example:
+</P><PRE
+CLASS="SCREEN"
+>test=# SELECT * FROM brin_page_items(get_raw_page('brinidx', 5),
+                                     'brinidx')
+       ORDER BY blknum, attnum LIMIT 6;
+ itemoffset | blknum | attnum | allnulls | hasnulls | placeholder |    value     
+------------+--------+--------+----------+----------+-------------+--------------
+        137 |      0 |      1 | t        | f        | f           | 
+        137 |      0 |      2 | f        | f        | f           | {1 .. 88}
+        138 |      4 |      1 | t        | f        | f           | 
+        138 |      4 |      2 | f        | f        | f           | {89 .. 176}
+        139 |      8 |      1 | t        | f        | f           | 
+        139 |      8 |      2 | f        | f        | f           | {177 .. 264}</PRE
+><P>
+      The returned columns correspond to the fields in the
+      <TT
+CLASS="STRUCTNAME"
+>BrinMemTuple</TT
+> and <TT
+CLASS="STRUCTNAME"
+>BrinValues</TT
+> structs.
+      See <TT
+CLASS="FILENAME"
+>src/include/access/brin_tuple.h</TT
+> for details.
+     </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>gin_metapage_info(page bytea) returns record</CODE
+>
+     </DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>gin_metapage_info</CODE
+> returns information about
+      a <ACRONYM
+CLASS="ACRONYM"
+>GIN</ACRONYM
+> index metapage.  For example:
+</P><PRE
+CLASS="SCREEN"
+>test=# SELECT * FROM gin_metapage_info(get_raw_page('gin_index', 0));
+-[ RECORD 1 ]----+-----------
+pending_head     | 4294967295
+pending_tail     | 4294967295
+tail_free_size   | 0
+n_pending_pages  | 0
+n_pending_tuples | 0
+n_total_pages    | 7
+n_entry_pages    | 6
+n_data_pages     | 0
+n_entries        | 693
+version          | 2</PRE
+><P>
+     </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>gin_page_opaque_info(page bytea) returns record</CODE
+>
+     </DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>gin_page_opaque_info</CODE
+> returns information about
+      a <ACRONYM
+CLASS="ACRONYM"
+>GIN</ACRONYM
+> index opaque area, like the page type.
+      For example:
+</P><PRE
+CLASS="SCREEN"
+>test=# SELECT * FROM gin_page_opaque_info(get_raw_page('gin_index', 2));
+ rightlink | maxoff |         flags
+-----------+--------+------------------------
+         5 |      0 | {data,leaf,compressed}
+(1 row)</PRE
+><P>
+     </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>gin_leafpage_items(page bytea) returns setof record</CODE
+>
+     </DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>gin_leafpage_items</CODE
+> returns information about
+      the data stored in a <ACRONYM
+CLASS="ACRONYM"
+>GIN</ACRONYM
+> leaf page.  For example:
+</P><PRE
+CLASS="SCREEN"
+>test=# SELECT first_tid, nbytes, tids[0:5] as some_tids
+        FROM gin_leafpage_items(get_raw_page('gin_test_idx', 2));
+ first_tid | nbytes |                        some_tids
+-----------+--------+----------------------------------------------------------
+ (8,41)    |    244 | {"(8,41)","(8,43)","(8,44)","(8,45)","(8,46)"}
+ (10,45)   |    248 | {"(10,45)","(10,46)","(10,47)","(10,48)","(10,49)"}
+ (12,52)   |    248 | {"(12,52)","(12,53)","(12,54)","(12,55)","(12,56)"}
+ (14,59)   |    320 | {"(14,59)","(14,60)","(14,61)","(14,62)","(14,63)"}
+ (167,16)  |    376 | {"(167,16)","(167,17)","(167,18)","(167,19)","(167,20)"}
+ (170,30)  |    376 | {"(170,30)","(170,31)","(170,32)","(170,33)","(170,34)"}
+ (173,44)  |    197 | {"(173,44)","(173,45)","(173,46)","(173,47)","(173,48)"}
+(7 rows)</PRE
+><P>
+     </P
+></DD
+><DT
+><CODE
+CLASS="FUNCTION"
+>fsm_page_contents(page bytea) returns text</CODE
+>
+     </DT
+><DD
+><P
+>      <CODE
+CLASS="FUNCTION"
+>fsm_page_contents</CODE
+> shows the internal node structure
+      of a FSM page. The output is a multiline string, with one line per
+      node in the binary tree within the page. Only those nodes that are not
+      zero are printed. The so-called "next" pointer, which points to the
+      next slot to be returned from the page, is also printed.
+     </P
+><P
+>      See <TT
+CLASS="FILENAME"
+>src/backend/storage/freespace/README</TT
+> for more
+      information on the structure of an FSM page.
+     </P
+></DD
+></DL
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ltree.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="passwordcheck.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>ltree</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>passwordcheck</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

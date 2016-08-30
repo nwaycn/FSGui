@@ -1,0 +1,320 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>DISCARD</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="DELETE"
+HREF="sql-delete.html"><LINK
+REL="NEXT"
+TITLE="DO"
+HREF="sql-do.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="DELETE"
+HREF="sql-delete.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="DO"
+HREF="sql-do.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-DISCARD"
+></A
+>DISCARD</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN81528"
+></A
+><H2
+>Name</H2
+>DISCARD&nbsp;--&nbsp;discard session state</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN81531"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>DISCARD { ALL | PLANS | SEQUENCES | TEMPORARY | TEMP }</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN81533"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>DISCARD</TT
+> releases internal resources associated with a
+   database session.  This command is useful for partially or fully
+   resetting the session's state.  There are several subcommands to
+   release different types of resources; the <TT
+CLASS="COMMAND"
+>DISCARD ALL</TT
+>
+   variant subsumes all the others, and also resets additional state.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN81538"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>PLANS</TT
+></DT
+><DD
+><P
+>      Releases all cached query plans, forcing re-planning to occur
+      the next time the associated prepared statement is used.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SEQUENCES</TT
+></DT
+><DD
+><P
+>      Discards all cached sequence-related state,
+      including <CODE
+CLASS="FUNCTION"
+>currval()</CODE
+>/<CODE
+CLASS="FUNCTION"
+>lastval()</CODE
+>
+      information and any preallocated sequence values that have not
+      yet been returned by <CODE
+CLASS="FUNCTION"
+>nextval()</CODE
+>.
+      (See <A
+HREF="sql-createsequence.html"
+>CREATE SEQUENCE</A
+> for a description of
+      preallocated sequence values.)
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>TEMPORARY</TT
+> or <TT
+CLASS="LITERAL"
+>TEMP</TT
+></DT
+><DD
+><P
+>      Drops all temporary tables created in the current session.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>ALL</TT
+></DT
+><DD
+><P
+>      Releases all temporary resources associated with the current
+      session and resets the session to its initial state.
+      Currently, this has the same effect as executing the following sequence
+      of statements:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SET SESSION AUTHORIZATION DEFAULT;
+RESET ALL;
+DEALLOCATE ALL;
+CLOSE ALL;
+UNLISTEN *;
+SELECT pg_advisory_unlock_all();
+DISCARD PLANS;
+DISCARD SEQUENCES;
+DISCARD TEMP;</PRE
+><P></P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN81567"
+></A
+><H2
+>Notes</H2
+><P
+>    <TT
+CLASS="COMMAND"
+>DISCARD ALL</TT
+> cannot be executed inside a transaction block.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN81571"
+></A
+><H2
+>Compatibility</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>DISCARD</TT
+> is a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> extension.
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-delete.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-do.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>DELETE</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>DO</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,447 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.2.17</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.2.18"
+HREF="release-9-2-18.html"><LINK
+REL="NEXT"
+TITLE="Release 9.2.16"
+HREF="release-9-2-16.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.2.18"
+HREF="release-9-2-18.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.2.16"
+HREF="release-9-2-16.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-2-17"
+>E.32. Release 9.2.17</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2016-05-12</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 9.2.16.
+   For information about new features in the 9.2 major release, see
+   <A
+HREF="release-9-2.html"
+>Section E.49</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN134232"
+>E.32.1. Migration to Version 9.2.17</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.2.X.
+   </P
+><P
+>    However, if you are upgrading from a version earlier than 9.2.11,
+    see <A
+HREF="release-9-2-11.html"
+>Section E.38</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN134237"
+>E.32.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Clear the OpenSSL error queue before OpenSSL calls, rather than
+      assuming it's clear already; and make sure we leave it clear
+      afterwards (Peter Geoghegan, Dave Vitek, Peter Eisentraut)
+     </P
+><P
+>      This change prevents problems when there are multiple connections
+      using OpenSSL within a single process and not all the code involved
+      follows the same rules for when to clear the error queue.
+      Failures have been reported specifically when a client application
+      uses SSL connections in <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> concurrently with
+      SSL connections using the PHP, Python, or Ruby wrappers for OpenSSL.
+      It's possible for similar problems to arise within the server as well,
+      if an extension module establishes an outgoing SSL connection.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="QUOTE"
+>"failed to build any <TT
+CLASS="REPLACEABLE"
+><I
+>N</I
+></TT
+>-way joins"</SPAN
+>
+      planner error with a full join enclosed in the right-hand side of a
+      left join (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect handling of equivalence-class tests in multilevel
+      nestloop plans (Tom Lane)
+     </P
+><P
+>      Given a three-or-more-way equivalence class of variables, such
+      as <TT
+CLASS="LITERAL"
+>X.X = Y.Y = Z.Z</TT
+>, it was possible for the planner to omit
+      some of the tests needed to enforce that all the variables are actually
+      equal, leading to join rows being output that didn't satisfy
+      the <TT
+CLASS="LITERAL"
+>WHERE</TT
+> clauses.  For various reasons, erroneous plans
+      were seldom selected in practice, so that this bug has gone undetected
+      for a long time.
+     </P
+></LI
+><LI
+><P
+>      Fix possible misbehavior of <TT
+CLASS="LITERAL"
+>TH</TT
+>, <TT
+CLASS="LITERAL"
+>th</TT
+>,
+      and <TT
+CLASS="LITERAL"
+>Y,YYY</TT
+> format codes in <CODE
+CLASS="FUNCTION"
+>to_timestamp()</CODE
+>
+      (Tom Lane)
+     </P
+><P
+>      These could advance off the end of the input string, causing subsequent
+      format codes to read garbage.
+     </P
+></LI
+><LI
+><P
+>      Fix dumping of rules and views in which the <TT
+CLASS="REPLACEABLE"
+><I
+>array</I
+></TT
+>
+      argument of a <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>operator</I
+></TT
+>
+      ANY (<TT
+CLASS="REPLACEABLE"
+><I
+>array</I
+></TT
+>)</TT
+> construct is a sub-SELECT
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>pg_regress</SPAN
+> use a startup timeout from the
+      <TT
+CLASS="ENVAR"
+>PGCTLTIMEOUT</TT
+> environment variable, if that's set (Tom Lane)
+     </P
+><P
+>      This is for consistency with a behavior recently added
+      to <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+>; it eases automated testing on slow machines.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> to correctly restore extension
+      membership for operator families containing only one operator class
+      (Tom Lane)
+     </P
+><P
+>      In such a case, the operator family was restored into the new database,
+      but it was no longer marked as part of the extension.  This had no
+      immediate ill effects, but would cause later <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>
+      runs to emit output that would cause (harmless) errors on restore.
+     </P
+></LI
+><LI
+><P
+>      Back-port 9.4-era memory-barrier code changes into 9.2 and 9.3 (Tom Lane)
+     </P
+><P
+>      These changes were not originally needed in pre-9.4 branches, but we
+      recently back-patched a fix that expected the barrier code to work
+      properly.  Only IA64 (when using icc), HPPA, and Alpha platforms are
+      affected.
+     </P
+></LI
+><LI
+><P
+>      Reduce the number of SysV semaphores used by a build configured with
+      <TT
+CLASS="OPTION"
+>--disable-spinlocks</TT
+> (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Rename internal function <CODE
+CLASS="FUNCTION"
+>strtoi()</CODE
+>
+      to <CODE
+CLASS="FUNCTION"
+>strtoint()</CODE
+> to avoid conflict with a NetBSD library
+      function (Thomas Munro)
+     </P
+></LI
+><LI
+><P
+>      Fix reporting of errors from <CODE
+CLASS="FUNCTION"
+>bind()</CODE
+>
+      and <CODE
+CLASS="FUNCTION"
+>listen()</CODE
+> system calls on Windows (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Reduce verbosity of compiler output when building with Microsoft Visual
+      Studio (Christian Ullrich)
+     </P
+></LI
+><LI
+><P
+>      Avoid possibly-unsafe use of Windows' <CODE
+CLASS="FUNCTION"
+>FormatMessage()</CODE
+>
+      function (Christian Ullrich)
+     </P
+><P
+>      Use the <TT
+CLASS="LITERAL"
+>FORMAT_MESSAGE_IGNORE_INSERTS</TT
+> flag where
+      appropriate.  No live bug is known to exist here, but it seems like a
+      good idea to be careful.
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2016d
+      for DST law changes in Russia and Venezuela.  There are new zone
+      names <TT
+CLASS="LITERAL"
+>Europe/Kirov</TT
+> and <TT
+CLASS="LITERAL"
+>Asia/Tomsk</TT
+> to reflect
+      the fact that these regions now have different time zone histories from
+      adjacent regions.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-2-18.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-2-16.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.2.18</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.2.16</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

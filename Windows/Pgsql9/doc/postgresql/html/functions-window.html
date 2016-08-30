@@ -1,0 +1,830 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Window Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Functions and Operators"
+HREF="functions.html"><LINK
+REL="PREVIOUS"
+TITLE="Aggregate Functions"
+HREF="functions-aggregate.html"><LINK
+REL="NEXT"
+TITLE="Subquery Expressions"
+HREF="functions-subquery.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Aggregate Functions"
+HREF="functions-aggregate.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 9. Functions and Operators</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Subquery Expressions"
+HREF="functions-subquery.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="FUNCTIONS-WINDOW"
+>9.21. Window Functions</A
+></H1
+><P
+>   <I
+CLASS="FIRSTTERM"
+>Window functions</I
+> provide the ability to perform
+   calculations across sets of rows that are related to the current query
+   row.  See <A
+HREF="tutorial-window.html"
+>Section 3.5</A
+> for an introduction to this
+   feature, and <A
+HREF="sql-expressions.html#SYNTAX-WINDOW-FUNCTIONS"
+>Section 4.2.8</A
+> for syntax
+   details.
+  </P
+><P
+>   The built-in window functions are listed in
+   <A
+HREF="functions-window.html#FUNCTIONS-WINDOW-TABLE"
+>Table 9-54</A
+>.  Note that these functions
+   <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>must</I
+></SPAN
+> be invoked using window function syntax; that is an
+   <TT
+CLASS="LITERAL"
+>OVER</TT
+> clause is required.
+  </P
+><P
+>   In addition to these functions, any built-in or user-defined normal
+   aggregate function (but not ordered-set or hypothetical-set aggregates)
+   can be used as a window function; see
+   <A
+HREF="functions-aggregate.html"
+>Section 9.20</A
+> for a list of the built-in aggregates.
+   Aggregate functions act as window functions only when an <TT
+CLASS="LITERAL"
+>OVER</TT
+>
+   clause follows the call; otherwise they act as regular aggregates.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-WINDOW-TABLE"
+></A
+><P
+><B
+>Table 9-54. General-Purpose Window Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>row_number()</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>bigint</TT
+>
+      </TD
+><TD
+>number of the current row within its partition, counting from 1</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>rank()</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>bigint</TT
+>
+      </TD
+><TD
+>rank of the current row with gaps; same as <CODE
+CLASS="FUNCTION"
+>row_number</CODE
+> of its first peer</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>dense_rank()</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>bigint</TT
+>
+      </TD
+><TD
+>rank of the current row without gaps; this function counts peer groups</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>percent_rank()</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>relative rank of the current row: (<CODE
+CLASS="FUNCTION"
+>rank</CODE
+> - 1) / (total rows - 1)</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>cume_dist()</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>relative rank of the current row: (number of rows preceding or peer with current row) / (total rows)</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>ntile(<TT
+CLASS="REPLACEABLE"
+><I
+>num_buckets</I
+></TT
+> <TT
+CLASS="TYPE"
+>integer</TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>integer</TT
+>
+      </TD
+><TD
+>integer ranging from 1 to the argument value, dividing the
+       partition as equally as possible</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>         lag(<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> <TT
+CLASS="TYPE"
+>anyelement</TT
+>
+             [, <TT
+CLASS="REPLACEABLE"
+><I
+>offset</I
+></TT
+> <TT
+CLASS="TYPE"
+>integer</TT
+>
+             [, <TT
+CLASS="REPLACEABLE"
+><I
+>default</I
+></TT
+> <TT
+CLASS="TYPE"
+>anyelement</TT
+> ]])
+       </CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>same type as <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+></TT
+>
+      </TD
+><TD
+>       returns <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> evaluated at
+       the row that is <TT
+CLASS="REPLACEABLE"
+><I
+>offset</I
+></TT
+>
+       rows before the current row within the partition; if there is no such
+       row, instead return <TT
+CLASS="REPLACEABLE"
+><I
+>default</I
+></TT
+>
+       (which must be of the same type as
+       <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>).
+       Both <TT
+CLASS="REPLACEABLE"
+><I
+>offset</I
+></TT
+> and
+       <TT
+CLASS="REPLACEABLE"
+><I
+>default</I
+></TT
+> are evaluated
+       with respect to the current row.  If omitted,
+       <TT
+CLASS="REPLACEABLE"
+><I
+>offset</I
+></TT
+> defaults to 1 and
+       <TT
+CLASS="REPLACEABLE"
+><I
+>default</I
+></TT
+> to null
+      </TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>         lead(<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> <TT
+CLASS="TYPE"
+>anyelement</TT
+>
+              [, <TT
+CLASS="REPLACEABLE"
+><I
+>offset</I
+></TT
+> <TT
+CLASS="TYPE"
+>integer</TT
+>
+              [, <TT
+CLASS="REPLACEABLE"
+><I
+>default</I
+></TT
+> <TT
+CLASS="TYPE"
+>anyelement</TT
+> ]])
+       </CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>same type as <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+></TT
+>
+      </TD
+><TD
+>       returns <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> evaluated at
+       the row that is <TT
+CLASS="REPLACEABLE"
+><I
+>offset</I
+></TT
+>
+       rows after the current row within the partition; if there is no such
+       row, instead return <TT
+CLASS="REPLACEABLE"
+><I
+>default</I
+></TT
+>
+       (which must be of the same type as
+       <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>).
+       Both <TT
+CLASS="REPLACEABLE"
+><I
+>offset</I
+></TT
+> and
+       <TT
+CLASS="REPLACEABLE"
+><I
+>default</I
+></TT
+> are evaluated
+       with respect to the current row.  If omitted,
+       <TT
+CLASS="REPLACEABLE"
+><I
+>offset</I
+></TT
+> defaults to 1 and
+       <TT
+CLASS="REPLACEABLE"
+><I
+>default</I
+></TT
+> to null
+      </TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>first_value(<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> <TT
+CLASS="TYPE"
+>any</TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>same type as <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+></TT
+>
+      </TD
+><TD
+>       returns <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> evaluated
+       at the row that is the first row of the window frame
+      </TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>last_value(<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> <TT
+CLASS="TYPE"
+>any</TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>same type as <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+></TT
+>
+      </TD
+><TD
+>       returns <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> evaluated
+       at the row that is the last row of the window frame
+      </TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>         nth_value(<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> <TT
+CLASS="TYPE"
+>any</TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>nth</I
+></TT
+> <TT
+CLASS="TYPE"
+>integer</TT
+>)
+       </CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>same type as <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+></TT
+>
+      </TD
+><TD
+>       returns <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> evaluated
+       at the row that is the <TT
+CLASS="REPLACEABLE"
+><I
+>nth</I
+></TT
+>
+       row of the window frame (counting from 1); null if no such row
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   All of the functions listed in
+   <A
+HREF="functions-window.html#FUNCTIONS-WINDOW-TABLE"
+>Table 9-54</A
+> depend on the sort ordering
+   specified by the <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> clause of the associated window
+   definition.  Rows that are not distinct in the <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+>
+   ordering are said to be <I
+CLASS="FIRSTTERM"
+>peers</I
+>; the four ranking functions
+   are defined so that they give the same answer for any two peer rows.
+  </P
+><P
+>   Note that <CODE
+CLASS="FUNCTION"
+>first_value</CODE
+>, <CODE
+CLASS="FUNCTION"
+>last_value</CODE
+>, and
+   <CODE
+CLASS="FUNCTION"
+>nth_value</CODE
+> consider only the rows within the <SPAN
+CLASS="QUOTE"
+>"window
+   frame"</SPAN
+>, which by default contains the rows from the start of the
+   partition through the last peer of the current row.  This is
+   likely to give unhelpful results for <CODE
+CLASS="FUNCTION"
+>last_value</CODE
+> and
+   sometimes also <CODE
+CLASS="FUNCTION"
+>nth_value</CODE
+>.  You can redefine the frame by
+   adding a suitable frame specification (<TT
+CLASS="LITERAL"
+>RANGE</TT
+> or
+   <TT
+CLASS="LITERAL"
+>ROWS</TT
+>) to the <TT
+CLASS="LITERAL"
+>OVER</TT
+> clause.
+   See <A
+HREF="sql-expressions.html#SYNTAX-WINDOW-FUNCTIONS"
+>Section 4.2.8</A
+> for more information
+   about frame specifications.
+  </P
+><P
+>   When an aggregate function is used as a window function, it aggregates
+   over the rows within the current row's window frame.
+   An aggregate used with <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> and the default window frame
+   definition produces a <SPAN
+CLASS="QUOTE"
+>"running sum"</SPAN
+> type of behavior, which may or
+   may not be what's wanted.  To obtain
+   aggregation over the whole partition, omit <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> or use
+   <TT
+CLASS="LITERAL"
+>ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING</TT
+>.
+   Other frame specifications can be used to obtain other effects.
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    The SQL standard defines a <TT
+CLASS="LITERAL"
+>RESPECT NULLS</TT
+> or
+    <TT
+CLASS="LITERAL"
+>IGNORE NULLS</TT
+> option for <CODE
+CLASS="FUNCTION"
+>lead</CODE
+>, <CODE
+CLASS="FUNCTION"
+>lag</CODE
+>,
+    <CODE
+CLASS="FUNCTION"
+>first_value</CODE
+>, <CODE
+CLASS="FUNCTION"
+>last_value</CODE
+>, and
+    <CODE
+CLASS="FUNCTION"
+>nth_value</CODE
+>.  This is not implemented in
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>: the behavior is always the
+    same as the standard's default, namely <TT
+CLASS="LITERAL"
+>RESPECT NULLS</TT
+>.
+    Likewise, the standard's <TT
+CLASS="LITERAL"
+>FROM FIRST</TT
+> or <TT
+CLASS="LITERAL"
+>FROM LAST</TT
+>
+    option for <CODE
+CLASS="FUNCTION"
+>nth_value</CODE
+> is not implemented: only the
+    default <TT
+CLASS="LITERAL"
+>FROM FIRST</TT
+> behavior is supported.  (You can achieve
+    the result of <TT
+CLASS="LITERAL"
+>FROM LAST</TT
+> by reversing the <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+>
+    ordering.)
+   </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions-aggregate.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="functions-subquery.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Aggregate Functions</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Subquery Expressions</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

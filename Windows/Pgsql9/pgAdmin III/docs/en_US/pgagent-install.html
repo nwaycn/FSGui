@@ -1,0 +1,177 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=cp1252" />
+    
+    <title>pgAgent Installation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="top" title="pgAdmin III 1.22.1 documentation" href="index.html" />
+    <link rel="up" title="pgAgent" href="pgagent.html" />
+    <link rel="next" title="pgAgent Jobs" href="pgagent-jobs.html" />
+    <link rel="prev" title="pgAgent" href="pgagent.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="pgagent-jobs.html" title="pgAgent Jobs"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="pgagent.html" title="pgAgent"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pgAdmin III 1.22.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="pgagent.html" accesskey="U">pgAgent</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="pgagent-installation">
+<span id="pgagent-install"></span><h1><span class="target" id="index-0"></span>pgAgent Installation</h1>
+<p>pgAgent runs as a daemon on Unix systems, and a service on Windows systems.
+In the majority of cases it will run on the database server itself - it is
+for this reason that pgAgent is not automatically setup when pgAdmin is
+installed. In some cases however, it may be preferable to run pgAgent on
+multiple systems, against the same database - individual jobs may be targetted
+at a particular host, or left for execution by any host. Locking prevents
+execution of the same instance of a job by multiple hosts.</p>
+<div class="section" id="database-setup">
+<h2>Database setup</h2>
+<p>pgAgent stores its configuration in the &#8216;postgres&#8217; database in your cluster. This
+database exists by default in PostgreSQL 8.1 versions, for earlier versions
+you need to create the database yourself. The database
+must have the pl/pgsql procedural language installed - PostgreSQL&#8217;s
+&#8216;createlang&#8217; program can do this if required.</p>
+<p>Connect to the &#8220;postgres&#8221; database (once created if needed), and open the SQL tool.
+If the server is 9.1 or later, and pgAgent 3.4.0 or later, simply paste in this
+query and click the &#8216;Run&#8217; button:</p>
+<blockquote>
+<div>CREATE EXTENSION pgagent;</div></blockquote>
+<p>This command will create a number of tables and other objects in a schema called
+&#8216;pgagent&#8217;.</p>
+<p>For earlier versions of PostgreSQL or pgAgent, select the File -&gt; Open option from the
+menu and find the &#8216;pgagent.sql&#8217; script installed with pgAdmin. The
+installation location for this file varies from operating system to operating
+system, however it will normally be found under &#8216;C:Program filespgAdmin III&#8217;
+on Windows systems (or
+&#8216;C:Program filesPostgreSQL8.xpgAdmin III&#8217; if installed with the PostgreSQL server installer),
+or &#8216;/usr/local/pgadmin3/share/pgadmin3&#8217; or &#8216;/usr/share/pgadmin3&#8217; on Unix
+systems. Once the file is loaded, click the &#8216;Run&#8217; button to execute the script.</p>
+<p>The script will create a number of tables and other objects in a schema called
+&#8216;pgagent&#8217;.</p>
+</div>
+<div class="section" id="daemon-installation-on-unix">
+<h2>Daemon installation on Unix</h2>
+<p>To install the pgAgent daemon on a Unix system, you will normally need to have root
+privileges to modify the system startup scripts - doing so is quite system specific
+so you should consult your system documentation for further information.</p>
+<p>The program itself takes few command line options - most of which are only
+needed for debugging or specialised configurations:</p>
+<div class="highlight-python"><div class="highlight"><pre>Usage:
+  /path/to/pgagent [options] &lt;connect-string&gt;
+
+options:
+  -f run in the foreground (do not detach from the terminal)
+  -t &lt;poll time interval in seconds (default 10)&gt;
+  -r &lt;retry period after connection abort in seconds (&gt;=10, default 30)&gt;
+  -s &lt;log file (messages are logged to STDOUT if not specified)&gt;
+  -l &lt;logging verbosity (ERROR=0, WARNING=1, DEBUG=2, default 0)&gt;
+</pre></div>
+</div>
+<p>The connect string required is a standard PostgreSQL libpq connection
+string (see the <a class="reference external" href="http://www.postgresql.org/docs/current/static/libpq.html#libpq-connect">PostgreSQL documentation on the connection string</a>
+for further details). For example, the following
+command lilne will run pgAgent against a server listening on the localhost,
+using a database called &#8216;pgadmin&#8217;, connecting as the user &#8216;postgres&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre>/path/to/pgagent hostaddr=127.0.0.1 dbname=postgres user=postgres
+</pre></div>
+</div>
+</div>
+<div class="section" id="service-installation-on-windows">
+<h2>Service installation on Windows</h2>
+<p>pgAgent is able to self-install itself as a service on Windows systems.
+The command line options available are similar to those on Unix systems, but
+include an additional parameter to tell the service what to do:</p>
+<div class="highlight-python"><div class="highlight"><pre>Usage:
+  pgAgent REMOVE &lt;serviceName&gt;
+  pgAgent INSTALL &lt;serviceName&gt; [options] &lt;connect-string&gt;
+  pgAgent DEBUG [options] &lt;connect-string&gt;
+
+  options:
+    -u &lt;user or DOMAIN\user&gt;
+    -p &lt;password&gt;
+    -d &lt;displayname&gt;
+    -t &lt;poll time interval in seconds (default 10)&gt;
+    -r &lt;retry period after connection abort in seconds (&gt;=10, default 30)&gt;
+    -l &lt;logging verbosity (ERROR=0, WARNING=1, DEBUG=2, default 0)&gt;
+</pre></div>
+</div>
+<p>The service may be quite simply installed from the command line as follows
+(adjusting the path as required):</p>
+<div class="highlight-python"><div class="highlight"><pre>&quot;C:\Program Files\pgAdmin III\pgAgent&quot; INSTALL pgAgent -u postgres -p secret hostaddr=127.0.0.1 dbname=postgres user=postgres
+</pre></div>
+</div>
+<p>The service may then be started from the command line using <em>net start pgAgent</em>,
+or from the <em>Services</em> control panel applet. Any logging output or errors will be
+reported in the Application event log. The DEBUG mode may be used to run pgAgent from a
+command prompt. When run this way, log messages will output to the command window.</p>
+</div>
+<div class="section" id="security-concerns">
+<h2>Security concerns</h2>
+<p>pgAgent is a very powerful tool, but does have some security considerations
+that you should be aware of:</p>
+<p><strong>Database password</strong> - <em>DO NOT</em> be tempted to include a password in
+the pgAgent connection string - on Unix systems it may be visible to all users
+in &#8216;ps&#8217; output, and on Windows systems it will be stored in the registry in
+plain text. Instead, use a libpq <em>~/.pgpass</em> file to store the passwords for
+every database that pgAgent must access. Details of this technique may be
+found in the <a class="reference external" href="http://www.postgresql.org/docs/current/static/libpq-pgpass.html">PostgreSQL documentation on .pgpass file</a>.</p>
+<p><strong>System/database access</strong> - all jobs run by pgAgent will run with the
+security privileges of the pgAgent user. SQL steps will run as the user that
+pgAgent connects to the database as, and batch/shell scripts will run as the
+operating system user that the pgAgent service or daemon is running under.
+Because of this, it is essential to maintain control over the users that are
+able to create and modify jobs. By default, only the user that created the
+pgAgent database objects will be able to do this - this will normally be the
+PostgreSQL superuser.</p>
+</div>
+</div>
+
+
+          </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="pgagent-jobs.html" title="pgAgent Jobs"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="pgagent.html" title="pgAgent"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pgAdmin III 1.22.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="pgagent.html" >pgAgent</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2002 - 2016, The pgAdmin Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

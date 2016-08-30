@@ -1,0 +1,571 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.3.22</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.3.23"
+HREF="release-8-3-23.html"><LINK
+REL="NEXT"
+TITLE="Release 8.3.21"
+HREF="release-8-3-21.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.3.23"
+HREF="release-8-3-23.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.3.21"
+HREF="release-8-3-21.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-3-22"
+>E.122. Release 8.3.22</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2012-12-06</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.3.21.
+   For information about new features in the 8.3 major release, see
+   <A
+HREF="release-8-3.html"
+>Section E.144</A
+>.
+  </P
+><P
+>   The <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> community will stop releasing updates
+   for the 8.3.X release series in February 2013.
+   Users are encouraged to update to a newer release branch soon.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN151609"
+>E.122.1. Migration to Version 8.3.22</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.3.X.
+   </P
+><P
+>    However, if you are upgrading from a version earlier than 8.3.17,
+    see <A
+HREF="release-8-3-17.html"
+>Section E.127</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN151614"
+>E.122.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix multiple bugs associated with <TT
+CLASS="COMMAND"
+>CREATE INDEX
+      CONCURRENTLY</TT
+> (Andres Freund, Tom Lane)
+     </P
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>CREATE INDEX CONCURRENTLY</TT
+> to use
+      in-place updates when changing the state of an index's
+      <TT
+CLASS="STRUCTNAME"
+>pg_index</TT
+> row.  This prevents race conditions that could
+      cause concurrent sessions to miss updating the target index, thus
+      resulting in corrupt concurrently-created indexes.
+     </P
+><P
+>      Also, fix various other operations to ensure that they ignore
+      invalid indexes resulting from a failed <TT
+CLASS="COMMAND"
+>CREATE INDEX
+      CONCURRENTLY</TT
+> command.  The most important of these is
+      <TT
+CLASS="COMMAND"
+>VACUUM</TT
+>, because an auto-vacuum could easily be launched
+      on the table before corrective action can be taken to fix or remove
+      the invalid index.
+     </P
+></LI
+><LI
+><P
+>      Avoid corruption of internal hash tables when out of memory
+      (Hitoshi Harada)
+     </P
+></LI
+><LI
+><P
+>      Fix planning of non-strict equivalence clauses above outer joins
+      (Tom Lane)
+     </P
+><P
+>      The planner could derive incorrect constraints from a clause equating
+      a non-strict construct to something else, for example
+      <TT
+CLASS="LITERAL"
+>WHERE COALESCE(foo, 0) = 0</TT
+>
+      when <TT
+CLASS="LITERAL"
+>foo</TT
+> is coming from the nullable side of an outer join.
+     </P
+></LI
+><LI
+><P
+>      Improve planner's ability to prove exclusion constraints from
+      equivalence classes (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix partial-row matching in hashed subplans to handle cross-type cases
+      correctly (Tom Lane)
+     </P
+><P
+>      This affects multicolumn <TT
+CLASS="LITERAL"
+>NOT IN</TT
+> subplans, such as
+      <TT
+CLASS="LITERAL"
+>WHERE (a, b) NOT IN (SELECT x, y FROM ...)</TT
+>
+      when for instance <TT
+CLASS="LITERAL"
+>b</TT
+> and <TT
+CLASS="LITERAL"
+>y</TT
+> are <TT
+CLASS="TYPE"
+>int4</TT
+>
+      and <TT
+CLASS="TYPE"
+>int8</TT
+> respectively.  This mistake led to wrong answers
+      or crashes depending on the specific datatypes involved.
+     </P
+></LI
+><LI
+><P
+>      Acquire buffer lock when re-fetching the old tuple for an
+      <TT
+CLASS="LITERAL"
+>AFTER ROW UPDATE/DELETE</TT
+> trigger (Andres Freund)
+     </P
+><P
+>      In very unusual circumstances, this oversight could result in passing
+      incorrect data to the precheck logic for a foreign-key enforcement
+      trigger.  That could result in a crash, or in an incorrect decision
+      about whether to fire the trigger.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>REASSIGN OWNED</TT
+> to handle grants on tablespaces
+      (&Aacute;lvaro Herrera)
+     </P
+></LI
+><LI
+><P
+>      Ignore incorrect <TT
+CLASS="STRUCTNAME"
+>pg_attribute</TT
+> entries for system
+      columns for views (Tom Lane)
+     </P
+><P
+>      Views do not have any system columns.  However, we forgot to
+      remove such entries when converting a table to a view.  That's fixed
+      properly for 9.3 and later, but in previous branches we need to defend
+      against existing mis-converted views.
+     </P
+></LI
+><LI
+><P
+>      Fix rule printing to dump <TT
+CLASS="LITERAL"
+>INSERT INTO <TT
+CLASS="REPLACEABLE"
+><I
+>table</I
+></TT
+>
+      DEFAULT VALUES</TT
+> correctly (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Guard against stack overflow when there are too many
+      <TT
+CLASS="LITERAL"
+>UNION</TT
+>/<TT
+CLASS="LITERAL"
+>INTERSECT</TT
+>/<TT
+CLASS="LITERAL"
+>EXCEPT</TT
+> clauses
+      in a query (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Prevent platform-dependent failures when dividing the minimum possible
+      integer value by -1 (Xi Wang, Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix possible access past end of string in date parsing
+      (Hitoshi Harada)
+     </P
+></LI
+><LI
+><P
+>      Produce an understandable error message if the length of the path name
+      for a Unix-domain socket exceeds the platform-specific limit
+      (Tom Lane, Andrew Dunstan)
+     </P
+><P
+>      Formerly, this would result in something quite unhelpful, such as
+      <SPAN
+CLASS="QUOTE"
+>"Non-recoverable failure in name resolution"</SPAN
+>.
+     </P
+></LI
+><LI
+><P
+>      Fix memory leaks when sending composite column values to the client
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> more robust about reading the
+      <TT
+CLASS="FILENAME"
+>postmaster.pid</TT
+> file (Heikki Linnakangas)
+     </P
+><P
+>      Fix race conditions and possible file descriptor leakage.
+     </P
+></LI
+><LI
+><P
+>      Fix possible crash in <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> if incorrectly-encoded data
+      is presented and the <TT
+CLASS="VARNAME"
+>client_encoding</TT
+> setting is a
+      client-only encoding, such as SJIS (Jiang Guiqing)
+     </P
+></LI
+><LI
+><P
+>      Fix bugs in the <TT
+CLASS="FILENAME"
+>restore.sql</TT
+> script emitted by
+      <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> in <TT
+CLASS="LITERAL"
+>tar</TT
+> output format (Tom Lane)
+     </P
+><P
+>      The script would fail outright on tables whose names include
+      upper-case characters.  Also, make the script capable of restoring
+      data in <TT
+CLASS="OPTION"
+>--inserts</TT
+> mode as well as the regular COPY mode.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+> to accept POSIX-conformant
+      <TT
+CLASS="LITERAL"
+>tar</TT
+> files (Brian Weaver, Tom Lane)
+     </P
+><P
+>      The original coding of <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>'s <TT
+CLASS="LITERAL"
+>tar</TT
+>
+      output mode produced files that are not fully conformant with the
+      POSIX standard.  This has been corrected for version 9.3.  This
+      patch updates previous branches so that they will accept both the
+      incorrect and the corrected formats, in hopes of avoiding
+      compatibility problems when 9.3 comes out.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_resetxlog</SPAN
+> to locate <TT
+CLASS="FILENAME"
+>postmaster.pid</TT
+>
+      correctly when given a relative path to the data directory (Tom Lane)
+     </P
+><P
+>      This mistake could lead to <SPAN
+CLASS="APPLICATION"
+>pg_resetxlog</SPAN
+> not noticing
+      that there is an active postmaster using the data directory.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>'s <CODE
+CLASS="FUNCTION"
+>lo_import()</CODE
+> and
+      <CODE
+CLASS="FUNCTION"
+>lo_export()</CODE
+> functions to report file I/O errors properly
+      (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>'s processing of nested structure pointer
+      variables (Muhammad Usama)
+     </P
+></LI
+><LI
+><P
+>      Make <TT
+CLASS="FILENAME"
+>contrib/pageinspect</TT
+>'s btree page inspection
+      functions take buffer locks while examining pages (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pgxs</SPAN
+> support for building loadable modules on AIX
+      (Tom Lane)
+     </P
+><P
+>      Building modules outside the original source tree didn't work on AIX.
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2012j
+      for DST law changes in Cuba, Israel, Jordan, Libya, Palestine, Western
+      Samoa, and portions of Brazil.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-3-23.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-3-21.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.3.23</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.3.21</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

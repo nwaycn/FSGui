@@ -1,0 +1,851 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Replication</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Configuration"
+HREF="runtime-config.html"><LINK
+REL="PREVIOUS"
+TITLE="Write Ahead Log"
+HREF="runtime-config-wal.html"><LINK
+REL="NEXT"
+TITLE="Query Planning"
+HREF="runtime-config-query.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Write Ahead Log"
+HREF="runtime-config-wal.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 18. Server Configuration</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Query Planning"
+HREF="runtime-config-query.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RUNTIME-CONFIG-REPLICATION"
+>18.6. Replication</A
+></H1
+><P
+>     These settings control the behavior of the built-in
+     <I
+CLASS="FIRSTTERM"
+>streaming replication</I
+> feature (see
+     <A
+HREF="warm-standby.html#STREAMING-REPLICATION"
+>Section 25.2.5</A
+>).  Servers will be either a
+     Master or a Standby server.  Masters can send data, while Standby(s)
+     are always receivers of replicated data.  When cascading replication
+     (see <A
+HREF="warm-standby.html#CASCADING-REPLICATION"
+>Section 25.2.7</A
+>) is used, Standby server(s)
+     can also be senders, as well as receivers.
+     Parameters are mainly for Sending and Standby servers, though some
+     parameters have meaning only on the Master server.  Settings may vary
+     across the cluster without problems if that is required.
+    </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-REPLICATION-SENDER"
+>18.6.1. Sending Server(s)</A
+></H2
+><P
+>      These parameters can be set on any server that is
+      to send replication data to one or more standby servers.
+      The master is always a sending server, so these parameters must
+      always be set on the master.
+      The role and meaning of these parameters does not change after a
+      standby becomes the master.
+     </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-MAX-WAL-SENDERS"
+></A
+><TT
+CLASS="VARNAME"
+>max_wal_senders</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+       </DT
+><DD
+><P
+>        Specifies the maximum number of concurrent connections from
+        standby servers or streaming base backup clients (i.e., the
+        maximum number of simultaneously running WAL sender
+        processes). The default is zero, meaning replication is
+        disabled. WAL sender processes count towards the total number
+        of connections, so the parameter cannot be set higher than
+        <A
+HREF="runtime-config-connection.html#GUC-MAX-CONNECTIONS"
+>max_connections</A
+>.  Abrupt streaming client
+        disconnection might cause an orphaned connection slot until
+        a timeout is reached, so this parameter should be set slightly
+        higher than the maximum number of expected clients so disconnected
+        clients can immediately reconnect.  This parameter can only
+        be set at server start. <TT
+CLASS="VARNAME"
+>wal_level</TT
+> must be set to
+        <TT
+CLASS="LITERAL"
+>archive</TT
+> or higher to allow connections from standby
+        servers.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-MAX-REPLICATION-SLOTS"
+></A
+><TT
+CLASS="VARNAME"
+>max_replication_slots</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+       </DT
+><DD
+><P
+>         Specifies the maximum number of replication slots
+         (see <A
+HREF="warm-standby.html#STREAMING-REPLICATION-SLOTS"
+>Section 25.2.6</A
+>) that the server
+         can support. The default is zero.  This parameter can only be set at
+         server start.
+         <TT
+CLASS="VARNAME"
+>wal_level</TT
+> must be set
+         to <TT
+CLASS="LITERAL"
+>archive</TT
+> or higher to allow replication slots to
+         be used. Setting it to a lower value than the number of currently
+         existing replication slots will prevent the server from starting.
+        </P
+></DD
+><DT
+><A
+NAME="GUC-WAL-KEEP-SEGMENTS"
+></A
+><TT
+CLASS="VARNAME"
+>wal_keep_segments</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+       </DT
+><DD
+><P
+>        Specifies the minimum number of past log file segments kept in the
+        <TT
+CLASS="FILENAME"
+>pg_xlog</TT
+>
+        directory, in case a standby server needs to fetch them for streaming
+        replication. Each segment is normally 16 megabytes. If a standby
+        server connected to the sending server falls behind by more than
+        <TT
+CLASS="VARNAME"
+>wal_keep_segments</TT
+> segments, the sending server might remove
+        a WAL segment still needed by the standby, in which case the
+        replication connection will be terminated.  Downstream connections
+        will also eventually fail as a result.  (However, the standby
+        server can recover by fetching the segment from archive, if WAL
+        archiving is in use.)
+       </P
+><P
+>        This sets only the minimum number of segments retained in
+        <TT
+CLASS="FILENAME"
+>pg_xlog</TT
+>; the system might need to retain more segments
+        for WAL archival or to recover from a checkpoint. If
+        <TT
+CLASS="VARNAME"
+>wal_keep_segments</TT
+> is zero (the default), the system
+        doesn't keep any extra segments for standby purposes, so the number
+        of old WAL segments available to standby servers is a function of
+        the location of the previous checkpoint and status of WAL
+        archiving.
+        This parameter can only be set in the
+        <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> file or on the server command line.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-WAL-SENDER-TIMEOUT"
+></A
+><TT
+CLASS="VARNAME"
+>wal_sender_timeout</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Terminate replication connections that are inactive longer
+        than the specified number of milliseconds. This is useful for
+        the sending server to detect a standby crash or network outage.
+        A value of zero disables the timeout mechanism.  This parameter
+        can only be set in
+        the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> file or on the server command line.
+        The default value is 60 seconds.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-TRACK-COMMIT-TIMESTAMP"
+></A
+><TT
+CLASS="VARNAME"
+>track_commit_timestamp</TT
+> (<TT
+CLASS="TYPE"
+>bool</TT
+>)
+      </DT
+><DD
+><P
+>        Record commit time of transactions. This parameter
+        can only be set in <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> file or on the server
+        command line. The default value is <TT
+CLASS="LITERAL"
+>off</TT
+>.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-REPLICATION-MASTER"
+>18.6.2. Master Server</A
+></H2
+><P
+>      These parameters can be set on the master/primary server that is
+      to send replication data to one or more standby servers.
+      Note that in addition to these parameters,
+      <A
+HREF="runtime-config-wal.html#GUC-WAL-LEVEL"
+>wal_level</A
+> must be set appropriately on the master
+      server, and optionally WAL archiving can be enabled as
+      well (see <A
+HREF="runtime-config-wal.html#RUNTIME-CONFIG-WAL-ARCHIVING"
+>Section 18.5.3</A
+>).
+      The values of these parameters on standby servers are irrelevant,
+      although you may wish to set them there in preparation for the
+      possibility of a standby becoming the master.
+     </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-SYNCHRONOUS-STANDBY-NAMES"
+></A
+><TT
+CLASS="VARNAME"
+>synchronous_standby_names</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies a comma-separated list of standby names that can support
+        <I
+CLASS="FIRSTTERM"
+>synchronous replication</I
+>, as described in
+        <A
+HREF="warm-standby.html#SYNCHRONOUS-REPLICATION"
+>Section 25.2.8</A
+>.
+        At any one time there will be at most one active synchronous standby;
+        transactions waiting for commit will be allowed to proceed after
+        this standby server confirms receipt of their data.
+        The synchronous standby will be the first standby named in this list
+        that is both currently connected and streaming data in real-time
+        (as shown by a state of <TT
+CLASS="LITERAL"
+>streaming</TT
+> in the
+        <A
+HREF="monitoring-stats.html#MONITORING-STATS-VIEWS-TABLE"
+>        <TT
+CLASS="LITERAL"
+>pg_stat_replication</TT
+></A
+> view).
+        Other standby servers appearing later in this list represent potential
+        synchronous standbys.
+        If the current synchronous standby disconnects for whatever reason,
+        it will be replaced immediately with the next-highest-priority standby.
+        Specifying more than one standby name can allow very high availability.
+       </P
+><P
+>        The name of a standby server for this purpose is the
+        <TT
+CLASS="VARNAME"
+>application_name</TT
+> setting of the standby, as set in the
+        <TT
+CLASS="VARNAME"
+>primary_conninfo</TT
+> of the standby's WAL receiver.  There is
+        no mechanism to enforce uniqueness. In case of duplicates one of the
+        matching standbys will be chosen to be the synchronous standby, though
+        exactly which one is indeterminate.
+        The special entry <TT
+CLASS="LITERAL"
+>*</TT
+> matches any
+        <TT
+CLASS="VARNAME"
+>application_name</TT
+>, including the default application name
+        of <TT
+CLASS="LITERAL"
+>walreceiver</TT
+>.
+       </P
+><P
+>        If no synchronous standby names are specified here, then synchronous
+        replication is not enabled and transaction commits will not wait for
+        replication.  This is the default configuration.  Even when
+        synchronous replication is enabled, individual transactions can be
+        configured not to wait for replication by setting the
+        <A
+HREF="runtime-config-wal.html#GUC-SYNCHRONOUS-COMMIT"
+>synchronous_commit</A
+> parameter to
+        <TT
+CLASS="LITERAL"
+>local</TT
+> or <TT
+CLASS="LITERAL"
+>off</TT
+>.
+       </P
+><P
+>        This parameter can only be set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+        file or on the server command line.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-VACUUM-DEFER-CLEANUP-AGE"
+></A
+><TT
+CLASS="VARNAME"
+>vacuum_defer_cleanup_age</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies the number of transactions by which <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> and
+        <ACRONYM
+CLASS="ACRONYM"
+>HOT</ACRONYM
+> updates will defer cleanup of dead row versions. The
+        default is zero transactions, meaning that dead row versions can be
+        removed as soon as possible, that is, as soon as they are no longer
+        visible to any open transaction.  You may wish to set this to a
+        non-zero value on a primary server that is supporting hot standby
+        servers, as described in <A
+HREF="hot-standby.html"
+>Section 25.5</A
+>.  This allows
+        more time for queries on the standby to complete without incurring
+        conflicts due to early cleanup of rows.  However, since the value
+        is measured in terms of number of write transactions occurring on the
+        primary server, it is difficult to predict just how much additional
+        grace time will be made available to standby queries.
+        This parameter can only be set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+        file or on the server command line.
+       </P
+><P
+>        You should also consider setting <TT
+CLASS="VARNAME"
+>hot_standby_feedback</TT
+>
+        on standby server(s) as an alternative to using this parameter.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="RUNTIME-CONFIG-REPLICATION-STANDBY"
+>18.6.3. Standby Servers</A
+></H2
+><P
+>      These settings control the behavior of a standby server that is
+      to receive replication data.  Their values on the master server
+      are irrelevant.
+     </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="GUC-HOT-STANDBY"
+></A
+><TT
+CLASS="VARNAME"
+>hot_standby</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies whether or not you can connect and run queries during
+        recovery, as described in <A
+HREF="hot-standby.html"
+>Section 25.5</A
+>.
+        The default value is <TT
+CLASS="LITERAL"
+>off</TT
+>.
+        This parameter can only be set at server start. It only has effect
+        during archive recovery or in standby mode.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-MAX-STANDBY-ARCHIVE-DELAY"
+></A
+><TT
+CLASS="VARNAME"
+>max_standby_archive_delay</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        When Hot Standby is active, this parameter determines how long the
+        standby server should wait before canceling standby queries that
+        conflict with about-to-be-applied WAL entries, as described in
+        <A
+HREF="hot-standby.html#HOT-STANDBY-CONFLICT"
+>Section 25.5.2</A
+>.
+        <TT
+CLASS="VARNAME"
+>max_standby_archive_delay</TT
+> applies when WAL data is
+        being read from WAL archive (and is therefore not current).
+        The default is 30 seconds. Units are milliseconds if not specified.
+        A value of -1 allows the standby to wait forever for conflicting
+        queries to complete.
+        This parameter can only be set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+        file or on the server command line.
+       </P
+><P
+>        Note that <TT
+CLASS="VARNAME"
+>max_standby_archive_delay</TT
+> is not the same as the
+        maximum length of time a query can run before cancellation; rather it
+        is the maximum total time allowed to apply any one WAL segment's data.
+        Thus, if one query has resulted in significant delay earlier in the
+        WAL segment, subsequent conflicting queries will have much less grace
+        time.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-MAX-STANDBY-STREAMING-DELAY"
+></A
+><TT
+CLASS="VARNAME"
+>max_standby_streaming_delay</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        When Hot Standby is active, this parameter determines how long the
+        standby server should wait before canceling standby queries that
+        conflict with about-to-be-applied WAL entries, as described in
+        <A
+HREF="hot-standby.html#HOT-STANDBY-CONFLICT"
+>Section 25.5.2</A
+>.
+        <TT
+CLASS="VARNAME"
+>max_standby_streaming_delay</TT
+> applies when WAL data is
+        being received via streaming replication.
+        The default is 30 seconds. Units are milliseconds if not specified.
+        A value of -1 allows the standby to wait forever for conflicting
+        queries to complete.
+        This parameter can only be set in the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>
+        file or on the server command line.
+       </P
+><P
+>        Note that <TT
+CLASS="VARNAME"
+>max_standby_streaming_delay</TT
+> is not the same as
+        the maximum length of time a query can run before cancellation; rather
+        it is the maximum total time allowed to apply WAL data once it has
+        been received from the primary server.  Thus, if one query has
+        resulted in significant delay, subsequent conflicting queries will
+        have much less grace time until the standby server has caught up
+        again.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-WAL-RECEIVER-STATUS-INTERVAL"
+></A
+><TT
+CLASS="VARNAME"
+>wal_receiver_status_interval</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>       Specifies the minimum frequency for the WAL receiver
+       process on the standby to send information about replication progress
+       to the primary or upstream standby, where it can be seen using the
+       <A
+HREF="monitoring-stats.html#MONITORING-STATS-VIEWS-TABLE"
+>       <TT
+CLASS="LITERAL"
+>pg_stat_replication</TT
+></A
+> view.  The standby will report
+       the last transaction log position it has written, the last position it
+       has flushed to disk, and the last position it has applied.
+       This parameter's
+       value is the maximum interval, in seconds, between reports.  Updates are
+       sent each time the write or flush positions change, or at least as
+       often as specified by this parameter.  Thus, the apply position may
+       lag slightly behind the true position.  Setting this parameter to zero
+       disables status updates completely.  This parameter can only be set in
+       the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> file or on the server command line.
+       The default value is 10 seconds.
+      </P
+></DD
+><DT
+><A
+NAME="GUC-HOT-STANDBY-FEEDBACK"
+></A
+><TT
+CLASS="VARNAME"
+>hot_standby_feedback</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+      </DT
+><DD
+><P
+>        Specifies whether or not a hot standby will send feedback to the primary
+        or upstream standby
+        about queries currently executing on the standby. This parameter can
+        be used to eliminate query cancels caused by cleanup records, but
+        can cause database bloat on the primary for some workloads.
+        Feedback messages will not be sent more frequently than once per
+        <TT
+CLASS="VARNAME"
+>wal_receiver_status_interval</TT
+>. The default value is
+        <TT
+CLASS="LITERAL"
+>off</TT
+>. This parameter can only be set in the
+        <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> file or on the server command line.
+       </P
+><P
+>        If cascaded replication is in use the feedback is passed upstream
+        until it eventually reaches the primary.  Standbys make no other use
+        of feedback they receive other than to pass upstream.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-WAL-RECEIVER-TIMEOUT"
+></A
+><TT
+CLASS="VARNAME"
+>wal_receiver_timeout</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Terminate replication connections that are inactive longer
+        than the specified number of milliseconds. This is useful for
+        the receiving standby server to detect a primary node crash or network
+        outage.
+        A value of zero disables the timeout mechanism.  This parameter
+        can only be set in
+        the <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> file or on the server command line.
+        The default value is 60 seconds.
+       </P
+></DD
+><DT
+><A
+NAME="GUC-WAL-RETRIEVE-RETRY-INTERVAL"
+></A
+><TT
+CLASS="VARNAME"
+>wal_retrieve_retry_interval</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        Specify how long the standby server should wait when WAL data is not
+        available from any sources (streaming replication,
+        local <TT
+CLASS="FILENAME"
+>pg_xlog</TT
+> or WAL archive) before retrying to
+        retrieve WAL data.  This parameter can only be set in the
+        <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+> file or on the server command line.
+        The default value is 5 seconds. Units are milliseconds if not specified.
+       </P
+><P
+>        This parameter is useful in configurations where a node in recovery
+        needs to control the amount of time to wait for new WAL data to be
+        available. For example, in archive recovery, it is possible to
+        make the recovery more responsive in the detection of a new WAL
+        log file by reducing the value of this parameter. On a system with
+        low WAL activity, increasing it reduces the amount of requests necessary
+        to access WAL archives, something useful for example in cloud
+        environments where the amount of times an infrastructure is accessed
+        is taken into account.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="runtime-config-wal.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="runtime-config-query.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Write Ahead Log</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="runtime-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Query Planning</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

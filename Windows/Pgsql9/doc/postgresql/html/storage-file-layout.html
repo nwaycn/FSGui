@@ -1,0 +1,776 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Database File Layout</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Database Physical Storage"
+HREF="storage.html"><LINK
+REL="PREVIOUS"
+TITLE="Database Physical Storage"
+HREF="storage.html"><LINK
+REL="NEXT"
+TITLE="TOAST"
+HREF="storage-toast.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Database Physical Storage"
+HREF="storage.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="storage.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 63. Database Physical Storage</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="TOAST"
+HREF="storage-toast.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="STORAGE-FILE-LAYOUT"
+>63.1. Database File Layout</A
+></H1
+><P
+>This section describes the storage format at the level of files and
+directories.</P
+><P
+>Traditionally, the configuration and data files used by a database
+cluster are stored together within the cluster's data
+directory, commonly referred to as <TT
+CLASS="VARNAME"
+>PGDATA</TT
+> (after the name of the
+environment variable that can be used to define it).  A common location for
+<TT
+CLASS="VARNAME"
+>PGDATA</TT
+> is <TT
+CLASS="FILENAME"
+>/var/lib/pgsql/data</TT
+>.  Multiple clusters,
+managed by different server instances, can exist on the same machine.</P
+><P
+>The <TT
+CLASS="VARNAME"
+>PGDATA</TT
+> directory contains several subdirectories and control
+files, as shown in <A
+HREF="storage-file-layout.html#PGDATA-CONTENTS-TABLE"
+>Table 63-1</A
+>.  In addition to
+these required items, the cluster configuration files
+<TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>, <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+>, and
+<TT
+CLASS="FILENAME"
+>pg_ident.conf</TT
+> are traditionally stored in
+<TT
+CLASS="VARNAME"
+>PGDATA</TT
+>, although it is possible to place them elsewhere.</P
+><DIV
+CLASS="TABLE"
+><A
+NAME="PGDATA-CONTENTS-TABLE"
+></A
+><P
+><B
+>Table 63-1. Contents of <TT
+CLASS="VARNAME"
+>PGDATA</TT
+></B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>Item</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>PG_VERSION</TT
+></TD
+><TD
+>A file containing the major version number of <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>base</TT
+></TD
+><TD
+>Subdirectory containing per-database subdirectories</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>global</TT
+></TD
+><TD
+>Subdirectory containing cluster-wide tables, such as
+ <TT
+CLASS="STRUCTNAME"
+>pg_database</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>pg_commit_ts</TT
+></TD
+><TD
+>Subdirectory containing transaction commit timestamp data</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>pg_clog</TT
+></TD
+><TD
+>Subdirectory containing transaction commit status data</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>pg_dynshmem</TT
+></TD
+><TD
+>Subdirectory containing files used by the dynamic shared memory
+  subsystem</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>pg_logical</TT
+></TD
+><TD
+>Subdirectory containing status data for logical decoding</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>pg_multixact</TT
+></TD
+><TD
+>Subdirectory containing multitransaction status data
+  (used for shared row locks)</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>pg_notify</TT
+></TD
+><TD
+>Subdirectory containing LISTEN/NOTIFY status data</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>pg_replslot</TT
+></TD
+><TD
+>Subdirectory containing replication slot data</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>pg_serial</TT
+></TD
+><TD
+>Subdirectory containing information about committed serializable transactions</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>pg_snapshots</TT
+></TD
+><TD
+>Subdirectory containing exported snapshots</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>pg_stat</TT
+></TD
+><TD
+>Subdirectory containing permanent files for the statistics
+  subsystem</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>pg_stat_tmp</TT
+></TD
+><TD
+>Subdirectory containing temporary files for the statistics
+  subsystem</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>pg_subtrans</TT
+></TD
+><TD
+>Subdirectory containing subtransaction status data</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>pg_tblspc</TT
+></TD
+><TD
+>Subdirectory containing symbolic links to tablespaces</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>pg_twophase</TT
+></TD
+><TD
+>Subdirectory containing state files for prepared transactions</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>pg_xlog</TT
+></TD
+><TD
+>Subdirectory containing WAL (Write Ahead Log) files</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>postgresql.auto.conf</TT
+></TD
+><TD
+>A file used for storing configuration parameters that are set by
+<TT
+CLASS="COMMAND"
+>ALTER SYSTEM</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>postmaster.opts</TT
+></TD
+><TD
+>A file recording the command-line options the server was
+last started with</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="FILENAME"
+>postmaster.pid</TT
+></TD
+><TD
+>A lock file recording the current postmaster process ID (PID),
+  cluster data directory path,
+  postmaster start timestamp,
+  port number,
+  Unix-domain socket directory path (empty on Windows),
+  first valid listen_address (IP address or <TT
+CLASS="LITERAL"
+>*</TT
+>, or empty if
+  not listening on TCP),
+  and shared memory segment ID
+  (this file is not present after server shutdown)</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>For each database in the cluster there is a subdirectory within
+<TT
+CLASS="VARNAME"
+>PGDATA</TT
+><TT
+CLASS="FILENAME"
+>/base</TT
+>, named after the database's OID in
+<TT
+CLASS="STRUCTNAME"
+>pg_database</TT
+>.  This subdirectory is the default location
+for the database's files; in particular, its system catalogs are stored
+there.</P
+><P
+>Each table and index is stored in a separate file.  For ordinary relations,
+these files are named after the table or index's <I
+CLASS="FIRSTTERM"
+>filenode</I
+> number,
+which can be found in <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>relfilenode</TT
+>. But
+for temporary relations, the file name is of the form
+<TT
+CLASS="LITERAL"
+>t<TT
+CLASS="REPLACEABLE"
+><I
+>BBB</I
+></TT
+>_<TT
+CLASS="REPLACEABLE"
+><I
+>FFF</I
+></TT
+></TT
+>, where <TT
+CLASS="REPLACEABLE"
+><I
+>BBB</I
+></TT
+>
+is the backend ID of the backend which created the file, and <TT
+CLASS="REPLACEABLE"
+><I
+>FFF</I
+></TT
+>
+is the filenode number.  In either case, in addition to the main file (a/k/a
+main fork), each table and index has a <I
+CLASS="FIRSTTERM"
+>free space map</I
+> (see <A
+HREF="storage-fsm.html"
+>Section 63.3</A
+>), which stores information about free space available in
+the relation.  The free space map is stored in a file named with the filenode
+number plus the suffix <TT
+CLASS="LITERAL"
+>_fsm</TT
+>.  Tables also have a
+<I
+CLASS="FIRSTTERM"
+>visibility map</I
+>, stored in a fork with the suffix <TT
+CLASS="LITERAL"
+>_vm</TT
+>,
+to track which pages are known to have no dead tuples.  The visibility map is
+described further in <A
+HREF="storage-vm.html"
+>Section 63.4</A
+>.  Unlogged tables and indexes
+have a third fork, known as the initialization fork, which is stored in a fork
+with the suffix <TT
+CLASS="LITERAL"
+>_init</TT
+> (see <A
+HREF="storage-init.html"
+>Section 63.5</A
+>).</P
+><DIV
+CLASS="CAUTION"
+><P
+></P
+><TABLE
+CLASS="CAUTION"
+BORDER="1"
+WIDTH="100%"
+><TR
+><TD
+ALIGN="CENTER"
+><B
+>Caution</B
+></TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+><P
+>Note that while a table's filenode often matches its OID, this is
+<SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+> necessarily the case; some operations, like
+<TT
+CLASS="COMMAND"
+>TRUNCATE</TT
+>, <TT
+CLASS="COMMAND"
+>REINDEX</TT
+>, <TT
+CLASS="COMMAND"
+>CLUSTER</TT
+> and some forms
+of <TT
+CLASS="COMMAND"
+>ALTER TABLE</TT
+>, can change the filenode while preserving the OID.
+Avoid assuming that filenode and table OID are the same.
+Also, for certain system catalogs including <TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+> itself,
+<TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>relfilenode</TT
+> contains zero.  The
+actual filenode number of these catalogs is stored in a lower-level data
+structure, and can be obtained using the <CODE
+CLASS="FUNCTION"
+>pg_relation_filenode()</CODE
+>
+function.</P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>When a table or index exceeds 1 GB, it is divided into gigabyte-sized
+<I
+CLASS="FIRSTTERM"
+>segments</I
+>.  The first segment's file name is the same as the
+filenode; subsequent segments are named filenode.1, filenode.2, etc.
+This arrangement avoids problems on platforms that have file size limitations.
+(Actually, 1 GB is just the default segment size.  The segment size can be
+adjusted using the configuration option <TT
+CLASS="OPTION"
+>--with-segsize</TT
+>
+when building <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>.)
+In principle, free space map and visibility map forks could require multiple
+segments as well, though this is unlikely to happen in practice.</P
+><P
+>A table that has columns with potentially large entries will have an
+associated <I
+CLASS="FIRSTTERM"
+>TOAST</I
+> table, which is used for out-of-line storage of
+field values that are too large to keep in the table rows proper.
+<TT
+CLASS="STRUCTNAME"
+>pg_class</TT
+>.<TT
+CLASS="STRUCTFIELD"
+>reltoastrelid</TT
+> links from a table to
+its <ACRONYM
+CLASS="ACRONYM"
+>TOAST</ACRONYM
+> table, if any.
+See <A
+HREF="storage-toast.html"
+>Section 63.2</A
+> for more information.</P
+><P
+>The contents of tables and indexes are discussed further in
+<A
+HREF="storage-page-layout.html"
+>Section 63.6</A
+>.</P
+><P
+>Tablespaces make the scenario more complicated.  Each user-defined tablespace
+has a symbolic link inside the <TT
+CLASS="VARNAME"
+>PGDATA</TT
+><TT
+CLASS="FILENAME"
+>/pg_tblspc</TT
+>
+directory, which points to the physical tablespace directory (i.e., the
+location specified in the tablespace's <TT
+CLASS="COMMAND"
+>CREATE TABLESPACE</TT
+> command).
+This symbolic link is named after
+the tablespace's OID.  Inside the physical tablespace directory there is
+a subdirectory with a name that depends on the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+server version, such as <TT
+CLASS="LITERAL"
+>PG_9.0_201008051</TT
+>.  (The reason for using
+this subdirectory is so that successive versions of the database can use
+the same <TT
+CLASS="COMMAND"
+>CREATE TABLESPACE</TT
+> location value without conflicts.)
+Within the version-specific subdirectory, there is
+a subdirectory for each database that has elements in the tablespace, named
+after the database's OID.  Tables and indexes are stored within that
+directory, using the filenode naming scheme.
+The <TT
+CLASS="LITERAL"
+>pg_default</TT
+> tablespace is not accessed through
+<TT
+CLASS="FILENAME"
+>pg_tblspc</TT
+>, but corresponds to
+<TT
+CLASS="VARNAME"
+>PGDATA</TT
+><TT
+CLASS="FILENAME"
+>/base</TT
+>.  Similarly, the <TT
+CLASS="LITERAL"
+>pg_global</TT
+>
+tablespace is not accessed through <TT
+CLASS="FILENAME"
+>pg_tblspc</TT
+>, but corresponds to
+<TT
+CLASS="VARNAME"
+>PGDATA</TT
+><TT
+CLASS="FILENAME"
+>/global</TT
+>.</P
+><P
+>The <CODE
+CLASS="FUNCTION"
+>pg_relation_filepath()</CODE
+> function shows the entire path
+(relative to <TT
+CLASS="VARNAME"
+>PGDATA</TT
+>) of any relation.  It is often useful
+as a substitute for remembering many of the above rules.  But keep in
+mind that this function just gives the name of the first segment of the
+main fork of the relation &mdash; you may need to append a segment number
+and/or <TT
+CLASS="LITERAL"
+>_fsm</TT
+>, <TT
+CLASS="LITERAL"
+>_vm</TT
+>, or <TT
+CLASS="LITERAL"
+>_init</TT
+> to find all
+the files associated with the relation.</P
+><P
+>Temporary files (for operations such as sorting more data than can fit in
+memory) are created within <TT
+CLASS="VARNAME"
+>PGDATA</TT
+><TT
+CLASS="FILENAME"
+>/base/pgsql_tmp</TT
+>,
+or within a <TT
+CLASS="FILENAME"
+>pgsql_tmp</TT
+> subdirectory of a tablespace directory
+if a tablespace other than <TT
+CLASS="LITERAL"
+>pg_default</TT
+> is specified for them.
+The name of a temporary file has the form
+<TT
+CLASS="FILENAME"
+>pgsql_tmp<TT
+CLASS="REPLACEABLE"
+><I
+>PPP</I
+></TT
+>.<TT
+CLASS="REPLACEABLE"
+><I
+>NNN</I
+></TT
+></TT
+>,
+where <TT
+CLASS="REPLACEABLE"
+><I
+>PPP</I
+></TT
+> is the PID of the owning backend and
+<TT
+CLASS="REPLACEABLE"
+><I
+>NNN</I
+></TT
+> distinguishes different temporary files of that backend.</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="storage.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="storage-toast.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Database Physical Storage</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="storage.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>TOAST</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

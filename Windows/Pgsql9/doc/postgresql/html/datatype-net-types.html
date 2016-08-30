@@ -1,0 +1,717 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Network Address Types</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Data Types"
+HREF="datatype.html"><LINK
+REL="PREVIOUS"
+TITLE="Geometric Types"
+HREF="datatype-geometric.html"><LINK
+REL="NEXT"
+TITLE="Bit String Types"
+HREF="datatype-bit.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Geometric Types"
+HREF="datatype-geometric.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="datatype.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 8. Data Types</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Bit String Types"
+HREF="datatype-bit.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="DATATYPE-NET-TYPES"
+>8.9. Network Address Types</A
+></H1
+><P
+>    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> offers data types to store IPv4, IPv6, and MAC
+    addresses, as shown in <A
+HREF="datatype-net-types.html#DATATYPE-NET-TYPES-TABLE"
+>Table 8-21</A
+>.  It
+    is better to use these types instead of plain text types to store
+    network addresses, because
+    these types offer input error checking and specialized
+    operators and functions (see <A
+HREF="functions-net.html"
+>Section 9.12</A
+>).
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="DATATYPE-NET-TYPES-TABLE"
+></A
+><P
+><B
+>Table 8-21. Network Address Types</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Name</TH
+><TH
+>Storage Size</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>cidr</TT
+></TD
+><TD
+>7 or 19 bytes</TD
+><TD
+>IPv4 and IPv6 networks</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>inet</TT
+></TD
+><TD
+>7 or 19 bytes</TD
+><TD
+>IPv4 and IPv6 hosts and networks</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>macaddr</TT
+></TD
+><TD
+>6 bytes</TD
+><TD
+>MAC addresses</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    When sorting <TT
+CLASS="TYPE"
+>inet</TT
+> or <TT
+CLASS="TYPE"
+>cidr</TT
+> data types,
+    IPv4 addresses will always sort before IPv6 addresses, including
+    IPv4 addresses encapsulated or mapped to IPv6 addresses, such as
+    ::10.2.3.4 or ::ffff:10.4.3.2.
+   </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="DATATYPE-INET"
+>8.9.1. <TT
+CLASS="TYPE"
+>inet</TT
+></A
+></H2
+><P
+>     The <TT
+CLASS="TYPE"
+>inet</TT
+> type holds an IPv4 or IPv6 host address, and
+     optionally its subnet, all in one field.
+     The subnet is represented by the number of network address bits
+     present in the host address (the
+     <SPAN
+CLASS="QUOTE"
+>"netmask"</SPAN
+>).  If the netmask is 32 and the address is IPv4,
+     then the value does not indicate a subnet, only a single host.
+     In IPv6, the address length is 128 bits, so 128 bits specify a
+     unique host address.  Note that if you
+     want to accept only networks, you should use the
+     <TT
+CLASS="TYPE"
+>cidr</TT
+> type rather than <TT
+CLASS="TYPE"
+>inet</TT
+>.
+    </P
+><P
+>      The input format for this type is
+      <TT
+CLASS="REPLACEABLE"
+><I
+>address/y</I
+></TT
+>
+      where
+      <TT
+CLASS="REPLACEABLE"
+><I
+>address</I
+></TT
+>
+      is an IPv4 or IPv6 address and
+      <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+>
+      is the number of bits in the netmask.  If the
+      <TT
+CLASS="REPLACEABLE"
+><I
+>/y</I
+></TT
+>
+      portion is missing, the
+      netmask is 32 for IPv4 and 128 for IPv6, so the value represents
+      just a single host.  On display, the
+      <TT
+CLASS="REPLACEABLE"
+><I
+>/y</I
+></TT
+>
+      portion is suppressed if the netmask specifies a single host.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="DATATYPE-CIDR"
+>8.9.2. <TT
+CLASS="TYPE"
+>cidr</TT
+></A
+></H2
+><P
+>     The <TT
+CLASS="TYPE"
+>cidr</TT
+> type holds an IPv4 or IPv6 network specification.
+     Input and output formats follow Classless Internet Domain Routing
+     conventions.
+     The format for specifying networks is <TT
+CLASS="REPLACEABLE"
+><I
+>address/y</I
+></TT
+> where <TT
+CLASS="REPLACEABLE"
+><I
+>address</I
+></TT
+> is the network represented as an
+     IPv4 or IPv6 address, and <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+> is the number of bits in the netmask.  If
+     <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+> is omitted, it is calculated
+     using assumptions from the older classful network numbering system, except
+     it will be at least large enough to include all of the octets
+     written in the input.  It is an error to specify a network address
+     that has bits set to the right of the specified netmask.
+    </P
+><P
+>     <A
+HREF="datatype-net-types.html#DATATYPE-NET-CIDR-TABLE"
+>Table 8-22</A
+> shows some examples.
+    </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="DATATYPE-NET-CIDR-TABLE"
+></A
+><P
+><B
+>Table 8-22. <TT
+CLASS="TYPE"
+>cidr</TT
+> Type Input Examples</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+><TT
+CLASS="TYPE"
+>cidr</TT
+> Input</TH
+><TH
+><TT
+CLASS="TYPE"
+>cidr</TT
+> Output</TH
+><TH
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>abbrev(<TT
+CLASS="TYPE"
+>cidr</TT
+>)</CODE
+></TT
+></TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>192.168.100.128/25</TD
+><TD
+>192.168.100.128/25</TD
+><TD
+>192.168.100.128/25</TD
+></TR
+><TR
+><TD
+>192.168/24</TD
+><TD
+>192.168.0.0/24</TD
+><TD
+>192.168.0/24</TD
+></TR
+><TR
+><TD
+>192.168/25</TD
+><TD
+>192.168.0.0/25</TD
+><TD
+>192.168.0.0/25</TD
+></TR
+><TR
+><TD
+>192.168.1</TD
+><TD
+>192.168.1.0/24</TD
+><TD
+>192.168.1/24</TD
+></TR
+><TR
+><TD
+>192.168</TD
+><TD
+>192.168.0.0/24</TD
+><TD
+>192.168.0/24</TD
+></TR
+><TR
+><TD
+>128.1</TD
+><TD
+>128.1.0.0/16</TD
+><TD
+>128.1/16</TD
+></TR
+><TR
+><TD
+>128</TD
+><TD
+>128.0.0.0/16</TD
+><TD
+>128.0/16</TD
+></TR
+><TR
+><TD
+>128.1.2</TD
+><TD
+>128.1.2.0/24</TD
+><TD
+>128.1.2/24</TD
+></TR
+><TR
+><TD
+>10.1.2</TD
+><TD
+>10.1.2.0/24</TD
+><TD
+>10.1.2/24</TD
+></TR
+><TR
+><TD
+>10.1</TD
+><TD
+>10.1.0.0/16</TD
+><TD
+>10.1/16</TD
+></TR
+><TR
+><TD
+>10</TD
+><TD
+>10.0.0.0/8</TD
+><TD
+>10/8</TD
+></TR
+><TR
+><TD
+>10.1.2.3/32</TD
+><TD
+>10.1.2.3/32</TD
+><TD
+>10.1.2.3/32</TD
+></TR
+><TR
+><TD
+>2001:4f8:3:ba::/64</TD
+><TD
+>2001:4f8:3:ba::/64</TD
+><TD
+>2001:4f8:3:ba::/64</TD
+></TR
+><TR
+><TD
+>2001:4f8:3:ba:2e0:81ff:fe22:d1f1/128</TD
+><TD
+>2001:4f8:3:ba:2e0:81ff:fe22:d1f1/128</TD
+><TD
+>2001:4f8:3:ba:2e0:81ff:fe22:d1f1</TD
+></TR
+><TR
+><TD
+>::ffff:1.2.3.0/120</TD
+><TD
+>::ffff:1.2.3.0/120</TD
+><TD
+>::ffff:1.2.3/120</TD
+></TR
+><TR
+><TD
+>::ffff:1.2.3.0/128</TD
+><TD
+>::ffff:1.2.3.0/128</TD
+><TD
+>::ffff:1.2.3.0/128</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="DATATYPE-INET-VS-CIDR"
+>8.9.3. <TT
+CLASS="TYPE"
+>inet</TT
+> vs. <TT
+CLASS="TYPE"
+>cidr</TT
+></A
+></H2
+><P
+>    The essential difference between <TT
+CLASS="TYPE"
+>inet</TT
+> and <TT
+CLASS="TYPE"
+>cidr</TT
+>
+    data types is that <TT
+CLASS="TYPE"
+>inet</TT
+> accepts values with nonzero bits to
+    the right of the netmask, whereas <TT
+CLASS="TYPE"
+>cidr</TT
+> does not.
+    </P
+><DIV
+CLASS="TIP"
+><BLOCKQUOTE
+CLASS="TIP"
+><P
+><B
+>Tip: </B
+>        If you do not like the output format for <TT
+CLASS="TYPE"
+>inet</TT
+> or
+        <TT
+CLASS="TYPE"
+>cidr</TT
+> values, try the functions <CODE
+CLASS="FUNCTION"
+>host</CODE
+>,
+        <CODE
+CLASS="FUNCTION"
+>text</CODE
+>, and <CODE
+CLASS="FUNCTION"
+>abbrev</CODE
+>.
+        </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="DATATYPE-MACADDR"
+>8.9.4. <TT
+CLASS="TYPE"
+>macaddr</TT
+></A
+></H2
+><P
+>     The <TT
+CLASS="TYPE"
+>macaddr</TT
+> type stores MAC addresses, known for example
+     from Ethernet card hardware addresses (although MAC addresses are
+     used for other purposes as well).  Input is accepted in the
+     following formats:
+
+     <P
+></P
+><TABLE
+BORDER="0"
+><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>'08:00:2b:01:02:03'</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>'08-00-2b-01-02-03'</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>'08002b:010203'</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>'08002b-010203'</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>'0800.2b01.0203'</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>'0800-2b01-0203'</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>'08002b010203'</TT
+></TD
+></TR
+></TBODY
+></TABLE
+><P
+></P
+>
+
+     These examples would all specify the same address.  Upper and
+     lower case is accepted for the digits
+     <TT
+CLASS="LITERAL"
+>a</TT
+> through <TT
+CLASS="LITERAL"
+>f</TT
+>.  Output is always in the
+     first of the forms shown.
+    </P
+><P
+>     IEEE Std 802-2001 specifies the second shown form (with hyphens)
+     as the canonical form for MAC addresses, and specifies the first
+     form (with colons) as the bit-reversed notation, so that
+     08-00-2b-01-02-03 = 01:00:4D:08:04:0C.  This convention is widely
+     ignored nowadays, and it is relevant only for obsolete network
+     protocols (such as Token Ring).  PostgreSQL makes no provisions
+     for bit reversal, and all accepted formats use the canonical LSB
+     order.
+    </P
+><P
+>     The remaining five input formats are not part of any standard.
+    </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="datatype-geometric.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="datatype-bit.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Geometric Types</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="datatype.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Bit String Types</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

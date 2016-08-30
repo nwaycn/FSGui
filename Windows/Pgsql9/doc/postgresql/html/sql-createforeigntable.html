@@ -1,0 +1,769 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>CREATE FOREIGN TABLE</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="CREATE FOREIGN DATA WRAPPER"
+HREF="sql-createforeigndatawrapper.html"><LINK
+REL="NEXT"
+TITLE="CREATE FUNCTION"
+HREF="sql-createfunction.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="CREATE FOREIGN DATA WRAPPER"
+HREF="sql-createforeigndatawrapper.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="CREATE FUNCTION"
+HREF="sql-createfunction.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-CREATEFOREIGNTABLE"
+></A
+>CREATE FOREIGN TABLE</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN75898"
+></A
+><H2
+>Name</H2
+>CREATE FOREIGN TABLE&nbsp;--&nbsp;define a new foreign table</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN75901"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>CREATE FOREIGN TABLE [ IF NOT EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+> ( [
+  { <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>data_type</I
+></TT
+> [ OPTIONS ( <TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+> '<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>' [, ... ] ) ] [ COLLATE <TT
+CLASS="REPLACEABLE"
+><I
+>collation</I
+></TT
+> ] [ <TT
+CLASS="REPLACEABLE"
+><I
+>column_constraint</I
+></TT
+> [ ... ] ]
+    | <TT
+CLASS="REPLACEABLE"
+><I
+>table_constraint</I
+></TT
+> }
+    [, ... ]
+] )
+[ INHERITS ( <TT
+CLASS="REPLACEABLE"
+><I
+>parent_table</I
+></TT
+> [, ... ] ) ]
+  SERVER <TT
+CLASS="REPLACEABLE"
+><I
+>server_name</I
+></TT
+>
+[ OPTIONS ( <TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+> '<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>' [, ... ] ) ]
+
+<SPAN
+CLASS="phrase"
+><SPAN
+CLASS="PHRASE"
+>where <TT
+CLASS="REPLACEABLE"
+><I
+>column_constraint</I
+></TT
+> is:</SPAN
+></SPAN
+>
+
+[ CONSTRAINT <TT
+CLASS="REPLACEABLE"
+><I
+>constraint_name</I
+></TT
+> ]
+{ NOT NULL |
+  NULL |
+  CHECK ( <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+> ) [ NO INHERIT ] |
+  DEFAULT <TT
+CLASS="REPLACEABLE"
+><I
+>default_expr</I
+></TT
+> }
+
+<SPAN
+CLASS="phrase"
+><SPAN
+CLASS="PHRASE"
+>and <TT
+CLASS="REPLACEABLE"
+><I
+>table_constraint</I
+></TT
+> is:</SPAN
+></SPAN
+>
+
+[ CONSTRAINT <TT
+CLASS="REPLACEABLE"
+><I
+>constraint_name</I
+></TT
+> ]
+CHECK ( <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+> ) [ NO INHERIT ]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-CREATEFOREIGNTABLE-DESCRIPTION"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>CREATE FOREIGN TABLE</TT
+> creates a new foreign table
+   in the current database. The table will be owned by the user issuing the
+   command.
+  </P
+><P
+>   If a schema name is given (for example, <TT
+CLASS="LITERAL"
+>CREATE FOREIGN TABLE
+   myschema.mytable ...</TT
+>) then the table is created in the specified
+   schema.  Otherwise it is created in the current schema.
+   The name of the foreign table must be
+   distinct from the name of any other foreign table, table, sequence, index,
+   view, or materialized view in the same schema.
+  </P
+><P
+>   <TT
+CLASS="COMMAND"
+>CREATE FOREIGN TABLE</TT
+> also automatically creates a data
+   type that represents the composite type corresponding to one row of
+   the foreign table.  Therefore, foreign tables cannot have the same
+   name as any existing data type in the same schema.
+  </P
+><P
+>   To be able to create a foreign table, you must have <TT
+CLASS="LITERAL"
+>USAGE</TT
+>
+   privilege on the foreign server, as well as <TT
+CLASS="LITERAL"
+>USAGE</TT
+>
+   privilege on all column types used in the table.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75935"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>IF NOT EXISTS</TT
+></DT
+><DD
+><P
+>      Do not throw an error if a relation with the same name already exists.
+      A notice is issued in this case.  Note that there is no guarantee that
+      the existing relation is anything like the one that would have been
+      created.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+></DT
+><DD
+><P
+>      The name (optionally schema-qualified) of the table to be created.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+></DT
+><DD
+><P
+>      The name of a column to be created in the new table.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>data_type</I
+></TT
+></DT
+><DD
+><P
+>      The data type of the column. This can include array
+      specifiers. For more information on the data types supported by
+      <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>, refer to <A
+HREF="datatype.html"
+>Chapter 8</A
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>COLLATE <TT
+CLASS="REPLACEABLE"
+><I
+>collation</I
+></TT
+></TT
+></DT
+><DD
+><P
+>      The <TT
+CLASS="LITERAL"
+>COLLATE</TT
+> clause assigns a collation to
+      the column (which must be of a collatable data type).
+      If not specified, the column data type's default collation is used.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>INHERITS ( <TT
+CLASS="REPLACEABLE"
+><I
+>parent_table</I
+></TT
+> [, ... ] )</TT
+></DT
+><DD
+><P
+>      The optional <TT
+CLASS="LITERAL"
+>INHERITS</TT
+> clause specifies a list of
+      tables from which the new foreign table automatically inherits
+      all columns.  Parent tables can be plain tables or foreign tables.
+      See the similar form of
+      <A
+HREF="sql-createtable.html"
+>CREATE TABLE</A
+> for more details.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>CONSTRAINT <TT
+CLASS="REPLACEABLE"
+><I
+>constraint_name</I
+></TT
+></TT
+></DT
+><DD
+><P
+>      An optional name for a column or table constraint.  If the
+      constraint is violated, the constraint name is present in error messages,
+      so constraint names like <TT
+CLASS="LITERAL"
+>col must be positive</TT
+> can be used
+      to communicate helpful constraint information to client applications.
+      (Double-quotes are needed to specify constraint names that contain spaces.)
+      If a constraint name is not specified, the system generates a name.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>NOT NULL</TT
+></DT
+><DD
+><P
+>      The column is not allowed to contain null values.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>NULL</TT
+></DT
+><DD
+><P
+>      The column is allowed to contain null values. This is the default.
+     </P
+><P
+>      This clause is only provided for compatibility with
+      non-standard SQL databases.  Its use is discouraged in new
+      applications.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>CHECK ( <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+> ) [ NO INHERIT ] </TT
+></DT
+><DD
+><P
+>      The <TT
+CLASS="LITERAL"
+>CHECK</TT
+> clause specifies an expression producing a
+      Boolean result which each row in the foreign table is expected
+      to satisfy; that is, the expression should produce TRUE or UNKNOWN,
+      never FALSE, for all rows in the foreign table.
+      A check constraint specified as a column constraint should
+      reference that column's value only, while an expression
+      appearing in a table constraint can reference multiple columns.
+     </P
+><P
+>      Currently, <TT
+CLASS="LITERAL"
+>CHECK</TT
+> expressions cannot contain
+      subqueries nor refer to variables other than columns of the
+      current row.  The system column <TT
+CLASS="LITERAL"
+>tableoid</TT
+>
+      may be referenced, but not any other system column.
+     </P
+><P
+>      A constraint marked with <TT
+CLASS="LITERAL"
+>NO INHERIT</TT
+> will not propagate to
+      child tables.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>DEFAULT
+    <TT
+CLASS="REPLACEABLE"
+><I
+>default_expr</I
+></TT
+></TT
+></DT
+><DD
+><P
+>      The <TT
+CLASS="LITERAL"
+>DEFAULT</TT
+> clause assigns a default data value for
+      the column whose column definition it appears within.  The value
+      is any variable-free expression (subqueries and cross-references
+      to other columns in the current table are not allowed).  The
+      data type of the default expression must match the data type of the
+      column.
+     </P
+><P
+>      The default expression will be used in any insert operation that
+      does not specify a value for the column.  If there is no default
+      for a column, then the default is null.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>server_name</I
+></TT
+></DT
+><DD
+><P
+>      The name of an existing foreign server to use for the foreign table.
+      For details on defining a server, see <A
+HREF="sql-createserver.html"
+>CREATE SERVER</A
+>.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>OPTIONS ( <TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+> '<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>' [, ...] )</TT
+></DT
+><DD
+><P
+>      Options to be associated with the new foreign table or one of its
+      columns.
+      The allowed option names and values are specific to each foreign
+      data wrapper and are validated using the foreign-data wrapper's
+      validator function.  Duplicate option names are not allowed (although
+      it's OK for a table option and a column option to have the same name).
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN76026"
+></A
+><H2
+>Notes</H2
+><P
+>    Constraints on foreign tables (such as <TT
+CLASS="LITERAL"
+>CHECK</TT
+>
+    or <TT
+CLASS="LITERAL"
+>NOT NULL</TT
+> clauses) are not enforced by the
+    core <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> system, and most foreign data wrappers
+    do not attempt to enforce them either; that is, the constraint is
+    simply assumed to hold true.  There would be little point in such
+    enforcement since it would only apply to rows inserted or updated via
+    the foreign table, and not to rows modified by other means, such as
+    directly on the remote server.  Instead, a constraint attached to a
+    foreign table should represent a constraint that is being enforced by
+    the remote server.
+   </P
+><P
+>    Some special-purpose foreign data wrappers might be the only access
+    mechanism for the data they access, and in that case it might be
+    appropriate for the foreign data wrapper itself to perform constraint
+    enforcement.  But you should not assume that a wrapper does that
+    unless its documentation says so.
+   </P
+><P
+>    Although <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> does not attempt to enforce
+    constraints on foreign tables, it does assume that they are correct
+    for purposes of query optimization.  If there are rows visible in the
+    foreign table that do not satisfy a declared constraint, queries on
+    the table might produce incorrect answers.  It is the user's
+    responsibility to ensure that the constraint definition matches
+    reality.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-CREATEFOREIGNTABLE-EXAMPLES"
+></A
+><H2
+>Examples</H2
+><P
+>   Create foreign table <TT
+CLASS="STRUCTNAME"
+>films</TT
+>, which will be accessed through
+   the server <TT
+CLASS="STRUCTNAME"
+>film_server</TT
+>:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FOREIGN TABLE films (
+    code        char(5) NOT NULL,
+    title       varchar(40) NOT NULL,
+    did         integer NOT NULL,
+    date_prod   date,
+    kind        varchar(10),
+    len         interval hour to minute
+)
+SERVER film_server;</PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-CREATEFOREIGNTABLE-COMPATIBILITY"
+></A
+><H2
+>Compatibility</H2
+><P
+>   The <TT
+CLASS="COMMAND"
+>CREATE FOREIGN TABLE</TT
+> command largely conforms to the
+   <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> standard; however, much as with
+   <A
+HREF="sql-createtable.html"
+><TT
+CLASS="COMMAND"
+>CREATE TABLE</TT
+></A
+>,
+   <TT
+CLASS="LITERAL"
+>NULL</TT
+> constraints and zero-column foreign tables are permitted.
+   The ability to specify column default values is also
+   a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> extension.  Table inheritance, in the form
+   defined by <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>, is nonstandard.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN76051"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-alterforeigntable.html"
+>ALTER FOREIGN TABLE</A
+>, <A
+HREF="sql-dropforeigntable.html"
+>DROP FOREIGN TABLE</A
+>, <A
+HREF="sql-createtable.html"
+>CREATE TABLE</A
+>, <A
+HREF="sql-createserver.html"
+>CREATE SERVER</A
+>, <A
+HREF="sql-importforeignschema.html"
+>IMPORT FOREIGN SCHEMA</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-createforeigndatawrapper.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-createfunction.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>CREATE FOREIGN DATA WRAPPER</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>CREATE FUNCTION</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,327 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>DISCONNECT</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Embedded SQL Commands"
+HREF="ecpg-sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="DESCRIBE"
+HREF="ecpg-sql-describe.html"><LINK
+REL="NEXT"
+TITLE="EXECUTE IMMEDIATE"
+HREF="ecpg-sql-execute-immediate.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="DESCRIBE"
+HREF="ecpg-sql-describe.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ecpg-sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="EXECUTE IMMEDIATE"
+HREF="ecpg-sql-execute-immediate.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="ECPG-SQL-DISCONNECT"
+></A
+>DISCONNECT</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN49538"
+></A
+><H2
+>Name</H2
+>DISCONNECT&nbsp;--&nbsp;terminate a database connection</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN49541"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>DISCONNECT <TT
+CLASS="REPLACEABLE"
+><I
+>connection_name</I
+></TT
+>
+DISCONNECT [ CURRENT ]
+DISCONNECT DEFAULT
+DISCONNECT ALL</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN49544"
+></A
+><H2
+>Description</H2
+><P
+>     <TT
+CLASS="COMMAND"
+>DISCONNECT</TT
+> closes a connection (or all
+     connections) to the database.
+    </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN49548"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>connection_name</I
+></TT
+></DT
+><DD
+><P
+>        A database connection name established by
+        the <TT
+CLASS="COMMAND"
+>CONNECT</TT
+> command.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>CURRENT</TT
+></DT
+><DD
+><P
+>        Close the <SPAN
+CLASS="QUOTE"
+>"current"</SPAN
+> connection, which is either
+        the most recently opened connection, or the connection set by
+        the <TT
+CLASS="COMMAND"
+>SET CONNECTION</TT
+> command.  This is also
+        the default if no argument is given to
+        the <TT
+CLASS="COMMAND"
+>DISCONNECT</TT
+> command.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>DEFAULT</TT
+></DT
+><DD
+><P
+>        Close the default connection.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>ALL</TT
+></DT
+><DD
+><P
+>        Close all open connections.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN49575"
+></A
+><H2
+>Examples</H2
+><PRE
+CLASS="PROGRAMLISTING"
+>int
+main(void)
+{
+    EXEC SQL CONNECT TO testdb AS DEFAULT USER testuser;
+    EXEC SQL CONNECT TO testdb AS con1 USER testuser;
+    EXEC SQL CONNECT TO testdb AS con2 USER testuser;
+    EXEC SQL CONNECT TO testdb AS con3 USER testuser;
+
+    EXEC SQL DISCONNECT CURRENT;  /* close con3          */
+    EXEC SQL DISCONNECT DEFAULT;  /* close DEFAULT       */
+    EXEC SQL DISCONNECT ALL;      /* close con2 and con1 */
+
+    return 0;
+}</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN49578"
+></A
+><H2
+>Compatibility</H2
+><P
+>     <TT
+CLASS="COMMAND"
+>DISCONNECT</TT
+> is specified in the SQL standard.
+    </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN49582"
+></A
+><H2
+>See Also</H2
+><A
+HREF="ecpg-sql-connect.html"
+>CONNECT</A
+>, <A
+HREF="ecpg-sql-set-connection.html"
+>SET CONNECTION</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ecpg-sql-describe.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="ecpg-sql-execute-immediate.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>DESCRIBE</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="ecpg-sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>EXECUTE IMMEDIATE</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

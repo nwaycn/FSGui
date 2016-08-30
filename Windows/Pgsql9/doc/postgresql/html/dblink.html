@@ -1,0 +1,293 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>dblink</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="cube"
+HREF="cube.html"><LINK
+REL="NEXT"
+TITLE="dblink_connect"
+HREF="contrib-dblink-connect.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="cube"
+HREF="cube.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="dblink_connect"
+HREF="contrib-dblink-connect.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="DBLINK"
+>F.9. dblink</A
+></H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+><A
+HREF="contrib-dblink-connect.html"
+>dblink_connect</A
+>&nbsp;--&nbsp;opens a persistent connection to a remote database</DT
+><DT
+><A
+HREF="contrib-dblink-connect-u.html"
+>dblink_connect_u</A
+>&nbsp;--&nbsp;opens a persistent connection to a remote database, insecurely</DT
+><DT
+><A
+HREF="contrib-dblink-disconnect.html"
+>dblink_disconnect</A
+>&nbsp;--&nbsp;closes a persistent connection to a remote database</DT
+><DT
+><A
+HREF="contrib-dblink-function.html"
+>dblink</A
+>&nbsp;--&nbsp;executes a query in a remote database</DT
+><DT
+><A
+HREF="contrib-dblink-exec.html"
+>dblink_exec</A
+>&nbsp;--&nbsp;executes a command in a remote database</DT
+><DT
+><A
+HREF="contrib-dblink-open.html"
+>dblink_open</A
+>&nbsp;--&nbsp;opens a cursor in a remote database</DT
+><DT
+><A
+HREF="contrib-dblink-fetch.html"
+>dblink_fetch</A
+>&nbsp;--&nbsp;returns rows from an open cursor in a remote database</DT
+><DT
+><A
+HREF="contrib-dblink-close.html"
+>dblink_close</A
+>&nbsp;--&nbsp;closes a cursor in a remote database</DT
+><DT
+><A
+HREF="contrib-dblink-get-connections.html"
+>dblink_get_connections</A
+>&nbsp;--&nbsp;returns the names of all open named dblink connections</DT
+><DT
+><A
+HREF="contrib-dblink-error-message.html"
+>dblink_error_message</A
+>&nbsp;--&nbsp;gets last error message on the named connection</DT
+><DT
+><A
+HREF="contrib-dblink-send-query.html"
+>dblink_send_query</A
+>&nbsp;--&nbsp;sends an async query to a remote database</DT
+><DT
+><A
+HREF="contrib-dblink-is-busy.html"
+>dblink_is_busy</A
+>&nbsp;--&nbsp;checks if connection is busy with an async query</DT
+><DT
+><A
+HREF="contrib-dblink-get-notify.html"
+>dblink_get_notify</A
+>&nbsp;--&nbsp;retrieve async notifications on a connection</DT
+><DT
+><A
+HREF="contrib-dblink-get-result.html"
+>dblink_get_result</A
+>&nbsp;--&nbsp;gets an async query result</DT
+><DT
+><A
+HREF="contrib-dblink-cancel-query.html"
+>dblink_cancel_query</A
+>&nbsp;--&nbsp;cancels any active query on the named connection</DT
+><DT
+><A
+HREF="contrib-dblink-get-pkey.html"
+>dblink_get_pkey</A
+>&nbsp;--&nbsp;returns the positions and field names of a relation's
+    primary key fields
+   </DT
+><DT
+><A
+HREF="contrib-dblink-build-sql-insert.html"
+>dblink_build_sql_insert</A
+>&nbsp;--&nbsp;    builds an INSERT statement using a local tuple, replacing the
+    primary key field values with alternative supplied values
+   </DT
+><DT
+><A
+HREF="contrib-dblink-build-sql-delete.html"
+>dblink_build_sql_delete</A
+>&nbsp;--&nbsp;builds a DELETE statement using supplied values for primary
+    key field values
+   </DT
+><DT
+><A
+HREF="contrib-dblink-build-sql-update.html"
+>dblink_build_sql_update</A
+>&nbsp;--&nbsp;builds an UPDATE statement using a local tuple, replacing
+    the primary key field values with alternative supplied values
+   </DT
+></DL
+></DIV
+><P
+>  <TT
+CLASS="FILENAME"
+>dblink</TT
+> is a module that supports connections to
+  other <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> databases from within a database
+  session.
+ </P
+><P
+>  See also <A
+HREF="postgres-fdw.html"
+>postgres_fdw</A
+>, which provides roughly the same
+  functionality using a more modern and standards-compliant infrastructure.
+ </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="cube.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="contrib-dblink-connect.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>cube</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>dblink_connect</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

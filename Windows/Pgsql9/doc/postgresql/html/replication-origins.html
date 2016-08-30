@@ -1,0 +1,310 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Replication Progress Tracking</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Programming"
+HREF="server-programming.html"><LINK
+REL="PREVIOUS"
+TITLE="Synchronous Replication Support for Logical Decoding"
+HREF="logicaldecoding-synchronous.html"><LINK
+REL="NEXT"
+TITLE="Reference"
+HREF="reference.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="CHAPTER"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Synchronous Replication Support for Logical Decoding"
+HREF="logicaldecoding-synchronous.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="server-programming.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Reference"
+HREF="reference.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="REPLICATION-ORIGINS"
+></A
+>Chapter 47. Replication Progress Tracking</H1
+><P
+>  Replication origins are intended to make it easier to implement
+  logical replication solutions on top
+  of <A
+HREF="logicaldecoding.html"
+>logical decoding</A
+>.
+  They provide a solution to two common problems:
+  <P
+></P
+></P><UL
+><LI
+><P
+>How to safely keep track of replication progress</P
+></LI
+><LI
+><P
+>How to change replication behavior based on the
+     origin of a row; for example, to prevent loops in bi-directional
+     replication setups</P
+></LI
+></UL
+><P>
+ </P
+><P
+>  Replication origins have just two properties, a name and an OID. The name,
+  which is what should be used to refer to the origin across systems, is
+  free-form <TT
+CLASS="TYPE"
+>text</TT
+>. It should be used in a way that makes conflicts
+  between replication origins created by different replication solutions
+  unlikely; e.g. by prefixing the replication solution's name to it.
+  The OID is used only to avoid having to store the long version
+  in situations where space efficiency is important. It should never be shared
+  across systems.
+ </P
+><P
+>  Replication origins can be created using the function
+  <A
+HREF="functions-admin.html#PG-REPLICATION-ORIGIN-CREATE"
+><CODE
+CLASS="FUNCTION"
+>pg_replication_origin_create()</CODE
+></A
+>;
+  dropped using
+  <A
+HREF="functions-admin.html#PG-REPLICATION-ORIGIN-DROP"
+><CODE
+CLASS="FUNCTION"
+>pg_replication_origin_drop()</CODE
+></A
+>;
+  and seen in the
+  <A
+HREF="catalog-pg-replication-origin.html"
+><TT
+CLASS="STRUCTNAME"
+>pg_replication_origin</TT
+></A
+>
+  system catalog.
+ </P
+><P
+>  One nontrivial part of building a replication solution is to keep track of
+  replay progress in a safe manner. When the applying process, or the whole
+  cluster, dies, it needs to be possible to find out up to where data has
+  successfully been replicated. Naive solutions to this, such as updating a
+  row in a table for every replayed transaction, have problems like run-time
+  overhead and database bloat.
+ </P
+><P
+>  Using the replication origin infrastructure a session can be
+  marked as replaying from a remote node (using the
+  <A
+HREF="functions-admin.html#PG-REPLICATION-ORIGIN-SESSION-SETUP"
+><CODE
+CLASS="FUNCTION"
+>pg_replication_origin_session_setup()</CODE
+></A
+>
+  function). Additionally the <ACRONYM
+CLASS="ACRONYM"
+>LSN</ACRONYM
+> and commit
+  time stamp of every source transaction can be configured on a per
+  transaction basis using
+  <A
+HREF="functions-admin.html#PG-REPLICATION-ORIGIN-XACT-SETUP"
+><CODE
+CLASS="FUNCTION"
+>pg_replication_origin_xact_setup()</CODE
+></A
+>.
+  If that's done replication progress will persist in a crash safe
+  manner. Replay progress for all replication origins can be seen in the
+  <A
+HREF="view-pg-replication-origin-status.html"
+>   <TT
+CLASS="STRUCTNAME"
+>pg_replication_origin_status</TT
+>
+  </A
+> view. An individual origin's progress, e.g. when resuming
+  replication, can be acquired using
+  <A
+HREF="functions-admin.html#PG-REPLICATION-ORIGIN-PROGRESS"
+><CODE
+CLASS="FUNCTION"
+>pg_replication_origin_progress()</CODE
+></A
+>
+  for any origin or
+  <A
+HREF="functions-admin.html#PG-REPLICATION-ORIGIN-SESSION-PROGRESS"
+><CODE
+CLASS="FUNCTION"
+>pg_replication_origin_session_progress()</CODE
+></A
+>
+  for the origin configured in the current session.
+ </P
+><P
+>  In replication topologies more complex than replication from exactly one
+  system to one other system, another problem can be that it is hard to avoid
+  replicating replayed rows again. That can lead both to cycles in the
+  replication and inefficiencies. Replication origins provide an optional
+  mechanism to recognize and prevent that. When configured using the functions
+  referenced in the previous paragraph, every change and transaction passed to
+  output plugin callbacks (see <A
+HREF="logicaldecoding-output-plugin.html"
+>Section 46.6</A
+>)
+  generated by the session is tagged with the replication origin of the
+  generating session.  This allows treating them differently in the output
+  plugin, e.g. ignoring all but locally-originating rows.  Additionally
+  the <A
+HREF="logicaldecoding-output-plugin.html#LOGICALDECODING-OUTPUT-PLUGIN-FILTER-ORIGIN"
+>  <CODE
+CLASS="FUNCTION"
+>filter_by_origin_cb</CODE
+></A
+> callback can be used
+  to filter the logical decoding change stream based on the
+  source. While less flexible, filtering via that callback is
+  considerably more efficient than doing it in the output plugin.
+ </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="logicaldecoding-synchronous.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="reference.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Synchronous Replication Support for Logical Decoding</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="server-programming.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Reference</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

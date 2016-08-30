@@ -1,0 +1,308 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Logical Decoding Concepts</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Logical Decoding"
+HREF="logicaldecoding.html"><LINK
+REL="PREVIOUS"
+TITLE="Logical Decoding Examples"
+HREF="logicaldecoding-example.html"><LINK
+REL="NEXT"
+TITLE="Streaming Replication Protocol Interface"
+HREF="logicaldecoding-walsender.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Logical Decoding Examples"
+HREF="logicaldecoding-example.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="logicaldecoding.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 46. Logical Decoding</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Streaming Replication Protocol Interface"
+HREF="logicaldecoding-walsender.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="LOGICALDECODING-EXPLANATION"
+>46.2. Logical Decoding Concepts</A
+></H1
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN68613"
+>46.2.1. Logical Decoding</A
+></H2
+><P
+>     Logical decoding is the process of extracting all persistent changes
+     to a database's tables into a coherent, easy to understand format which
+     can be interpreted without detailed knowledge of the database's internal
+     state.
+    </P
+><P
+>     In <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>, logical decoding is implemented
+     by decoding the contents of the <A
+HREF="wal.html"
+>write-ahead
+     log</A
+>, which describe changes on a storage level, into an
+     application-specific form such as a stream of tuples or SQL statements.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN68621"
+>46.2.2. Replication Slots</A
+></H2
+><P
+>     In the context of logical replication, a slot represents a stream of
+     changes that can be replayed to a client in the order they were made on
+     the origin server. Each slot streams a sequence of changes from a single
+     database, sending each change exactly once (except when peeking forward
+     in the stream).
+    </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+><SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> also has streaming replication slots
+     (see <A
+HREF="warm-standby.html#STREAMING-REPLICATION"
+>Section 25.2.5</A
+>), but they are used somewhat
+     differently there.
+     </P
+></BLOCKQUOTE
+></DIV
+><P
+>     A replication slot has an identifier that is unique across all databases
+     in a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> cluster. Slots persist
+     independently of the connection using them and are crash-safe.
+    </P
+><P
+>     Multiple independent slots may exist for a single database. Each slot has
+     its own state, allowing different consumers to receive changes from
+     different points in the database change stream. For most applications, a
+     separate slot will be required for each consumer.
+    </P
+><P
+>     A logical replication slot knows nothing about the state of the
+     receiver(s).  It's even possible to have multiple different receivers using
+     the same slot at different times; they'll just get the changes following
+     on from when the last receiver stopped consuming them. Only one receiver
+     may consume changes from a slot at any given time.
+    </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>      Replication slots persist across crashes and know nothing about the state
+      of their consumer(s). They will prevent removal of required resources
+      even when there is no connection using them. This consumes storage
+      because neither required WAL nor required rows from the system catalogs
+      can be removed by <TT
+CLASS="COMMAND"
+>VACUUM</TT
+> as long as they are required by a replication
+      slot.  So if a slot is no longer required it should be dropped.
+     </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN68638"
+>46.2.3. Output Plugins</A
+></H2
+><P
+>     Output plugins transform the data from the write-ahead log's internal
+     representation into the format the consumer of a replication slot desires.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN68641"
+>46.2.4. Exported Snapshots</A
+></H2
+><P
+>     When a new replication slot is created using the streaming replication interface,
+     a snapshot is exported
+     (see <A
+HREF="functions-admin.html#FUNCTIONS-SNAPSHOT-SYNCHRONIZATION"
+>Section 9.26.5</A
+>), which will show
+     exactly the state of the database after which all changes will be
+     included in the change stream. This can be used to create a new replica by
+     using <A
+HREF="sql-set-transaction.html"
+><TT
+CLASS="LITERAL"
+>SET TRANSACTION
+     SNAPSHOT</TT
+></A
+> to read the state of the database at the moment
+     the slot was created. This transaction can then be used to dump the
+     database's state at that point in time, which afterwards can be updated
+     using the slot's contents without losing any changes.
+    </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="logicaldecoding-example.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="logicaldecoding-walsender.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Logical Decoding Examples</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="logicaldecoding.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Streaming Replication Protocol Interface</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

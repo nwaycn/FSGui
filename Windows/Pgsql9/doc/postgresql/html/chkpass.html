@@ -1,0 +1,262 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>chkpass</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="btree_gist"
+HREF="btree-gist.html"><LINK
+REL="NEXT"
+TITLE="citext"
+HREF="citext.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="btree_gist"
+HREF="btree-gist.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="citext"
+HREF="citext.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="CHKPASS"
+>F.6. chkpass</A
+></H1
+><P
+>  This module implements a data type <TT
+CLASS="TYPE"
+>chkpass</TT
+> that is
+  designed for storing encrypted passwords.
+  Each password is automatically converted to encrypted form upon entry,
+  and is always stored encrypted.  To compare, simply compare against a clear
+  text password and the comparison function will encrypt it before comparing.
+ </P
+><P
+>  There are provisions in the code to report an error if the password is
+  determined to be easily crackable.  However, this is currently just
+  a stub that does nothing.
+ </P
+><P
+>  If you precede an input string with a colon, it is assumed to be an
+  already-encrypted password, and is stored without further encryption.
+  This allows entry of previously-encrypted passwords.
+ </P
+><P
+>  On output, a colon is prepended.  This makes it possible to dump and reload
+  passwords without re-encrypting them.  If you want the encrypted password
+  without the colon then use the <CODE
+CLASS="FUNCTION"
+>raw()</CODE
+> function.
+  This allows you to use the
+  type with things like Apache's <TT
+CLASS="LITERAL"
+>Auth_PostgreSQL</TT
+> module.
+ </P
+><P
+>  The encryption uses the standard Unix function <CODE
+CLASS="FUNCTION"
+>crypt()</CODE
+>,
+  and so it suffers
+  from all the usual limitations of that function; notably that only the
+  first eight characters of a password are considered.
+ </P
+><P
+>  Note that the <TT
+CLASS="TYPE"
+>chkpass</TT
+> data type is not indexable.
+  
+ </P
+><P
+>  Sample usage:
+ </P
+><PRE
+CLASS="PROGRAMLISTING"
+>test=# create table test (p chkpass);
+CREATE TABLE
+test=# insert into test values ('hello');
+INSERT 0 1
+test=# select * from test;
+       p
+----------------
+ :dVGkpXdOrE3ko
+(1 row)
+
+test=# select raw(p) from test;
+      raw
+---------------
+ dVGkpXdOrE3ko
+(1 row)
+
+test=# select p = 'hello' from test;
+ ?column?
+----------
+ t
+(1 row)
+
+test=# select p = 'goodbye' from test;
+ ?column?
+----------
+ f
+(1 row)</PRE
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN169179"
+>F.6.1. Author</A
+></H2
+><P
+>   D'Arcy J.M. Cain (<CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:darcy@druid.net"
+>darcy@druid.net</A
+>&#62;</CODE
+>)
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="btree-gist.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="citext.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>btree_gist</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>citext</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

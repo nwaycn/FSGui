@@ -1,0 +1,392 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.0.25</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.0.26"
+HREF="release-8-0-26.html"><LINK
+REL="NEXT"
+TITLE="Release 8.0.24"
+HREF="release-8-0-24.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.0.26"
+HREF="release-8-0-26.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.0.24"
+HREF="release-8-0-24.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-0-25"
+>E.194. Release 8.0.25</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2010-05-17</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.0.24.
+   For information about new features in the 8.0 major release, see
+   <A
+HREF="release-8-0.html"
+>Section E.219</A
+>.
+  </P
+><P
+>   The <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> community will stop releasing updates
+   for the 8.0.X release series in July 2010.
+   Users are encouraged to update to a newer release branch soon.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN160481"
+>E.194.1. Migration to Version 8.0.25</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.0.X.
+    However, if you are upgrading from a version earlier than 8.0.22,
+    see <A
+HREF="release-8-0-22.html"
+>Section E.197</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN160485"
+>E.194.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Enforce restrictions in <TT
+CLASS="LITERAL"
+>plperl</TT
+> using an opmask applied to
+      the whole interpreter, instead of using <TT
+CLASS="FILENAME"
+>Safe.pm</TT
+>
+      (Tim Bunce, Andrew Dunstan)
+     </P
+><P
+>      Recent developments have convinced us that <TT
+CLASS="FILENAME"
+>Safe.pm</TT
+> is too
+      insecure to rely on for making <TT
+CLASS="LITERAL"
+>plperl</TT
+> trustable.  This
+      change removes use of <TT
+CLASS="FILENAME"
+>Safe.pm</TT
+> altogether, in favor of using
+      a separate interpreter with an opcode mask that is always applied.
+      Pleasant side effects of the change include that it is now possible to
+      use Perl's <TT
+CLASS="LITERAL"
+>strict</TT
+> pragma in a natural way in
+      <TT
+CLASS="LITERAL"
+>plperl</TT
+>, and that Perl's <TT
+CLASS="LITERAL"
+>$a</TT
+> and <TT
+CLASS="LITERAL"
+>$b</TT
+>
+      variables work as expected in sort routines, and that function
+      compilation is significantly faster.  (CVE-2010-1169)
+     </P
+></LI
+><LI
+><P
+>      Prevent PL/Tcl from executing untrustworthy code from
+      <TT
+CLASS="STRUCTNAME"
+>pltcl_modules</TT
+> (Tom)
+     </P
+><P
+>      PL/Tcl's feature for autoloading Tcl code from a database table
+      could be exploited for trojan-horse attacks, because there was no
+      restriction on who could create or insert into that table.  This change
+      disables the feature unless <TT
+CLASS="STRUCTNAME"
+>pltcl_modules</TT
+> is owned by a
+      superuser.  (However, the permissions on the table are not checked, so
+      installations that really need a less-than-secure modules table can
+      still grant suitable privileges to trusted non-superusers.)  Also,
+      prevent loading code into the unrestricted <SPAN
+CLASS="QUOTE"
+>"normal"</SPAN
+> Tcl
+      interpreter unless we are really going to execute a <TT
+CLASS="LITERAL"
+>pltclu</TT
+>
+      function.  (CVE-2010-1170)
+     </P
+></LI
+><LI
+><P
+>      Do not allow an unprivileged user to reset superuser-only parameter
+      settings (Alvaro)
+     </P
+><P
+>      Previously, if an unprivileged user ran <TT
+CLASS="LITERAL"
+>ALTER USER ... RESET
+      ALL</TT
+> for himself, or <TT
+CLASS="LITERAL"
+>ALTER DATABASE ... RESET ALL</TT
+> for
+      a database he owns, this would remove all special parameter settings
+      for the user or database, even ones that are only supposed to be
+      changeable by a superuser.  Now, the <TT
+CLASS="COMMAND"
+>ALTER</TT
+> will only
+      remove the parameters that the user has permission to change.
+     </P
+></LI
+><LI
+><P
+>      Avoid possible crash during backend shutdown if shutdown occurs
+      when a <TT
+CLASS="LITERAL"
+>CONTEXT</TT
+> addition would be made to log entries (Tom)
+     </P
+><P
+>      In some cases the context-printing function would fail because the
+      current transaction had already been rolled back when it came time
+      to print a log message.
+     </P
+></LI
+><LI
+><P
+>      Update pl/perl's <TT
+CLASS="FILENAME"
+>ppport.h</TT
+> for modern Perl versions
+      (Andrew)
+     </P
+></LI
+><LI
+><P
+>      Fix assorted memory leaks in pl/python (Andreas Freund, Tom)
+     </P
+></LI
+><LI
+><P
+>      Prevent infinite recursion in <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> when expanding
+      a variable that refers to itself (Tom)
+     </P
+></LI
+><LI
+><P
+>      Ensure that <TT
+CLASS="FILENAME"
+>contrib/pgstattuple</TT
+> functions respond to cancel
+      interrupts promptly (Tatsuhito Kasahara)
+     </P
+></LI
+><LI
+><P
+>      Make server startup deal properly with the case that
+      <CODE
+CLASS="FUNCTION"
+>shmget()</CODE
+> returns <TT
+CLASS="LITERAL"
+>EINVAL</TT
+> for an existing
+      shared memory segment (Tom)
+     </P
+><P
+>      This behavior has been observed on BSD-derived kernels including OS X.
+      It resulted in an entirely-misleading startup failure complaining that
+      the shared memory request size was too large.
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2010j
+      for DST law changes in Argentina, Australian Antarctic, Bangladesh,
+      Mexico, Morocco, Pakistan, Palestine, Russia, Syria, Tunisia;
+      also historical corrections for Taiwan.
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-0-26.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-0-24.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.0.26</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.0.24</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

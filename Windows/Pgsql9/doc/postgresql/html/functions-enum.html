@@ -1,0 +1,335 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Enum Support Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Functions and Operators"
+HREF="functions.html"><LINK
+REL="PREVIOUS"
+TITLE="Date/Time Functions and Operators"
+HREF="functions-datetime.html"><LINK
+REL="NEXT"
+TITLE="Geometric Functions and Operators"
+HREF="functions-geometry.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Date/Time Functions and Operators"
+HREF="functions-datetime.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 9. Functions and Operators</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Geometric Functions and Operators"
+HREF="functions-geometry.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="FUNCTIONS-ENUM"
+>9.10. Enum Support Functions</A
+></H1
+><P
+>   For enum types (described in <A
+HREF="datatype-enum.html"
+>Section 8.7</A
+>),
+   there are several functions that allow cleaner programming without
+   hard-coding particular values of an enum type.
+   These are listed in <A
+HREF="functions-enum.html#FUNCTIONS-ENUM-TABLE"
+>Table 9-30</A
+>. The examples
+   assume an enum type created as:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TYPE rainbow AS ENUM ('red', 'orange', 'yellow', 'green', 'blue', 'purple');</PRE
+><P>
+
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-ENUM-TABLE"
+></A
+><P
+><B
+>Table 9-30. Enum Support Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Description</TH
+><TH
+>Example</TH
+><TH
+>Example Result</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+>enum_first(anyenum)</TT
+>
+       </TD
+><TD
+>Returns the first value of the input enum type</TD
+><TD
+><TT
+CLASS="LITERAL"
+>enum_first(null::rainbow)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>red</TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+>enum_last(anyenum)</TT
+>
+       </TD
+><TD
+>Returns the last value of the input enum type</TD
+><TD
+><TT
+CLASS="LITERAL"
+>enum_last(null::rainbow)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>purple</TT
+></TD
+></TR
+><TR
+><TD
+>         
+         <TT
+CLASS="LITERAL"
+>enum_range(anyenum)</TT
+>
+       </TD
+><TD
+>Returns all values of the input enum type in an ordered array</TD
+><TD
+><TT
+CLASS="LITERAL"
+>enum_range(null::rainbow)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>{red,orange,yellow,green,blue,purple}</TT
+></TD
+></TR
+><TR
+><TD
+ROWSPAN="3"
+><TT
+CLASS="LITERAL"
+>enum_range(anyenum, anyenum)</TT
+></TD
+><TD
+ROWSPAN="3"
+>        Returns the range between the two given enum values, as an ordered
+        array. The values must be from the same enum type. If the first
+        parameter is null, the result will start with the first value of
+        the enum type.
+        If the second parameter is null, the result will end with the last
+        value of the enum type.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>enum_range('orange'::rainbow, 'green'::rainbow)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>{orange,yellow,green}</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>enum_range(NULL, 'green'::rainbow)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>{red,orange,yellow,green}</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>enum_range('orange'::rainbow, NULL)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>{orange,yellow,green,blue,purple}</TT
+></TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    Notice that except for the two-argument form of <CODE
+CLASS="FUNCTION"
+>enum_range</CODE
+>,
+    these functions disregard the specific value passed to them; they care
+    only about its declared data type.  Either null or a specific value of
+    the type can be passed, with the same result.  It is more common to
+    apply these functions to a table column or function argument than to
+    a hardwired type name as suggested by the examples.
+   </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions-datetime.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="functions-geometry.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Date/Time Functions and Operators</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Geometric Functions and Operators</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

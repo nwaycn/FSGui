@@ -1,0 +1,473 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Overview</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="PL/pgSQL - SQL Procedural Language"
+HREF="plpgsql.html"><LINK
+REL="PREVIOUS"
+TITLE="PL/pgSQL - SQL Procedural Language"
+HREF="plpgsql.html"><LINK
+REL="NEXT"
+TITLE="Structure of PL/pgSQL"
+HREF="plpgsql-structure.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="PL/pgSQL - SQL Procedural Language"
+HREF="plpgsql.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plpgsql.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 40. <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> - <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Procedural Language</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Structure of PL/pgSQL"
+HREF="plpgsql-structure.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="PLPGSQL-OVERVIEW"
+>40.1. Overview</A
+></H1
+><P
+>  <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> is a loadable procedural
+  language for the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> database
+  system.  The design goals of <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> were to create
+  a loadable procedural language that
+
+    <P
+></P
+></P><UL
+><LI
+><P
+>       can be used to create functions and trigger procedures,
+      </P
+></LI
+><LI
+><P
+>       adds control structures to the <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> language,
+      </P
+></LI
+><LI
+><P
+>       can perform complex computations,
+      </P
+></LI
+><LI
+><P
+>       inherits all user-defined types, functions, and operators,
+      </P
+></LI
+><LI
+><P
+>       can be defined to be trusted by the server,
+      </P
+></LI
+><LI
+><P
+>       is easy to use.
+      </P
+></LI
+></UL
+><P>
+   </P
+><P
+>    Functions created with <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> can be
+    used anywhere that built-in functions could be used.
+    For example, it is possible to
+    create complex conditional computation functions and later use
+    them to define operators or use them in index expressions.
+   </P
+><P
+>    In <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 9.0 and later,
+    <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> is installed by default.
+    However it is still a loadable module, so especially security-conscious
+    administrators could choose to remove it.
+   </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="PLPGSQL-ADVANTAGES"
+>40.1.1. Advantages of Using <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+></A
+></H2
+><P
+>     <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> is the language <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+     and most other relational databases use as query language. It's
+     portable and easy to learn. But every <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+>
+     statement must be executed individually by the database server.
+    </P
+><P
+>     That means that your client application must send each query to
+     the database server, wait for it to be processed, receive and
+     process the results, do some computation, then send further
+     queries to the server.  All this incurs interprocess
+     communication and will also incur network overhead if your client
+     is on a different machine than the database server.
+    </P
+><P
+>     With <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> you can group a block of
+     computation and a series of queries <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>inside</I
+></SPAN
+>
+     the database server, thus having the power of a procedural
+     language and the ease of use of SQL, but with considerable
+     savings of client/server communication overhead.
+    </P
+><P
+></P
+><UL
+><LI
+><P
+> Extra round trips between
+     client and server are eliminated </P
+></LI
+><LI
+><P
+> Intermediate results that the client does not
+     need do not have to be marshaled or transferred between server
+     and client </P
+></LI
+><LI
+><P
+> Multiple rounds of query
+     parsing can be avoided </P
+></LI
+></UL
+><P
+> This can result in a considerable performance increase as
+    compared to an application that does not use stored functions.
+    </P
+><P
+>     Also, with <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> you can use all
+     the data types, operators and functions of SQL.
+    </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="PLPGSQL-ARGS-RESULTS"
+>40.1.2. Supported Argument and Result Data Types</A
+></H2
+><P
+>     Functions written in <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> can accept
+     as arguments any scalar or array data type supported by the server,
+     and they can return a result of any of these types.  They can also
+     accept or return any composite type (row type) specified by name.
+     It is also possible to declare a <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+>
+     function as returning <TT
+CLASS="TYPE"
+>record</TT
+>, which means that the result
+     is a row type whose columns are determined by specification in the
+     calling query, as discussed in <A
+HREF="queries-table-expressions.html#QUERIES-TABLEFUNCTIONS"
+>Section 7.2.1.4</A
+>.
+    </P
+><P
+>     <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> functions can be declared to accept a variable
+     number of arguments by using the <TT
+CLASS="LITERAL"
+>VARIADIC</TT
+> marker.  This
+     works exactly the same way as for SQL functions, as discussed in
+     <A
+HREF="xfunc-sql.html#XFUNC-SQL-VARIADIC-FUNCTIONS"
+>Section 35.4.5</A
+>.
+    </P
+><P
+>     <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> functions can also be declared to accept
+     and return the polymorphic types
+     <TT
+CLASS="TYPE"
+>anyelement</TT
+>, <TT
+CLASS="TYPE"
+>anyarray</TT
+>, <TT
+CLASS="TYPE"
+>anynonarray</TT
+>,
+     <TT
+CLASS="TYPE"
+>anyenum</TT
+>, and <TT
+CLASS="TYPE"
+>anyrange</TT
+>.  The actual
+     data types handled by a polymorphic function can vary from call to
+     call, as discussed in <A
+HREF="extend-type-system.html#EXTEND-TYPES-POLYMORPHIC"
+>Section 35.2.5</A
+>.
+     An example is shown in <A
+HREF="plpgsql-declarations.html#PLPGSQL-DECLARATION-PARAMETERS"
+>Section 40.3.1</A
+>.
+    </P
+><P
+>     <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> functions can also be declared to return
+     a <SPAN
+CLASS="QUOTE"
+>"set"</SPAN
+> (or table) of any data type that can be returned as
+     a single instance.  Such a function generates its output by executing
+     <TT
+CLASS="COMMAND"
+>RETURN NEXT</TT
+> for each desired element of the result
+     set, or by using <TT
+CLASS="COMMAND"
+>RETURN QUERY</TT
+> to output the result of
+     evaluating a query.
+    </P
+><P
+>     Finally, a <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> function can be declared to return
+     <TT
+CLASS="TYPE"
+>void</TT
+> if it has no useful return value.
+    </P
+><P
+>     <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> functions can also be declared with output
+     parameters in place of an explicit specification of the return type.
+     This does not add any fundamental capability to the language, but
+     it is often convenient, especially for returning multiple values.
+     The <TT
+CLASS="LITERAL"
+>RETURNS TABLE</TT
+> notation can also be used in place
+     of <TT
+CLASS="LITERAL"
+>RETURNS SETOF</TT
+>.
+    </P
+><P
+>     Specific examples appear in
+     <A
+HREF="plpgsql-declarations.html#PLPGSQL-DECLARATION-PARAMETERS"
+>Section 40.3.1</A
+> and
+     <A
+HREF="plpgsql-control-structures.html#PLPGSQL-STATEMENTS-RETURNING"
+>Section 40.6.1</A
+>.
+    </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="plpgsql.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="plpgsql-structure.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+> - <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Procedural Language</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="plpgsql.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Structure of <SPAN
+CLASS="APPLICATION"
+>PL/pgSQL</SPAN
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

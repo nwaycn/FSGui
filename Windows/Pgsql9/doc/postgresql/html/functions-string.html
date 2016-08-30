@@ -1,0 +1,5751 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>String Functions and Operators</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Functions and Operators"
+HREF="functions.html"><LINK
+REL="PREVIOUS"
+TITLE="Mathematical Functions and Operators"
+HREF="functions-math.html"><LINK
+REL="NEXT"
+TITLE="Binary String Functions and Operators"
+HREF="functions-binarystring.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Mathematical Functions and Operators"
+HREF="functions-math.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 9. Functions and Operators</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Binary String Functions and Operators"
+HREF="functions-binarystring.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="FUNCTIONS-STRING"
+>9.4. String Functions and Operators</A
+></H1
+><P
+>    This section describes functions and operators for examining and
+    manipulating string values.  Strings in this context include values
+    of the types <TT
+CLASS="TYPE"
+>character</TT
+>, <TT
+CLASS="TYPE"
+>character varying</TT
+>,
+    and <TT
+CLASS="TYPE"
+>text</TT
+>.  Unless otherwise noted, all
+    of the functions listed below work on all of these types, but be
+    wary of potential effects of automatic space-padding when using the
+    <TT
+CLASS="TYPE"
+>character</TT
+> type.  Some functions also exist
+    natively for the bit-string types.
+   </P
+><P
+>    <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> defines some string functions that use
+    key words, rather than commas, to separate
+    arguments.  Details are in
+    <A
+HREF="functions-string.html#FUNCTIONS-STRING-SQL"
+>Table 9-6</A
+>.
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> also provides versions of these functions
+    that use the regular function invocation syntax
+    (see <A
+HREF="functions-string.html#FUNCTIONS-STRING-OTHER"
+>Table 9-7</A
+>).
+   </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>     Before <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 8.3, these functions would
+     silently accept values of several non-string data types as well, due to
+     the presence of implicit coercions from those data types to
+     <TT
+CLASS="TYPE"
+>text</TT
+>.  Those coercions have been removed because they frequently
+     caused surprising behaviors.  However, the string concatenation operator
+     (<TT
+CLASS="LITERAL"
+>||</TT
+>) still accepts non-string input, so long as at least one
+     input is of a string type, as shown in <A
+HREF="functions-string.html#FUNCTIONS-STRING-SQL"
+>Table 9-6</A
+>.  For other cases, insert an explicit
+     coercion to <TT
+CLASS="TYPE"
+>text</TT
+> if you need to duplicate the previous behavior.
+    </P
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-STRING-SQL"
+></A
+><P
+><B
+>Table 9-6. <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> String Functions and Operators</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+><TH
+>Example</TH
+><TH
+>Result</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="LITERAL"
+>||</TT
+>
+        <TT
+CLASS="PARAMETER"
+>string</TT
+></TT
+></TD
+><TD
+> <TT
+CLASS="TYPE"
+>text</TT
+> </TD
+><TD
+>        String concatenation
+        
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>'Post' || 'greSQL'</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>PostgreSQL</TT
+></TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="LITERAL"
+>||</TT
+>
+        <TT
+CLASS="PARAMETER"
+>non-string</TT
+></TT
+>
+        or
+        <TT
+CLASS="LITERAL"
+><TT
+CLASS="PARAMETER"
+>non-string</TT
+> <TT
+CLASS="LITERAL"
+>||</TT
+>
+        <TT
+CLASS="PARAMETER"
+>string</TT
+></TT
+>
+       </TD
+><TD
+> <TT
+CLASS="TYPE"
+>text</TT
+> </TD
+><TD
+>        String concatenation with one non-string input
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>'Value: ' || 42</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>Value: 42</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>bit_length(<TT
+CLASS="PARAMETER"
+>string</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+><TD
+>Number of bits in string</TD
+><TD
+><TT
+CLASS="LITERAL"
+>bit_length('jose')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>32</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>char_length(<TT
+CLASS="PARAMETER"
+>string</TT
+>)</CODE
+></TT
+> or <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>character_length(<TT
+CLASS="PARAMETER"
+>string</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+><TD
+>        Number of characters in string
+        
+        
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>char_length('jose')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>4</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>lower(<TT
+CLASS="PARAMETER"
+>string</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Convert string to lower case</TD
+><TD
+><TT
+CLASS="LITERAL"
+>lower('TOM')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>tom</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>octet_length(<TT
+CLASS="PARAMETER"
+>string</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+><TD
+>Number of bytes in string</TD
+><TD
+><TT
+CLASS="LITERAL"
+>octet_length('jose')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>4</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>overlay(<TT
+CLASS="PARAMETER"
+>string</TT
+> placing <TT
+CLASS="PARAMETER"
+>string</TT
+> from <TT
+CLASS="TYPE"
+>int</TT
+> [<SPAN
+CLASS="OPTIONAL"
+>for <TT
+CLASS="TYPE"
+>int</TT
+></SPAN
+>])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Replace substring
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>overlay('Txxxxas' placing 'hom' from 2 for 4)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>Thomas</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>position(<TT
+CLASS="PARAMETER"
+>substring</TT
+> in <TT
+CLASS="PARAMETER"
+>string</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+><TD
+>Location of specified substring</TD
+><TD
+><TT
+CLASS="LITERAL"
+>position('om' in 'Thomas')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>3</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>substring(<TT
+CLASS="PARAMETER"
+>string</TT
+> [<SPAN
+CLASS="OPTIONAL"
+>from <TT
+CLASS="TYPE"
+>int</TT
+></SPAN
+>] [<SPAN
+CLASS="OPTIONAL"
+>for <TT
+CLASS="TYPE"
+>int</TT
+></SPAN
+>])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Extract substring
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>substring('Thomas' from 2 for 3)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>hom</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>substring(<TT
+CLASS="PARAMETER"
+>string</TT
+> from <TT
+CLASS="REPLACEABLE"
+><I
+>pattern</I
+></TT
+>)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Extract substring matching POSIX regular expression. See
+        <A
+HREF="functions-matching.html"
+>Section 9.7</A
+> for more information on pattern
+        matching.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>substring('Thomas' from '...$')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>mas</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>substring(<TT
+CLASS="PARAMETER"
+>string</TT
+> from <TT
+CLASS="REPLACEABLE"
+><I
+>pattern</I
+></TT
+> for <TT
+CLASS="REPLACEABLE"
+><I
+>escape</I
+></TT
+>)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Extract substring matching <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> regular expression.
+        See <A
+HREF="functions-matching.html"
+>Section 9.7</A
+> for more information on
+        pattern matching.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>substring('Thomas' from '%#"o_a#"_' for '#')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>oma</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>trim([<SPAN
+CLASS="OPTIONAL"
+>leading | trailing | both</SPAN
+>]
+        [<SPAN
+CLASS="OPTIONAL"
+><TT
+CLASS="PARAMETER"
+>characters</TT
+></SPAN
+>] from
+        <TT
+CLASS="PARAMETER"
+>string</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Remove the longest string containing only the
+        <TT
+CLASS="PARAMETER"
+>characters</TT
+> (a space by default) from the
+        start/end/both ends of the <TT
+CLASS="PARAMETER"
+>string</TT
+>
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>trim(both 'x' from 'xTomxx')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>Tom</TT
+></TD
+></TR
+><TR
+><TD
+>        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>trim([<SPAN
+CLASS="OPTIONAL"
+>leading | trailing
+        | both</SPAN
+>] [<SPAN
+CLASS="OPTIONAL"
+>from</SPAN
+>]
+        <TT
+CLASS="PARAMETER"
+>string</TT
+>
+        [<SPAN
+CLASS="OPTIONAL"
+><TT
+CLASS="PARAMETER"
+>, characters</TT
+></SPAN
+>]
+        )</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Non-standard version of <CODE
+CLASS="FUNCTION"
+>trim()</CODE
+>
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>trim(both from 'xTomxx', 'x')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>Tom</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>upper(<TT
+CLASS="PARAMETER"
+>string</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Convert string to upper case</TD
+><TD
+><TT
+CLASS="LITERAL"
+>upper('tom')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>TOM</TT
+></TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    Additional string manipulation functions are available and are
+    listed in <A
+HREF="functions-string.html#FUNCTIONS-STRING-OTHER"
+>Table 9-7</A
+>.  Some of them are used internally to implement the
+    <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+>-standard string functions listed in <A
+HREF="functions-string.html#FUNCTIONS-STRING-SQL"
+>Table 9-6</A
+>.
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-STRING-OTHER"
+></A
+><P
+><B
+>Table 9-7. Other String Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+><TH
+>Example</TH
+><TH
+>Result</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>ascii(<TT
+CLASS="PARAMETER"
+>string</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+><TD
+>        <ACRONYM
+CLASS="ACRONYM"
+>ASCII</ACRONYM
+> code of the first character of the
+        argument.  For <ACRONYM
+CLASS="ACRONYM"
+>UTF8</ACRONYM
+> returns the Unicode code
+        point of the character.  For other multibyte encodings, the
+        argument must be an <ACRONYM
+CLASS="ACRONYM"
+>ASCII</ACRONYM
+> character.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>ascii('x')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>120</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>btrim(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>
+        [<SPAN
+CLASS="OPTIONAL"
+>, <TT
+CLASS="PARAMETER"
+>characters</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+></SPAN
+>])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Remove the longest string consisting only of characters
+        in <TT
+CLASS="PARAMETER"
+>characters</TT
+> (a space by default)
+        from the start and end of <TT
+CLASS="PARAMETER"
+>string</TT
+>
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>btrim('xyxtrimyyx', 'xy')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>trim</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>chr(<TT
+CLASS="TYPE"
+>int</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Character with the given code. For <ACRONYM
+CLASS="ACRONYM"
+>UTF8</ACRONYM
+> the
+        argument is treated as a Unicode code point. For other multibyte
+        encodings the argument must designate an
+        <ACRONYM
+CLASS="ACRONYM"
+>ASCII</ACRONYM
+> character.  The NULL (0) character is not
+        allowed because text data types cannot store such bytes.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>chr(65)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>A</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>concat(<TT
+CLASS="PARAMETER"
+>str</TT
+> <TT
+CLASS="TYPE"
+>"any"</TT
+>
+         [, <TT
+CLASS="PARAMETER"
+>str</TT
+> <TT
+CLASS="TYPE"
+>"any"</TT
+> [, ...] ])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Concatenate the text representations of all the arguments.
+        NULL arguments are ignored.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>concat('abcde', 2, NULL, 22)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>abcde222</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>concat_ws(<TT
+CLASS="PARAMETER"
+>sep</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>,
+        <TT
+CLASS="PARAMETER"
+>str</TT
+> <TT
+CLASS="TYPE"
+>"any"</TT
+>
+        [, <TT
+CLASS="PARAMETER"
+>str</TT
+> <TT
+CLASS="TYPE"
+>"any"</TT
+> [, ...] ])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Concatenate all but the first argument with separators. The first
+        argument is used as the separator string. NULL arguments are ignored.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>concat_ws(',', 'abcde', 2, NULL, 22)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>abcde,2,22</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>convert(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>bytea</TT
+>,
+        <TT
+CLASS="PARAMETER"
+>src_encoding</TT
+> <TT
+CLASS="TYPE"
+>name</TT
+>,
+        <TT
+CLASS="PARAMETER"
+>dest_encoding</TT
+> <TT
+CLASS="TYPE"
+>name</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>bytea</TT
+></TD
+><TD
+>        Convert string to <TT
+CLASS="PARAMETER"
+>dest_encoding</TT
+>.  The
+        original encoding is specified by
+        <TT
+CLASS="PARAMETER"
+>src_encoding</TT
+>. The
+        <TT
+CLASS="PARAMETER"
+>string</TT
+> must be valid in this encoding.
+        Conversions can be defined by <TT
+CLASS="COMMAND"
+>CREATE CONVERSION</TT
+>.
+        Also there are some predefined conversions. See <A
+HREF="functions-string.html#CONVERSION-NAMES"
+>Table 9-8</A
+> for available conversions.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>convert('text_in_utf8', 'UTF8', 'LATIN1')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>text_in_utf8</TT
+> represented in Latin-1
+       encoding (ISO 8859-1)</TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>convert_from(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>bytea</TT
+>,
+        <TT
+CLASS="PARAMETER"
+>src_encoding</TT
+> <TT
+CLASS="TYPE"
+>name</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Convert string to the database encoding.  The original encoding
+        is specified by <TT
+CLASS="PARAMETER"
+>src_encoding</TT
+>. The
+        <TT
+CLASS="PARAMETER"
+>string</TT
+> must be valid in this encoding.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>convert_from('text_in_utf8', 'UTF8')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>text_in_utf8</TT
+> represented in the current database encoding</TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>convert_to(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>,
+        <TT
+CLASS="PARAMETER"
+>dest_encoding</TT
+> <TT
+CLASS="TYPE"
+>name</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>bytea</TT
+></TD
+><TD
+>        Convert string to <TT
+CLASS="PARAMETER"
+>dest_encoding</TT
+>.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>convert_to('some text', 'UTF8')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>some text</TT
+> represented in the UTF8 encoding</TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>decode(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>,
+        <TT
+CLASS="PARAMETER"
+>format</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>bytea</TT
+></TD
+><TD
+>        Decode binary data from textual representation in <TT
+CLASS="PARAMETER"
+>string</TT
+>.
+        Options for <TT
+CLASS="PARAMETER"
+>format</TT
+> are same as in <CODE
+CLASS="FUNCTION"
+>encode</CODE
+>.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>decode('MTIzAAE=', 'base64')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>\x3132330001</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>encode(<TT
+CLASS="PARAMETER"
+>data</TT
+> <TT
+CLASS="TYPE"
+>bytea</TT
+>,
+        <TT
+CLASS="PARAMETER"
+>format</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Encode binary data into a textual representation.  Supported
+        formats are: <TT
+CLASS="LITERAL"
+>base64</TT
+>, <TT
+CLASS="LITERAL"
+>hex</TT
+>, <TT
+CLASS="LITERAL"
+>escape</TT
+>.
+        <TT
+CLASS="LITERAL"
+>escape</TT
+> converts zero bytes and high-bit-set bytes to
+        octal sequences (<TT
+CLASS="LITERAL"
+>\</TT
+><TT
+CLASS="REPLACEABLE"
+><I
+>nnn</I
+></TT
+>) and
+        doubles backslashes.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>encode(E'123\\000\\001', 'base64')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MTIzAAE=</TT
+></TD
+></TR
+><TR
+><A
+NAME="FORMAT"
+></A
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>format</CODE
+>(<TT
+CLASS="PARAMETER"
+>formatstr</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>
+        [, <TT
+CLASS="PARAMETER"
+>formatarg</TT
+> <TT
+CLASS="TYPE"
+>"any"</TT
+> [, ...] ])</TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>         Format arguments according to a format string.
+         This function is similar to the C function <CODE
+CLASS="FUNCTION"
+>sprintf</CODE
+>.
+         See <A
+HREF="functions-string.html#FUNCTIONS-STRING-FORMAT"
+>Section 9.4.1</A
+>.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>format('Hello %s, %1$s', 'World')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>Hello World, World</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>initcap(<TT
+CLASS="PARAMETER"
+>string</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Convert the first letter of each word to upper case and the
+        rest to lower case. Words are sequences of alphanumeric
+        characters separated by non-alphanumeric characters.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>initcap('hi THOMAS')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>Hi Thomas</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>left(<TT
+CLASS="PARAMETER"
+>str</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>,
+        <TT
+CLASS="PARAMETER"
+>n</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Return first <TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+> characters in the string. When <TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>
+        is negative, return all but last |<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>| characters.
+        </TD
+><TD
+><TT
+CLASS="LITERAL"
+>left('abcde', 2)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>ab</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>length(<TT
+CLASS="PARAMETER"
+>string</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+><TD
+>        Number of characters in <TT
+CLASS="PARAMETER"
+>string</TT
+>
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>length('jose')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>4</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>length(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>bytea</TT
+>,
+        <TT
+CLASS="PARAMETER"
+>encoding</TT
+> <TT
+CLASS="TYPE"
+>name</TT
+> )</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+><TD
+>        Number of characters in <TT
+CLASS="PARAMETER"
+>string</TT
+> in the given
+        <TT
+CLASS="PARAMETER"
+>encoding</TT
+>. The <TT
+CLASS="PARAMETER"
+>string</TT
+>
+        must be valid in this encoding.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>length('jose', 'UTF8')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>4</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>lpad(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>,
+        <TT
+CLASS="PARAMETER"
+>length</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>
+        [<SPAN
+CLASS="OPTIONAL"
+>, <TT
+CLASS="PARAMETER"
+>fill</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+></SPAN
+>])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Fill up the <TT
+CLASS="PARAMETER"
+>string</TT
+> to length
+        <TT
+CLASS="PARAMETER"
+>length</TT
+> by prepending the characters
+        <TT
+CLASS="PARAMETER"
+>fill</TT
+> (a space by default).  If the
+        <TT
+CLASS="PARAMETER"
+>string</TT
+> is already longer than
+        <TT
+CLASS="PARAMETER"
+>length</TT
+> then it is truncated (on the
+        right).
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>lpad('hi', 5, 'xy')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>xyxhi</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>ltrim(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>
+        [<SPAN
+CLASS="OPTIONAL"
+>, <TT
+CLASS="PARAMETER"
+>characters</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+></SPAN
+>])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Remove the longest string containing only characters from
+        <TT
+CLASS="PARAMETER"
+>characters</TT
+> (a space by default) from the start of
+        <TT
+CLASS="PARAMETER"
+>string</TT
+>
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>ltrim('zzzytrim', 'xyz')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>trim</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>md5(<TT
+CLASS="PARAMETER"
+>string</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Calculates the MD5 hash of <TT
+CLASS="PARAMETER"
+>string</TT
+>,
+        returning the result in hexadecimal
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>md5('abc')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>900150983cd24fb0 d6963f7d28e17f72</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>pg_client_encoding()</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>name</TT
+></TD
+><TD
+>        Current client encoding name
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>pg_client_encoding()</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>SQL_ASCII</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>quote_ident(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Return the given string suitably quoted to be used as an identifier
+        in an <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> statement string.
+        Quotes are added only if necessary (i.e., if the string contains
+        non-identifier characters or would be case-folded).
+        Embedded quotes are properly doubled.
+        See also <A
+HREF="plpgsql-statements.html#PLPGSQL-QUOTE-LITERAL-EXAMPLE"
+>Example 40-1</A
+>.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>quote_ident('Foo bar')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>"Foo bar"</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>quote_literal(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Return the given string suitably quoted to be used as a string literal
+        in an <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> statement string.
+        Embedded single-quotes and backslashes are properly doubled.
+        Note that <CODE
+CLASS="FUNCTION"
+>quote_literal</CODE
+> returns null on null
+        input; if the argument might be null,
+        <CODE
+CLASS="FUNCTION"
+>quote_nullable</CODE
+> is often more suitable.
+        See also <A
+HREF="plpgsql-statements.html#PLPGSQL-QUOTE-LITERAL-EXAMPLE"
+>Example 40-1</A
+>.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>quote_literal(E'O\'Reilly')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>'O''Reilly'</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>quote_literal(<TT
+CLASS="PARAMETER"
+>value</TT
+> <TT
+CLASS="TYPE"
+>anyelement</TT
+>)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Coerce the given value to text and then quote it as a literal.
+        Embedded single-quotes and backslashes are properly doubled.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>quote_literal(42.5)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>'42.5'</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>quote_nullable(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Return the given string suitably quoted to be used as a string literal
+        in an <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> statement string; or, if the argument
+        is null, return <TT
+CLASS="LITERAL"
+>NULL</TT
+>.
+        Embedded single-quotes and backslashes are properly doubled.
+        See also <A
+HREF="plpgsql-statements.html#PLPGSQL-QUOTE-LITERAL-EXAMPLE"
+>Example 40-1</A
+>.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>quote_nullable(NULL)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>NULL</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>quote_nullable(<TT
+CLASS="PARAMETER"
+>value</TT
+> <TT
+CLASS="TYPE"
+>anyelement</TT
+>)</CODE
+></TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Coerce the given value to text and then quote it as a literal;
+        or, if the argument is null, return <TT
+CLASS="LITERAL"
+>NULL</TT
+>.
+        Embedded single-quotes and backslashes are properly doubled.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>quote_nullable(42.5)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>'42.5'</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>regexp_matches(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, <TT
+CLASS="PARAMETER"
+>pattern</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+> [, <TT
+CLASS="PARAMETER"
+>flags</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>setof text[]</TT
+></TD
+><TD
+>        Return all captured substrings resulting from matching a POSIX regular
+        expression against the <TT
+CLASS="PARAMETER"
+>string</TT
+>. See
+        <A
+HREF="functions-matching.html#FUNCTIONS-POSIX-REGEXP"
+>Section 9.7.3</A
+> for more information.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>regexp_matches('foobarbequebaz', '(bar)(beque)')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>{bar,beque}</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>regexp_replace(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, <TT
+CLASS="PARAMETER"
+>pattern</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, <TT
+CLASS="PARAMETER"
+>replacement</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+> [, <TT
+CLASS="PARAMETER"
+>flags</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Replace substring(s) matching a POSIX regular expression. See
+        <A
+HREF="functions-matching.html#FUNCTIONS-POSIX-REGEXP"
+>Section 9.7.3</A
+> for more information.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>regexp_replace('Thomas', '.[mN]a.', 'M')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>ThM</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>regexp_split_to_array(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, <TT
+CLASS="PARAMETER"
+>pattern</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+> [, <TT
+CLASS="PARAMETER"
+>flags</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+> ])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text[]</TT
+></TD
+><TD
+>        Split <TT
+CLASS="PARAMETER"
+>string</TT
+> using a POSIX regular expression as
+        the delimiter.  See <A
+HREF="functions-matching.html#FUNCTIONS-POSIX-REGEXP"
+>Section 9.7.3</A
+> for more
+        information.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>regexp_split_to_array('hello world', E'\\s+')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>{hello,world}</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>regexp_split_to_table(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, <TT
+CLASS="PARAMETER"
+>pattern</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+> [, <TT
+CLASS="PARAMETER"
+>flags</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>setof text</TT
+></TD
+><TD
+>        Split <TT
+CLASS="PARAMETER"
+>string</TT
+> using a POSIX regular expression as
+        the delimiter.  See <A
+HREF="functions-matching.html#FUNCTIONS-POSIX-REGEXP"
+>Section 9.7.3</A
+> for more
+        information.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>regexp_split_to_table('hello world', E'\\s+')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>hello</TT
+><P
+><TT
+CLASS="LITERAL"
+>world</TT
+></P
+> (2 rows)</TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>repeat(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>, <TT
+CLASS="PARAMETER"
+>number</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Repeat <TT
+CLASS="PARAMETER"
+>string</TT
+> the specified
+       <TT
+CLASS="PARAMETER"
+>number</TT
+> of times</TD
+><TD
+><TT
+CLASS="LITERAL"
+>repeat('Pg', 4)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>PgPgPgPg</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>replace(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>,
+        <TT
+CLASS="PARAMETER"
+>from</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>,
+        <TT
+CLASS="PARAMETER"
+>to</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Replace all occurrences in <TT
+CLASS="PARAMETER"
+>string</TT
+> of substring
+        <TT
+CLASS="PARAMETER"
+>from</TT
+> with substring <TT
+CLASS="PARAMETER"
+>to</TT
+>
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>replace('abcdefabcdef', 'cd', 'XX')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>abXXefabXXef</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>reverse(<TT
+CLASS="PARAMETER"
+>str</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Return reversed string.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>reverse('abcde')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>edcba</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>right(<TT
+CLASS="PARAMETER"
+>str</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>,
+         <TT
+CLASS="PARAMETER"
+>n</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Return last <TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+> characters in the string. When <TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>
+        is negative, return all but first |<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>| characters.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>right('abcde', 2)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>de</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>rpad(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>,
+        <TT
+CLASS="PARAMETER"
+>length</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>
+        [<SPAN
+CLASS="OPTIONAL"
+>, <TT
+CLASS="PARAMETER"
+>fill</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+></SPAN
+>])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Fill up the <TT
+CLASS="PARAMETER"
+>string</TT
+> to length
+        <TT
+CLASS="PARAMETER"
+>length</TT
+> by appending the characters
+        <TT
+CLASS="PARAMETER"
+>fill</TT
+> (a space by default).  If the
+        <TT
+CLASS="PARAMETER"
+>string</TT
+> is already longer than
+        <TT
+CLASS="PARAMETER"
+>length</TT
+> then it is truncated.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>rpad('hi', 5, 'xy')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>hixyx</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>rtrim(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>
+         [<SPAN
+CLASS="OPTIONAL"
+>, <TT
+CLASS="PARAMETER"
+>characters</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+></SPAN
+>])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Remove the longest string containing only characters from
+        <TT
+CLASS="PARAMETER"
+>characters</TT
+> (a space by default) from the end of
+        <TT
+CLASS="PARAMETER"
+>string</TT
+>
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>rtrim('trimxxxx', 'x')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>trim</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>split_part(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>,
+        <TT
+CLASS="PARAMETER"
+>delimiter</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>,
+        <TT
+CLASS="PARAMETER"
+>field</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Split <TT
+CLASS="PARAMETER"
+>string</TT
+> on <TT
+CLASS="PARAMETER"
+>delimiter</TT
+>
+        and return the given field (counting from one)
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>split_part('abc~@~def~@~ghi', '~@~', 2)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>def</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>strpos(<TT
+CLASS="PARAMETER"
+>string</TT
+>, <TT
+CLASS="PARAMETER"
+>substring</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>int</TT
+></TD
+><TD
+>        Location of specified substring (same as
+        <TT
+CLASS="LITERAL"
+>position(<TT
+CLASS="PARAMETER"
+>substring</TT
+> in
+         <TT
+CLASS="PARAMETER"
+>string</TT
+>)</TT
+>, but note the reversed
+        argument order)
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>strpos('high', 'ig')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>2</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>substr(<TT
+CLASS="PARAMETER"
+>string</TT
+>, <TT
+CLASS="PARAMETER"
+>from</TT
+> [<SPAN
+CLASS="OPTIONAL"
+>, <TT
+CLASS="PARAMETER"
+>count</TT
+></SPAN
+>])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Extract substring (same as
+        <TT
+CLASS="LITERAL"
+>substring(<TT
+CLASS="PARAMETER"
+>string</TT
+> from <TT
+CLASS="PARAMETER"
+>from</TT
+> for <TT
+CLASS="PARAMETER"
+>count</TT
+>)</TT
+>)
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>substr('alphabet', 3, 2)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>ph</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>to_ascii(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>
+        [<SPAN
+CLASS="OPTIONAL"
+>, <TT
+CLASS="PARAMETER"
+>encoding</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+></SPAN
+>])</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>       Convert <TT
+CLASS="PARAMETER"
+>string</TT
+> to <ACRONYM
+CLASS="ACRONYM"
+>ASCII</ACRONYM
+> from another encoding
+       (only supports conversion from  <TT
+CLASS="LITERAL"
+>LATIN1</TT
+>, <TT
+CLASS="LITERAL"
+>LATIN2</TT
+>, <TT
+CLASS="LITERAL"
+>LATIN9</TT
+>,
+       and <TT
+CLASS="LITERAL"
+>WIN1250</TT
+> encodings)
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>to_ascii('Karel')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>Karel</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>to_hex(<TT
+CLASS="PARAMETER"
+>number</TT
+> <TT
+CLASS="TYPE"
+>int</TT
+>
+        or <TT
+CLASS="TYPE"
+>bigint</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>Convert <TT
+CLASS="PARAMETER"
+>number</TT
+> to its equivalent hexadecimal
+        representation
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>to_hex(2147483647)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>7fffffff</TT
+></TD
+></TR
+><TR
+><TD
+>        
+        <TT
+CLASS="LITERAL"
+><CODE
+CLASS="FUNCTION"
+>translate(<TT
+CLASS="PARAMETER"
+>string</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>,
+        <TT
+CLASS="PARAMETER"
+>from</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>,
+        <TT
+CLASS="PARAMETER"
+>to</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+>)</CODE
+></TT
+>
+       </TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>        Any character in <TT
+CLASS="PARAMETER"
+>string</TT
+> that matches a
+        character in the <TT
+CLASS="PARAMETER"
+>from</TT
+> set is replaced by
+        the corresponding character in the <TT
+CLASS="PARAMETER"
+>to</TT
+>
+        set. If <TT
+CLASS="PARAMETER"
+>from</TT
+> is longer than
+        <TT
+CLASS="PARAMETER"
+>to</TT
+>, occurrences of the extra characters in
+        <TT
+CLASS="PARAMETER"
+>from</TT
+> are removed.
+       </TD
+><TD
+><TT
+CLASS="LITERAL"
+>translate('12345', '143', 'ax')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>a2x5</TT
+></TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    The <CODE
+CLASS="FUNCTION"
+>concat</CODE
+>, <CODE
+CLASS="FUNCTION"
+>concat_ws</CODE
+> and
+    <CODE
+CLASS="FUNCTION"
+>format</CODE
+> functions are variadic, so it is possible to
+    pass the values to be concatenated or formatted as an array marked with
+    the <TT
+CLASS="LITERAL"
+>VARIADIC</TT
+> keyword (see <A
+HREF="xfunc-sql.html#XFUNC-SQL-VARIADIC-FUNCTIONS"
+>Section 35.4.5</A
+>).  The array's elements are
+    treated as if they were separate ordinary arguments to the function.
+    If the variadic array argument is NULL, <CODE
+CLASS="FUNCTION"
+>concat</CODE
+>
+    and <CODE
+CLASS="FUNCTION"
+>concat_ws</CODE
+> return NULL, but
+    <CODE
+CLASS="FUNCTION"
+>format</CODE
+> treats a NULL as a zero-element array.
+   </P
+><P
+>   See also the aggregate function <CODE
+CLASS="FUNCTION"
+>string_agg</CODE
+> in
+   <A
+HREF="functions-aggregate.html"
+>Section 9.20</A
+>.
+   </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="CONVERSION-NAMES"
+></A
+><P
+><B
+>Table 9-8. Built-in Conversions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Conversion Name
+        <A
+NAME="AEN10668"
+HREF="#FTN.AEN10668"
+><SPAN
+CLASS="footnote"
+>[a]</SPAN
+></A
+>
+       </TH
+><TH
+>Source Encoding</TH
+><TH
+>Destination Encoding</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>ascii_to_mic</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>SQL_ASCII</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>ascii_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>SQL_ASCII</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>big5_to_euc_tw</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>BIG5</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_TW</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>big5_to_mic</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>BIG5</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>big5_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>BIG5</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>euc_cn_to_mic</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_CN</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>euc_cn_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_CN</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>euc_jp_to_mic</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_JP</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>euc_jp_to_sjis</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_JP</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>SJIS</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>euc_jp_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_JP</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>euc_kr_to_mic</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_KR</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>euc_kr_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_KR</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>euc_tw_to_big5</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_TW</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>BIG5</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>euc_tw_to_mic</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_TW</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>euc_tw_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_TW</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>gb18030_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>GB18030</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>gbk_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>GBK</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_10_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN6</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_13_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN7</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_14_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_15_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN9</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_16_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN10</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_1_to_mic</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN1</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_1_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN1</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_2_to_mic</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN2</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_2_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN2</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_2_to_windows_1250</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN2</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1250</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_3_to_mic</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN3</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_3_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN3</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_4_to_mic</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN4</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_4_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN4</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_5_to_koi8_r</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>ISO_8859_5</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>KOI8R</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_5_to_mic</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>ISO_8859_5</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_5_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>ISO_8859_5</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_5_to_windows_1251</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>ISO_8859_5</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1251</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_5_to_windows_866</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>ISO_8859_5</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN866</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_6_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>ISO_8859_6</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_7_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>ISO_8859_7</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_8_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>ISO_8859_8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>iso_8859_9_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN5</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>johab_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>JOHAB</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>koi8_r_to_iso_8859_5</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>KOI8R</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>ISO_8859_5</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>koi8_r_to_mic</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>KOI8R</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>koi8_r_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>KOI8R</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>koi8_r_to_windows_1251</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>KOI8R</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1251</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>koi8_r_to_windows_866</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>KOI8R</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN866</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>koi8_u_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>KOI8U</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>mic_to_ascii</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>SQL_ASCII</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>mic_to_big5</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>BIG5</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>mic_to_euc_cn</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_CN</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>mic_to_euc_jp</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_JP</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>mic_to_euc_kr</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_KR</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>mic_to_euc_tw</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_TW</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>mic_to_iso_8859_1</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN1</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>mic_to_iso_8859_2</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN2</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>mic_to_iso_8859_3</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN3</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>mic_to_iso_8859_4</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN4</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>mic_to_iso_8859_5</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>ISO_8859_5</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>mic_to_koi8_r</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>KOI8R</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>mic_to_sjis</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>SJIS</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>mic_to_windows_1250</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1250</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>mic_to_windows_1251</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1251</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>mic_to_windows_866</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN866</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>sjis_to_euc_jp</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>SJIS</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_JP</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>sjis_to_mic</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>SJIS</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>sjis_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>SJIS</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>tcvn_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1258</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>uhc_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UHC</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_ascii</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>SQL_ASCII</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_big5</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>BIG5</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_euc_cn</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_CN</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_euc_jp</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_JP</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_euc_kr</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_KR</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_euc_tw</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_TW</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_gb18030</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>GB18030</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_gbk</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>GBK</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_iso_8859_1</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN1</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_iso_8859_10</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN6</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_iso_8859_13</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN7</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_iso_8859_14</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_iso_8859_15</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN9</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_iso_8859_16</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN10</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_iso_8859_2</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN2</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_iso_8859_3</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN3</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_iso_8859_4</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN4</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_iso_8859_5</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>ISO_8859_5</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_iso_8859_6</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>ISO_8859_6</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_iso_8859_7</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>ISO_8859_7</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_iso_8859_8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>ISO_8859_8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_iso_8859_9</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN5</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_johab</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>JOHAB</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_koi8_r</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>KOI8R</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_koi8_u</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>KOI8U</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_sjis</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>SJIS</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_tcvn</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1258</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_uhc</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UHC</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_windows_1250</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1250</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_windows_1251</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1251</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_windows_1252</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1252</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_windows_1253</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1253</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_windows_1254</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1254</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_windows_1255</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1255</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_windows_1256</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1256</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_windows_1257</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1257</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_windows_866</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN866</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_windows_874</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN874</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>windows_1250_to_iso_8859_2</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1250</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>LATIN2</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>windows_1250_to_mic</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1250</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>windows_1250_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1250</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>windows_1251_to_iso_8859_5</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1251</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>ISO_8859_5</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>windows_1251_to_koi8_r</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1251</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>KOI8R</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>windows_1251_to_mic</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1251</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>windows_1251_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1251</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>windows_1251_to_windows_866</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1251</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN866</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>windows_1252_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1252</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>windows_1256_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN1256</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>windows_866_to_iso_8859_5</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN866</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>ISO_8859_5</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>windows_866_to_koi8_r</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN866</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>KOI8R</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>windows_866_to_mic</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN866</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>MULE_INTERNAL</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>windows_866_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN866</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>windows_866_to_windows_1251</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN866</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>windows_874_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>WIN874</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>euc_jis_2004_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_JIS_2004</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_euc_jis_2004</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_JIS_2004</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>shift_jis_2004_to_utf8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>SHIFT_JIS_2004</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>utf8_to_shift_jis_2004</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>UTF8</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>SHIFT_JIS_2004</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>euc_jis_2004_to_shift_jis_2004</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_JIS_2004</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>SHIFT_JIS_2004</TT
+></TD
+></TR
+><TR
+><TD
+><TT
+CLASS="LITERAL"
+>shift_jis_2004_to_euc_jis_2004</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>SHIFT_JIS_2004</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>EUC_JIS_2004</TT
+></TD
+></TR
+></TBODY
+><TR
+><TD
+COLSPAN="3"
+>Notes:<BR><A
+NAME="FTN.AEN10668"
+>a. </A
+>          The conversion names follow a standard naming scheme: The
+          official name of the source encoding with all
+          non-alphanumeric characters replaced by underscores, followed
+          by <TT
+CLASS="LITERAL"
+>_to_</TT
+>, followed by the similarly processed
+          destination encoding name. Therefore, the names might deviate
+          from the customary encoding names.
+         <BR></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="FUNCTIONS-STRING-FORMAT"
+>9.4.1. <CODE
+CLASS="FUNCTION"
+>format</CODE
+></A
+></H2
+><P
+>     The function <CODE
+CLASS="FUNCTION"
+>format</CODE
+> produces output formatted according to
+     a format string, in a style similar to the C function
+     <CODE
+CLASS="FUNCTION"
+>sprintf</CODE
+>.
+    </P
+><P
+></P><PRE
+CLASS="SYNOPSIS"
+><CODE
+CLASS="FUNCTION"
+>format</CODE
+>(<TT
+CLASS="PARAMETER"
+>formatstr</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+> [, <TT
+CLASS="PARAMETER"
+>formatarg</TT
+> <TT
+CLASS="TYPE"
+>"any"</TT
+> [, ...] ])</PRE
+><P>
+     <TT
+CLASS="REPLACEABLE"
+><I
+>formatstr</I
+></TT
+> is a format string that specifies how the
+     result should be formatted.  Text in the format string is copied
+     directly to the result, except where <I
+CLASS="FIRSTTERM"
+>format specifiers</I
+> are
+     used.  Format specifiers act as placeholders in the string, defining how
+     subsequent function arguments should be formatted and inserted into the
+     result.  Each <TT
+CLASS="REPLACEABLE"
+><I
+>formatarg</I
+></TT
+> argument is converted to text
+     according to the usual output rules for its data type, and then formatted
+     and inserted into the result string according to the format specifier(s).
+    </P
+><P
+>     Format specifiers are introduced by a <TT
+CLASS="LITERAL"
+>%</TT
+> character and have
+     the form
+</P><PRE
+CLASS="SYNOPSIS"
+>%[<TT
+CLASS="REPLACEABLE"
+><I
+>position</I
+></TT
+>][<TT
+CLASS="REPLACEABLE"
+><I
+>flags</I
+></TT
+>][<TT
+CLASS="REPLACEABLE"
+><I
+>width</I
+></TT
+>]<TT
+CLASS="REPLACEABLE"
+><I
+>type</I
+></TT
+></PRE
+><P>
+     where the component fields are:
+
+     <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>position</I
+></TT
+> (optional)</DT
+><DD
+><P
+>         A string of the form <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>$</TT
+> where
+         <TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+> is the index of the argument to print.
+         Index 1 means the first argument after
+         <TT
+CLASS="REPLACEABLE"
+><I
+>formatstr</I
+></TT
+>.  If the <TT
+CLASS="REPLACEABLE"
+><I
+>position</I
+></TT
+> is
+         omitted, the default is to use the next argument in sequence.
+        </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>flags</I
+></TT
+> (optional)</DT
+><DD
+><P
+>         Additional options controlling how the format specifier's output is
+         formatted.  Currently the only supported flag is a minus sign
+         (<TT
+CLASS="LITERAL"
+>-</TT
+>) which will cause the format specifier's output to be
+         left-justified.  This has no effect unless the <TT
+CLASS="REPLACEABLE"
+><I
+>width</I
+></TT
+>
+         field is also specified.
+        </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>width</I
+></TT
+> (optional)</DT
+><DD
+><P
+>         Specifies the <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>minimum</I
+></SPAN
+> number of characters to use to
+         display the format specifier's output.  The output is padded on the
+         left or right (depending on the <TT
+CLASS="LITERAL"
+>-</TT
+> flag) with spaces as
+         needed to fill the width.  A too-small width does not cause
+         truncation of the output, but is simply ignored.  The width may be
+         specified using any of the following: a positive integer; an
+         asterisk (<TT
+CLASS="LITERAL"
+>*</TT
+>) to use the next function argument as the
+         width; or a string of the form <TT
+CLASS="LITERAL"
+>*<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>$</TT
+> to
+         use the <TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>th function argument as the width.
+        </P
+><P
+>         If the width comes from a function argument, that argument is
+         consumed before the argument that is used for the format specifier's
+         value.  If the width argument is negative, the result is left
+         aligned (as if the <TT
+CLASS="LITERAL"
+>-</TT
+> flag had been specified) within a
+         field of length <CODE
+CLASS="FUNCTION"
+>abs</CODE
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>width</I
+></TT
+>).
+        </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>type</I
+></TT
+> (required)</DT
+><DD
+><P
+>         The type of format conversion to use to produce the format
+         specifier's output.  The following types are supported:
+         <P
+></P
+></P><UL
+><LI
+><P
+>            <TT
+CLASS="LITERAL"
+>s</TT
+> formats the argument value as a simple
+            string.  A null value is treated as an empty string.
+           </P
+></LI
+><LI
+><P
+>            <TT
+CLASS="LITERAL"
+>I</TT
+> treats the argument value as an SQL
+            identifier, double-quoting it if necessary.
+            It is an error for the value to be null (equivalent to
+            <CODE
+CLASS="FUNCTION"
+>quote_ident</CODE
+>).
+           </P
+></LI
+><LI
+><P
+>            <TT
+CLASS="LITERAL"
+>L</TT
+> quotes the argument value as an SQL literal.
+            A null value is displayed as the string <TT
+CLASS="LITERAL"
+>NULL</TT
+>, without
+            quotes (equivalent to <CODE
+CLASS="FUNCTION"
+>quote_nullable</CODE
+>).
+           </P
+></LI
+></UL
+><P>
+        </P
+></DD
+></DL
+></DIV
+><P>
+    </P
+><P
+>     In addition to the format specifiers described above, the special sequence
+     <TT
+CLASS="LITERAL"
+>%%</TT
+> may be used to output a literal <TT
+CLASS="LITERAL"
+>%</TT
+> character.
+    </P
+><P
+>     Here are some examples of the basic format conversions:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT format('Hello %s', 'World');
+<I
+CLASS="LINEANNOTATION"
+>Result: </I
+><SAMP
+CLASS="COMPUTEROUTPUT"
+>Hello World</SAMP
+>
+
+SELECT format('Testing %s, %s, %s, %%', 'one', 'two', 'three');
+<I
+CLASS="LINEANNOTATION"
+>Result: </I
+><SAMP
+CLASS="COMPUTEROUTPUT"
+>Testing one, two, three, %</SAMP
+>
+
+SELECT format('INSERT INTO %I VALUES(%L)', 'Foo bar', E'O\'Reilly');
+<I
+CLASS="LINEANNOTATION"
+>Result: </I
+><SAMP
+CLASS="COMPUTEROUTPUT"
+>INSERT INTO "Foo bar" VALUES('O''Reilly')</SAMP
+>
+
+SELECT format('INSERT INTO %I VALUES(%L)', 'locations', E'C:\\Program Files');
+<I
+CLASS="LINEANNOTATION"
+>Result: </I
+><SAMP
+CLASS="COMPUTEROUTPUT"
+>INSERT INTO locations VALUES(E'C:\\Program Files')</SAMP
+></PRE
+><P>
+    </P
+><P
+>     Here are examples using <TT
+CLASS="REPLACEABLE"
+><I
+>width</I
+></TT
+> fields
+     and the <TT
+CLASS="LITERAL"
+>-</TT
+> flag:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT format('|%10s|', 'foo');
+<I
+CLASS="LINEANNOTATION"
+>Result: </I
+><SAMP
+CLASS="COMPUTEROUTPUT"
+>|       foo|</SAMP
+>
+
+SELECT format('|%-10s|', 'foo');
+<I
+CLASS="LINEANNOTATION"
+>Result: </I
+><SAMP
+CLASS="COMPUTEROUTPUT"
+>|foo       |</SAMP
+>
+
+SELECT format('|%*s|', 10, 'foo');
+<I
+CLASS="LINEANNOTATION"
+>Result: </I
+><SAMP
+CLASS="COMPUTEROUTPUT"
+>|       foo|</SAMP
+>
+
+SELECT format('|%*s|', -10, 'foo');
+<I
+CLASS="LINEANNOTATION"
+>Result: </I
+><SAMP
+CLASS="COMPUTEROUTPUT"
+>|foo       |</SAMP
+>
+
+SELECT format('|%-*s|', 10, 'foo');
+<I
+CLASS="LINEANNOTATION"
+>Result: </I
+><SAMP
+CLASS="COMPUTEROUTPUT"
+>|foo       |</SAMP
+>
+
+SELECT format('|%-*s|', -10, 'foo');
+<I
+CLASS="LINEANNOTATION"
+>Result: </I
+><SAMP
+CLASS="COMPUTEROUTPUT"
+>|foo       |</SAMP
+></PRE
+><P>
+    </P
+><P
+>     These examples show use of <TT
+CLASS="REPLACEABLE"
+><I
+>position</I
+></TT
+> fields:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT format('Testing %3$s, %2$s, %1$s', 'one', 'two', 'three');
+<I
+CLASS="LINEANNOTATION"
+>Result: </I
+><SAMP
+CLASS="COMPUTEROUTPUT"
+>Testing three, two, one</SAMP
+>
+
+SELECT format('|%*2$s|', 'foo', 10, 'bar');
+<I
+CLASS="LINEANNOTATION"
+>Result: </I
+><SAMP
+CLASS="COMPUTEROUTPUT"
+>|       bar|</SAMP
+>
+
+SELECT format('|%1$*2$s|', 'foo', 10, 'bar');
+<I
+CLASS="LINEANNOTATION"
+>Result: </I
+><SAMP
+CLASS="COMPUTEROUTPUT"
+>|       foo|</SAMP
+></PRE
+><P>
+    </P
+><P
+>     Unlike the standard C function <CODE
+CLASS="FUNCTION"
+>sprintf</CODE
+>,
+     <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>'s <CODE
+CLASS="FUNCTION"
+>format</CODE
+> function allows format
+     specifiers with and without <TT
+CLASS="REPLACEABLE"
+><I
+>position</I
+></TT
+> fields to be mixed
+     in the same format string.  A format specifier without a
+     <TT
+CLASS="REPLACEABLE"
+><I
+>position</I
+></TT
+> field always uses the next argument after the
+     last argument consumed.
+     In addition, the <CODE
+CLASS="FUNCTION"
+>format</CODE
+> function does not require all
+     function arguments to be used in the format string.
+     For example:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT format('Testing %3$s, %2$s, %s', 'one', 'two', 'three');
+<I
+CLASS="LINEANNOTATION"
+>Result: </I
+><SAMP
+CLASS="COMPUTEROUTPUT"
+>Testing three, two, three</SAMP
+></PRE
+><P>
+    </P
+><P
+>     The <TT
+CLASS="LITERAL"
+>%I</TT
+> and <TT
+CLASS="LITERAL"
+>%L</TT
+> format specifiers are particularly
+     useful for safely constructing dynamic SQL statements.  See
+     <A
+HREF="plpgsql-statements.html#PLPGSQL-QUOTE-LITERAL-EXAMPLE"
+>Example 40-1</A
+>.
+    </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions-math.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="functions-binarystring.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Mathematical Functions and Operators</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Binary String Functions and Operators</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

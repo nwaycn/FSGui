@@ -1,0 +1,514 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>tsearch2</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="test_decoding"
+HREF="test-decoding.html"><LINK
+REL="NEXT"
+TITLE="tsm_system_rows"
+HREF="tsm-system-rows.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="test_decoding"
+HREF="test-decoding.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="tsm_system_rows"
+HREF="tsm-system-rows.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="TSEARCH2"
+>F.39. tsearch2</A
+></H1
+><P
+>  The <SPAN
+CLASS="APPLICATION"
+>tsearch2</SPAN
+> module provides backwards-compatible
+  text search functionality for applications that used
+  <SPAN
+CLASS="APPLICATION"
+>tsearch2</SPAN
+> before text searching was integrated
+  into core <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> in release 8.3.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN176021"
+>F.39.1. Portability Issues</A
+></H2
+><P
+>   Although the built-in text search features were based on
+   <SPAN
+CLASS="APPLICATION"
+>tsearch2</SPAN
+> and are largely similar to it,
+   there are numerous small differences that will create portability
+   issues for existing applications:
+  </P
+><P
+></P
+><UL
+><LI
+STYLE="list-style-type: disc"
+><P
+>     Some functions' names were changed, for example <CODE
+CLASS="FUNCTION"
+>rank</CODE
+>
+     to <CODE
+CLASS="FUNCTION"
+>ts_rank</CODE
+>.
+     The replacement <TT
+CLASS="LITERAL"
+>tsearch2</TT
+> module
+     provides aliases having the old names.
+    </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>     The built-in text search data types and functions all exist within
+     the system schema <TT
+CLASS="LITERAL"
+>pg_catalog</TT
+>.  In an installation using
+     <SPAN
+CLASS="APPLICATION"
+>tsearch2</SPAN
+>, these objects would usually have been in
+     the <TT
+CLASS="LITERAL"
+>public</TT
+> schema, though some users chose to place them
+     in a separate schema of their own.  Explicitly schema-qualified
+     references to the objects will therefore fail in either case.
+     The replacement <TT
+CLASS="LITERAL"
+>tsearch2</TT
+> module
+     provides alias objects that are stored in <TT
+CLASS="LITERAL"
+>public</TT
+>
+     (or another schema if necessary) so that such references will still work.
+    </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>     There is no concept of a <SPAN
+CLASS="QUOTE"
+>"current parser"</SPAN
+> or <SPAN
+CLASS="QUOTE"
+>"current
+     dictionary"</SPAN
+> in the built-in text search features, only of a current
+     search configuration (set by the <TT
+CLASS="VARNAME"
+>default_text_search_config</TT
+>
+     parameter).  While the current parser and current dictionary were used
+     only by functions intended for debugging, this might still pose
+     a porting obstacle in some cases.
+     The replacement <TT
+CLASS="LITERAL"
+>tsearch2</TT
+> module emulates these
+     additional state variables and provides backwards-compatible functions
+     for setting and retrieving them.
+    </P
+></LI
+></UL
+><P
+>   There are some issues that are not addressed by the replacement
+   <TT
+CLASS="LITERAL"
+>tsearch2</TT
+> module, and will therefore require
+   application code changes in any case:
+  </P
+><P
+></P
+><UL
+><LI
+STYLE="list-style-type: disc"
+><P
+>     The old <CODE
+CLASS="FUNCTION"
+>tsearch2</CODE
+> trigger function allowed items in its
+     argument list to be names of functions to be invoked on the text data
+     before it was converted to <TT
+CLASS="TYPE"
+>tsvector</TT
+> format.  This was removed
+     as being a security hole, since it was not possible to guarantee that
+     the function invoked was the one intended.  The recommended approach
+     if the data must be massaged before being indexed is to write a custom
+     trigger that does the work for itself.
+    </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>     Text search configuration information has been moved into core
+     system catalogs that are noticeably different from the tables used
+     by <SPAN
+CLASS="APPLICATION"
+>tsearch2</SPAN
+>.  Any applications that examined
+     or modified those tables will need adjustment.
+    </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>     If an application used any custom text search configurations,
+     those will need to be set up in the core
+     catalogs using the new text search configuration SQL commands.
+     The replacement <TT
+CLASS="LITERAL"
+>tsearch2</TT
+> module offers a little
+     bit of support for this by making it possible to load an old set
+     of <SPAN
+CLASS="APPLICATION"
+>tsearch2</SPAN
+> configuration tables into
+     <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 8.3.  (Without the module,
+     it is not possible to load the configuration data because values in the
+     <TT
+CLASS="TYPE"
+>regprocedure</TT
+> columns cannot be resolved to functions.)
+     While those configuration tables won't actually <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>do</I
+></SPAN
+>
+     anything, at least their contents will be available to be consulted
+     while setting up an equivalent custom configuration in 8.3.
+    </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>     The old <CODE
+CLASS="FUNCTION"
+>reset_tsearch()</CODE
+> and <CODE
+CLASS="FUNCTION"
+>get_covers()</CODE
+>
+     functions are not supported.
+    </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>     The replacement <TT
+CLASS="LITERAL"
+>tsearch2</TT
+> module does not define
+     any alias operators, relying entirely on the built-in ones.
+     This would only pose an issue if an application used explicitly
+     schema-qualified operator names, which is very uncommon.
+    </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN176068"
+>F.39.2. Converting a pre-8.3 Installation</A
+></H2
+><P
+>   The recommended way to update a pre-8.3 installation that uses
+   <SPAN
+CLASS="APPLICATION"
+>tsearch2</SPAN
+> is:
+  </P
+><DIV
+CLASS="PROCEDURE"
+><OL
+TYPE="1"
+><LI
+CLASS="STEP"
+><P
+>     Make a dump from the old installation in the usual way,
+     but be sure not to use <TT
+CLASS="LITERAL"
+>-c</TT
+> (<TT
+CLASS="LITERAL"
+>--clean</TT
+>)
+     option of <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> or <SPAN
+CLASS="APPLICATION"
+>pg_dumpall</SPAN
+>.
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+>     In the new installation, create empty database(s) and install
+     the replacement <TT
+CLASS="LITERAL"
+>tsearch2</TT
+> module into each
+     database that will use text search.  This must be done
+     <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>before</I
+></SPAN
+> loading the dump data!  If your old installation
+     had the <SPAN
+CLASS="APPLICATION"
+>tsearch2</SPAN
+> objects in a schema other
+     than <TT
+CLASS="LITERAL"
+>public</TT
+>, be sure to adjust the
+     <TT
+CLASS="COMMAND"
+>CREATE EXTENSION</TT
+> command so that the replacement
+     objects are created in that same schema.
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+>     Load the dump data.  There will be quite a few errors reported
+     due to failure to recreate the original <SPAN
+CLASS="APPLICATION"
+>tsearch2</SPAN
+>
+     objects.  These errors can be ignored, but this means you cannot
+     restore the dump in a single transaction (eg, you cannot use
+     <SPAN
+CLASS="APPLICATION"
+>pg_restore</SPAN
+>'s <TT
+CLASS="OPTION"
+>-1</TT
+> switch).
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+>     Examine the contents of the restored <SPAN
+CLASS="APPLICATION"
+>tsearch2</SPAN
+>
+     configuration tables (<TT
+CLASS="STRUCTNAME"
+>pg_ts_cfg</TT
+> and so on), and
+     create equivalent built-in text search configurations as needed.
+     You may drop the old configuration tables once you've extracted
+     all the useful information from them.
+    </P
+></LI
+><LI
+CLASS="STEP"
+><P
+>     Test your application.
+    </P
+></LI
+></OL
+></DIV
+><P
+>   At a later time you may wish to rename application references
+   to the alias text search objects, so that you can eventually
+   uninstall the replacement <TT
+CLASS="LITERAL"
+>tsearch2</TT
+> module.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN176099"
+>F.39.3. References</A
+></H2
+><P
+>   Tsearch2 Development Site
+   <A
+HREF="http://www.sai.msu.su/~megera/postgres/gist/tsearch/V2/"
+TARGET="_top"
+>http://www.sai.msu.su/~megera/postgres/gist/tsearch/V2/</A
+>
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="test-decoding.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="tsm-system-rows.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>test_decoding</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>tsm_system_rows</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

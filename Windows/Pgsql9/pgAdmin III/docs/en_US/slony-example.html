@@ -1,0 +1,196 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=cp1252" />
+    
+    <title>Slony-I example</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="top" title="pgAdmin III 1.22.1 documentation" href="index.html" />
+    <link rel="up" title="Slony-I support" href="slony.html" />
+    <link rel="next" title="Extended features" href="extend.html" />
+    <link rel="prev" title="Slony-I tasks" href="slony-functions.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="extend.html" title="Extended features"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="slony-functions.html" title="Slony-I tasks"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pgAdmin III 1.22.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="slony.html" accesskey="U">Slony-I support</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="slony-i-example">
+<span id="slony-example"></span><h1><span class="target" id="index-0"></span>Slony-I example</h1>
+<p>In this example, a master server is setup with two direct slaves. This example was
+written and tested using Slony-I v1.2.11 and PostgreSQL 8.2.5, running on a single
+Windows XP machine. The PostgresSQL pgbench utility is used to generate the test
+schema and workload.</p>
+<ol class="arabic">
+<li><p class="first">Create 3 databases, master, slave1 and slave2 and ensure pl/pgsql is
+setup in each.</p>
+</li>
+<li><p class="first">Create a pgbench schema in the master database:</p>
+<div class="highlight-python"><div class="highlight"><pre>&gt; pgbench -i -U postgres master
+</pre></div>
+</div>
+</li>
+<li><p class="first">Add a primary key called history_pkey to the history table on the tid,
+bid and aid columns</p>
+</li>
+<li><p class="first">Create a schema-only dump of the master database, and load it into
+slave1 and slave2:</p>
+<div class="highlight-python"><div class="highlight"><pre>&gt; pg_dump -s -U postgres master &gt; schema.sql
+&gt; psql -U postgres slave1 &lt; schema.sql
+&gt; psql -U postgres slave2 &lt; schema.sql
+</pre></div>
+</div>
+</li>
+<li><p class="first">Create Slony config files for each slon engine (daemon on Unix). The
+files should contain just the following two lines:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">cluster_name</span><span class="o">=</span><span class="s">&#39;pgbench&#39;</span>
+<span class="n">conn_info</span><span class="o">=</span><span class="s">&#39;host=127.0.0.1 port=5432 user=postgres dbname=master&#39;</span>
+</pre></div>
+</div>
+<p>Create a file for each database, adjusting the dbname parameter as
+required and adding any other connection options that may be
+needed.</p>
+</li>
+<li><p class="first">(Windows only) Install the Slony-I service:</p>
+<div class="highlight-python"><div class="highlight"><pre>&gt; slon -regservice Slony-I
+</pre></div>
+</div>
+</li>
+<li><p class="first">Register each of the engines (this is only necessary on Windows - on
+Unix the slon daemons may be started individually and given the path
+to the config file on the command line using the -f option):</p>
+<div class="highlight-python"><div class="highlight"><pre>&gt; slon -addengine Slony-I C:\slony\master.conf
+&gt; slon -addengine Slony-I C:\slony\slave1.conf
+&gt; slon -addengine Slony-I C:\slony\slave2.conf
+</pre></div>
+</div>
+</li>
+<li><p class="first">In pgAdmin under the Slony Replication node in the master database,
+create a new Slony-I cluster using the following options:</p>
+<div class="highlight-python"><div class="highlight"><pre>Join existing cluster: Unchecked
+Cluster name:          pgbench
+Local node:            1        Master node
+Admin node:            99       Admin node
+</pre></div>
+</div>
+</li>
+<li><p class="first">Under the Slony Replication node, create a Slony-I cluster in each of
+the slave databases using the following options:</p>
+<div class="highlight-python"><div class="highlight"><pre>Join existing cluster: Checked
+Server:                &lt;Select the server containing the master database&gt;
+Database:              master
+Cluster name:          pgbench
+Local node:            10       Slave node 1
+Admin node:            99 - Admin node
+
+Join existing cluster: Checked
+Server:                &lt;Select the server containing the master database&gt;
+Database:              master
+Cluster name:          pgbench
+Local node:            20       Slave node 2
+Admin node:            99 - Admin node
+</pre></div>
+</div>
+</li>
+<li><p class="first">Create Paths on the master to both slaves, and on each slave back to
+the master. Create the paths under each node on the master, using the
+connection strings specified in the slon config files. Note that future
+restructuring of the cluster may require additional paths to be defined.</p>
+</li>
+<li><p class="first">Create a Replication Set on the master using the following settings:</p>
+<div class="highlight-python"><div class="highlight"><pre>ID:                  1
+Comment:             pgbench set
+</pre></div>
+</div>
+</li>
+<li><p class="first">Add the tables to the replication set using the following settings:</p>
+<div class="highlight-python"><div class="highlight"><pre>Table:               public.accounts
+ID:                  1
+Index:               accounts_pkey
+
+Table:               public.branches
+ID:                  2
+Index:               branches_pkey
+
+Table:               public.history
+ID:                  3
+Index:               history_pkey
+
+Table:               public.tellers
+ID:                  4
+Index:               tellers_pkey
+</pre></div>
+</div>
+</li>
+<li><p class="first">On the master node, create a new subscription for each slave using the
+following options:</p>
+<div class="highlight-python"><div class="highlight"><pre>Origin:              1
+Provider:            1 - Master node
+Receiver:            10 - Slave node 1
+
+Origin:              1
+Provider:            1 - Master node
+Receiver:            20 - Slave node 2
+</pre></div>
+</div>
+</li>
+<li><p class="first">Start the slon service (or daemons on Unix):</p>
+<div class="highlight-python"><div class="highlight"><pre>&gt; net start Slony-I
+</pre></div>
+</div>
+</li>
+</ol>
+<p>Initial replication should begin and can be monitored on the statistics
+tab in pgAdmin for each node. The pgbench utility may be run against the
+master database to generate a test workload.</p>
+</div>
+
+
+          </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="extend.html" title="Extended features"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="slony-functions.html" title="Slony-I tasks"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pgAdmin III 1.22.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="slony.html" >Slony-I support</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2002 - 2016, The pgAdmin Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

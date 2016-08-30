@@ -1,0 +1,694 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 8.3.2</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 8.3.3"
+HREF="release-8-3-3.html"><LINK
+REL="NEXT"
+TITLE="Release 8.3.1"
+HREF="release-8-3-1.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 8.3.3"
+HREF="release-8-3-3.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 8.3.1"
+HREF="release-8-3-1.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-8-3-2"
+>E.142. Release 8.3.2</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>never released</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 8.3.1.
+   For information about new features in the 8.3 major release, see
+   <A
+HREF="release-8-3.html"
+>Section E.144</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN153576"
+>E.142.1. Migration to Version 8.3.2</A
+></H2
+><P
+>    A dump/restore is not required for those running 8.3.X.
+    However, if you are upgrading from a version earlier than 8.3.1,
+    see <A
+HREF="release-8-3-1.html"
+>Section E.143</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN153580"
+>E.142.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Fix <TT
+CLASS="LITERAL"
+>ERRORDATA_STACK_SIZE exceeded</TT
+> crash that
+      occurred on Windows when using UTF-8 database encoding and a different
+      client encoding (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect archive truncation point calculation for the
+      <TT
+CLASS="LITERAL"
+>%r</TT
+> macro in <TT
+CLASS="VARNAME"
+>restore_command</TT
+> parameters
+      (Simon)
+     </P
+><P
+>      This could lead to data loss if a warm-standby script relied on
+      <TT
+CLASS="LITERAL"
+>%r</TT
+> to decide when to throw away WAL segment files.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>ALTER TABLE ADD COLUMN ... PRIMARY KEY</TT
+> so that the new
+      column is correctly checked to see if it's been initialized to all
+      non-nulls (Brendan Jurd)
+     </P
+><P
+>      Previous versions neglected to check this requirement at all.
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="COMMAND"
+>REASSIGN OWNED</TT
+> so that it works on procedural
+      languages too (Alvaro)
+     </P
+></LI
+><LI
+><P
+>      Fix problems with <TT
+CLASS="COMMAND"
+>SELECT FOR UPDATE/SHARE</TT
+> occurring as a
+      subquery in a query with a non-<TT
+CLASS="COMMAND"
+>SELECT</TT
+> top-level operation
+      (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix possible <TT
+CLASS="COMMAND"
+>CREATE TABLE</TT
+> failure when inheriting the
+      <SPAN
+CLASS="QUOTE"
+>"same"</SPAN
+> constraint from multiple parent relations that
+      inherited that constraint from a common ancestor (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix <CODE
+CLASS="FUNCTION"
+>pg_get_ruledef()</CODE
+> to show the alias, if any, attached
+      to the target table of an <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> or <TT
+CLASS="COMMAND"
+>DELETE</TT
+>
+      (Tom)
+     </P
+></LI
+><LI
+><P
+>      Restore the pre-8.3 behavior that an out-of-range block number in a
+      TID being used in a TidScan plan results in silently not matching any
+      rows (Tom)
+     </P
+><P
+>      8.3.0 and 8.3.1 threw an error instead.
+     </P
+></LI
+><LI
+><P
+>      Fix GIN bug that could result in a <TT
+CLASS="LITERAL"
+>too many LWLocks
+      taken</TT
+> failure (Teodor)
+     </P
+></LI
+><LI
+><P
+>      Fix broken GiST comparison function for <TT
+CLASS="TYPE"
+>tsquery</TT
+> (Teodor)
+     </P
+></LI
+><LI
+><P
+>      Fix <CODE
+CLASS="FUNCTION"
+>tsvector_update_trigger()</CODE
+> and <CODE
+CLASS="FUNCTION"
+>ts_stat()</CODE
+>
+      to accept domains over the types they expect to work with (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix failure to support enum data types as foreign keys (Tom)
+     </P
+></LI
+><LI
+><P
+>      Avoid possible crash when decompressing corrupted data
+      (Zdenek Kotala)
+     </P
+></LI
+><LI
+><P
+>      Fix race conditions between delayed unlinks and <TT
+CLASS="COMMAND"
+>DROP
+      DATABASE</TT
+> (Heikki)
+     </P
+><P
+>      In the worst case this could result in deleting a newly created table
+      in a new database that happened to get the same OID as the
+      recently-dropped one; but of course that is an extremely
+      low-probability scenario.
+     </P
+></LI
+><LI
+><P
+>      Repair two places where SIGTERM exit of a backend could leave corrupted
+      state in shared memory (Tom)
+     </P
+><P
+>      Neither case is very important if SIGTERM is used to shut down the
+      whole database cluster together, but there was a problem if someone
+      tried to SIGTERM individual backends.
+     </P
+></LI
+><LI
+><P
+>      Fix possible crash due to incorrect plan generated for an
+      <TT
+CLASS="LITERAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> IN (SELECT <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+>
+      FROM ...)</TT
+> clause when <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+> and <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+>
+      have different data types; and make sure the behavior is semantically
+      correct when the conversion from <TT
+CLASS="REPLACEABLE"
+><I
+>y</I
+></TT
+>'s type to
+      <TT
+CLASS="REPLACEABLE"
+><I
+>x</I
+></TT
+>'s type is lossy (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix oversight that prevented the planner from substituting known Param
+      values as if they were constants (Tom)
+     </P
+><P
+>      This mistake partially disabled optimization of unnamed
+      extended-Query statements in 8.3.0 and 8.3.1: in particular the
+      LIKE-to-indexscan optimization would never be applied if the LIKE
+      pattern was passed as a parameter, and constraint exclusion
+      depending on a parameter value didn't work either.
+     </P
+></LI
+><LI
+><P
+>      Fix planner failure when an indexable <CODE
+CLASS="FUNCTION"
+>MIN</CODE
+> or
+      <CODE
+CLASS="FUNCTION"
+>MAX</CODE
+> aggregate is used with <TT
+CLASS="LITERAL"
+>DISTINCT</TT
+> or
+      <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix planner to ensure it never uses a <SPAN
+CLASS="QUOTE"
+>"physical tlist"</SPAN
+> for a
+      plan node that is feeding a Sort node (Tom)
+     </P
+><P
+>      This led to the sort having to push around more data than it really
+      needed to, since unused column values were included in the sorted
+      data.
+     </P
+></LI
+><LI
+><P
+>      Avoid unnecessary copying of query strings (Tom)
+     </P
+><P
+>      This fixes a performance problem introduced in 8.3.0 when a very large
+      number of commands are submitted as a single query string.
+     </P
+></LI
+><LI
+><P
+>      Make <CODE
+CLASS="FUNCTION"
+>TransactionIdIsCurrentTransactionId()</CODE
+> use binary
+      search instead of linear search when checking child-transaction XIDs
+      (Heikki)
+     </P
+><P
+>      This fixes some cases in which 8.3.0 was significantly
+      slower than earlier releases.
+     </P
+></LI
+><LI
+><P
+>      Fix conversions between ISO-8859-5 and other encodings to handle
+      Cyrillic <SPAN
+CLASS="QUOTE"
+>"Yo"</SPAN
+> characters (<TT
+CLASS="LITERAL"
+>e</TT
+> and <TT
+CLASS="LITERAL"
+>E</TT
+> with
+      two dots) (Sergey Burladyan)
+     </P
+></LI
+><LI
+><P
+>      Fix several datatype input functions, notably <CODE
+CLASS="FUNCTION"
+>array_in()</CODE
+>,
+      that were allowing unused bytes in their results to contain
+      uninitialized, unpredictable values (Tom)
+     </P
+><P
+>      This could lead to failures in which two apparently identical literal
+      values were not seen as equal, resulting in the parser complaining
+      about unmatched <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> and <TT
+CLASS="LITERAL"
+>DISTINCT</TT
+>
+      expressions.
+     </P
+></LI
+><LI
+><P
+>      Fix a corner case in regular-expression substring matching
+      (<TT
+CLASS="LITERAL"
+>substring(<TT
+CLASS="REPLACEABLE"
+><I
+>string</I
+></TT
+> from
+      <TT
+CLASS="REPLACEABLE"
+><I
+>pattern</I
+></TT
+>)</TT
+>) (Tom)
+     </P
+><P
+>      The problem occurs when there is a match to the pattern overall but
+      the user has specified a parenthesized subexpression and that
+      subexpression hasn't got a match.  An example is
+      <TT
+CLASS="LITERAL"
+>substring('foo' from 'foo(bar)?')</TT
+>.
+      This should return NULL, since <TT
+CLASS="LITERAL"
+>(bar)</TT
+> isn't matched, but
+      it was mistakenly returning the whole-pattern match instead (ie,
+      <TT
+CLASS="LITERAL"
+>foo</TT
+>).
+     </P
+></LI
+><LI
+><P
+>      Prevent cancellation of an auto-vacuum that was launched to prevent
+      XID wraparound (Alvaro)
+     </P
+></LI
+><LI
+><P
+>      Improve <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+>'s handling of in-doubt tuples (those
+      inserted or deleted by a not-yet-committed transaction) so that the
+      counts it reports to the stats collector are more likely to be correct
+      (Pavan Deolasee)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>initdb</SPAN
+> to reject a relative path for its
+      <TT
+CLASS="LITERAL"
+>--xlogdir</TT
+> (<TT
+CLASS="LITERAL"
+>-X</TT
+>) option (Tom)
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> print tab characters as an appropriate
+      number of spaces, rather than <TT
+CLASS="LITERAL"
+>\x09</TT
+> as was done in
+      8.3.0 and 8.3.1 (Bruce)
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2008c (for
+      DST law changes in Morocco, Iraq, Choibalsan, Pakistan, Syria, Cuba, and
+      Argentina/San_Luis)
+     </P
+></LI
+><LI
+><P
+>      Add <CODE
+CLASS="FUNCTION"
+>ECPGget_PGconn()</CODE
+> function to
+      <SPAN
+CLASS="APPLICATION"
+>ecpglib</SPAN
+> (Michael)
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect result from <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>'s
+      <CODE
+CLASS="FUNCTION"
+>PGTYPEStimestamp_sub()</CODE
+> function (Michael)
+     </P
+></LI
+><LI
+><P
+>      Fix handling of continuation line markers in <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+>
+      (Michael)
+     </P
+></LI
+><LI
+><P
+>      Fix possible crashes in <TT
+CLASS="FILENAME"
+>contrib/cube</TT
+> functions (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix core dump in <TT
+CLASS="FILENAME"
+>contrib/xml2</TT
+>'s
+      <CODE
+CLASS="FUNCTION"
+>xpath_table()</CODE
+> function when the input query returns a
+      NULL value (Tom)
+     </P
+></LI
+><LI
+><P
+>      Fix <TT
+CLASS="FILENAME"
+>contrib/xml2</TT
+>'s makefile to not override
+      <TT
+CLASS="LITERAL"
+>CFLAGS</TT
+>, and make it auto-configure properly for
+      <SPAN
+CLASS="APPLICATION"
+>libxslt</SPAN
+> present or not (Tom)
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-8-3-3.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-8-3-1.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 8.3.3</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 8.3.1</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

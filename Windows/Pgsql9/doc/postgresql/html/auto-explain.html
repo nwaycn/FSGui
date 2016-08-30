@@ -1,0 +1,545 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>auto_explain</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="auth_delay"
+HREF="auth-delay.html"><LINK
+REL="NEXT"
+TITLE="btree_gin"
+HREF="btree-gin.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="auth_delay"
+HREF="auth-delay.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="btree_gin"
+HREF="btree-gin.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="AUTO-EXPLAIN"
+>F.3. auto_explain</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>auto_explain</TT
+> module provides a means for
+  logging execution plans of slow statements automatically, without
+  having to run <A
+HREF="sql-explain.html"
+>EXPLAIN</A
+>
+  by hand.  This is especially helpful for tracking down un-optimized queries
+  in large applications.
+ </P
+><P
+>  The module provides no SQL-accessible functions.  To use it, simply
+  load it into the server.  You can load it into an individual session:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>LOAD 'auto_explain';</PRE
+><P>
+
+  (You must be superuser to do that.)  More typical usage is to preload
+  it into some or all sessions by including <TT
+CLASS="LITERAL"
+>auto_explain</TT
+> in
+  <A
+HREF="runtime-config-client.html#GUC-SESSION-PRELOAD-LIBRARIES"
+>session_preload_libraries</A
+> or
+  <A
+HREF="runtime-config-client.html#GUC-SHARED-PRELOAD-LIBRARIES"
+>shared_preload_libraries</A
+> in
+  <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>.  Then you can track unexpectedly slow queries
+  no matter when they happen.  Of course there is a price in overhead for
+  that.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN168940"
+>F.3.1. Configuration Parameters</A
+></H2
+><P
+>  There are several configuration parameters that control the behavior of
+  <TT
+CLASS="FILENAME"
+>auto_explain</TT
+>.  Note that the default behavior is
+  to do nothing, so you must set at least
+  <TT
+CLASS="VARNAME"
+>auto_explain.log_min_duration</TT
+> if you want any results.
+ </P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="VARNAME"
+>auto_explain.log_min_duration</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+     </DT
+><DD
+><P
+>      <TT
+CLASS="VARNAME"
+>auto_explain.log_min_duration</TT
+> is the minimum statement
+      execution time, in milliseconds, that will cause the statement's plan to
+      be logged. Setting this to zero logs all plans. Minus-one (the default)
+      disables logging of plans.  For example, if you set it to
+      <TT
+CLASS="LITERAL"
+>250ms</TT
+> then all statements that run 250ms or longer
+      will be logged. Only superusers can change this setting.
+     </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>auto_explain.log_analyze</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+     </DT
+><DD
+><P
+>      <TT
+CLASS="VARNAME"
+>auto_explain.log_analyze</TT
+> causes <TT
+CLASS="COMMAND"
+>EXPLAIN ANALYZE</TT
+>
+      output, rather than just <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+> output, to be printed
+      when an execution plan is logged. This parameter is off by default.
+      Only superusers can change this setting.
+     </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>       When this parameter is on, per-plan-node timing occurs for all
+       statements executed, whether or not they run long enough to actually
+       get logged.  This can have an extremely negative impact on performance.
+       Turning off <TT
+CLASS="VARNAME"
+>auto_explain.log_timing</TT
+> ameliorates the
+       performance cost, at the price of obtaining less information.
+      </P
+></BLOCKQUOTE
+></DIV
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>auto_explain.log_buffers</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+     </DT
+><DD
+><P
+>      <TT
+CLASS="VARNAME"
+>auto_explain.log_buffers</TT
+> controls whether buffer
+      usage statistics are printed when an execution plan is logged; it's
+      equivalent to the <TT
+CLASS="LITERAL"
+>BUFFERS</TT
+> option of <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+>.
+      This parameter has no effect
+      unless <TT
+CLASS="VARNAME"
+>auto_explain.log_analyze</TT
+> is enabled.
+      This parameter is off by default.
+      Only superusers can change this setting.
+     </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>auto_explain.log_timing</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+     </DT
+><DD
+><P
+>      <TT
+CLASS="VARNAME"
+>auto_explain.log_timing</TT
+> controls whether per-node
+      timing information is printed when an execution plan is logged; it's
+      equivalent to the <TT
+CLASS="LITERAL"
+>TIMING</TT
+> option of <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+>.
+      The overhead of repeatedly reading the system clock can slow down
+      queries significantly on some systems, so it may be useful to set this
+      parameter to off when only actual row counts, and not exact times, are
+      needed.
+      This parameter has no effect
+      unless <TT
+CLASS="VARNAME"
+>auto_explain.log_analyze</TT
+> is enabled.
+      This parameter is on by default.
+      Only superusers can change this setting.
+     </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>auto_explain.log_triggers</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+     </DT
+><DD
+><P
+>      <TT
+CLASS="VARNAME"
+>auto_explain.log_triggers</TT
+> causes trigger
+      execution statistics to be included when an execution plan is logged.
+      This parameter has no effect
+      unless <TT
+CLASS="VARNAME"
+>auto_explain.log_analyze</TT
+> is enabled.
+      This parameter is off by default.
+      Only superusers can change this setting.
+     </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>auto_explain.log_verbose</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+     </DT
+><DD
+><P
+>      <TT
+CLASS="VARNAME"
+>auto_explain.log_verbose</TT
+> controls whether verbose
+      details are printed when an execution plan is logged; it's
+      equivalent to the <TT
+CLASS="LITERAL"
+>VERBOSE</TT
+> option of <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+>.
+      This parameter is off by default.
+      Only superusers can change this setting.
+     </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>auto_explain.log_format</TT
+> (<TT
+CLASS="TYPE"
+>enum</TT
+>)
+     </DT
+><DD
+><P
+>      <TT
+CLASS="VARNAME"
+>auto_explain.log_format</TT
+> selects the
+      <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+> output format to be used.
+      The allowed values are <TT
+CLASS="LITERAL"
+>text</TT
+>, <TT
+CLASS="LITERAL"
+>xml</TT
+>,
+      <TT
+CLASS="LITERAL"
+>json</TT
+>, and <TT
+CLASS="LITERAL"
+>yaml</TT
+>.  The default is text.
+      Only superusers can change this setting.
+     </P
+></DD
+><DT
+><TT
+CLASS="VARNAME"
+>auto_explain.log_nested_statements</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+     </DT
+><DD
+><P
+>      <TT
+CLASS="VARNAME"
+>auto_explain.log_nested_statements</TT
+> causes nested
+      statements (statements executed inside a function) to be considered
+      for logging.  When it is off, only top-level query plans are logged. This
+      parameter is off by default. Only superusers can change this setting.
+     </P
+></DD
+></DL
+></DIV
+><P
+>   In ordinary usage, these parameters are set
+   in <TT
+CLASS="FILENAME"
+>postgresql.conf</TT
+>, although superusers can alter them
+   on-the-fly within their own sessions.
+   Typical usage might be:
+  </P
+><PRE
+CLASS="PROGRAMLISTING"
+># postgresql.conf
+session_preload_libraries = 'auto_explain'
+
+auto_explain.log_min_duration = '3s'</PRE
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN169049"
+>F.3.2. Example</A
+></H2
+><PRE
+CLASS="PROGRAMLISTING"
+>postgres=# LOAD 'auto_explain';
+postgres=# SET auto_explain.log_min_duration = 0;
+postgres=# SET auto_explain.log_analyze = true;
+postgres=# SELECT count(*)
+           FROM pg_class, pg_index
+           WHERE oid = indrelid AND indisunique;</PRE
+><P
+>   This might produce log output such as:
+  </P
+><PRE
+CLASS="SCREEN"
+>LOG:  duration: 3.651 ms  plan:
+  Query Text: SELECT count(*)
+              FROM pg_class, pg_index
+              WHERE oid = indrelid AND indisunique;
+  Aggregate  (cost=16.79..16.80 rows=1 width=0) (actual time=3.626..3.627 rows=1 loops=1)
+    -&#62;  Hash Join  (cost=4.17..16.55 rows=92 width=0) (actual time=3.349..3.594 rows=92 loops=1)
+          Hash Cond: (pg_class.oid = pg_index.indrelid)
+          -&#62;  Seq Scan on pg_class  (cost=0.00..9.55 rows=255 width=4) (actual time=0.016..0.140 rows=255 loops=1)
+          -&#62;  Hash  (cost=3.02..3.02 rows=92 width=4) (actual time=3.238..3.238 rows=92 loops=1)
+                Buckets: 1024  Batches: 1  Memory Usage: 4kB
+                -&#62;  Seq Scan on pg_index  (cost=0.00..3.02 rows=92 width=4) (actual time=0.008..3.187 rows=92 loops=1)
+                      Filter: indisunique</PRE
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN169054"
+>F.3.3. Author</A
+></H2
+><P
+>   Takahiro Itagaki <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:itagaki.takahiro@oss.ntt.co.jp"
+>itagaki.takahiro@oss.ntt.co.jp</A
+>&#62;</CODE
+>
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="auth-delay.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="btree-gin.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>auth_delay</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>btree_gin</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,1984 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>ltree</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="lo"
+HREF="lo.html"><LINK
+REL="NEXT"
+TITLE="pageinspect"
+HREF="pageinspect.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="lo"
+HREF="lo.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="pageinspect"
+HREF="pageinspect.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="LTREE"
+>F.20. ltree</A
+></H1
+><P
+>  This module implements a data type <TT
+CLASS="TYPE"
+>ltree</TT
+> for representing
+  labels of data stored in a hierarchical tree-like structure.
+  Extensive facilities for searching through label trees are provided.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN172002"
+>F.20.1. Definitions</A
+></H2
+><P
+>   A <I
+CLASS="FIRSTTERM"
+>label</I
+> is a sequence of alphanumeric characters
+   and underscores (for example, in C locale the characters
+   <TT
+CLASS="LITERAL"
+>A-Za-z0-9_</TT
+> are allowed).  Labels must be less than 256 bytes
+   long.
+  </P
+><P
+>   Examples: <TT
+CLASS="LITERAL"
+>42</TT
+>, <TT
+CLASS="LITERAL"
+>Personal_Services</TT
+>
+  </P
+><P
+>   A <I
+CLASS="FIRSTTERM"
+>label path</I
+> is a sequence of zero or more
+   labels separated by dots, for example <TT
+CLASS="LITERAL"
+>L1.L2.L3</TT
+>, representing
+   a path from the root of a hierarchical tree to a particular node.  The
+   length of a label path must be less than 65Kb, but keeping it under 2Kb is
+   preferable.  In practice this is not a major limitation; for example,
+   the longest label path in the DMOZ catalog (<A
+HREF="http://www.dmoz.org"
+TARGET="_top"
+>http://www.dmoz.org</A
+>) is about 240 bytes.
+  </P
+><P
+>   Example: <TT
+CLASS="LITERAL"
+>Top.Countries.Europe.Russia</TT
+>
+  </P
+><P
+>   The <TT
+CLASS="FILENAME"
+>ltree</TT
+> module provides several data types:
+  </P
+><P
+></P
+><UL
+><LI
+><P
+>     <TT
+CLASS="TYPE"
+>ltree</TT
+> stores a label path.
+    </P
+></LI
+><LI
+><P
+>     <TT
+CLASS="TYPE"
+>lquery</TT
+> represents a regular-expression-like pattern
+     for matching <TT
+CLASS="TYPE"
+>ltree</TT
+> values.  A simple word matches that
+     label within a path.  A star symbol (<TT
+CLASS="LITERAL"
+>*</TT
+>) matches zero
+     or more labels.  For example:
+</P><PRE
+CLASS="SYNOPSIS"
+>foo         <I
+CLASS="LINEANNOTATION"
+>Match the exact label path <TT
+CLASS="LITERAL"
+>foo</TT
+></I
+>
+*.foo.*     <I
+CLASS="LINEANNOTATION"
+>Match any label path containing the label <TT
+CLASS="LITERAL"
+>foo</TT
+></I
+>
+*.foo       <I
+CLASS="LINEANNOTATION"
+>Match any label path whose last label is <TT
+CLASS="LITERAL"
+>foo</TT
+></I
+></PRE
+><P>
+    </P
+><P
+>     Star symbols can also be quantified to restrict how many labels
+     they can match:
+</P><PRE
+CLASS="SYNOPSIS"
+>*{<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>}        <I
+CLASS="LINEANNOTATION"
+>Match exactly <TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+> labels</I
+>
+*{<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>,}       <I
+CLASS="LINEANNOTATION"
+>Match at least <TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+> labels</I
+>
+*{<TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+>,<TT
+CLASS="REPLACEABLE"
+><I
+>m</I
+></TT
+>}      <I
+CLASS="LINEANNOTATION"
+>Match at least <TT
+CLASS="REPLACEABLE"
+><I
+>n</I
+></TT
+> but not more than <TT
+CLASS="REPLACEABLE"
+><I
+>m</I
+></TT
+> labels</I
+>
+*{,<TT
+CLASS="REPLACEABLE"
+><I
+>m</I
+></TT
+>}       <I
+CLASS="LINEANNOTATION"
+>Match at most <TT
+CLASS="REPLACEABLE"
+><I
+>m</I
+></TT
+> labels &mdash; same as </I
+> *{0,<TT
+CLASS="REPLACEABLE"
+><I
+>m</I
+></TT
+>}</PRE
+><P>
+    </P
+><P
+>     There are several modifiers that can be put at the end of a non-star
+     label in <TT
+CLASS="TYPE"
+>lquery</TT
+> to make it match more than just the exact match:
+</P><PRE
+CLASS="SYNOPSIS"
+>@           <I
+CLASS="LINEANNOTATION"
+>Match case-insensitively, for example <TT
+CLASS="LITERAL"
+>a@</TT
+> matches <TT
+CLASS="LITERAL"
+>A</TT
+></I
+>
+*           <I
+CLASS="LINEANNOTATION"
+>Match any label with this prefix, for example <TT
+CLASS="LITERAL"
+>foo*</TT
+> matches <TT
+CLASS="LITERAL"
+>foobar</TT
+></I
+>
+%           <I
+CLASS="LINEANNOTATION"
+>Match initial underscore-separated words</I
+></PRE
+><P>
+     The behavior of <TT
+CLASS="LITERAL"
+>%</TT
+> is a bit complicated.  It tries to match
+     words rather than the entire label.  For example
+     <TT
+CLASS="LITERAL"
+>foo_bar%</TT
+> matches <TT
+CLASS="LITERAL"
+>foo_bar_baz</TT
+> but not
+     <TT
+CLASS="LITERAL"
+>foo_barbaz</TT
+>.  If combined with <TT
+CLASS="LITERAL"
+>*</TT
+>, prefix
+     matching applies to each word separately, for example
+     <TT
+CLASS="LITERAL"
+>foo_bar%*</TT
+> matches <TT
+CLASS="LITERAL"
+>foo1_bar2_baz</TT
+> but
+     not <TT
+CLASS="LITERAL"
+>foo1_br2_baz</TT
+>.
+    </P
+><P
+>     Also, you can write several possibly-modified labels separated with
+     <TT
+CLASS="LITERAL"
+>|</TT
+> (OR) to match any of those labels, and you can put
+     <TT
+CLASS="LITERAL"
+>!</TT
+> (NOT) at the start to match any label that doesn't
+     match any of the alternatives.
+    </P
+><P
+>     Here's an annotated example of <TT
+CLASS="TYPE"
+>lquery</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>Top.*{0,2}.sport*@.!football|tennis.Russ*|Spain
+a.  b.     c.      d.               e.</PRE
+><P>
+     This query will match any label path that:
+    </P
+><P
+></P
+><OL
+TYPE="a"
+><LI
+><P
+>       begins with the label <TT
+CLASS="LITERAL"
+>Top</TT
+>
+      </P
+></LI
+><LI
+><P
+>       and next has zero to two labels before
+      </P
+></LI
+><LI
+><P
+>       a label beginning with the case-insensitive prefix <TT
+CLASS="LITERAL"
+>sport</TT
+>
+      </P
+></LI
+><LI
+><P
+>       then a label not matching <TT
+CLASS="LITERAL"
+>football</TT
+> nor
+       <TT
+CLASS="LITERAL"
+>tennis</TT
+>
+      </P
+></LI
+><LI
+><P
+>       and then ends with a label beginning with <TT
+CLASS="LITERAL"
+>Russ</TT
+> or
+       exactly matching <TT
+CLASS="LITERAL"
+>Spain</TT
+>.
+      </P
+></LI
+></OL
+></LI
+><LI
+><P
+><TT
+CLASS="TYPE"
+>ltxtquery</TT
+> represents a full-text-search-like
+    pattern for matching <TT
+CLASS="TYPE"
+>ltree</TT
+> values.  An
+    <TT
+CLASS="TYPE"
+>ltxtquery</TT
+> value contains words, possibly with the
+    modifiers <TT
+CLASS="LITERAL"
+>@</TT
+>, <TT
+CLASS="LITERAL"
+>*</TT
+>, <TT
+CLASS="LITERAL"
+>%</TT
+> at the end;
+    the modifiers have the same meanings as in <TT
+CLASS="TYPE"
+>lquery</TT
+>.
+    Words can be combined with <TT
+CLASS="LITERAL"
+>&amp;</TT
+> (AND),
+    <TT
+CLASS="LITERAL"
+>|</TT
+> (OR), <TT
+CLASS="LITERAL"
+>!</TT
+> (NOT), and parentheses.
+    The key difference from
+    <TT
+CLASS="TYPE"
+>lquery</TT
+> is that <TT
+CLASS="TYPE"
+>ltxtquery</TT
+> matches words without
+    regard to their position in the label path.
+    </P
+><P
+>     Here's an example <TT
+CLASS="TYPE"
+>ltxtquery</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>Europe &amp; Russia*@ &amp; !Transportation</PRE
+><P>
+     This will match paths that contain the label <TT
+CLASS="LITERAL"
+>Europe</TT
+> and
+     any label beginning with <TT
+CLASS="LITERAL"
+>Russia</TT
+> (case-insensitive),
+     but not paths containing the label <TT
+CLASS="LITERAL"
+>Transportation</TT
+>.
+     The location of these words within the path is not important.
+     Also, when <TT
+CLASS="LITERAL"
+>%</TT
+> is used, the word can be matched to any
+     underscore-separated word within a label, regardless of position.
+    </P
+></LI
+></UL
+><P
+>   Note: <TT
+CLASS="TYPE"
+>ltxtquery</TT
+> allows whitespace between symbols, but
+   <TT
+CLASS="TYPE"
+>ltree</TT
+> and <TT
+CLASS="TYPE"
+>lquery</TT
+> do not.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN172117"
+>F.20.2. Operators and Functions</A
+></H2
+><P
+>   Type <TT
+CLASS="TYPE"
+>ltree</TT
+> has the usual comparison operators
+   <TT
+CLASS="LITERAL"
+>=</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;&gt;</TT
+>,
+   <TT
+CLASS="LITERAL"
+>&lt;</TT
+>, <TT
+CLASS="LITERAL"
+>&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;=</TT
+>, <TT
+CLASS="LITERAL"
+>&gt;=</TT
+>.
+   Comparison sorts in the order of a tree traversal, with the children
+   of a node sorted by label text.  In addition, the specialized
+   operators shown in <A
+HREF="ltree.html#LTREE-OP-TABLE"
+>Table F-12</A
+> are available.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="LTREE-OP-TABLE"
+></A
+><P
+><B
+>Table F-12. <TT
+CLASS="TYPE"
+>ltree</TT
+> Operators</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Operator</TH
+><TH
+>Returns</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+> <TT
+CLASS="LITERAL"
+>@&gt;</TT
+> <TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>is left argument an ancestor of right (or equal)?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+> <TT
+CLASS="LITERAL"
+>&lt;@</TT
+> <TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>is left argument a descendant of right (or equal)?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+> <TT
+CLASS="LITERAL"
+>~</TT
+> <TT
+CLASS="TYPE"
+>lquery</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>does <TT
+CLASS="TYPE"
+>ltree</TT
+> match <TT
+CLASS="TYPE"
+>lquery</TT
+>?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>lquery</TT
+> <TT
+CLASS="LITERAL"
+>~</TT
+> <TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>does <TT
+CLASS="TYPE"
+>ltree</TT
+> match <TT
+CLASS="TYPE"
+>lquery</TT
+>?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+> <TT
+CLASS="LITERAL"
+>?</TT
+> <TT
+CLASS="TYPE"
+>lquery[]</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>does <TT
+CLASS="TYPE"
+>ltree</TT
+> match any <TT
+CLASS="TYPE"
+>lquery</TT
+> in array?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>lquery[]</TT
+> <TT
+CLASS="LITERAL"
+>?</TT
+> <TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>does <TT
+CLASS="TYPE"
+>ltree</TT
+> match any <TT
+CLASS="TYPE"
+>lquery</TT
+> in array?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+> <TT
+CLASS="LITERAL"
+>@</TT
+> <TT
+CLASS="TYPE"
+>ltxtquery</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>does <TT
+CLASS="TYPE"
+>ltree</TT
+> match <TT
+CLASS="TYPE"
+>ltxtquery</TT
+>?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltxtquery</TT
+> <TT
+CLASS="LITERAL"
+>@</TT
+> <TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>does <TT
+CLASS="TYPE"
+>ltree</TT
+> match <TT
+CLASS="TYPE"
+>ltxtquery</TT
+>?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+> <TT
+CLASS="LITERAL"
+>||</TT
+> <TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+>concatenate <TT
+CLASS="TYPE"
+>ltree</TT
+> paths</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+> <TT
+CLASS="LITERAL"
+>||</TT
+> <TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+>convert text to <TT
+CLASS="TYPE"
+>ltree</TT
+> and concatenate</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+> <TT
+CLASS="LITERAL"
+>||</TT
+> <TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+>convert text to <TT
+CLASS="TYPE"
+>ltree</TT
+> and concatenate</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltree[]</TT
+> <TT
+CLASS="LITERAL"
+>@&gt;</TT
+> <TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>does array contain an ancestor of <TT
+CLASS="TYPE"
+>ltree</TT
+>?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+> <TT
+CLASS="LITERAL"
+>&lt;@</TT
+> <TT
+CLASS="TYPE"
+>ltree[]</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>does array contain an ancestor of <TT
+CLASS="TYPE"
+>ltree</TT
+>?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltree[]</TT
+> <TT
+CLASS="LITERAL"
+>&lt;@</TT
+> <TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>does array contain a descendant of <TT
+CLASS="TYPE"
+>ltree</TT
+>?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+> <TT
+CLASS="LITERAL"
+>@&gt;</TT
+> <TT
+CLASS="TYPE"
+>ltree[]</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>does array contain a descendant of <TT
+CLASS="TYPE"
+>ltree</TT
+>?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltree[]</TT
+> <TT
+CLASS="LITERAL"
+>~</TT
+> <TT
+CLASS="TYPE"
+>lquery</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>does array contain any path matching <TT
+CLASS="TYPE"
+>lquery</TT
+>?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>lquery</TT
+> <TT
+CLASS="LITERAL"
+>~</TT
+> <TT
+CLASS="TYPE"
+>ltree[]</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>does array contain any path matching <TT
+CLASS="TYPE"
+>lquery</TT
+>?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltree[]</TT
+> <TT
+CLASS="LITERAL"
+>?</TT
+> <TT
+CLASS="TYPE"
+>lquery[]</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>does <TT
+CLASS="TYPE"
+>ltree</TT
+> array contain any path matching any <TT
+CLASS="TYPE"
+>lquery</TT
+>?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>lquery[]</TT
+> <TT
+CLASS="LITERAL"
+>?</TT
+> <TT
+CLASS="TYPE"
+>ltree[]</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>does <TT
+CLASS="TYPE"
+>ltree</TT
+> array contain any path matching any <TT
+CLASS="TYPE"
+>lquery</TT
+>?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltree[]</TT
+> <TT
+CLASS="LITERAL"
+>@</TT
+> <TT
+CLASS="TYPE"
+>ltxtquery</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>does array contain any path matching <TT
+CLASS="TYPE"
+>ltxtquery</TT
+>?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltxtquery</TT
+> <TT
+CLASS="LITERAL"
+>@</TT
+> <TT
+CLASS="TYPE"
+>ltree[]</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>boolean</TT
+></TD
+><TD
+>does array contain any path matching <TT
+CLASS="TYPE"
+>ltxtquery</TT
+>?</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltree[]</TT
+> <TT
+CLASS="LITERAL"
+>?@&gt;</TT
+> <TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+>first array entry that is an ancestor of <TT
+CLASS="TYPE"
+>ltree</TT
+>; NULL if none</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltree[]</TT
+> <TT
+CLASS="LITERAL"
+>?&lt;@</TT
+> <TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+>first array entry that is a descendant of <TT
+CLASS="TYPE"
+>ltree</TT
+>; NULL if none</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltree[]</TT
+> <TT
+CLASS="LITERAL"
+>?~</TT
+> <TT
+CLASS="TYPE"
+>lquery</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+>first array entry that matches <TT
+CLASS="TYPE"
+>lquery</TT
+>; NULL if none</TD
+></TR
+><TR
+><TD
+><TT
+CLASS="TYPE"
+>ltree[]</TT
+> <TT
+CLASS="LITERAL"
+>?@</TT
+> <TT
+CLASS="TYPE"
+>ltxtquery</TT
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+>first array entry that matches <TT
+CLASS="TYPE"
+>ltxtquery</TT
+>; NULL if none</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   The operators <TT
+CLASS="LITERAL"
+>&lt;@</TT
+>, <TT
+CLASS="LITERAL"
+>@&gt;</TT
+>,
+   <TT
+CLASS="LITERAL"
+>@</TT
+> and <TT
+CLASS="LITERAL"
+>~</TT
+> have analogues
+   <TT
+CLASS="LITERAL"
+>^&lt;@</TT
+>, <TT
+CLASS="LITERAL"
+>^@&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>^@</TT
+>,
+   <TT
+CLASS="LITERAL"
+>^~</TT
+>, which are the same except they do not use
+   indexes.  These are useful only for testing purposes.
+  </P
+><P
+>   The available functions are shown in <A
+HREF="ltree.html#LTREE-FUNC-TABLE"
+>Table F-13</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="LTREE-FUNC-TABLE"
+></A
+><P
+><B
+>Table F-13. <TT
+CLASS="TYPE"
+>ltree</TT
+> Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+><TH
+>Example</TH
+><TH
+>Result</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>subltree(ltree, int start, int end)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+>subpath of <TT
+CLASS="TYPE"
+>ltree</TT
+> from position <TT
+CLASS="PARAMETER"
+>start</TT
+> to
+       position <TT
+CLASS="PARAMETER"
+>end</TT
+>-1 (counting from 0)</TD
+><TD
+><TT
+CLASS="LITERAL"
+>subltree('Top.Child1.Child2',1,2)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>Child1</TT
+></TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>subpath(ltree, int offset, int len)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+>subpath of <TT
+CLASS="TYPE"
+>ltree</TT
+> starting at position
+       <TT
+CLASS="PARAMETER"
+>offset</TT
+>, length <TT
+CLASS="PARAMETER"
+>len</TT
+>.
+       If <TT
+CLASS="PARAMETER"
+>offset</TT
+> is negative, subpath starts that far from the
+       end of the path.  If <TT
+CLASS="PARAMETER"
+>len</TT
+> is negative, leaves that many
+       labels off the end of the path.</TD
+><TD
+><TT
+CLASS="LITERAL"
+>subpath('Top.Child1.Child2',0,2)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>Top.Child1</TT
+></TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>subpath(ltree, int offset)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+>subpath of <TT
+CLASS="TYPE"
+>ltree</TT
+> starting at position
+       <TT
+CLASS="PARAMETER"
+>offset</TT
+>, extending to end of path.
+       If <TT
+CLASS="PARAMETER"
+>offset</TT
+> is negative, subpath starts that far from the
+       end of the path.</TD
+><TD
+><TT
+CLASS="LITERAL"
+>subpath('Top.Child1.Child2',1)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>Child1.Child2</TT
+></TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>nlevel(ltree)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>number of labels in path</TD
+><TD
+><TT
+CLASS="LITERAL"
+>nlevel('Top.Child1.Child2')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>3</TT
+></TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>index(ltree a, ltree b)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>position of first occurrence of <TT
+CLASS="PARAMETER"
+>b</TT
+> in
+       <TT
+CLASS="PARAMETER"
+>a</TT
+>; -1 if not found</TD
+><TD
+><TT
+CLASS="LITERAL"
+>index('0.1.2.3.5.4.5.6.8.5.6.8','5.6')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>6</TT
+></TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>index(ltree a, ltree b, int offset)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>integer</TT
+></TD
+><TD
+>position of first occurrence of <TT
+CLASS="PARAMETER"
+>b</TT
+> in
+       <TT
+CLASS="PARAMETER"
+>a</TT
+>, searching starting at <TT
+CLASS="PARAMETER"
+>offset</TT
+>;
+       negative <TT
+CLASS="PARAMETER"
+>offset</TT
+> means start <TT
+CLASS="PARAMETER"
+>-offset</TT
+>
+       labels from the end of the path</TD
+><TD
+><TT
+CLASS="LITERAL"
+>index('0.1.2.3.5.4.5.6.8.5.6.8','5.6',-4)</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>9</TT
+></TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>text2ltree(text)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+>cast <TT
+CLASS="TYPE"
+>text</TT
+> to <TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+></TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+></TT
+></TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>ltree2text(ltree)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+>cast <TT
+CLASS="TYPE"
+>ltree</TT
+> to <TT
+CLASS="TYPE"
+>text</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+></TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+></TT
+></TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>lca(ltree, ltree, ...)</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+>lowest common ancestor, i.e., longest common prefix of paths
+       (up to 8 arguments supported)</TD
+><TD
+><TT
+CLASS="LITERAL"
+>lca('1.2.2.3','1.2.3.4.5.6')</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>1.2</TT
+></TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>lca(ltree[])</CODE
+></TD
+><TD
+><TT
+CLASS="TYPE"
+>ltree</TT
+></TD
+><TD
+>lowest common ancestor, i.e., longest common prefix of paths</TD
+><TD
+><TT
+CLASS="LITERAL"
+>lca(array['1.2.2.3'::ltree,'1.2.3'])</TT
+></TD
+><TD
+><TT
+CLASS="LITERAL"
+>1.2</TT
+></TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN172528"
+>F.20.3. Indexes</A
+></H2
+><P
+>   <TT
+CLASS="FILENAME"
+>ltree</TT
+> supports several types of indexes that can speed
+   up the indicated operators:
+  </P
+><P
+></P
+><UL
+><LI
+><P
+>     B-tree index over <TT
+CLASS="TYPE"
+>ltree</TT
+>:
+     <TT
+CLASS="LITERAL"
+>&lt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;=</TT
+>, <TT
+CLASS="LITERAL"
+>=</TT
+>,
+     <TT
+CLASS="LITERAL"
+>&gt;=</TT
+>, <TT
+CLASS="LITERAL"
+>&gt;</TT
+>
+    </P
+></LI
+><LI
+><P
+>     GiST index over <TT
+CLASS="TYPE"
+>ltree</TT
+>:
+     <TT
+CLASS="LITERAL"
+>&lt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;=</TT
+>, <TT
+CLASS="LITERAL"
+>=</TT
+>,
+     <TT
+CLASS="LITERAL"
+>&gt;=</TT
+>, <TT
+CLASS="LITERAL"
+>&gt;</TT
+>,
+     <TT
+CLASS="LITERAL"
+>@&gt;</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;@</TT
+>,
+     <TT
+CLASS="LITERAL"
+>@</TT
+>, <TT
+CLASS="LITERAL"
+>~</TT
+>, <TT
+CLASS="LITERAL"
+>?</TT
+>
+    </P
+><P
+>     Example of creating such an index:
+    </P
+><PRE
+CLASS="PROGRAMLISTING"
+>CREATE INDEX path_gist_idx ON test USING GIST (path);</PRE
+></LI
+><LI
+><P
+>     GiST index over <TT
+CLASS="TYPE"
+>ltree[]</TT
+>:
+     <TT
+CLASS="LITERAL"
+>ltree[] &lt;@ ltree</TT
+>, <TT
+CLASS="LITERAL"
+>ltree @&gt; ltree[]</TT
+>,
+     <TT
+CLASS="LITERAL"
+>@</TT
+>, <TT
+CLASS="LITERAL"
+>~</TT
+>, <TT
+CLASS="LITERAL"
+>?</TT
+>
+    </P
+><P
+>     Example of creating such an index:
+    </P
+><PRE
+CLASS="PROGRAMLISTING"
+>CREATE INDEX path_gist_idx ON test USING GIST (array_path);</PRE
+><P
+>     Note: This index type is lossy.
+    </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN172567"
+>F.20.4. Example</A
+></H2
+><P
+>   This example uses the following data (also available in file
+   <TT
+CLASS="FILENAME"
+>contrib/ltree/ltreetest.sql</TT
+> in the source distribution):
+  </P
+><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE test (path ltree);
+INSERT INTO test VALUES ('Top');
+INSERT INTO test VALUES ('Top.Science');
+INSERT INTO test VALUES ('Top.Science.Astronomy');
+INSERT INTO test VALUES ('Top.Science.Astronomy.Astrophysics');
+INSERT INTO test VALUES ('Top.Science.Astronomy.Cosmology');
+INSERT INTO test VALUES ('Top.Hobbies');
+INSERT INTO test VALUES ('Top.Hobbies.Amateurs_Astronomy');
+INSERT INTO test VALUES ('Top.Collections');
+INSERT INTO test VALUES ('Top.Collections.Pictures');
+INSERT INTO test VALUES ('Top.Collections.Pictures.Astronomy');
+INSERT INTO test VALUES ('Top.Collections.Pictures.Astronomy.Stars');
+INSERT INTO test VALUES ('Top.Collections.Pictures.Astronomy.Galaxies');
+INSERT INTO test VALUES ('Top.Collections.Pictures.Astronomy.Astronauts');
+CREATE INDEX path_gist_idx ON test USING GIST (path);
+CREATE INDEX path_idx ON test USING BTREE (path);</PRE
+><P
+>   Now, we have a table <TT
+CLASS="STRUCTNAME"
+>test</TT
+> populated with data describing
+   the hierarchy shown below:
+  </P
+><PRE
+CLASS="LITERALLAYOUT"
+>                        Top
+                     /   |  \
+             Science Hobbies Collections
+                 /       |              \
+        Astronomy   Amateurs_Astronomy Pictures
+           /  \                            |
+Astrophysics  Cosmology                Astronomy
+                                        /  |    \
+                                 Galaxies Stars Astronauts</PRE
+><P
+>   We can do inheritance:
+</P><PRE
+CLASS="SCREEN"
+>ltreetest=&gt; SELECT path FROM test WHERE path &lt;@ 'Top.Science';
+                path
+------------------------------------
+ Top.Science
+ Top.Science.Astronomy
+ Top.Science.Astronomy.Astrophysics
+ Top.Science.Astronomy.Cosmology
+(4 rows)</PRE
+><P>
+  </P
+><P
+>   Here are some examples of path matching:
+</P><PRE
+CLASS="SCREEN"
+>ltreetest=&gt; SELECT path FROM test WHERE path ~ '*.Astronomy.*';
+                     path
+-----------------------------------------------
+ Top.Science.Astronomy
+ Top.Science.Astronomy.Astrophysics
+ Top.Science.Astronomy.Cosmology
+ Top.Collections.Pictures.Astronomy
+ Top.Collections.Pictures.Astronomy.Stars
+ Top.Collections.Pictures.Astronomy.Galaxies
+ Top.Collections.Pictures.Astronomy.Astronauts
+(7 rows)
+
+ltreetest=&gt; SELECT path FROM test WHERE path ~ '*.!pictures@.*.Astronomy.*';
+                path
+------------------------------------
+ Top.Science.Astronomy
+ Top.Science.Astronomy.Astrophysics
+ Top.Science.Astronomy.Cosmology
+(3 rows)</PRE
+><P>
+  </P
+><P
+>   Here are some examples of full text search:
+</P><PRE
+CLASS="SCREEN"
+>ltreetest=&gt; SELECT path FROM test WHERE path @ 'Astro*% &amp; !pictures@';
+                path
+------------------------------------
+ Top.Science.Astronomy
+ Top.Science.Astronomy.Astrophysics
+ Top.Science.Astronomy.Cosmology
+ Top.Hobbies.Amateurs_Astronomy
+(4 rows)
+
+ltreetest=&gt; SELECT path FROM test WHERE path @ 'Astro* &amp; !pictures@';
+                path
+------------------------------------
+ Top.Science.Astronomy
+ Top.Science.Astronomy.Astrophysics
+ Top.Science.Astronomy.Cosmology
+(3 rows)</PRE
+><P>
+  </P
+><P
+>   Path construction using functions:
+</P><PRE
+CLASS="SCREEN"
+>ltreetest=&gt; SELECT subpath(path,0,2)||'Space'||subpath(path,2) FROM test WHERE path &lt;@ 'Top.Science.Astronomy';
+                 ?column?
+------------------------------------------
+ Top.Science.Space.Astronomy
+ Top.Science.Space.Astronomy.Astrophysics
+ Top.Science.Space.Astronomy.Cosmology
+(3 rows)</PRE
+><P>
+  </P
+><P
+>   We could simplify this by creating a SQL function that inserts a label
+   at a specified position in a path:
+</P><PRE
+CLASS="SCREEN"
+>CREATE FUNCTION ins_label(ltree, int, text) RETURNS ltree
+    AS 'select subpath($1,0,$2) || $3 || subpath($1,$2);'
+    LANGUAGE SQL IMMUTABLE;
+
+ltreetest=&gt; SELECT ins_label(path,2,'Space') FROM test WHERE path &lt;@ 'Top.Science.Astronomy';
+                ins_label
+------------------------------------------
+ Top.Science.Space.Astronomy
+ Top.Science.Space.Astronomy.Astrophysics
+ Top.Science.Space.Astronomy.Cosmology
+(3 rows)</PRE
+><P>
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN172585"
+>F.20.5. Transforms</A
+></H2
+><P
+>   Additional extensions are available that implement transforms for
+   the <TT
+CLASS="TYPE"
+>ltree</TT
+> type for PL/Python.  The extensions are
+   called <TT
+CLASS="LITERAL"
+>ltree_plpythonu</TT
+>, <TT
+CLASS="LITERAL"
+>ltree_plpython2u</TT
+>,
+   and <TT
+CLASS="LITERAL"
+>ltree_plpython3u</TT
+>
+   (see <A
+HREF="plpython-python23.html"
+>Section 43.1</A
+> for the PL/Python naming
+   convention).  If you install these transforms and specify them when
+   creating a function, <TT
+CLASS="TYPE"
+>ltree</TT
+> values are mapped to Python lists.
+   (The reverse is currently not supported, however.)
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN172594"
+>F.20.6. Authors</A
+></H2
+><P
+>   All work was done by Teodor Sigaev (<CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:teodor@stack.net"
+>teodor@stack.net</A
+>&#62;</CODE
+>) and
+   Oleg Bartunov (<CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:oleg@sai.msu.su"
+>oleg@sai.msu.su</A
+>&#62;</CODE
+>). See
+   <A
+HREF="http://www.sai.msu.su/~megera/postgres/gist/"
+TARGET="_top"
+>http://www.sai.msu.su/~megera/postgres/gist/</A
+> for
+   additional information. Authors would like to thank Eugeny Rodichev for
+   helpful discussions. Comments and bug reports are welcome.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="lo.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="pageinspect.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>lo</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>pageinspect</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

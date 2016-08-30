@@ -1,0 +1,1249 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>ALTER FOREIGN TABLE</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="ALTER FOREIGN DATA WRAPPER"
+HREF="sql-alterforeigndatawrapper.html"><LINK
+REL="NEXT"
+TITLE="ALTER FUNCTION"
+HREF="sql-alterfunction.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="ALTER FOREIGN DATA WRAPPER"
+HREF="sql-alterforeigndatawrapper.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="ALTER FUNCTION"
+HREF="sql-alterfunction.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-ALTERFOREIGNTABLE"
+></A
+>ALTER FOREIGN TABLE</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN69963"
+></A
+><H2
+>Name</H2
+>ALTER FOREIGN TABLE&nbsp;--&nbsp;change the definition of a foreign table</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN69966"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>ALTER FOREIGN TABLE [ IF EXISTS ] [ ONLY ] <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> [ * ]
+    <TT
+CLASS="REPLACEABLE"
+><I
+>action</I
+></TT
+> [, ... ]
+ALTER FOREIGN TABLE [ IF EXISTS ] [ ONLY ] <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> [ * ]
+    RENAME [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> TO <TT
+CLASS="REPLACEABLE"
+><I
+>new_column_name</I
+></TT
+>
+ALTER FOREIGN TABLE [ IF EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>
+    RENAME TO <TT
+CLASS="REPLACEABLE"
+><I
+>new_name</I
+></TT
+>
+ALTER FOREIGN TABLE [ IF EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>
+    SET SCHEMA <TT
+CLASS="REPLACEABLE"
+><I
+>new_schema</I
+></TT
+>
+
+<SPAN
+CLASS="phrase"
+><SPAN
+CLASS="PHRASE"
+>where <TT
+CLASS="REPLACEABLE"
+><I
+>action</I
+></TT
+> is one of:</SPAN
+></SPAN
+>
+
+    ADD [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>data_type</I
+></TT
+> [ COLLATE <TT
+CLASS="REPLACEABLE"
+><I
+>collation</I
+></TT
+> ] [ <TT
+CLASS="REPLACEABLE"
+><I
+>column_constraint</I
+></TT
+> [ ... ] ]
+    DROP [ COLUMN ] [ IF EXISTS ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> [ RESTRICT | CASCADE ]
+    ALTER [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> [ SET DATA ] TYPE <TT
+CLASS="REPLACEABLE"
+><I
+>data_type</I
+></TT
+> [ COLLATE <TT
+CLASS="REPLACEABLE"
+><I
+>collation</I
+></TT
+> ]
+    ALTER [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> SET DEFAULT <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>
+    ALTER [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> DROP DEFAULT
+    ALTER [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> { SET | DROP } NOT NULL
+    ALTER [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> SET STATISTICS <TT
+CLASS="REPLACEABLE"
+><I
+>integer</I
+></TT
+>
+    ALTER [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> SET ( <TT
+CLASS="REPLACEABLE"
+><I
+>attribute_option</I
+></TT
+> = <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> [, ... ] )
+    ALTER [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> RESET ( <TT
+CLASS="REPLACEABLE"
+><I
+>attribute_option</I
+></TT
+> [, ... ] )
+    ALTER [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> SET STORAGE { PLAIN | EXTERNAL | EXTENDED | MAIN }
+    ALTER [ COLUMN ] <TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> OPTIONS ( [ ADD | SET | DROP ] <TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+> ['<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>'] [, ... ])
+    ADD <TT
+CLASS="REPLACEABLE"
+><I
+>table_constraint</I
+></TT
+> [ NOT VALID ]
+    VALIDATE CONSTRAINT <TT
+CLASS="REPLACEABLE"
+><I
+>constraint_name</I
+></TT
+>
+    DROP CONSTRAINT [ IF EXISTS ]  <TT
+CLASS="REPLACEABLE"
+><I
+>constraint_name</I
+></TT
+> [ RESTRICT | CASCADE ]
+    DISABLE TRIGGER [ <TT
+CLASS="REPLACEABLE"
+><I
+>trigger_name</I
+></TT
+> | ALL | USER ]
+    ENABLE TRIGGER [ <TT
+CLASS="REPLACEABLE"
+><I
+>trigger_name</I
+></TT
+> | ALL | USER ]
+    ENABLE REPLICA TRIGGER <TT
+CLASS="REPLACEABLE"
+><I
+>trigger_name</I
+></TT
+>
+    ENABLE ALWAYS TRIGGER <TT
+CLASS="REPLACEABLE"
+><I
+>trigger_name</I
+></TT
+>
+    SET WITH OIDS
+    SET WITHOUT OIDS
+    INHERIT <TT
+CLASS="REPLACEABLE"
+><I
+>parent_table</I
+></TT
+>
+    NO INHERIT <TT
+CLASS="REPLACEABLE"
+><I
+>parent_table</I
+></TT
+>
+    OWNER TO { <TT
+CLASS="REPLACEABLE"
+><I
+>new_owner</I
+></TT
+> | CURRENT_USER | SESSION_USER }
+    OPTIONS ( [ ADD | SET | DROP ] <TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+> ['<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>'] [, ... ])</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN70014"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>ALTER FOREIGN TABLE</TT
+> changes the definition of an
+   existing foreign table.  There are several subforms:
+
+  <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>ADD COLUMN</TT
+></DT
+><DD
+><P
+>      This form adds a new column to the foreign table, using the same syntax as
+      <A
+HREF="sql-createforeigntable.html"
+>CREATE FOREIGN TABLE</A
+>.
+      Unlike the case when adding a column to a regular table, nothing happens
+      to the underlying storage: this action simply declares that
+      some new column is now accessible through the foreign table.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>DROP COLUMN [ IF EXISTS ]</TT
+></DT
+><DD
+><P
+>      This form drops a column from a foreign table.
+      You will need to say <TT
+CLASS="LITERAL"
+>CASCADE</TT
+> if
+      anything outside the table depends on the column; for example,
+      views.
+      If <TT
+CLASS="LITERAL"
+>IF EXISTS</TT
+> is specified and the column
+      does not exist, no error is thrown. In this case a notice
+      is issued instead.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET DATA TYPE</TT
+></DT
+><DD
+><P
+>      This form changes the type of a column of a foreign table.
+      Again, this has no effect on any underlying storage: this action simply
+      changes the type that <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> believes the column to
+      have.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET</TT
+>/<TT
+CLASS="LITERAL"
+>DROP DEFAULT</TT
+></DT
+><DD
+><P
+>      These forms set or remove the default value for a column.
+      Default values only apply in subsequent <TT
+CLASS="COMMAND"
+>INSERT</TT
+>
+      or <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> commands; they do not cause rows already in the
+      table to change.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET</TT
+>/<TT
+CLASS="LITERAL"
+>DROP NOT NULL</TT
+></DT
+><DD
+><P
+>      Mark a column as allowing, or not allowing, null values.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET STATISTICS</TT
+></DT
+><DD
+><P
+>      This form
+      sets the per-column statistics-gathering target for subsequent
+      <A
+HREF="sql-analyze.html"
+>ANALYZE</A
+> operations.
+      See the similar form of <A
+HREF="sql-altertable.html"
+>ALTER TABLE</A
+>
+      for more details.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET ( <TT
+CLASS="REPLACEABLE"
+><I
+>attribute_option</I
+></TT
+> = <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+> [, ... ] )</TT
+><BR><TT
+CLASS="LITERAL"
+>RESET ( <TT
+CLASS="REPLACEABLE"
+><I
+>attribute_option</I
+></TT
+> [, ... ] )</TT
+></DT
+><DD
+><P
+>      This form sets or resets per-attribute options.
+      See the similar form of <A
+HREF="sql-altertable.html"
+>ALTER TABLE</A
+>
+      for more details.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET STORAGE</TT
+></DT
+><DD
+><P
+>      This form sets the storage mode for a column.
+      See the similar form of <A
+HREF="sql-altertable.html"
+>ALTER TABLE</A
+>
+      for more details.
+      Note that the storage mode has no effect unless the table's
+      foreign-data wrapper chooses to pay attention to it.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>ADD <TT
+CLASS="REPLACEABLE"
+><I
+>table_constraint</I
+></TT
+> [ NOT VALID ]</TT
+></DT
+><DD
+><P
+>      This form adds a new constraint to a foreign table, using the same
+      syntax as <A
+HREF="sql-createforeigntable.html"
+>CREATE FOREIGN TABLE</A
+>.
+      Currently only <TT
+CLASS="LITERAL"
+>CHECK</TT
+> constraints are supported.
+     </P
+><P
+>      Unlike the case when adding a constraint to a regular table, nothing is
+      done to verify the constraint is correct; rather, this action simply
+      declares that some new condition should be assumed to hold for all rows
+      in the foreign table.  (See the discussion
+      in <A
+HREF="sql-createforeigntable.html"
+>CREATE FOREIGN TABLE</A
+>.)
+      If the constraint is marked <TT
+CLASS="LITERAL"
+>NOT VALID</TT
+>, then it isn't
+      assumed to hold, but is only recorded for possible future use.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>VALIDATE CONSTRAINT</TT
+></DT
+><DD
+><P
+>      This form marks as valid a constraint that was previously marked
+      as <TT
+CLASS="LITERAL"
+>NOT VALID</TT
+>.  No action is taken to verify the
+      constraint, but future queries will assume that it holds.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>DROP CONSTRAINT [ IF EXISTS ]</TT
+></DT
+><DD
+><P
+>      This form drops the specified constraint on a foreign table.
+      If <TT
+CLASS="LITERAL"
+>IF EXISTS</TT
+> is specified and the constraint
+      does not exist, no error is thrown.
+      In this case a notice is issued instead.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>DISABLE</TT
+>/<TT
+CLASS="LITERAL"
+>ENABLE [ REPLICA | ALWAYS ] TRIGGER</TT
+></DT
+><DD
+><P
+>      These forms configure the firing of trigger(s) belonging to the foreign
+      table.  See the similar form of <A
+HREF="sql-altertable.html"
+>ALTER TABLE</A
+> for more
+      details.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET WITH OIDS</TT
+></DT
+><DD
+><P
+>      This form adds an <TT
+CLASS="LITERAL"
+>oid</TT
+> system column to the
+      table (see <A
+HREF="ddl-system-columns.html"
+>Section 5.4</A
+>).
+      It does nothing if the table already has OIDs.
+      Unless the table's foreign-data wrapper supports OIDs, this column
+      will simply read as zeroes.
+     </P
+><P
+>      Note that this is not equivalent to <TT
+CLASS="LITERAL"
+>ADD COLUMN oid oid</TT
+>;
+      that would add a normal column that happened to be named
+      <TT
+CLASS="LITERAL"
+>oid</TT
+>, not a system column.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET WITHOUT OIDS</TT
+></DT
+><DD
+><P
+>      This form removes the <TT
+CLASS="LITERAL"
+>oid</TT
+> system column from the
+      table.  This is exactly equivalent to
+      <TT
+CLASS="LITERAL"
+>DROP COLUMN oid RESTRICT</TT
+>,
+      except that it will not complain if there is already no
+      <TT
+CLASS="LITERAL"
+>oid</TT
+> column.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>INHERIT <TT
+CLASS="REPLACEABLE"
+><I
+>parent_table</I
+></TT
+></TT
+></DT
+><DD
+><P
+>      This form adds the target foreign table as a new child of the specified
+      parent table.
+      See the similar form of <A
+HREF="sql-altertable.html"
+>ALTER TABLE</A
+>
+      for more details.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>NO INHERIT <TT
+CLASS="REPLACEABLE"
+><I
+>parent_table</I
+></TT
+></TT
+></DT
+><DD
+><P
+>      This form removes the target foreign table from the list of children of
+      the specified parent table.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>OWNER</TT
+></DT
+><DD
+><P
+>      This form changes the owner of the foreign table to the
+      specified user.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>OPTIONS ( [ ADD | SET | DROP ] <TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+> ['<TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>'] [, ... ] )</TT
+></DT
+><DD
+><P
+>      Change options for the foreign table or one of its columns.
+      <TT
+CLASS="LITERAL"
+>ADD</TT
+>, <TT
+CLASS="LITERAL"
+>SET</TT
+>, and <TT
+CLASS="LITERAL"
+>DROP</TT
+>
+      specify the action to be performed.  <TT
+CLASS="LITERAL"
+>ADD</TT
+> is assumed
+      if no operation is explicitly specified.  Duplicate option names are not
+      allowed (although it's OK for a table option and a column option to have
+      the same name).  Option names and values are also validated using the
+      foreign data wrapper library.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>RENAME</TT
+></DT
+><DD
+><P
+>      The <TT
+CLASS="LITERAL"
+>RENAME</TT
+> forms change the name of a foreign table
+      or the name of an individual column in a foreign table.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET SCHEMA</TT
+></DT
+><DD
+><P
+>      This form moves the foreign table into another schema.
+     </P
+></DD
+></DL
+></DIV
+><P>
+  </P
+><P
+>   All the actions except <TT
+CLASS="LITERAL"
+>RENAME</TT
+> and <TT
+CLASS="LITERAL"
+>SET SCHEMA</TT
+>
+   can be combined into
+   a list of multiple alterations to apply in parallel.  For example, it
+   is possible to add several columns and/or alter the type of several
+   columns in a single command.
+  </P
+><P
+>   If the command is written as <TT
+CLASS="LITERAL"
+>ALTER FOREIGN TABLE IF EXISTS ...</TT
+>
+   and the foreign table does not exist, no error is thrown. A notice is
+   issued in this case.
+  </P
+><P
+>   You must own the table to use <TT
+CLASS="COMMAND"
+>ALTER FOREIGN TABLE</TT
+>.
+   To change the schema of a foreign table, you must also have
+   <TT
+CLASS="LITERAL"
+>CREATE</TT
+> privilege on the new schema.
+   To alter the owner, you must also be a direct or indirect member of the new
+   owning role, and that role must have <TT
+CLASS="LITERAL"
+>CREATE</TT
+> privilege on
+   the table's schema.  (These restrictions enforce that altering the owner
+   doesn't do anything you couldn't do by dropping and recreating the table.
+   However, a superuser can alter ownership of any table anyway.)
+   To add a column or alter a column type, you must also
+   have <TT
+CLASS="LITERAL"
+>USAGE</TT
+> privilege on the data type.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN70174"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></DT
+><DD
+><P
+>        The name (possibly schema-qualified) of an existing foreign table to
+        alter. If <TT
+CLASS="LITERAL"
+>ONLY</TT
+> is specified before the table name, only
+        that table is altered. If <TT
+CLASS="LITERAL"
+>ONLY</TT
+> is not specified, the table
+        and all its descendant tables (if any) are altered.  Optionally,
+        <TT
+CLASS="LITERAL"
+>*</TT
+> can be specified after the table name to explicitly
+        indicate that descendant tables are included.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+></DT
+><DD
+><P
+>        Name of a new or existing column.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_column_name</I
+></TT
+></DT
+><DD
+><P
+>        New name for an existing column.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_name</I
+></TT
+></DT
+><DD
+><P
+>        New name for the table.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>data_type</I
+></TT
+></DT
+><DD
+><P
+>        Data type of the new column, or new data type for an existing
+        column.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>table_constraint</I
+></TT
+></DT
+><DD
+><P
+>        New table constraint for the foreign table.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>constraint_name</I
+></TT
+></DT
+><DD
+><P
+>        Name of an existing constraint to drop.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>CASCADE</TT
+></DT
+><DD
+><P
+>        Automatically drop objects that depend on the dropped column
+        or constraint (for example, views referencing the column).
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>RESTRICT</TT
+></DT
+><DD
+><P
+>        Refuse to drop the column or constraint if there are any dependent
+        objects. This is the default behavior.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>trigger_name</I
+></TT
+></DT
+><DD
+><P
+>        Name of a single trigger to disable or enable.
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>ALL</TT
+></DT
+><DD
+><P
+>        Disable or enable all triggers belonging to the foreign table.  (This
+        requires superuser privilege if any of the triggers are internally
+        generated triggers.  The core system does not add such triggers to
+        foreign tables, but add-on code could do so.)
+       </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>USER</TT
+></DT
+><DD
+><P
+>        Disable or enable all triggers belonging to the foreign table except
+        for internally generated triggers.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>parent_table</I
+></TT
+></DT
+><DD
+><P
+>        A parent table to associate or de-associate with this foreign table.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_owner</I
+></TT
+></DT
+><DD
+><P
+>        The user name of the new owner of the table.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_schema</I
+></TT
+></DT
+><DD
+><P
+>        The name of the schema to which the table will be moved.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN70255"
+></A
+><H2
+>Notes</H2
+><P
+>    The key word <TT
+CLASS="LITERAL"
+>COLUMN</TT
+> is noise and can be omitted.
+   </P
+><P
+>    Consistency with the foreign server is not checked when a column is added
+    or removed with <TT
+CLASS="LITERAL"
+>ADD COLUMN</TT
+> or
+    <TT
+CLASS="LITERAL"
+>DROP COLUMN</TT
+>, a <TT
+CLASS="LITERAL"
+>NOT NULL</TT
+>
+    or <TT
+CLASS="LITERAL"
+>CHECK</TT
+> constraint is added, or a column type is changed
+    with <TT
+CLASS="LITERAL"
+>SET DATA TYPE</TT
+>.  It is the user's responsibility to ensure
+    that the table definition matches the remote side.
+   </P
+><P
+>    Refer to <A
+HREF="sql-createforeigntable.html"
+>CREATE FOREIGN TABLE</A
+> for a further description of valid
+    parameters.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN70267"
+></A
+><H2
+>Examples</H2
+><P
+>   To mark a column as not-null:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER FOREIGN TABLE distributors ALTER COLUMN street SET NOT NULL;</PRE
+><P>
+  </P
+><P
+>   To change options of a foreign table:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER FOREIGN TABLE myschema.distributors OPTIONS (ADD opt1 'value', SET opt2 'value2', DROP opt3 'value3');</PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN70273"
+></A
+><H2
+>Compatibility</H2
+><P
+>   The forms <TT
+CLASS="LITERAL"
+>ADD</TT
+>, <TT
+CLASS="LITERAL"
+>DROP</TT
+>,
+   and <TT
+CLASS="LITERAL"
+>SET DATA TYPE</TT
+>
+   conform with the SQL standard.  The other forms are
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> extensions of the SQL standard.
+   Also, the ability to specify more than one manipulation in a single
+   <TT
+CLASS="COMMAND"
+>ALTER FOREIGN TABLE</TT
+> command is an extension.
+  </P
+><P
+>   <TT
+CLASS="COMMAND"
+>ALTER FOREIGN TABLE DROP COLUMN</TT
+> can be used to drop the only
+   column of a foreign table, leaving a zero-column table.  This is an
+   extension of SQL, which disallows zero-column foreign tables.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN70283"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-createforeigntable.html"
+>CREATE FOREIGN TABLE</A
+>, <A
+HREF="sql-dropforeigntable.html"
+>DROP FOREIGN TABLE</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-alterforeigndatawrapper.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-alterfunction.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>ALTER FOREIGN DATA WRAPPER</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>ALTER FUNCTION</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

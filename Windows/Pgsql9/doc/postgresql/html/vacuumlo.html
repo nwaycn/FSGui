@@ -1,0 +1,502 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>vacuumlo</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Client Applications"
+HREF="contrib-prog-client.html"><LINK
+REL="PREVIOUS"
+TITLE="oid2name"
+HREF="oid2name.html"><LINK
+REL="NEXT"
+TITLE="Server Applications"
+HREF="contrib-prog-server.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="oid2name"
+HREF="oid2name.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib-prog-client.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Server Applications"
+HREF="contrib-prog-server.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="VACUUMLO"
+></A
+><SPAN
+CLASS="APPLICATION"
+>vacuumlo</SPAN
+></H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN176713"
+></A
+><H2
+>Name</H2
+>vacuumlo&nbsp;--&nbsp;remove orphaned large objects from a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> database</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN176717"
+></A
+><H2
+>Synopsis</H2
+><P
+><TT
+CLASS="COMMAND"
+>vacuumlo</TT
+> [<TT
+CLASS="REPLACEABLE"
+><I
+>option</I
+></TT
+>...]  <TT
+CLASS="REPLACEABLE"
+><I
+>dbname</I
+></TT
+>... </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN176724"
+></A
+><H2
+>Description</H2
+><P
+>  <SPAN
+CLASS="APPLICATION"
+>vacuumlo</SPAN
+> is a simple utility program that will remove any
+  <SPAN
+CLASS="QUOTE"
+>"orphaned"</SPAN
+> large objects from a
+  <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> database.  An orphaned large object (LO) is
+  considered to be any LO whose OID does not appear in any <TT
+CLASS="TYPE"
+>oid</TT
+> or
+  <TT
+CLASS="TYPE"
+>lo</TT
+> data column of the database.
+ </P
+><P
+>  If you use this, you may also be interested in the <CODE
+CLASS="FUNCTION"
+>lo_manage</CODE
+>
+  trigger in the <A
+HREF="lo.html"
+>lo</A
+> module.
+  <CODE
+CLASS="FUNCTION"
+>lo_manage</CODE
+> is useful to try
+  to avoid creating orphaned LOs in the first place.
+ </P
+><P
+>   All databases named on the command line are processed.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN176737"
+></A
+><H2
+>Options</H2
+><P
+>   <SPAN
+CLASS="APPLICATION"
+>vacuumlo</SPAN
+> accepts the following command-line arguments:
+
+  <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-l</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>limit</I
+></TT
+></DT
+><DD
+><P
+>      Remove no more than <TT
+CLASS="REPLACEABLE"
+><I
+>limit</I
+></TT
+> large objects per
+      transaction (default 1000).  Since the server acquires a lock per LO
+      removed, removing too many LOs in one transaction risks exceeding
+      <A
+HREF="runtime-config-locks.html#GUC-MAX-LOCKS-PER-TRANSACTION"
+>max_locks_per_transaction</A
+>.  Set the limit to
+      zero if you want all removals done in a single transaction.
+     </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-n</TT
+></DT
+><DD
+><P
+>Don't remove anything, just show what would be done.</P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-v</TT
+></DT
+><DD
+><P
+>Write a lot of progress messages.</P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-V</TT
+><BR><TT
+CLASS="OPTION"
+>--version</TT
+></DT
+><DD
+><P
+>      Print the <SPAN
+CLASS="APPLICATION"
+>vacuumlo</SPAN
+> version and exit.
+     </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-?</TT
+><BR><TT
+CLASS="OPTION"
+>--help</TT
+></DT
+><DD
+><P
+>      Show help about <SPAN
+CLASS="APPLICATION"
+>vacuumlo</SPAN
+> command line
+      arguments, and exit.
+     </P
+></DD
+></DL
+></DIV
+><P>
+  </P
+><P
+>   <SPAN
+CLASS="APPLICATION"
+>vacuumlo</SPAN
+> also accepts the following command-line
+   arguments for connection parameters:
+
+  <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="OPTION"
+>-h</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>hostname</I
+></TT
+></DT
+><DD
+><P
+>Database server's host.</P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-p</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>port</I
+></TT
+></DT
+><DD
+><P
+>Database server's port.</P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-U</TT
+> <TT
+CLASS="REPLACEABLE"
+><I
+>username</I
+></TT
+></DT
+><DD
+><P
+>User name to connect as.</P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-w</TT
+><BR><TT
+CLASS="OPTION"
+>--no-password</TT
+></DT
+><DD
+><P
+>      Never issue a password prompt.  If the server requires password
+      authentication and a password is not available by other means
+      such as a <TT
+CLASS="FILENAME"
+>.pgpass</TT
+> file, the connection
+      attempt will fail.  This option can be useful in batch jobs and
+      scripts where no user is present to enter a password.
+     </P
+></DD
+><DT
+><TT
+CLASS="OPTION"
+>-W</TT
+></DT
+><DD
+><P
+>      Force <SPAN
+CLASS="APPLICATION"
+>vacuumlo</SPAN
+> to prompt for a
+      password before connecting to a database.
+     </P
+><P
+>      This option is never essential, since
+      <SPAN
+CLASS="APPLICATION"
+>vacuumlo</SPAN
+> will automatically prompt
+      for a password if the server demands password authentication.
+      However, <SPAN
+CLASS="APPLICATION"
+>vacuumlo</SPAN
+> will waste a
+      connection attempt finding out that the server wants a password.
+      In some cases it is worth typing <TT
+CLASS="OPTION"
+>-W</TT
+> to avoid the extra
+      connection attempt.
+     </P
+></DD
+></DL
+></DIV
+><P>
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN176815"
+></A
+><H2
+>Notes</H2
+><P
+>   <SPAN
+CLASS="APPLICATION"
+>vacuumlo</SPAN
+> works by the following method:
+   First, <SPAN
+CLASS="APPLICATION"
+>vacuumlo</SPAN
+> builds a temporary table which contains all
+   of the OIDs of the large objects in the selected database.  It then scans
+   through all columns in the database that are of type
+   <TT
+CLASS="TYPE"
+>oid</TT
+> or <TT
+CLASS="TYPE"
+>lo</TT
+>, and removes matching entries from the temporary
+   table.  (Note: Only types with these names are considered; in particular,
+   domains over them are not considered.)  The remaining entries in the
+   temporary table identify orphaned LOs.  These are removed.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN176822"
+></A
+><H2
+>Author</H2
+><P
+>   Peter Mount <CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:peter@retep.org.uk"
+>peter@retep.org.uk</A
+>&#62;</CODE
+>
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="oid2name.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="contrib-prog-server.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>oid2name</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib-prog-client.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Server Applications</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

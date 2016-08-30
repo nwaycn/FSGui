@@ -1,0 +1,300 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>btree_gin</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="auto_explain"
+HREF="auto-explain.html"><LINK
+REL="NEXT"
+TITLE="btree_gist"
+HREF="btree-gist.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="auto_explain"
+HREF="auto-explain.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="btree_gist"
+HREF="btree-gist.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="BTREE-GIN"
+>F.4. btree_gin</A
+></H1
+><P
+>  <TT
+CLASS="FILENAME"
+>btree_gin</TT
+> provides sample GIN operator classes that
+  implement B-tree equivalent behavior for the data types
+  <TT
+CLASS="TYPE"
+>int2</TT
+>, <TT
+CLASS="TYPE"
+>int4</TT
+>, <TT
+CLASS="TYPE"
+>int8</TT
+>, <TT
+CLASS="TYPE"
+>float4</TT
+>,
+  <TT
+CLASS="TYPE"
+>float8</TT
+>, <TT
+CLASS="TYPE"
+>timestamp with time zone</TT
+>,
+  <TT
+CLASS="TYPE"
+>timestamp without time zone</TT
+>, <TT
+CLASS="TYPE"
+>time with time zone</TT
+>,
+  <TT
+CLASS="TYPE"
+>time without time zone</TT
+>, <TT
+CLASS="TYPE"
+>date</TT
+>, <TT
+CLASS="TYPE"
+>interval</TT
+>,
+  <TT
+CLASS="TYPE"
+>oid</TT
+>, <TT
+CLASS="TYPE"
+>money</TT
+>, <TT
+CLASS="TYPE"
+>"char"</TT
+>,
+  <TT
+CLASS="TYPE"
+>varchar</TT
+>, <TT
+CLASS="TYPE"
+>text</TT
+>, <TT
+CLASS="TYPE"
+>bytea</TT
+>, <TT
+CLASS="TYPE"
+>bit</TT
+>,
+  <TT
+CLASS="TYPE"
+>varbit</TT
+>, <TT
+CLASS="TYPE"
+>macaddr</TT
+>, <TT
+CLASS="TYPE"
+>inet</TT
+>, and <TT
+CLASS="TYPE"
+>cidr</TT
+>.
+ </P
+><P
+>  In general, these operator classes will not outperform the equivalent
+  standard B-tree index methods, and they lack one major feature of the
+  standard B-tree code: the ability to enforce uniqueness.  However,
+  they are useful for GIN testing and as a base for developing other
+  GIN operator classes.  Also, for queries that test both a GIN-indexable
+  column and a B-tree-indexable column, it might be more efficient to create
+  a multicolumn GIN index that uses one of these operator classes than to create
+  two separate indexes that would have to be combined via bitmap ANDing.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN169087"
+>F.4.1. Example Usage</A
+></H2
+><PRE
+CLASS="PROGRAMLISTING"
+>CREATE TABLE test (a int4);
+-- create index
+CREATE INDEX testidx ON test USING GIN (a);
+-- query
+SELECT * FROM test WHERE a &lt; 10;</PRE
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN169090"
+>F.4.2. Authors</A
+></H2
+><P
+>   Teodor Sigaev (<CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:teodor@stack.net"
+>teodor@stack.net</A
+>&#62;</CODE
+>) and
+   Oleg Bartunov (<CODE
+CLASS="EMAIL"
+>&#60;<A
+HREF="mailto:oleg@sai.msu.su"
+>oleg@sai.msu.su</A
+>&#62;</CODE
+>).  See
+   <A
+HREF="http://www.sai.msu.su/~megera/oddmuse/index.cgi/Gin"
+TARGET="_top"
+>http://www.sai.msu.su/~megera/oddmuse/index.cgi/Gin</A
+>
+   for additional information.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="auto-explain.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="btree-gist.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>auto_explain</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>btree_gist</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

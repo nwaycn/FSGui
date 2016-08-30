@@ -1,0 +1,209 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Implementation</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="GiST Indexes"
+HREF="gist.html"><LINK
+REL="PREVIOUS"
+TITLE="Extensibility"
+HREF="gist-extensibility.html"><LINK
+REL="NEXT"
+TITLE="Examples"
+HREF="gist-examples.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Extensibility"
+HREF="gist-extensibility.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="gist.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 59. GiST Indexes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Examples"
+HREF="gist-examples.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="GIST-IMPLEMENTATION"
+>59.4. Implementation</A
+></H1
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="GIST-BUFFERING-BUILD"
+>59.4.1. GiST buffering build</A
+></H2
+><P
+>   Building large GiST indexes by simply inserting all the tuples tends to be
+   slow, because if the index tuples are scattered across the index and the
+   index is large enough to not fit in cache, the insertions need to perform
+   a lot of random I/O.  Beginning in version 9.2, PostgreSQL supports a more
+   efficient method to build GiST indexes based on buffering, which can
+   dramatically reduce the number of random I/Os needed for non-ordered data
+   sets. For well-ordered data sets the benefit is smaller or non-existent,
+   because only a small number of pages receive new tuples at a time, and
+   those pages fit in cache even if the index as whole does not.
+  </P
+><P
+>   However, buffering index build needs to call the <CODE
+CLASS="FUNCTION"
+>penalty</CODE
+>
+   function more often, which consumes some extra CPU resources. Also, the
+   buffers used in the buffering build need temporary disk space, up to
+   the size of the resulting index. Buffering can also influence the quality
+   of the resulting index, in both positive and negative directions. That
+   influence depends on various factors, like the distribution of the input
+   data and the operator class implementation.
+  </P
+><P
+>   By default, a GiST index build switches to the buffering method when the
+   index size reaches <A
+HREF="runtime-config-query.html#GUC-EFFECTIVE-CACHE-SIZE"
+>effective_cache_size</A
+>. It can
+   be manually turned on or off by the <TT
+CLASS="LITERAL"
+>buffering</TT
+> parameter
+   to the CREATE INDEX command. The default behavior is good for most cases,
+   but turning buffering off might speed up the build somewhat if the input
+   data is ordered.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="gist-extensibility.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="gist-examples.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Extensibility</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="gist.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Examples</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

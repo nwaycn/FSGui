@@ -1,0 +1,743 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>CREATE DATABASE</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="CREATE CONVERSION"
+HREF="sql-createconversion.html"><LINK
+REL="NEXT"
+TITLE="CREATE DOMAIN"
+HREF="sql-createdomain.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="CREATE CONVERSION"
+HREF="sql-createconversion.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="CREATE DOMAIN"
+HREF="sql-createdomain.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-CREATEDATABASE"
+></A
+>CREATE DATABASE</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN75340"
+></A
+><H2
+>Name</H2
+>CREATE DATABASE&nbsp;--&nbsp;create a new database</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN75343"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>CREATE DATABASE <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>
+    [ [ WITH ] [ OWNER [=] <TT
+CLASS="REPLACEABLE"
+><I
+>user_name</I
+></TT
+> ]
+           [ TEMPLATE [=] <TT
+CLASS="REPLACEABLE"
+><I
+>template</I
+></TT
+> ]
+           [ ENCODING [=] <TT
+CLASS="REPLACEABLE"
+><I
+>encoding</I
+></TT
+> ]
+           [ LC_COLLATE [=] <TT
+CLASS="REPLACEABLE"
+><I
+>lc_collate</I
+></TT
+> ]
+           [ LC_CTYPE [=] <TT
+CLASS="REPLACEABLE"
+><I
+>lc_ctype</I
+></TT
+> ]
+           [ TABLESPACE [=] <TT
+CLASS="REPLACEABLE"
+><I
+>tablespace_name</I
+></TT
+> ]
+           [ ALLOW_CONNECTIONS [=] <TT
+CLASS="REPLACEABLE"
+><I
+>allowconn</I
+></TT
+> ]
+           [ CONNECTION LIMIT [=] <TT
+CLASS="REPLACEABLE"
+><I
+>connlimit</I
+></TT
+> ]
+           [ IS_TEMPLATE [=] <TT
+CLASS="REPLACEABLE"
+><I
+>istemplate</I
+></TT
+> ] ]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75355"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>CREATE DATABASE</TT
+> creates a new
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> database.
+  </P
+><P
+>   To create a database, you must be a superuser or have the special
+   <TT
+CLASS="LITERAL"
+>CREATEDB</TT
+> privilege.
+   See <A
+HREF="sql-createuser.html"
+>CREATE USER</A
+>.
+  </P
+><P
+>   By default, the new database will be created by cloning the standard
+   system database <TT
+CLASS="LITERAL"
+>template1</TT
+>.  A different template can be
+   specified by writing <TT
+CLASS="LITERAL"
+>TEMPLATE
+   <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></TT
+>.  In particular,
+   by writing <TT
+CLASS="LITERAL"
+>TEMPLATE template0</TT
+>, you can create a virgin
+   database containing only the standard objects predefined by your
+   version of <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>.  This is useful
+   if you wish to avoid copying
+   any installation-local objects that might have been added to
+   <TT
+CLASS="LITERAL"
+>template1</TT
+>.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75370"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></DT
+><DD
+><P
+>        The name of a database to create.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>user_name</I
+></TT
+></DT
+><DD
+><P
+>        The role name of the user who will own the new database,
+        or <TT
+CLASS="LITERAL"
+>DEFAULT</TT
+> to use the default (namely, the
+        user executing the command).  To create a database owned by another
+        role, you must be a direct or indirect member of that role,
+        or be a superuser.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>template</I
+></TT
+></DT
+><DD
+><P
+>        The name of the template from which to create the new database,
+        or <TT
+CLASS="LITERAL"
+>DEFAULT</TT
+> to use the default template
+        (<TT
+CLASS="LITERAL"
+>template1</TT
+>).
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>encoding</I
+></TT
+></DT
+><DD
+><P
+>        Character set encoding to use in the new database.  Specify
+        a string constant (e.g., <TT
+CLASS="LITERAL"
+>'SQL_ASCII'</TT
+>),
+        or an integer encoding number, or <TT
+CLASS="LITERAL"
+>DEFAULT</TT
+>
+        to use the default encoding (namely, the encoding of the
+        template database). The character sets supported by the
+        <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> server are described in
+        <A
+HREF="multibyte.html#MULTIBYTE-CHARSET-SUPPORTED"
+>Section 22.3.1</A
+>. See below for
+        additional restrictions.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>lc_collate</I
+></TT
+></DT
+><DD
+><P
+>        Collation order (<TT
+CLASS="LITERAL"
+>LC_COLLATE</TT
+>) to use in the new database.
+        This affects the sort order applied to strings, e.g. in queries with
+        ORDER BY, as well as the order used in indexes on text columns.
+        The default is to use the collation order of the template database.
+        See below for additional restrictions.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>lc_ctype</I
+></TT
+></DT
+><DD
+><P
+>        Character classification (<TT
+CLASS="LITERAL"
+>LC_CTYPE</TT
+>) to use in the new
+        database. This affects the categorization of characters, e.g. lower,
+        upper and digit. The default is to use the character classification of
+        the template database. See below for additional restrictions.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>tablespace_name</I
+></TT
+></DT
+><DD
+><P
+>        The name of the tablespace that will be associated with the
+        new database, or <TT
+CLASS="LITERAL"
+>DEFAULT</TT
+> to use the
+        template database's tablespace. This
+        tablespace will be the default tablespace used for objects
+        created in this database. See
+        <A
+HREF="sql-createtablespace.html"
+>CREATE TABLESPACE</A
+>
+        for more information.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>allowconn</I
+></TT
+></DT
+><DD
+><P
+>         If false then no one can connect to this database.  The default is
+         true, allowing connections (except as restricted by other mechanisms,
+         such as <TT
+CLASS="LITERAL"
+>GRANT</TT
+>/<TT
+CLASS="LITERAL"
+>REVOKE CONNECT</TT
+>).
+        </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>connlimit</I
+></TT
+></DT
+><DD
+><P
+>        How many concurrent connections can be made
+        to this database.  -1 (the default) means no limit.
+       </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>istemplate</I
+></TT
+></DT
+><DD
+><P
+>         If true, then this database can be cloned by any user with <TT
+CLASS="LITERAL"
+>CREATEDB</TT
+>
+         privileges; if false (the default), then only superusers or the owner
+         of the database can clone it.
+        </P
+></DD
+></DL
+></DIV
+><P
+>   Optional parameters can be written in any order, not only the order
+   illustrated above.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75438"
+></A
+><H2
+>Notes</H2
+><P
+>    <TT
+CLASS="COMMAND"
+>CREATE DATABASE</TT
+> cannot be executed inside a transaction
+    block.
+   </P
+><P
+>    Errors along the line of <SPAN
+CLASS="QUOTE"
+>"could not initialize database directory"</SPAN
+>
+    are most likely related to insufficient permissions on the data
+    directory, a full disk, or other file system problems.
+   </P
+><P
+>    Use <A
+HREF="sql-dropdatabase.html"
+>DROP DATABASE</A
+> to remove a database.
+   </P
+><P
+>    The program <A
+HREF="app-createdb.html"
+><SPAN
+CLASS="APPLICATION"
+>createdb</SPAN
+></A
+> is a
+    wrapper program around this command, provided for convenience.
+   </P
+><P
+>    Database-level configuration parameters (set via <A
+HREF="sql-alterdatabase.html"
+>ALTER DATABASE</A
+>) are not copied from the template
+    database.
+   </P
+><P
+>   Although it is possible to copy a database other than <TT
+CLASS="LITERAL"
+>template1</TT
+>
+   by specifying its name as the template, this is not (yet) intended as
+   a general-purpose <SPAN
+CLASS="QUOTE"
+>"<TT
+CLASS="COMMAND"
+>COPY DATABASE</TT
+>"</SPAN
+> facility.
+   The principal limitation is that no other sessions can be connected to
+   the template database while it is being copied.  <TT
+CLASS="COMMAND"
+>CREATE
+   DATABASE</TT
+> will fail if any other connection exists when it starts;
+   otherwise, new connections to the template database are locked out
+   until <TT
+CLASS="COMMAND"
+>CREATE DATABASE</TT
+> completes.
+   See <A
+HREF="manage-ag-templatedbs.html"
+>Section 21.3</A
+> for more information.
+  </P
+><P
+>   The character set encoding specified for the new database must be
+   compatible with the chosen locale settings (<TT
+CLASS="LITERAL"
+>LC_COLLATE</TT
+> and
+   <TT
+CLASS="LITERAL"
+>LC_CTYPE</TT
+>).  If the locale is <TT
+CLASS="LITERAL"
+>C</TT
+> (or equivalently
+   <TT
+CLASS="LITERAL"
+>POSIX</TT
+>), then all encodings are allowed, but for other
+   locale settings there is only one encoding that will work properly.
+   (On Windows, however, UTF-8 encoding can be used with any locale.)
+   <TT
+CLASS="COMMAND"
+>CREATE DATABASE</TT
+> will allow superusers to specify
+   <TT
+CLASS="LITERAL"
+>SQL_ASCII</TT
+> encoding regardless of the locale settings,
+   but this choice is deprecated and may result in misbehavior of
+   character-string functions if data that is not encoding-compatible
+   with the locale is stored in the database.
+  </P
+><P
+>   The encoding and locale settings must match those of the template database,
+   except when <TT
+CLASS="LITERAL"
+>template0</TT
+> is used as template.  This is because
+   other databases might contain data that does not match the specified
+   encoding, or might contain indexes whose sort ordering is affected by
+   <TT
+CLASS="LITERAL"
+>LC_COLLATE</TT
+> and <TT
+CLASS="LITERAL"
+>LC_CTYPE</TT
+>.  Copying such data would
+   result in a database that is corrupt according to the new settings.
+   <TT
+CLASS="LITERAL"
+>template0</TT
+>, however, is known to not contain any data or
+   indexes that would be affected.
+  </P
+><P
+>   The <TT
+CLASS="LITERAL"
+>CONNECTION LIMIT</TT
+> option is only enforced approximately;
+   if two new sessions start at about the same time when just one
+   connection <SPAN
+CLASS="QUOTE"
+>"slot"</SPAN
+> remains for the database, it is possible that
+   both will fail.  Also, the limit is not enforced against superusers.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75472"
+></A
+><H2
+>Examples</H2
+><P
+>   To create a new database:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE DATABASE lusiadas;</PRE
+><P>
+  </P
+><P
+>   To create a database <TT
+CLASS="LITERAL"
+>sales</TT
+> owned by user <TT
+CLASS="LITERAL"
+>salesapp</TT
+>
+   with a default tablespace of <TT
+CLASS="LITERAL"
+>salesspace</TT
+>:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE DATABASE sales OWNER salesapp TABLESPACE salesspace;</PRE
+><P>
+  </P
+><P
+>   To create a database <TT
+CLASS="LITERAL"
+>music</TT
+> which supports the ISO-8859-1
+   character set:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE DATABASE music ENCODING 'LATIN1' TEMPLATE template0;</PRE
+><P>
+
+   In this example, the <TT
+CLASS="LITERAL"
+>TEMPLATE template0</TT
+> clause would only
+   be required if <TT
+CLASS="LITERAL"
+>template1</TT
+>'s encoding is not ISO-8859-1.
+   Note that changing encoding might require selecting new
+   <TT
+CLASS="LITERAL"
+>LC_COLLATE</TT
+> and <TT
+CLASS="LITERAL"
+>LC_CTYPE</TT
+> settings as well.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75488"
+></A
+><H2
+>Compatibility</H2
+><P
+>   There is no <TT
+CLASS="COMMAND"
+>CREATE DATABASE</TT
+> statement in the SQL
+   standard.  Databases are equivalent to catalogs, whose creation is
+   implementation-defined.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN75492"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-alterdatabase.html"
+>ALTER DATABASE</A
+>, <A
+HREF="sql-dropdatabase.html"
+>DROP DATABASE</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-createconversion.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-createdomain.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>CREATE CONVERSION</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>CREATE DOMAIN</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

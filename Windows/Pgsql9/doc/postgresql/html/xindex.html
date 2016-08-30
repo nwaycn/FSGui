@@ -1,0 +1,2205 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Interfacing Extensions To Indexes</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Extending SQL"
+HREF="extend.html"><LINK
+REL="PREVIOUS"
+TITLE="Operator Optimization Information"
+HREF="xoper-optimization.html"><LINK
+REL="NEXT"
+TITLE="Packaging Related Objects into an Extension"
+HREF="extend-extensions.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Operator Optimization Information"
+HREF="xoper-optimization.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="extend.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 35. Extending <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Packaging Related Objects into an Extension"
+HREF="extend-extensions.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="XINDEX"
+>35.14. Interfacing Extensions To Indexes</A
+></H1
+><P
+>   The procedures described thus far let you define new types, new
+   functions, and new operators. However, we cannot yet define an
+   index on a column of a new data type.  To do this, we must define an
+   <I
+CLASS="FIRSTTERM"
+>operator class</I
+> for the new data type.  Later in this
+   section, we will illustrate this concept in an example: a new
+   operator class for the B-tree index method that stores and sorts
+   complex numbers in ascending absolute value order.
+  </P
+><P
+>   Operator classes can be grouped into <I
+CLASS="FIRSTTERM"
+>operator families</I
+>
+   to show the relationships between semantically compatible classes.
+   When only a single data type is involved, an operator class is sufficient,
+   so we'll focus on that case first and then return to operator families.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="XINDEX-OPCLASS"
+>35.14.1. Index Methods and Operator Classes</A
+></H2
+><P
+>   The <CODE
+CLASS="CLASSNAME"
+>pg_am</CODE
+> table contains one row for every
+   index method (internally known as access method).  Support for
+   regular access to tables is built into
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>, but all index methods are
+   described in <CODE
+CLASS="CLASSNAME"
+>pg_am</CODE
+>.  It is possible to add a
+   new index method by defining the required interface routines and
+   then creating a row in <CODE
+CLASS="CLASSNAME"
+>pg_am</CODE
+> &mdash; but that is
+   beyond the scope of this chapter (see <A
+HREF="indexam.html"
+>Chapter 58</A
+>).
+  </P
+><P
+>   The routines for an index method do not directly know anything
+   about the data types that the index method will operate on.
+   Instead, an <I
+CLASS="FIRSTTERM"
+>operator
+   class</I
+>
+   identifies the set of operations that the index method needs to use
+   to work with a particular data type.  Operator classes are so
+   called because one thing they specify is the set of
+   <TT
+CLASS="LITERAL"
+>WHERE</TT
+>-clause operators that can be used with an index
+   (i.e., can be converted into an index-scan qualification).  An
+   operator class can also specify some <I
+CLASS="FIRSTTERM"
+>support
+   procedures</I
+> that are needed by the internal operations of the
+   index method, but do not directly correspond to any
+   <TT
+CLASS="LITERAL"
+>WHERE</TT
+>-clause operator that can be used with the index.
+  </P
+><P
+>   It is possible to define multiple operator classes for the same
+   data type and index method.  By doing this, multiple
+   sets of indexing semantics can be defined for a single data type.
+   For example, a B-tree index requires a sort ordering to be defined
+   for each data type it works on.
+   It might be useful for a complex-number data type
+   to have one B-tree operator class that sorts the data by complex
+   absolute value, another that sorts by real part, and so on.
+   Typically, one of the operator classes will be deemed most commonly
+   useful and will be marked as the default operator class for that
+   data type and index method.
+  </P
+><P
+>   The same operator class name
+   can be used for several different index methods (for example, both B-tree
+   and hash index methods have operator classes named
+   <TT
+CLASS="LITERAL"
+>int4_ops</TT
+>), but each such class is an independent
+   entity and must be defined separately.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="XINDEX-STRATEGIES"
+>35.14.2. Index Method Strategies</A
+></H2
+><P
+>   The operators associated with an operator class are identified by
+   <SPAN
+CLASS="QUOTE"
+>"strategy numbers"</SPAN
+>, which serve to identify the semantics of
+   each operator within the context of its operator class.
+   For example, B-trees impose a strict ordering on keys, lesser to greater,
+   and so operators like <SPAN
+CLASS="QUOTE"
+>"less than"</SPAN
+> and <SPAN
+CLASS="QUOTE"
+>"greater than or equal
+   to"</SPAN
+> are interesting with respect to a B-tree.
+   Because
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> allows the user to define operators,
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> cannot look at the name of an operator
+   (e.g., <TT
+CLASS="LITERAL"
+>&lt;</TT
+> or <TT
+CLASS="LITERAL"
+>&gt;=</TT
+>) and tell what kind of
+   comparison it is.  Instead, the index method defines a set of
+   <SPAN
+CLASS="QUOTE"
+>"strategies"</SPAN
+>, which can be thought of as generalized operators.
+   Each operator class specifies which actual operator corresponds to each
+   strategy for a particular data type and interpretation of the index
+   semantics.
+  </P
+><P
+>   The B-tree index method defines five strategies, shown in <A
+HREF="xindex.html#XINDEX-BTREE-STRAT-TABLE"
+>Table 35-2</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="XINDEX-BTREE-STRAT-TABLE"
+></A
+><P
+><B
+>Table 35-2. B-tree Strategies</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>Operation</TH
+><TH
+>Strategy Number</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>less than</TD
+><TD
+>1</TD
+></TR
+><TR
+><TD
+>less than or equal</TD
+><TD
+>2</TD
+></TR
+><TR
+><TD
+>equal</TD
+><TD
+>3</TD
+></TR
+><TR
+><TD
+>greater than or equal</TD
+><TD
+>4</TD
+></TR
+><TR
+><TD
+>greater than</TD
+><TD
+>5</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   Hash indexes support only equality comparisons, and so they use only one
+   strategy, shown in <A
+HREF="xindex.html#XINDEX-HASH-STRAT-TABLE"
+>Table 35-3</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="XINDEX-HASH-STRAT-TABLE"
+></A
+><P
+><B
+>Table 35-3. Hash Strategies</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>Operation</TH
+><TH
+>Strategy Number</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>equal</TD
+><TD
+>1</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   GiST indexes are more flexible: they do not have a fixed set of
+   strategies at all.  Instead, the <SPAN
+CLASS="QUOTE"
+>"consistency"</SPAN
+> support routine
+   of each particular GiST operator class interprets the strategy numbers
+   however it likes.  As an example, several of the built-in GiST index
+   operator classes index two-dimensional geometric objects, providing
+   the <SPAN
+CLASS="QUOTE"
+>"R-tree"</SPAN
+> strategies shown in
+   <A
+HREF="xindex.html#XINDEX-RTREE-STRAT-TABLE"
+>Table 35-4</A
+>.  Four of these are true
+   two-dimensional tests (overlaps, same, contains, contained by);
+   four of them consider only the X direction; and the other four
+   provide the same tests in the Y direction.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="XINDEX-RTREE-STRAT-TABLE"
+></A
+><P
+><B
+>Table 35-4. GiST Two-Dimensional <SPAN
+CLASS="QUOTE"
+>"R-tree"</SPAN
+> Strategies</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>Operation</TH
+><TH
+>Strategy Number</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>strictly left of</TD
+><TD
+>1</TD
+></TR
+><TR
+><TD
+>does not extend to right of</TD
+><TD
+>2</TD
+></TR
+><TR
+><TD
+>overlaps</TD
+><TD
+>3</TD
+></TR
+><TR
+><TD
+>does not extend to left of</TD
+><TD
+>4</TD
+></TR
+><TR
+><TD
+>strictly right of</TD
+><TD
+>5</TD
+></TR
+><TR
+><TD
+>same</TD
+><TD
+>6</TD
+></TR
+><TR
+><TD
+>contains</TD
+><TD
+>7</TD
+></TR
+><TR
+><TD
+>contained by</TD
+><TD
+>8</TD
+></TR
+><TR
+><TD
+>does not extend above</TD
+><TD
+>9</TD
+></TR
+><TR
+><TD
+>strictly below</TD
+><TD
+>10</TD
+></TR
+><TR
+><TD
+>strictly above</TD
+><TD
+>11</TD
+></TR
+><TR
+><TD
+>does not extend below</TD
+><TD
+>12</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   SP-GiST indexes are similar to GiST indexes in flexibility: they don't have
+   a fixed set of strategies. Instead the support routines of each operator
+   class interpret the strategy numbers according to the operator class's
+   definition. As an example, the strategy numbers used by the built-in
+   operator classes for points are shown in <A
+HREF="xindex.html#XINDEX-SPGIST-POINT-STRAT-TABLE"
+>Table 35-5</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="XINDEX-SPGIST-POINT-STRAT-TABLE"
+></A
+><P
+><B
+>Table 35-5. SP-GiST Point Strategies</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>Operation</TH
+><TH
+>Strategy Number</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>strictly left of</TD
+><TD
+>1</TD
+></TR
+><TR
+><TD
+>strictly right of</TD
+><TD
+>5</TD
+></TR
+><TR
+><TD
+>same</TD
+><TD
+>6</TD
+></TR
+><TR
+><TD
+>contained by</TD
+><TD
+>8</TD
+></TR
+><TR
+><TD
+>strictly below</TD
+><TD
+>10</TD
+></TR
+><TR
+><TD
+>strictly above</TD
+><TD
+>11</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   GIN indexes are similar to GiST and SP-GiST indexes, in that they don't
+   have a fixed set of strategies either. Instead the support routines of
+   each operator class interpret the strategy numbers according to the
+   operator class's definition. As an example, the strategy numbers used by
+   the built-in operator classes for arrays are shown in
+   <A
+HREF="xindex.html#XINDEX-GIN-ARRAY-STRAT-TABLE"
+>Table 35-6</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="XINDEX-GIN-ARRAY-STRAT-TABLE"
+></A
+><P
+><B
+>Table 35-6. GIN Array Strategies</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>Operation</TH
+><TH
+>Strategy Number</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>overlap</TD
+><TD
+>1</TD
+></TR
+><TR
+><TD
+>contains</TD
+><TD
+>2</TD
+></TR
+><TR
+><TD
+>is contained by</TD
+><TD
+>3</TD
+></TR
+><TR
+><TD
+>equal</TD
+><TD
+>4</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   BRIN indexes are similar to GiST, SP-GiST and GIN indexes in that they
+   don't have a fixed set of strategies either.  Instead the support routines
+   of each operator class interpret the strategy numbers according to the
+   operator class's definition. As an example, the strategy numbers used by
+   the built-in <TT
+CLASS="LITERAL"
+>Minmax</TT
+> operator classes are shown in
+   <A
+HREF="xindex.html#XINDEX-BRIN-MINMAX-STRAT-TABLE"
+>Table 35-7</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="XINDEX-BRIN-MINMAX-STRAT-TABLE"
+></A
+><P
+><B
+>Table 35-7. BRIN Minmax Strategies</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>Operation</TH
+><TH
+>Strategy Number</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>less than</TD
+><TD
+>1</TD
+></TR
+><TR
+><TD
+>less than or equal</TD
+><TD
+>2</TD
+></TR
+><TR
+><TD
+>equal</TD
+><TD
+>3</TD
+></TR
+><TR
+><TD
+>greater than or equal</TD
+><TD
+>4</TD
+></TR
+><TR
+><TD
+>greater than</TD
+><TD
+>5</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   Notice that all the operators listed above return Boolean values.  In
+   practice, all operators defined as index method search operators must
+   return type <TT
+CLASS="TYPE"
+>boolean</TT
+>, since they must appear at the top
+   level of a <TT
+CLASS="LITERAL"
+>WHERE</TT
+> clause to be used with an index.
+   (Some index access methods also support <I
+CLASS="FIRSTTERM"
+>ordering operators</I
+>,
+   which typically don't return Boolean values; that feature is discussed
+   in <A
+HREF="xindex.html#XINDEX-ORDERING-OPS"
+>Section 35.14.7</A
+>.)
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="XINDEX-SUPPORT"
+>35.14.3. Index Method Support Routines</A
+></H2
+><P
+>   Strategies aren't usually enough information for the system to figure
+   out how to use an index.  In practice, the index methods require
+   additional support routines in order to work. For example, the B-tree
+   index method must be able to compare two keys and determine whether one
+   is greater than, equal to, or less than the other.  Similarly, the
+   hash index method must be able to compute hash codes for key values.
+   These operations do not correspond to operators used in qualifications in
+   SQL commands;  they are administrative routines used by
+   the index methods, internally.
+  </P
+><P
+>   Just as with strategies, the operator class identifies which specific
+   functions should play each of these roles for a given data type and
+   semantic interpretation.  The index method defines the set
+   of functions it needs, and the operator class identifies the correct
+   functions to use by assigning them to the <SPAN
+CLASS="QUOTE"
+>"support function numbers"</SPAN
+>
+   specified by the index method.
+  </P
+><P
+>   B-trees require a single support function, and allow a second one to be
+   supplied at the operator class author's option, as shown in <A
+HREF="xindex.html#XINDEX-BTREE-SUPPORT-TABLE"
+>Table 35-8</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="XINDEX-BTREE-SUPPORT-TABLE"
+></A
+><P
+><B
+>Table 35-8. B-tree Support Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Support Number</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>        Compare two keys and return an integer less than zero, zero, or
+        greater than zero, indicating whether the first key is less than,
+        equal to, or greater than the second
+       </TD
+><TD
+>1</TD
+></TR
+><TR
+><TD
+>        Return the addresses of C-callable sort support function(s),
+        as documented in <TT
+CLASS="FILENAME"
+>utils/sortsupport.h</TT
+> (optional)
+       </TD
+><TD
+>2</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   Hash indexes require one support function, shown in <A
+HREF="xindex.html#XINDEX-HASH-SUPPORT-TABLE"
+>Table 35-9</A
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="XINDEX-HASH-SUPPORT-TABLE"
+></A
+><P
+><B
+>Table 35-9. Hash Support Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Support Number</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>Compute the hash value for a key</TD
+><TD
+>1</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   GiST indexes have nine support functions, two of which are optional,
+   as shown in <A
+HREF="xindex.html#XINDEX-GIST-SUPPORT-TABLE"
+>Table 35-10</A
+>.
+   (For more information see <A
+HREF="gist.html"
+>Chapter 59</A
+>.)
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="XINDEX-GIST-SUPPORT-TABLE"
+></A
+><P
+><B
+>Table 35-10. GiST Support Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Description</TH
+><TH
+>Support Number</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>consistent</CODE
+></TD
+><TD
+>determine whether key satisfies the
+        query qualifier</TD
+><TD
+>1</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>union</CODE
+></TD
+><TD
+>compute union of a set of keys</TD
+><TD
+>2</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>compress</CODE
+></TD
+><TD
+>compute a compressed representation of a key or value
+        to be indexed</TD
+><TD
+>3</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>decompress</CODE
+></TD
+><TD
+>compute a decompressed representation of a
+        compressed key</TD
+><TD
+>4</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>penalty</CODE
+></TD
+><TD
+>compute penalty for inserting new key into subtree
+       with given subtree's key</TD
+><TD
+>5</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>picksplit</CODE
+></TD
+><TD
+>determine which entries of a page are to be moved
+       to the new page and compute the union keys for resulting pages</TD
+><TD
+>6</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>equal</CODE
+></TD
+><TD
+>compare two keys and return true if they are equal</TD
+><TD
+>7</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>distance</CODE
+></TD
+><TD
+>determine distance from key to query value (optional)</TD
+><TD
+>8</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>fetch</CODE
+></TD
+><TD
+>compute original representation of a compressed key for
+       index-only scans (optional)</TD
+><TD
+>9</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   SP-GiST indexes require five support functions, as
+   shown in <A
+HREF="xindex.html#XINDEX-SPGIST-SUPPORT-TABLE"
+>Table 35-11</A
+>.
+   (For more information see <A
+HREF="spgist.html"
+>Chapter 60</A
+>.)
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="XINDEX-SPGIST-SUPPORT-TABLE"
+></A
+><P
+><B
+>Table 35-11. SP-GiST Support Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Description</TH
+><TH
+>Support Number</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>config</CODE
+></TD
+><TD
+>provide basic information about the operator class</TD
+><TD
+>1</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>choose</CODE
+></TD
+><TD
+>determine how to insert a new value into an inner tuple</TD
+><TD
+>2</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>picksplit</CODE
+></TD
+><TD
+>determine how to partition a set of values</TD
+><TD
+>3</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>inner_consistent</CODE
+></TD
+><TD
+>determine which sub-partitions need to be searched for a
+        query</TD
+><TD
+>4</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>leaf_consistent</CODE
+></TD
+><TD
+>determine whether key satisfies the
+        query qualifier</TD
+><TD
+>5</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   GIN indexes have six support functions, three of which are optional,
+   as shown in <A
+HREF="xindex.html#XINDEX-GIN-SUPPORT-TABLE"
+>Table 35-12</A
+>.
+   (For more information see <A
+HREF="gin.html"
+>Chapter 61</A
+>.)
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="XINDEX-GIN-SUPPORT-TABLE"
+></A
+><P
+><B
+>Table 35-12. GIN Support Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Description</TH
+><TH
+>Support Number</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>compare</CODE
+></TD
+><TD
+>        compare two keys and return an integer less than zero, zero,
+        or greater than zero, indicating whether the first key is less than,
+        equal to, or greater than the second
+       </TD
+><TD
+>1</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>extractValue</CODE
+></TD
+><TD
+>extract keys from a value to be indexed</TD
+><TD
+>2</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>extractQuery</CODE
+></TD
+><TD
+>extract keys from a query condition</TD
+><TD
+>3</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>consistent</CODE
+></TD
+><TD
+>        determine whether value matches query condition (Boolean variant)
+        (optional if support function 6 is present)
+       </TD
+><TD
+>4</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>comparePartial</CODE
+></TD
+><TD
+>        compare partial key from
+        query and key from index, and return an integer less than zero, zero,
+        or greater than zero, indicating whether GIN should ignore this index
+        entry, treat the entry as a match, or stop the index scan (optional)
+       </TD
+><TD
+>5</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>triConsistent</CODE
+></TD
+><TD
+>        determine whether value matches query condition (ternary variant)
+        (optional if support function 4 is present)
+       </TD
+><TD
+>6</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   BRIN indexes have four basic support functions, as shown in
+   <A
+HREF="xindex.html#XINDEX-BRIN-SUPPORT-TABLE"
+>Table 35-13</A
+>; those basic functions
+   may require additional support functions to be provided.
+   (For more information see <A
+HREF="brin-extensibility.html"
+>Section 62.3</A
+>.)
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="XINDEX-BRIN-SUPPORT-TABLE"
+></A
+><P
+><B
+>Table 35-13. BRIN Support Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Description</TH
+><TH
+>Support Number</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>opcInfo</CODE
+></TD
+><TD
+>        return internal information describing the indexed columns'
+        summary data
+       </TD
+><TD
+>1</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>add_value</CODE
+></TD
+><TD
+>add a new value to an existing summary index tuple</TD
+><TD
+>2</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>consistent</CODE
+></TD
+><TD
+>determine whether value matches query condition</TD
+><TD
+>3</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>union</CODE
+></TD
+><TD
+>        compute union of two summary tuples
+       </TD
+><TD
+>4</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   Unlike search operators, support functions return whichever data
+   type the particular index method expects; for example in the case
+   of the comparison function for B-trees, a signed integer.  The number
+   and types of the arguments to each support function are likewise
+   dependent on the index method.  For B-tree and hash the comparison and
+   hashing support functions take the same input data types as do the
+   operators included in the operator class, but this is not the case for
+   most GiST, SP-GiST, GIN, and BRIN support functions.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="XINDEX-EXAMPLE"
+>35.14.4. An Example</A
+></H2
+><P
+>   Now that we have seen the ideas, here is the promised example of
+   creating a new operator class.
+   (You can find a working copy of this example in
+   <TT
+CLASS="FILENAME"
+>src/tutorial/complex.c</TT
+> and
+   <TT
+CLASS="FILENAME"
+>src/tutorial/complex.sql</TT
+> in the source
+   distribution.)
+   The operator class encapsulates
+   operators that sort complex numbers in absolute value order, so we
+   choose the name <TT
+CLASS="LITERAL"
+>complex_abs_ops</TT
+>.  First, we need
+   a set of operators.  The procedure for defining operators was
+   discussed in <A
+HREF="xoper.html"
+>Section 35.12</A
+>.  For an operator class on
+   B-trees, the operators we require are:
+
+   <P
+></P
+></P><UL
+COMPACT="COMPACT"
+><LI
+><SPAN
+>absolute-value less-than (strategy 1)</SPAN
+></LI
+><LI
+><SPAN
+>absolute-value less-than-or-equal (strategy 2)</SPAN
+></LI
+><LI
+><SPAN
+>absolute-value equal (strategy 3)</SPAN
+></LI
+><LI
+><SPAN
+>absolute-value greater-than-or-equal (strategy 4)</SPAN
+></LI
+><LI
+><SPAN
+>absolute-value greater-than (strategy 5)</SPAN
+></LI
+></UL
+><P>
+  </P
+><P
+>   The least error-prone way to define a related set of comparison operators
+   is to write the B-tree comparison support function first, and then write the
+   other functions as one-line wrappers around the support function.  This
+   reduces the odds of getting inconsistent results for corner cases.
+   Following this approach, we first write:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>#define Mag(c)  ((c)-&#62;x*(c)-&#62;x + (c)-&#62;y*(c)-&#62;y)
+
+static int
+complex_abs_cmp_internal(Complex *a, Complex *b)
+{
+    double      amag = Mag(a),
+                bmag = Mag(b);
+
+    if (amag &#60; bmag)
+        return -1;
+    if (amag &#62; bmag)
+        return 1;
+    return 0;
+}</PRE
+><P>
+
+   Now the less-than function looks like:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>PG_FUNCTION_INFO_V1(complex_abs_lt);
+
+Datum
+complex_abs_lt(PG_FUNCTION_ARGS)
+{
+    Complex    *a = (Complex *) PG_GETARG_POINTER(0);
+    Complex    *b = (Complex *) PG_GETARG_POINTER(1);
+
+    PG_RETURN_BOOL(complex_abs_cmp_internal(a, b) &#60; 0);
+}</PRE
+><P>
+
+   The other four functions differ only in how they compare the internal
+   function's result to zero.
+  </P
+><P
+>   Next we declare the functions and the operators based on the functions
+   to SQL:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION complex_abs_lt(complex, complex) RETURNS bool
+    AS '<TT
+CLASS="REPLACEABLE"
+><I
+>filename</I
+></TT
+>', 'complex_abs_lt'
+    LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OPERATOR &lt; (
+   leftarg = complex, rightarg = complex, procedure = complex_abs_lt,
+   commutator = &gt; , negator = &gt;= ,
+   restrict = scalarltsel, join = scalarltjoinsel
+);</PRE
+><P>
+   It is important to specify the correct commutator and negator operators,
+   as well as suitable restriction and join selectivity
+   functions, otherwise the optimizer will be unable to make effective
+   use of the index.  Note that the less-than, equal, and
+   greater-than cases should use different selectivity functions.
+  </P
+><P
+>   Other things worth noting are happening here:
+
+  <P
+></P
+></P><UL
+><LI
+><P
+>     There can only be one operator named, say, <TT
+CLASS="LITERAL"
+>=</TT
+>
+     and taking type <TT
+CLASS="TYPE"
+>complex</TT
+> for both operands.  In this
+     case we don't have any other operator <TT
+CLASS="LITERAL"
+>=</TT
+> for
+     <TT
+CLASS="TYPE"
+>complex</TT
+>, but if we were building a practical data
+     type we'd probably want <TT
+CLASS="LITERAL"
+>=</TT
+> to be the ordinary
+     equality operation for complex numbers (and not the equality of
+     the absolute values).  In that case, we'd need to use some other
+     operator name for <CODE
+CLASS="FUNCTION"
+>complex_abs_eq</CODE
+>.
+    </P
+></LI
+><LI
+><P
+>     Although <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> can cope with
+     functions having the same SQL name as long as they have different
+     argument data types, C can only cope with one global function
+     having a given name.  So we shouldn't name the C function
+     something simple like <TT
+CLASS="FILENAME"
+>abs_eq</TT
+>.  Usually it's
+     a good practice to include the data type name in the C function
+     name, so as not to conflict with functions for other data types.
+    </P
+></LI
+><LI
+><P
+>     We could have made the SQL name
+     of the function <TT
+CLASS="FILENAME"
+>abs_eq</TT
+>, relying on
+     <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> to distinguish it by
+     argument data types from any other SQL function of the same name.
+     To keep the example simple, we make the function have the same
+     names at the C level and SQL level.
+    </P
+></LI
+></UL
+><P>
+  </P
+><P
+>   The next step is the registration of the support routine required
+   by B-trees.  The example C code that implements this is in the same
+   file that contains the operator functions.  This is how we declare
+   the function:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE FUNCTION complex_abs_cmp(complex, complex)
+    RETURNS integer
+    AS '<TT
+CLASS="REPLACEABLE"
+><I
+>filename</I
+></TT
+>'
+    LANGUAGE C IMMUTABLE STRICT;</PRE
+><P>
+  </P
+><P
+>   Now that we have the required operators and support routine,
+   we can finally create the operator class:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE OPERATOR CLASS complex_abs_ops
+    DEFAULT FOR TYPE complex USING btree AS
+        OPERATOR        1       &#60; ,
+        OPERATOR        2       &#60;= ,
+        OPERATOR        3       = ,
+        OPERATOR        4       &#62;= ,
+        OPERATOR        5       &#62; ,
+        FUNCTION        1       complex_abs_cmp(complex, complex);</PRE
+><P>
+  </P
+><P
+>   And we're done!  It should now be possible to create
+   and use B-tree indexes on <TT
+CLASS="TYPE"
+>complex</TT
+> columns.
+  </P
+><P
+>   We could have written the operator entries more verbosely, as in:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>        OPERATOR        1       &lt; (complex, complex) ,</PRE
+><P>
+   but there is no need to do so when the operators take the same data type
+   we are defining the operator class for.
+  </P
+><P
+>   The above example assumes that you want to make this new operator class the
+   default B-tree operator class for the <TT
+CLASS="TYPE"
+>complex</TT
+> data type.
+   If you don't, just leave out the word <TT
+CLASS="LITERAL"
+>DEFAULT</TT
+>.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="XINDEX-OPFAMILY"
+>35.14.5. Operator Classes and Operator Families</A
+></H2
+><P
+>   So far we have implicitly assumed that an operator class deals with
+   only one data type.  While there certainly can be only one data type in
+   a particular index column, it is often useful to index operations that
+   compare an indexed column to a value of a different data type.  Also,
+   if there is use for a cross-data-type operator in connection with an
+   operator class, it is often the case that the other data type has a
+   related operator class of its own.  It is helpful to make the connections
+   between related classes explicit, because this can aid the planner in
+   optimizing SQL queries (particularly for B-tree operator classes, since
+   the planner contains a great deal of knowledge about how to work with them).
+  </P
+><P
+>   To handle these needs, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+   uses the concept of an <I
+CLASS="FIRSTTERM"
+>operator
+   family</I
+>.
+   An operator family contains one or more operator classes, and can also
+   contain indexable operators and corresponding support functions that
+   belong to the family as a whole but not to any single class within the
+   family.  We say that such operators and functions are <SPAN
+CLASS="QUOTE"
+>"loose"</SPAN
+>
+   within the family, as opposed to being bound into a specific class.
+   Typically each operator class contains single-data-type operators
+   while cross-data-type operators are loose in the family.
+  </P
+><P
+>   All the operators and functions in an operator family must have compatible
+   semantics, where the compatibility requirements are set by the index
+   method.  You might therefore wonder why bother to single out particular
+   subsets of the family as operator classes; and indeed for many purposes
+   the class divisions are irrelevant and the family is the only interesting
+   grouping.  The reason for defining operator classes is that they specify
+   how much of the family is needed to support any particular index.
+   If there is an index using an operator class, then that operator class
+   cannot be dropped without dropping the index &mdash; but other parts of
+   the operator family, namely other operator classes and loose operators,
+   could be dropped.  Thus, an operator class should be specified to contain
+   the minimum set of operators and functions that are reasonably needed
+   to work with an index on a specific data type, and then related but
+   non-essential operators can be added as loose members of the operator
+   family.
+  </P
+><P
+>   As an example, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> has a built-in
+   B-tree operator family <TT
+CLASS="LITERAL"
+>integer_ops</TT
+>, which includes operator
+   classes <TT
+CLASS="LITERAL"
+>int8_ops</TT
+>, <TT
+CLASS="LITERAL"
+>int4_ops</TT
+>, and
+   <TT
+CLASS="LITERAL"
+>int2_ops</TT
+> for indexes on <TT
+CLASS="TYPE"
+>bigint</TT
+> (<TT
+CLASS="TYPE"
+>int8</TT
+>),
+   <TT
+CLASS="TYPE"
+>integer</TT
+> (<TT
+CLASS="TYPE"
+>int4</TT
+>), and <TT
+CLASS="TYPE"
+>smallint</TT
+> (<TT
+CLASS="TYPE"
+>int2</TT
+>)
+   columns respectively.  The family also contains cross-data-type comparison
+   operators allowing any two of these types to be compared, so that an index
+   on one of these types can be searched using a comparison value of another
+   type.  The family could be duplicated by these definitions:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE OPERATOR FAMILY integer_ops USING btree;
+
+CREATE OPERATOR CLASS int8_ops
+DEFAULT FOR TYPE int8 USING btree FAMILY integer_ops AS
+  -- standard int8 comparisons
+  OPERATOR 1 &#60; ,
+  OPERATOR 2 &#60;= ,
+  OPERATOR 3 = ,
+  OPERATOR 4 &#62;= ,
+  OPERATOR 5 &#62; ,
+  FUNCTION 1 btint8cmp(int8, int8) ,
+  FUNCTION 2 btint8sortsupport(internal) ;
+
+CREATE OPERATOR CLASS int4_ops
+DEFAULT FOR TYPE int4 USING btree FAMILY integer_ops AS
+  -- standard int4 comparisons
+  OPERATOR 1 &#60; ,
+  OPERATOR 2 &#60;= ,
+  OPERATOR 3 = ,
+  OPERATOR 4 &#62;= ,
+  OPERATOR 5 &#62; ,
+  FUNCTION 1 btint4cmp(int4, int4) ,
+  FUNCTION 2 btint4sortsupport(internal) ;
+
+CREATE OPERATOR CLASS int2_ops
+DEFAULT FOR TYPE int2 USING btree FAMILY integer_ops AS
+  -- standard int2 comparisons
+  OPERATOR 1 &#60; ,
+  OPERATOR 2 &#60;= ,
+  OPERATOR 3 = ,
+  OPERATOR 4 &#62;= ,
+  OPERATOR 5 &#62; ,
+  FUNCTION 1 btint2cmp(int2, int2) ,
+  FUNCTION 2 btint2sortsupport(internal) ;
+
+ALTER OPERATOR FAMILY integer_ops USING btree ADD
+  -- cross-type comparisons int8 vs int2
+  OPERATOR 1 &#60; (int8, int2) ,
+  OPERATOR 2 &#60;= (int8, int2) ,
+  OPERATOR 3 = (int8, int2) ,
+  OPERATOR 4 &#62;= (int8, int2) ,
+  OPERATOR 5 &#62; (int8, int2) ,
+  FUNCTION 1 btint82cmp(int8, int2) ,
+
+  -- cross-type comparisons int8 vs int4
+  OPERATOR 1 &#60; (int8, int4) ,
+  OPERATOR 2 &#60;= (int8, int4) ,
+  OPERATOR 3 = (int8, int4) ,
+  OPERATOR 4 &#62;= (int8, int4) ,
+  OPERATOR 5 &#62; (int8, int4) ,
+  FUNCTION 1 btint84cmp(int8, int4) ,
+
+  -- cross-type comparisons int4 vs int2
+  OPERATOR 1 &#60; (int4, int2) ,
+  OPERATOR 2 &#60;= (int4, int2) ,
+  OPERATOR 3 = (int4, int2) ,
+  OPERATOR 4 &#62;= (int4, int2) ,
+  OPERATOR 5 &#62; (int4, int2) ,
+  FUNCTION 1 btint42cmp(int4, int2) ,
+
+  -- cross-type comparisons int4 vs int8
+  OPERATOR 1 &#60; (int4, int8) ,
+  OPERATOR 2 &#60;= (int4, int8) ,
+  OPERATOR 3 = (int4, int8) ,
+  OPERATOR 4 &#62;= (int4, int8) ,
+  OPERATOR 5 &#62; (int4, int8) ,
+  FUNCTION 1 btint48cmp(int4, int8) ,
+
+  -- cross-type comparisons int2 vs int8
+  OPERATOR 1 &#60; (int2, int8) ,
+  OPERATOR 2 &#60;= (int2, int8) ,
+  OPERATOR 3 = (int2, int8) ,
+  OPERATOR 4 &#62;= (int2, int8) ,
+  OPERATOR 5 &#62; (int2, int8) ,
+  FUNCTION 1 btint28cmp(int2, int8) ,
+
+  -- cross-type comparisons int2 vs int4
+  OPERATOR 1 &#60; (int2, int4) ,
+  OPERATOR 2 &#60;= (int2, int4) ,
+  OPERATOR 3 = (int2, int4) ,
+  OPERATOR 4 &#62;= (int2, int4) ,
+  OPERATOR 5 &#62; (int2, int4) ,
+  FUNCTION 1 btint24cmp(int2, int4) ;</PRE
+><P>
+
+   Notice that this definition <SPAN
+CLASS="QUOTE"
+>"overloads"</SPAN
+> the operator strategy and
+   support function numbers: each number occurs multiple times within the
+   family.  This is allowed so long as each instance of a
+   particular number has distinct input data types.  The instances that have
+   both input types equal to an operator class's input type are the
+   primary operators and support functions for that operator class,
+   and in most cases should be declared as part of the operator class rather
+   than as loose members of the family.
+  </P
+><P
+>   In a B-tree operator family, all the operators in the family must sort
+   compatibly, meaning that the transitive laws hold across all the data types
+   supported by the family: <SPAN
+CLASS="QUOTE"
+>"if A = B and B = C, then A = C"</SPAN
+>,
+   and <SPAN
+CLASS="QUOTE"
+>"if A &lt; B and B &lt; C, then A &lt; C"</SPAN
+>.  Moreover, implicit
+   or binary coercion casts between types represented in the operator family
+   must not change the associated sort ordering.  For each
+   operator in the family there must be a support function having the same
+   two input data types as the operator.  It is recommended that a family be
+   complete, i.e., for each combination of data types, all operators are
+   included.  Each operator class should include just the non-cross-type
+   operators and support function for its data type.
+  </P
+><P
+>   To build a multiple-data-type hash operator family, compatible hash
+   support functions must be created for each data type supported by the
+   family.  Here compatibility means that the functions are guaranteed to
+   return the same hash code for any two values that are considered equal
+   by the family's equality operators, even when the values are of different
+   types.  This is usually difficult to accomplish when the types have
+   different physical representations, but it can be done in some cases.
+   Furthermore, casting a value from one data type represented in the operator
+   family to another data type also represented in the operator family via
+   an implicit or binary coercion cast must not change the computed hash value.
+   Notice that there is only one support function per data type, not one
+   per equality operator.  It is recommended that a family be complete, i.e.,
+   provide an equality operator for each combination of data types.
+   Each operator class should include just the non-cross-type equality
+   operator and the support function for its data type.
+  </P
+><P
+>   GiST, SP-GiST, and GIN indexes do not have any explicit notion of
+   cross-data-type operations.  The set of operators supported is just
+   whatever the primary support functions for a given operator class can
+   handle.
+  </P
+><P
+>   In BRIN, the requirements depends on the framework that provides the
+   operator classes.  For operator classes based on <TT
+CLASS="LITERAL"
+>minmax</TT
+>,
+   the behavior required is the same as for B-tree operator families:
+   all the operators in the family must sort compatibly, and casts must
+   not change the associated sort ordering.
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    Prior to <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 8.3, there was no concept
+    of operator families, and so any cross-data-type operators intended to be
+    used with an index had to be bound directly into the index's operator
+    class.  While this approach still works, it is deprecated because it
+    makes an index's dependencies too broad, and because the planner can
+    handle cross-data-type comparisons more effectively when both data types
+    have operators in the same operator family.
+   </P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="XINDEX-OPCLASS-DEPENDENCIES"
+>35.14.6. System Dependencies on Operator Classes</A
+></H2
+><P
+>   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> uses operator classes to infer the
+   properties of operators in more ways than just whether they can be used
+   with indexes.  Therefore, you might want to create operator classes
+   even if you have no intention of indexing any columns of your data type.
+  </P
+><P
+>   In particular, there are SQL features such as <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> and
+   <TT
+CLASS="LITERAL"
+>DISTINCT</TT
+> that require comparison and sorting of values.
+   To implement these features on a user-defined data type,
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> looks for the default B-tree operator
+   class for the data type.  The <SPAN
+CLASS="QUOTE"
+>"equals"</SPAN
+> member of this operator
+   class defines the system's notion of equality of values for
+   <TT
+CLASS="LITERAL"
+>GROUP BY</TT
+> and <TT
+CLASS="LITERAL"
+>DISTINCT</TT
+>, and the sort ordering
+   imposed by the operator class defines the default <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+>
+   ordering.
+  </P
+><P
+>   Comparison of arrays of user-defined types also relies on the semantics
+   defined by the default B-tree operator class.
+  </P
+><P
+>   If there is no default B-tree operator class for a data type, the system
+   will look for a default hash operator class.  But since that kind of
+   operator class only provides equality, in practice it is only enough
+   to support array equality.
+  </P
+><P
+>   When there is no default operator class for a data type, you will get
+   errors like <SPAN
+CLASS="QUOTE"
+>"could not identify an ordering operator"</SPAN
+> if you
+   try to use these SQL features with the data type.
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>     In <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> versions before 7.4,
+     sorting and grouping operations would implicitly use operators named
+     <TT
+CLASS="LITERAL"
+>=</TT
+>, <TT
+CLASS="LITERAL"
+>&lt;</TT
+>, and <TT
+CLASS="LITERAL"
+>&gt;</TT
+>.  The new
+     behavior of relying on default operator classes avoids having to make
+     any assumption about the behavior of operators with particular names.
+    </P
+></BLOCKQUOTE
+></DIV
+><P
+>   Another important point is that an operator that
+   appears in a hash operator family is a candidate for hash joins,
+   hash aggregation, and related optimizations.  The hash operator family
+   is essential here since it identifies the hash function(s) to use.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="XINDEX-ORDERING-OPS"
+>35.14.7. Ordering Operators</A
+></H2
+><P
+>   Some index access methods (currently, only GiST) support the concept of
+   <I
+CLASS="FIRSTTERM"
+>ordering operators</I
+>.  What we have been discussing so far
+   are <I
+CLASS="FIRSTTERM"
+>search operators</I
+>.  A search operator is one for which
+   the index can be searched to find all rows satisfying
+   <TT
+CLASS="LITERAL"
+>WHERE</TT
+>
+   <TT
+CLASS="REPLACEABLE"
+><I
+>indexed_column</I
+></TT
+>
+   <TT
+CLASS="REPLACEABLE"
+><I
+>operator</I
+></TT
+>
+   <TT
+CLASS="REPLACEABLE"
+><I
+>constant</I
+></TT
+>.
+   Note that nothing is promised about the order in which the matching rows
+   will be returned.  In contrast, an ordering operator does not restrict the
+   set of rows that can be returned, but instead determines their order.
+   An ordering operator is one for which the index can be scanned to return
+   rows in the order represented by
+   <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+>
+   <TT
+CLASS="REPLACEABLE"
+><I
+>indexed_column</I
+></TT
+>
+   <TT
+CLASS="REPLACEABLE"
+><I
+>operator</I
+></TT
+>
+   <TT
+CLASS="REPLACEABLE"
+><I
+>constant</I
+></TT
+>.
+   The reason for defining ordering operators that way is that it supports
+   nearest-neighbor searches, if the operator is one that measures distance.
+   For example, a query like
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT * FROM places ORDER BY location &#60;-&#62; point '(101,456)' LIMIT 10;</PRE
+><P>
+   finds the ten places closest to a given target point.  A GiST index
+   on the location column can do this efficiently because
+   <TT
+CLASS="LITERAL"
+>&lt;-&gt;</TT
+> is an ordering operator.
+  </P
+><P
+>   While search operators have to return Boolean results, ordering operators
+   usually return some other type, such as float or numeric for distances.
+   This type is normally not the same as the data type being indexed.
+   To avoid hard-wiring assumptions about the behavior of different data
+   types, the definition of an ordering operator is required to name
+   a B-tree operator family that specifies the sort ordering of the result
+   data type.  As was stated in the previous section, B-tree operator families
+   define <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>'s notion of ordering, so
+   this is a natural representation.  Since the point <TT
+CLASS="LITERAL"
+>&lt;-&gt;</TT
+>
+   operator returns <TT
+CLASS="TYPE"
+>float8</TT
+>, it could be specified in an operator
+   class creation command like this:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>OPERATOR 15    &#60;-&#62; (point, point) FOR ORDER BY float_ops</PRE
+><P>
+   where <TT
+CLASS="LITERAL"
+>float_ops</TT
+> is the built-in operator family that includes
+   operations on <TT
+CLASS="TYPE"
+>float8</TT
+>.  This declaration states that the index
+   is able to return rows in order of increasing values of the
+   <TT
+CLASS="LITERAL"
+>&lt;-&gt;</TT
+> operator.
+  </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="XINDEX-OPCLASS-FEATURES"
+>35.14.8. Special Features of Operator Classes</A
+></H2
+><P
+>   There are two special features of operator classes that we have
+   not discussed yet, mainly because they are not useful
+   with the most commonly used index methods.
+  </P
+><P
+>   Normally, declaring an operator as a member of an operator class
+   (or family) means that the index method can retrieve exactly the set of rows
+   that satisfy a <TT
+CLASS="LITERAL"
+>WHERE</TT
+> condition using the operator.  For example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT * FROM table WHERE integer_column &lt; 4;</PRE
+><P>
+   can be satisfied exactly by a B-tree index on the integer column.
+   But there are cases where an index is useful as an inexact guide to
+   the matching rows.  For example, if a GiST index stores only bounding boxes
+   for geometric objects, then it cannot exactly satisfy a <TT
+CLASS="LITERAL"
+>WHERE</TT
+>
+   condition that tests overlap between nonrectangular objects such as
+   polygons.  Yet we could use the index to find objects whose bounding
+   box overlaps the bounding box of the target object, and then do the
+   exact overlap test only on the objects found by the index.  If this
+   scenario applies, the index is said to be <SPAN
+CLASS="QUOTE"
+>"lossy"</SPAN
+> for the
+   operator.  Lossy index searches are implemented by having the index
+   method return a <I
+CLASS="FIRSTTERM"
+>recheck</I
+> flag when a row might or might
+   not really satisfy the query condition.  The core system will then
+   test the original query condition on the retrieved row to see whether
+   it should be returned as a valid match.  This approach works if
+   the index is guaranteed to return all the required rows, plus perhaps
+   some additional rows, which can be eliminated by performing the original
+   operator invocation.  The index methods that support lossy searches
+   (currently, GiST, SP-GiST and GIN) allow the support functions of individual
+   operator classes to set the recheck flag, and so this is essentially an
+   operator-class feature.
+  </P
+><P
+>   Consider again the situation where we are storing in the index only
+   the bounding box of a complex object such as a polygon.  In this
+   case there's not much value in storing the whole polygon in the index
+   entry &mdash; we might as well store just a simpler object of type
+   <TT
+CLASS="TYPE"
+>box</TT
+>.  This situation is expressed by the <TT
+CLASS="LITERAL"
+>STORAGE</TT
+>
+   option in <TT
+CLASS="COMMAND"
+>CREATE OPERATOR CLASS</TT
+>: we'd write something like:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>CREATE OPERATOR CLASS polygon_ops
+    DEFAULT FOR TYPE polygon USING gist AS
+        ...
+        STORAGE box;</PRE
+><P>
+
+   At present, only the GiST, GIN and BRIN index methods support a
+   <TT
+CLASS="LITERAL"
+>STORAGE</TT
+> type that's different from the column data type.
+   The GiST <CODE
+CLASS="FUNCTION"
+>compress</CODE
+> and <CODE
+CLASS="FUNCTION"
+>decompress</CODE
+> support
+   routines must deal with data-type conversion when <TT
+CLASS="LITERAL"
+>STORAGE</TT
+>
+   is used.  In GIN, the <TT
+CLASS="LITERAL"
+>STORAGE</TT
+> type identifies the type of
+   the <SPAN
+CLASS="QUOTE"
+>"key"</SPAN
+> values, which normally is different from the type
+   of the indexed column &mdash; for example, an operator class for
+   integer-array columns might have keys that are just integers.  The
+   GIN <CODE
+CLASS="FUNCTION"
+>extractValue</CODE
+> and <CODE
+CLASS="FUNCTION"
+>extractQuery</CODE
+> support
+   routines are responsible for extracting keys from indexed values.
+   BRIN is similar to GIN: the <TT
+CLASS="LITERAL"
+>STORAGE</TT
+> type identifies the
+   type of the stored summary values, and operator classes' support
+   procedures are responsible for interpreting the summary values
+   correctly.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="xoper-optimization.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="extend-extensions.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Operator Optimization Information</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="extend.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Packaging Related Objects into an Extension</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

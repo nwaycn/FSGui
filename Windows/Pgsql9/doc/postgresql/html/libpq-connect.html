@@ -1,0 +1,2550 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Database Connection Control Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="libpq - C Library"
+HREF="libpq.html"><LINK
+REL="PREVIOUS"
+TITLE="libpq - C Library"
+HREF="libpq.html"><LINK
+REL="NEXT"
+TITLE="Connection Status Functions"
+HREF="libpq-status.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="libpq - C Library"
+HREF="libpq.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="libpq.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 31. <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> - C Library</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Connection Status Functions"
+HREF="libpq-status.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="LIBPQ-CONNECT"
+>31.1. Database Connection Control Functions</A
+></H1
+><P
+>   The following functions deal with making a connection to a
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> backend server.  An
+   application program can have several backend connections open at
+   one time.  (One reason to do that is to access more than one
+   database.)  Each connection is represented by a
+   <TT
+CLASS="STRUCTNAME"
+>PGconn</TT
+> object, which
+   is obtained from the function <CODE
+CLASS="FUNCTION"
+>PQconnectdb</CODE
+>,
+   <CODE
+CLASS="FUNCTION"
+>PQconnectdbParams</CODE
+>, or
+   <CODE
+CLASS="FUNCTION"
+>PQsetdbLogin</CODE
+>.  Note that these functions will always
+   return a non-null object pointer, unless perhaps there is too
+   little memory even to allocate the <TT
+CLASS="STRUCTNAME"
+>PGconn</TT
+> object.
+   The <CODE
+CLASS="FUNCTION"
+>PQstatus</CODE
+> function should be called to check
+   the return value for a successful connection before queries are sent
+   via the connection object.
+
+   <DIV
+CLASS="WARNING"
+><P
+></P
+><TABLE
+CLASS="WARNING"
+BORDER="1"
+WIDTH="100%"
+><TR
+><TD
+ALIGN="CENTER"
+><B
+>Warning</B
+></TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+><P
+>     On Unix, forking a process with open libpq connections can lead to
+     unpredictable results because the parent and child processes share
+     the same sockets and operating system resources.  For this reason,
+     such usage is not recommended, though doing an <CODE
+CLASS="FUNCTION"
+>exec</CODE
+> from
+     the child process to load a new executable is safe.
+    </P
+></TD
+></TR
+></TABLE
+></DIV
+>
+
+   </P><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>     On Windows, there is a way to improve performance if a single
+     database connection is repeatedly started and shutdown.  Internally,
+     libpq calls <CODE
+CLASS="FUNCTION"
+>WSAStartup()</CODE
+> and <CODE
+CLASS="FUNCTION"
+>WSACleanup()</CODE
+> for connection startup
+     and shutdown, respectively.  <CODE
+CLASS="FUNCTION"
+>WSAStartup()</CODE
+> increments an internal
+     Windows library reference count which is decremented by <CODE
+CLASS="FUNCTION"
+>WSACleanup()</CODE
+>.
+     When the reference count is just one, calling <CODE
+CLASS="FUNCTION"
+>WSACleanup()</CODE
+> frees
+     all resources and all DLLs are unloaded.  This is an expensive
+     operation.  To avoid this, an application can manually call
+     <CODE
+CLASS="FUNCTION"
+>WSAStartup()</CODE
+> so resources will not be freed when the last database
+     connection is closed.
+    </P
+></BLOCKQUOTE
+></DIV
+><P>
+
+   <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="LIBPQ-PQCONNECTDBPARAMS"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQconnectdbParams</CODE
+></DT
+><DD
+><P
+>       Makes a new connection to the database server.
+
+</P><PRE
+CLASS="SYNOPSIS"
+>PGconn *PQconnectdbParams(const char * const *keywords,
+                          const char * const *values,
+                          int expand_dbname);</PRE
+><P>
+      </P
+><P
+>       This function opens a new database connection using the parameters taken
+       from two <TT
+CLASS="SYMBOL"
+>NULL</TT
+>-terminated arrays. The first,
+       <TT
+CLASS="LITERAL"
+>keywords</TT
+>, is defined as an array of strings, each one
+       being a key word. The second, <TT
+CLASS="LITERAL"
+>values</TT
+>, gives the value
+       for each key word. Unlike <CODE
+CLASS="FUNCTION"
+>PQsetdbLogin</CODE
+> below, the parameter
+       set can be extended without changing the function signature, so use of
+       this function (or its nonblocking analogs <CODE
+CLASS="FUNCTION"
+>PQconnectStartParams</CODE
+>
+       and <CODE
+CLASS="FUNCTION"
+>PQconnectPoll</CODE
+>) is preferred for new application
+       programming.
+      </P
+><P
+>       The currently recognized parameter key words are listed in
+       <A
+HREF="libpq-connect.html#LIBPQ-PARAMKEYWORDS"
+>Section 31.1.2</A
+>.
+      </P
+><P
+>       When <TT
+CLASS="LITERAL"
+>expand_dbname</TT
+> is non-zero, the
+       <TT
+CLASS="PARAMETER"
+>dbname</TT
+> key word value is allowed to be recognized
+       as a connection string. Only the first occurrence of
+       <TT
+CLASS="PARAMETER"
+>dbname</TT
+> is expanded this way, any subsequent
+       <TT
+CLASS="PARAMETER"
+>dbname</TT
+> value is processed as plain database name. More
+       details on the possible connection string formats appear in
+       <A
+HREF="libpq-connect.html#LIBPQ-CONNSTRING"
+>Section 31.1.1</A
+>.
+      </P
+><P
+>       The passed arrays can be empty to use all default parameters, or can
+       contain one or more parameter settings. They should be matched in length.
+       Processing will stop at the first <TT
+CLASS="SYMBOL"
+>NULL</TT
+> element
+       in the <TT
+CLASS="LITERAL"
+>keywords</TT
+> array.
+      </P
+><P
+>       If  any  parameter is <TT
+CLASS="SYMBOL"
+>NULL</TT
+> or an empty string, the corresponding
+       environment variable (see <A
+HREF="libpq-envars.html"
+>Section 31.14</A
+>) is checked.
+       If the  environment  variable is not set either, then the indicated
+       built-in defaults are used.
+      </P
+><P
+>       In general key words are processed from the beginning of these arrays in index
+       order. The effect of this is that when key words are repeated, the last processed
+       value is retained. Therefore, through careful placement of the
+       <TT
+CLASS="PARAMETER"
+>dbname</TT
+> key word, it is possible to determine what may
+       be overridden by a <TT
+CLASS="PARAMETER"
+>conninfo</TT
+> string, and what may not.
+      </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQCONNECTDB"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQconnectdb</CODE
+></DT
+><DD
+><P
+>       Makes a new connection to the database server.
+
+</P><PRE
+CLASS="SYNOPSIS"
+>PGconn *PQconnectdb(const char *conninfo);</PRE
+><P>
+      </P
+><P
+>       This function opens a new database connection using the parameters taken
+       from the string <TT
+CLASS="LITERAL"
+>conninfo</TT
+>.
+      </P
+><P
+>       The passed string can be empty to use all default parameters, or it can
+       contain one or more parameter settings separated by whitespace,
+       or it can contain a <ACRONYM
+CLASS="ACRONYM"
+>URI</ACRONYM
+>.
+       See <A
+HREF="libpq-connect.html#LIBPQ-CONNSTRING"
+>Section 31.1.1</A
+> for details.
+     </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQSETDBLOGIN"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQsetdbLogin</CODE
+></DT
+><DD
+><P
+>       Makes a new connection to the database server.
+</P><PRE
+CLASS="SYNOPSIS"
+>PGconn *PQsetdbLogin(const char *pghost,
+                     const char *pgport,
+                     const char *pgoptions,
+                     const char *pgtty,
+                     const char *dbName,
+                     const char *login,
+                     const char *pwd);</PRE
+><P>
+       </P
+><P
+>        This is the predecessor of <CODE
+CLASS="FUNCTION"
+>PQconnectdb</CODE
+> with a fixed
+        set of parameters.  It has the same functionality except that the
+        missing parameters will always take on default values.  Write <TT
+CLASS="SYMBOL"
+>NULL</TT
+> or an
+        empty string for any one of the fixed parameters that is to be defaulted.
+      </P
+><P
+>        If the <TT
+CLASS="PARAMETER"
+>dbName</TT
+> contains
+        an <TT
+CLASS="SYMBOL"
+>=</TT
+> sign or has a valid connection <ACRONYM
+CLASS="ACRONYM"
+>URI</ACRONYM
+> prefix, it
+        is taken as a <TT
+CLASS="PARAMETER"
+>conninfo</TT
+> string in exactly the same way as
+        if it had been passed to <CODE
+CLASS="FUNCTION"
+>PQconnectdb</CODE
+>, and the remaining
+        parameters are then applied as specified for <CODE
+CLASS="FUNCTION"
+>PQconnectdbParams</CODE
+>.
+      </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQSETDB"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQsetdb</CODE
+></DT
+><DD
+><P
+>   Makes a new connection to the database server.
+</P><PRE
+CLASS="SYNOPSIS"
+>PGconn *PQsetdb(char *pghost,
+                char *pgport,
+                char *pgoptions,
+                char *pgtty,
+                char *dbName);</PRE
+><P>
+     </P
+><P
+>      This is a macro that calls <CODE
+CLASS="FUNCTION"
+>PQsetdbLogin</CODE
+> with null pointers
+      for the <TT
+CLASS="PARAMETER"
+>login</TT
+> and <TT
+CLASS="PARAMETER"
+>pwd</TT
+> parameters.  It is provided
+      for backward compatibility with very old programs.
+     </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQCONNECTSTARTPARAMS"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQconnectStartParams</CODE
+><BR><CODE
+CLASS="FUNCTION"
+>PQconnectStart</CODE
+><BR><CODE
+CLASS="FUNCTION"
+>PQconnectPoll</CODE
+></DT
+><DD
+><P
+>       
+       Make a connection to the database server in a nonblocking manner.
+
+</P><PRE
+CLASS="SYNOPSIS"
+>PGconn *PQconnectStartParams(const char * const *keywords,
+                             const char * const *values,
+                             int expand_dbname);
+
+PGconn *PQconnectStart(const char *conninfo);
+
+PostgresPollingStatusType PQconnectPoll(PGconn *conn);</PRE
+><P>
+      </P
+><P
+>       These three functions are used to open a connection to a database server such
+       that your application's thread of execution is not blocked on remote I/O
+       whilst doing so. The point of this approach is that the waits for I/O to
+       complete can occur in the application's main loop, rather than down inside
+       <CODE
+CLASS="FUNCTION"
+>PQconnectdbParams</CODE
+> or <CODE
+CLASS="FUNCTION"
+>PQconnectdb</CODE
+>, and so the
+       application can manage this operation in parallel with other activities.
+      </P
+><P
+>       With <CODE
+CLASS="FUNCTION"
+>PQconnectStartParams</CODE
+>, the database connection is made
+       using the parameters taken from the <TT
+CLASS="LITERAL"
+>keywords</TT
+> and
+       <TT
+CLASS="LITERAL"
+>values</TT
+> arrays, and controlled by <TT
+CLASS="LITERAL"
+>expand_dbname</TT
+>,
+       as described above for <CODE
+CLASS="FUNCTION"
+>PQconnectdbParams</CODE
+>.
+      </P
+><P
+>       With <CODE
+CLASS="FUNCTION"
+>PQconnectStart</CODE
+>, the database connection is made
+       using the parameters taken from the string <TT
+CLASS="LITERAL"
+>conninfo</TT
+> as
+       described above for <CODE
+CLASS="FUNCTION"
+>PQconnectdb</CODE
+>.
+      </P
+><P
+>       Neither <CODE
+CLASS="FUNCTION"
+>PQconnectStartParams</CODE
+> nor <CODE
+CLASS="FUNCTION"
+>PQconnectStart</CODE
+>
+       nor <CODE
+CLASS="FUNCTION"
+>PQconnectPoll</CODE
+> will block, so long as a number of
+       restrictions are met:
+       <P
+></P
+></P><UL
+><LI
+><P
+>          The <TT
+CLASS="LITERAL"
+>hostaddr</TT
+> and <TT
+CLASS="LITERAL"
+>host</TT
+> parameters are used appropriately to ensure that
+          name and reverse name queries are not made. See the documentation of
+          these parameters in <A
+HREF="libpq-connect.html#LIBPQ-PARAMKEYWORDS"
+>Section 31.1.2</A
+> for details.
+         </P
+></LI
+><LI
+><P
+>          If you call <CODE
+CLASS="FUNCTION"
+>PQtrace</CODE
+>, ensure that the stream object
+          into which you trace will not block.
+         </P
+></LI
+><LI
+><P
+>          You ensure that the socket is in the appropriate state
+          before calling <CODE
+CLASS="FUNCTION"
+>PQconnectPoll</CODE
+>, as described below.
+         </P
+></LI
+></UL
+><P>
+      </P
+><P
+>       Note: use of <CODE
+CLASS="FUNCTION"
+>PQconnectStartParams</CODE
+> is analogous to
+       <CODE
+CLASS="FUNCTION"
+>PQconnectStart</CODE
+> shown below.
+      </P
+><P
+>       To begin a nonblocking connection request, call <TT
+CLASS="LITERAL"
+>conn = PQconnectStart("<TT
+CLASS="REPLACEABLE"
+><I
+>connection_info_string</I
+></TT
+>")</TT
+>.
+       If <TT
+CLASS="VARNAME"
+>conn</TT
+> is null, then <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> has been unable to allocate a new <TT
+CLASS="STRUCTNAME"
+>PGconn</TT
+>
+       structure. Otherwise, a valid <TT
+CLASS="STRUCTNAME"
+>PGconn</TT
+> pointer is returned (though not yet
+       representing a valid connection to the database). On return from
+       <CODE
+CLASS="FUNCTION"
+>PQconnectStart</CODE
+>, call <TT
+CLASS="LITERAL"
+>status = PQstatus(conn)</TT
+>. If <TT
+CLASS="VARNAME"
+>status</TT
+> equals
+       <TT
+CLASS="SYMBOL"
+>CONNECTION_BAD</TT
+>, <CODE
+CLASS="FUNCTION"
+>PQconnectStart</CODE
+> has failed.
+      </P
+><P
+>       If <CODE
+CLASS="FUNCTION"
+>PQconnectStart</CODE
+> succeeds, the next stage is to poll
+       <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> so that it can proceed with the connection sequence.
+       Use <CODE
+CLASS="FUNCTION"
+>PQsocket(conn)</CODE
+> to obtain the descriptor of the
+       socket underlying the database connection.
+       Loop thus: If <CODE
+CLASS="FUNCTION"
+>PQconnectPoll(conn)</CODE
+> last returned
+       <TT
+CLASS="SYMBOL"
+>PGRES_POLLING_READING</TT
+>, wait until the socket is ready to
+       read (as indicated by <CODE
+CLASS="FUNCTION"
+>select()</CODE
+>, <CODE
+CLASS="FUNCTION"
+>poll()</CODE
+>, or
+       similar system function).
+       Then call <CODE
+CLASS="FUNCTION"
+>PQconnectPoll(conn)</CODE
+> again.
+       Conversely, if <CODE
+CLASS="FUNCTION"
+>PQconnectPoll(conn)</CODE
+> last returned
+       <TT
+CLASS="SYMBOL"
+>PGRES_POLLING_WRITING</TT
+>, wait until the socket is ready
+       to write, then call <CODE
+CLASS="FUNCTION"
+>PQconnectPoll(conn)</CODE
+> again.
+       If you have yet to call
+       <CODE
+CLASS="FUNCTION"
+>PQconnectPoll</CODE
+>, i.e., just after the call to
+       <CODE
+CLASS="FUNCTION"
+>PQconnectStart</CODE
+>, behave as if it last returned
+       <TT
+CLASS="SYMBOL"
+>PGRES_POLLING_WRITING</TT
+>.  Continue this loop until
+       <CODE
+CLASS="FUNCTION"
+>PQconnectPoll(conn)</CODE
+> returns
+       <TT
+CLASS="SYMBOL"
+>PGRES_POLLING_FAILED</TT
+>, indicating the connection procedure
+       has failed, or <TT
+CLASS="SYMBOL"
+>PGRES_POLLING_OK</TT
+>, indicating the connection
+       has been successfully made.
+      </P
+><P
+>       At any time during connection, the status of the connection can be
+       checked by calling <CODE
+CLASS="FUNCTION"
+>PQstatus</CODE
+>. If this call returns <TT
+CLASS="SYMBOL"
+>CONNECTION_BAD</TT
+>, then the
+       connection procedure has failed; if the call returns <CODE
+CLASS="FUNCTION"
+>CONNECTION_OK</CODE
+>, then the
+       connection is ready.  Both of these states are equally detectable
+       from the return value of <CODE
+CLASS="FUNCTION"
+>PQconnectPoll</CODE
+>, described above. Other states might also occur
+       during (and only during) an asynchronous connection procedure. These
+       indicate the current stage of the connection procedure and might be useful
+       to provide feedback to the user for example. These statuses are:
+
+       <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="LIBPQ-CONNECTION-STARTED"
+></A
+><TT
+CLASS="SYMBOL"
+>CONNECTION_STARTED</TT
+></DT
+><DD
+><P
+>           Waiting for connection to be made.
+          </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECTION-MADE"
+></A
+><TT
+CLASS="SYMBOL"
+>CONNECTION_MADE</TT
+></DT
+><DD
+><P
+>           Connection OK; waiting to send.
+          </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECTION-AWAITING-RESPONSE"
+></A
+><TT
+CLASS="SYMBOL"
+>CONNECTION_AWAITING_RESPONSE</TT
+></DT
+><DD
+><P
+>           Waiting for a response from the server.
+          </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECTION-AUTH-OK"
+></A
+><TT
+CLASS="SYMBOL"
+>CONNECTION_AUTH_OK</TT
+></DT
+><DD
+><P
+>           Received authentication; waiting for backend start-up to finish.
+          </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECTION-SSL-STARTUP"
+></A
+><TT
+CLASS="SYMBOL"
+>CONNECTION_SSL_STARTUP</TT
+></DT
+><DD
+><P
+>           Negotiating SSL encryption.
+          </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECTION-SETENV"
+></A
+><TT
+CLASS="SYMBOL"
+>CONNECTION_SETENV</TT
+></DT
+><DD
+><P
+>           Negotiating environment-driven parameter settings.
+          </P
+></DD
+></DL
+></DIV
+><P>
+
+       Note that, although these constants will remain (in order to maintain
+       compatibility), an application should never rely upon these occurring in a
+       particular order, or at all, or on the status always being one of these
+       documented values. An application might do something like this:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>switch(PQstatus(conn))
+{
+        case CONNECTION_STARTED:
+            feedback = "Connecting...";
+            break;
+
+        case CONNECTION_MADE:
+            feedback = "Connected to server...";
+            break;
+.
+.
+.
+        default:
+            feedback = "Connecting...";
+}</PRE
+><P>
+      </P
+><P
+>       The <TT
+CLASS="LITERAL"
+>connect_timeout</TT
+> connection parameter is ignored
+       when using <CODE
+CLASS="FUNCTION"
+>PQconnectPoll</CODE
+>; it is the application's
+       responsibility to decide whether an excessive amount of time has elapsed.
+       Otherwise, <CODE
+CLASS="FUNCTION"
+>PQconnectStart</CODE
+> followed by a
+       <CODE
+CLASS="FUNCTION"
+>PQconnectPoll</CODE
+> loop is equivalent to
+       <CODE
+CLASS="FUNCTION"
+>PQconnectdb</CODE
+>.
+      </P
+><P
+>       Note that if <CODE
+CLASS="FUNCTION"
+>PQconnectStart</CODE
+> returns a non-null pointer, you must call
+       <CODE
+CLASS="FUNCTION"
+>PQfinish</CODE
+> when you are finished with it, in order to dispose of
+       the structure and any associated memory blocks. This must be done even if
+       the connection attempt fails or is abandoned.
+      </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQCONNDEFAULTS"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQconndefaults</CODE
+></DT
+><DD
+><P
+>       Returns the default connection options.
+</P><PRE
+CLASS="SYNOPSIS"
+>PQconninfoOption *PQconndefaults(void);
+
+typedef struct
+{
+    char   *keyword;   /* The keyword of the option */
+    char   *envvar;    /* Fallback environment variable name */
+    char   *compiled;  /* Fallback compiled in default value */
+    char   *val;       /* Option's current value, or NULL */
+    char   *label;     /* Label for field in connect dialog */
+    char   *dispchar;  /* Indicates how to display this field
+                          in a connect dialog. Values are:
+                          ""        Display entered value as is
+                          "*"       Password field - hide value
+                          "D"       Debug option - don't show by default */
+    int     dispsize;  /* Field size in characters for dialog */
+} PQconninfoOption;</PRE
+><P>
+      </P
+><P
+>       Returns a connection options array.  This can be used to determine
+       all possible <CODE
+CLASS="FUNCTION"
+>PQconnectdb</CODE
+> options and their
+       current default values.  The return value points to an array of
+       <TT
+CLASS="STRUCTNAME"
+>PQconninfoOption</TT
+> structures, which ends
+       with an entry having a null <TT
+CLASS="STRUCTFIELD"
+>keyword</TT
+> pointer.  The
+       null pointer is returned if memory could not be allocated. Note that
+       the current default values (<TT
+CLASS="STRUCTFIELD"
+>val</TT
+> fields)
+       will depend on environment variables and other context.  A
+       missing or invalid service file will be silently ignored.  Callers
+       must treat the connection options data as read-only.
+      </P
+><P
+>       After processing the options array, free it by passing it to
+       <CODE
+CLASS="FUNCTION"
+>PQconninfoFree</CODE
+>.  If this is not done, a small amount of memory
+       is leaked for each call to <CODE
+CLASS="FUNCTION"
+>PQconndefaults</CODE
+>.
+      </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQCONNINFO"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQconninfo</CODE
+></DT
+><DD
+><P
+>       Returns the connection options used by a live connection.
+</P><PRE
+CLASS="SYNOPSIS"
+>PQconninfoOption *PQconninfo(PGconn *conn);</PRE
+><P>
+      </P
+><P
+>       Returns a connection options array.  This can be used to determine
+       all possible <CODE
+CLASS="FUNCTION"
+>PQconnectdb</CODE
+> options and the
+       values that were used to connect to the server. The return
+       value points to an array of <TT
+CLASS="STRUCTNAME"
+>PQconninfoOption</TT
+>
+       structures, which ends with an entry having a null <TT
+CLASS="STRUCTFIELD"
+>keyword</TT
+>
+       pointer. All notes above for <CODE
+CLASS="FUNCTION"
+>PQconndefaults</CODE
+> also
+       apply to the result of <CODE
+CLASS="FUNCTION"
+>PQconninfo</CODE
+>.
+      </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQCONNINFOPARSE"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQconninfoParse</CODE
+></DT
+><DD
+><P
+>       Returns parsed connection options from the provided connection string.
+
+</P><PRE
+CLASS="SYNOPSIS"
+>PQconninfoOption *PQconninfoParse(const char *conninfo, char **errmsg);</PRE
+><P>
+      </P
+><P
+>       Parses a connection string and returns the resulting options as an
+       array; or returns <TT
+CLASS="SYMBOL"
+>NULL</TT
+> if there is a problem with the connection
+       string.  This function can be used to extract
+       the <CODE
+CLASS="FUNCTION"
+>PQconnectdb</CODE
+> options in the provided
+       connection string.  The return value points to an array of
+       <TT
+CLASS="STRUCTNAME"
+>PQconninfoOption</TT
+> structures, which ends
+       with an entry having a null <TT
+CLASS="STRUCTFIELD"
+>keyword</TT
+> pointer.
+      </P
+><P
+>       All legal options will be present in the result array, but the
+       <TT
+CLASS="LITERAL"
+>PQconninfoOption</TT
+> for any option not present
+       in the connection string will have <TT
+CLASS="LITERAL"
+>val</TT
+> set to
+       <TT
+CLASS="LITERAL"
+>NULL</TT
+>; default values are not inserted.
+      </P
+><P
+>       If <TT
+CLASS="LITERAL"
+>errmsg</TT
+> is not <TT
+CLASS="SYMBOL"
+>NULL</TT
+>, then <TT
+CLASS="LITERAL"
+>*errmsg</TT
+> is set
+       to <TT
+CLASS="SYMBOL"
+>NULL</TT
+> on success, else to a <CODE
+CLASS="FUNCTION"
+>malloc</CODE
+>'d error string explaining
+       the problem.  (It is also possible for <TT
+CLASS="LITERAL"
+>*errmsg</TT
+> to be
+       set to <TT
+CLASS="SYMBOL"
+>NULL</TT
+> and the function to return <TT
+CLASS="SYMBOL"
+>NULL</TT
+>;
+       this indicates an out-of-memory condition.)
+      </P
+><P
+>       After processing the options array, free it by passing it to
+       <CODE
+CLASS="FUNCTION"
+>PQconninfoFree</CODE
+>.  If this is not done, some memory
+       is leaked for each call to <CODE
+CLASS="FUNCTION"
+>PQconninfoParse</CODE
+>.
+       Conversely, if an error occurs and <TT
+CLASS="LITERAL"
+>errmsg</TT
+> is not <TT
+CLASS="SYMBOL"
+>NULL</TT
+>,
+       be sure to free the error string using <CODE
+CLASS="FUNCTION"
+>PQfreemem</CODE
+>.
+      </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQFINISH"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQfinish</CODE
+></DT
+><DD
+><P
+>       Closes  the  connection to the server.  Also frees
+       memory used by the <TT
+CLASS="STRUCTNAME"
+>PGconn</TT
+> object.
+</P><PRE
+CLASS="SYNOPSIS"
+>void PQfinish(PGconn *conn);</PRE
+><P>
+      </P
+><P
+>       Note that even if the server connection attempt fails (as
+       indicated by <CODE
+CLASS="FUNCTION"
+>PQstatus</CODE
+>), the application should call <CODE
+CLASS="FUNCTION"
+>PQfinish</CODE
+>
+       to free the memory used by the <TT
+CLASS="STRUCTNAME"
+>PGconn</TT
+> object.
+       The <TT
+CLASS="STRUCTNAME"
+>PGconn</TT
+> pointer must not be used again after
+       <CODE
+CLASS="FUNCTION"
+>PQfinish</CODE
+> has been called.
+      </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQRESET"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQreset</CODE
+></DT
+><DD
+><P
+>       Resets the communication channel to the server.
+</P><PRE
+CLASS="SYNOPSIS"
+>void PQreset(PGconn *conn);</PRE
+><P>
+      </P
+><P
+>       This function will close the connection
+       to the server and attempt to  reestablish  a  new
+       connection to the same server, using all the same
+       parameters previously used.  This might be useful for
+       error recovery if a working connection is lost.
+      </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQRESETSTART"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQresetStart</CODE
+><BR><CODE
+CLASS="FUNCTION"
+>PQresetPoll</CODE
+></DT
+><DD
+><P
+>       Reset the communication channel to the server, in a nonblocking manner.
+
+</P><PRE
+CLASS="SYNOPSIS"
+>int PQresetStart(PGconn *conn);
+
+PostgresPollingStatusType PQresetPoll(PGconn *conn);</PRE
+><P>
+      </P
+><P
+>       These functions will close the connection to the server and attempt to
+       reestablish a new connection to the same server, using all the same
+       parameters previously used. This can be useful for error recovery if a
+       working connection is lost. They differ from <CODE
+CLASS="FUNCTION"
+>PQreset</CODE
+> (above) in that they
+       act in a nonblocking manner. These functions suffer from the same
+       restrictions as <CODE
+CLASS="FUNCTION"
+>PQconnectStartParams</CODE
+>, <CODE
+CLASS="FUNCTION"
+>PQconnectStart</CODE
+>
+       and <CODE
+CLASS="FUNCTION"
+>PQconnectPoll</CODE
+>.
+      </P
+><P
+>       To initiate a connection reset, call
+       <CODE
+CLASS="FUNCTION"
+>PQresetStart</CODE
+>. If it returns 0, the reset has
+       failed. If it returns 1, poll the reset using
+       <CODE
+CLASS="FUNCTION"
+>PQresetPoll</CODE
+> in exactly the same way as you
+       would create the connection using <CODE
+CLASS="FUNCTION"
+>PQconnectPoll</CODE
+>.
+      </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQPINGPARAMS"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQpingParams</CODE
+></DT
+><DD
+><P
+>       <CODE
+CLASS="FUNCTION"
+>PQpingParams</CODE
+> reports the status of the
+       server.  It accepts connection parameters identical to those of
+       <CODE
+CLASS="FUNCTION"
+>PQconnectdbParams</CODE
+>, described above.  It is not
+       necessary to supply correct user name, password, or database name
+       values to obtain the server status; however, if incorrect values
+       are provided, the server will log a failed connection attempt.
+
+</P><PRE
+CLASS="SYNOPSIS"
+>PGPing PQpingParams(const char * const *keywords,
+                    const char * const *values,
+                    int expand_dbname);</PRE
+><P>
+
+       The function returns one of the following values:
+
+       <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="LIBPQ-PQPINGPARAMS-PQPING-OK"
+></A
+><TT
+CLASS="LITERAL"
+>PQPING_OK</TT
+></DT
+><DD
+><P
+>           The server is running and appears to be accepting connections.
+          </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQPINGPARAMS-PQPING-REJECT"
+></A
+><TT
+CLASS="LITERAL"
+>PQPING_REJECT</TT
+></DT
+><DD
+><P
+>           The server is running but is in a state that disallows connections
+           (startup, shutdown, or crash recovery).
+          </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQPINGPARAMS-PQPING-NO-RESPONSE"
+></A
+><TT
+CLASS="LITERAL"
+>PQPING_NO_RESPONSE</TT
+></DT
+><DD
+><P
+>           The server could not be contacted.  This might indicate that the
+           server is not running, or that there is something wrong with the
+           given connection parameters (for example, wrong port number), or
+           that there is a network connectivity problem (for example, a
+           firewall blocking the connection request).
+          </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQPINGPARAMS-PQPING-NO-ATTEMPT"
+></A
+><TT
+CLASS="LITERAL"
+>PQPING_NO_ATTEMPT</TT
+></DT
+><DD
+><P
+>           No attempt was made to contact the server, because the supplied
+           parameters were obviously incorrect or there was some client-side
+           problem (for example, out of memory).
+          </P
+></DD
+></DL
+></DIV
+><P>
+
+      </P
+></DD
+><DT
+><A
+NAME="LIBPQ-PQPING"
+></A
+><CODE
+CLASS="FUNCTION"
+>PQping</CODE
+></DT
+><DD
+><P
+>       <CODE
+CLASS="FUNCTION"
+>PQping</CODE
+> reports the status of the
+       server.  It accepts connection parameters identical to those of
+       <CODE
+CLASS="FUNCTION"
+>PQconnectdb</CODE
+>, described above.  It is not
+       necessary to supply correct user name, password, or database name
+       values to obtain the server status; however, if incorrect values
+       are provided, the server will log a failed connection attempt.
+
+</P><PRE
+CLASS="SYNOPSIS"
+>PGPing PQping(const char *conninfo);</PRE
+><P>
+      </P
+><P
+>       The return values are the same as for <CODE
+CLASS="FUNCTION"
+>PQpingParams</CODE
+>.
+      </P
+></DD
+></DL
+></DIV
+><P>
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="LIBPQ-CONNSTRING"
+>31.1.1. Connection Strings</A
+></H2
+><P
+>    Several <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> functions parse a user-specified string to obtain
+    connection parameters.  There are two accepted formats for these strings:
+    plain <TT
+CLASS="LITERAL"
+>keyword = value</TT
+> strings
+    and <A
+HREF="http://www.ietf.org/rfc/rfc3986.txt"
+TARGET="_top"
+>RFC
+    3986</A
+> URIs.
+   </P
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN42543"
+>31.1.1.1. Keyword/Value Connection Strings</A
+></H3
+><P
+>    In the first format, each parameter setting is in the form
+    <TT
+CLASS="LITERAL"
+>keyword = value</TT
+>.  Spaces around the equal sign are
+    optional. To write an empty value, or a value containing spaces, surround it
+    with single quotes, e.g., <TT
+CLASS="LITERAL"
+>keyword = 'a value'</TT
+>. Single
+    quotes and backslashes within
+    the value must be escaped with a backslash, i.e., <TT
+CLASS="LITERAL"
+>\'</TT
+> and
+    <TT
+CLASS="LITERAL"
+>\\</TT
+>.
+   </P
+><P
+>    Example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>host=localhost port=5432 dbname=mydb connect_timeout=10</PRE
+><P>
+   </P
+><P
+>    The recognized parameter key words are listed in <A
+HREF="libpq-connect.html#LIBPQ-PARAMKEYWORDS"
+>Section 31.1.2</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT3"
+><H3
+CLASS="SECT3"
+><A
+NAME="AEN42554"
+>31.1.1.2. Connection URIs</A
+></H3
+><P
+>   The general form for a connection <ACRONYM
+CLASS="ACRONYM"
+>URI</ACRONYM
+> is:
+</P><PRE
+CLASS="SYNOPSIS"
+>postgresql://[user[:password]@][netloc][:port][/dbname][?param1=value1&amp;...]</PRE
+><P>
+   </P
+><P
+>    The <ACRONYM
+CLASS="ACRONYM"
+>URI</ACRONYM
+> scheme designator can be either
+    <TT
+CLASS="LITERAL"
+>postgresql://</TT
+> or <TT
+CLASS="LITERAL"
+>postgres://</TT
+>.  Each
+    of the <ACRONYM
+CLASS="ACRONYM"
+>URI</ACRONYM
+> parts is optional.  The following examples
+    illustrate valid <ACRONYM
+CLASS="ACRONYM"
+>URI</ACRONYM
+> syntax uses:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>postgresql://
+postgresql://localhost
+postgresql://localhost:5433
+postgresql://localhost/mydb
+postgresql://user@localhost
+postgresql://user:secret@localhost
+postgresql://other@localhost/otherdb?connect_timeout=10&amp;application_name=myapp</PRE
+><P>
+    Components of the hierarchical part of the <ACRONYM
+CLASS="ACRONYM"
+>URI</ACRONYM
+> can also
+    be given as parameters.  For example:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>postgresql:///mydb?host=localhost&amp;port=5433</PRE
+><P>
+   </P
+><P
+>    Percent-encoding may be used to include symbols with special meaning in any
+    of the <ACRONYM
+CLASS="ACRONYM"
+>URI</ACRONYM
+> parts.
+   </P
+><P
+>    Any connection parameters not corresponding to key words listed in <A
+HREF="libpq-connect.html#LIBPQ-PARAMKEYWORDS"
+>Section 31.1.2</A
+> are ignored and a warning message about them
+    is sent to <TT
+CLASS="FILENAME"
+>stderr</TT
+>.
+   </P
+><P
+>    For improved compatibility with JDBC connection <ACRONYM
+CLASS="ACRONYM"
+>URI</ACRONYM
+>s,
+    instances of parameter <TT
+CLASS="LITERAL"
+>ssl=true</TT
+> are translated into
+    <TT
+CLASS="LITERAL"
+>sslmode=require</TT
+>.
+   </P
+><P
+>    The host part may be either host name or an IP address.  To specify an
+    IPv6 host address, enclose it in square brackets:
+</P><PRE
+CLASS="SYNOPSIS"
+>postgresql://[2001:db8::1234]/database</PRE
+><P>
+   </P
+><P
+>    The host component is interpreted as described for the parameter <A
+HREF="libpq-connect.html#LIBPQ-CONNECT-HOST"
+>host</A
+>.  In particular, a Unix-domain socket
+    connection is chosen if the host part is either empty or starts with a
+    slash, otherwise a TCP/IP connection is initiated.  Note, however, that the
+    slash is a reserved character in the hierarchical part of the URI.  So, to
+    specify a non-standard Unix-domain socket directory, either omit the host
+    specification in the URI and specify the host as a parameter, or
+    percent-encode the path in the host component of the URI:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>postgresql:///dbname?host=/var/lib/postgresql
+postgresql://%2Fvar%2Flib%2Fpostgresql/dbname</PRE
+><P>
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="LIBPQ-PARAMKEYWORDS"
+>31.1.2. Parameter Key Words</A
+></H2
+><P
+>    The currently recognized parameter key words are:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="LIBPQ-CONNECT-HOST"
+></A
+><TT
+CLASS="LITERAL"
+>host</TT
+></DT
+><DD
+><P
+>        Name of host to connect to.
+        If this begins with a slash, it specifies Unix-domain
+        communication rather than TCP/IP communication; the value is the
+        name of the directory in which the socket file is stored.  The
+        default behavior when <TT
+CLASS="LITERAL"
+>host</TT
+> is not specified
+        is to connect to a Unix-domain
+        socket in
+        <TT
+CLASS="FILENAME"
+>/tmp</TT
+> (or whatever socket directory was specified
+        when <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> was built). On machines without
+        Unix-domain sockets, the default is to connect to <TT
+CLASS="LITERAL"
+>localhost</TT
+>.
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-HOSTADDR"
+></A
+><TT
+CLASS="LITERAL"
+>hostaddr</TT
+></DT
+><DD
+><P
+>        Numeric IP address of host to connect to.  This should be in the
+        standard IPv4 address format, e.g., <TT
+CLASS="LITERAL"
+>172.28.40.9</TT
+>.  If
+        your machine supports IPv6, you can also use those addresses.
+        TCP/IP communication is
+        always used when a nonempty string is specified for this parameter.
+       </P
+><P
+>        Using <TT
+CLASS="LITERAL"
+>hostaddr</TT
+> instead of <TT
+CLASS="LITERAL"
+>host</TT
+> allows the
+        application to avoid a host name look-up, which might be important
+        in applications with time constraints. However, a host name is
+        required for GSSAPI or SSPI authentication
+        methods, as well as for <TT
+CLASS="LITERAL"
+>verify-full</TT
+> SSL
+        certificate verification.  The following rules are used:
+        <P
+></P
+></P><UL
+><LI
+><P
+>           If <TT
+CLASS="LITERAL"
+>host</TT
+> is specified without <TT
+CLASS="LITERAL"
+>hostaddr</TT
+>,
+           a host name lookup occurs.
+          </P
+></LI
+><LI
+><P
+>           If <TT
+CLASS="LITERAL"
+>hostaddr</TT
+> is specified without <TT
+CLASS="LITERAL"
+>host</TT
+>,
+           the value for <TT
+CLASS="LITERAL"
+>hostaddr</TT
+> gives the server network address.
+           The connection attempt will fail if the authentication
+           method requires a host name.
+          </P
+></LI
+><LI
+><P
+>           If both <TT
+CLASS="LITERAL"
+>host</TT
+> and <TT
+CLASS="LITERAL"
+>hostaddr</TT
+> are specified,
+           the value for <TT
+CLASS="LITERAL"
+>hostaddr</TT
+> gives the server network address.
+           The value for <TT
+CLASS="LITERAL"
+>host</TT
+> is ignored unless the
+           authentication method requires it, in which case it will be
+           used as the host name.
+          </P
+></LI
+></UL
+><P>
+        Note that authentication is likely to fail if <TT
+CLASS="LITERAL"
+>host</TT
+>
+        is not the name of the server at network address <TT
+CLASS="LITERAL"
+>hostaddr</TT
+>.
+        Also, note that <TT
+CLASS="LITERAL"
+>host</TT
+> rather than <TT
+CLASS="LITERAL"
+>hostaddr</TT
+>
+        is used to identify the connection in <TT
+CLASS="FILENAME"
+>~/.pgpass</TT
+> (see
+        <A
+HREF="libpq-pgpass.html"
+>Section 31.15</A
+>).
+       </P
+><P
+>        Without either a host name or host address,
+        <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> will connect using a
+        local Unix-domain socket; or on machines without Unix-domain
+        sockets, it will attempt to connect to <TT
+CLASS="LITERAL"
+>localhost</TT
+>.
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-PORT"
+></A
+><TT
+CLASS="LITERAL"
+>port</TT
+></DT
+><DD
+><P
+>        Port number to connect to at the server host, or socket file
+        name extension for Unix-domain
+        connections.
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-DBNAME"
+></A
+><TT
+CLASS="LITERAL"
+>dbname</TT
+></DT
+><DD
+><P
+>       The database name.  Defaults to be the same as the user name.
+       In certain contexts, the value is checked for extended
+       formats; see <A
+HREF="libpq-connect.html#LIBPQ-CONNSTRING"
+>Section 31.1.1</A
+> for more details on
+       those.
+      </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-USER"
+></A
+><TT
+CLASS="LITERAL"
+>user</TT
+></DT
+><DD
+><P
+>       <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> user name to connect as.
+       Defaults to be the same as the operating system name of the user
+       running the application.
+      </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-PASSWORD"
+></A
+><TT
+CLASS="LITERAL"
+>password</TT
+></DT
+><DD
+><P
+>       Password to be used if the server demands password authentication.
+      </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-CONNECT-TIMEOUT"
+></A
+><TT
+CLASS="LITERAL"
+>connect_timeout</TT
+></DT
+><DD
+><P
+>       Maximum wait for connection, in seconds (write as a decimal integer
+       string). Zero or not specified means wait indefinitely.  It is not
+       recommended to use a timeout of less than 2 seconds.
+      </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-CLIENT-ENCODING"
+></A
+><TT
+CLASS="LITERAL"
+>client_encoding</TT
+></DT
+><DD
+><P
+>       This sets the <TT
+CLASS="VARNAME"
+>client_encoding</TT
+>
+       configuration parameter for this connection.  In addition to
+       the values accepted by the corresponding server option, you
+       can use <TT
+CLASS="LITERAL"
+>auto</TT
+> to determine the right
+       encoding from the current locale in the client
+       (<TT
+CLASS="ENVAR"
+>LC_CTYPE</TT
+> environment variable on Unix
+       systems).
+      </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-OPTIONS"
+></A
+><TT
+CLASS="LITERAL"
+>options</TT
+></DT
+><DD
+><P
+>        Specifies command-line options to send to the server at connection
+        start.  For example, setting this to <TT
+CLASS="LITERAL"
+>-c geqo=off</TT
+> sets the
+        session's value of the <TT
+CLASS="VARNAME"
+>geqo</TT
+> parameter to
+        <TT
+CLASS="LITERAL"
+>off</TT
+>.  Spaces within this string are considered to
+        separate command-line arguments, unless escaped with a backslash
+        (<TT
+CLASS="LITERAL"
+>\</TT
+>); write <TT
+CLASS="LITERAL"
+>\\</TT
+> to represent a literal
+        backslash.  For a detailed discussion of the available
+        options, consult <A
+HREF="runtime-config.html"
+>Chapter 18</A
+>.
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-APPLICATION-NAME"
+></A
+><TT
+CLASS="LITERAL"
+>application_name</TT
+></DT
+><DD
+><P
+>        Specifies a value for the <A
+HREF="runtime-config-logging.html#GUC-APPLICATION-NAME"
+>application_name</A
+>
+        configuration parameter.
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-FALLBACK-APPLICATION-NAME"
+></A
+><TT
+CLASS="LITERAL"
+>fallback_application_name</TT
+></DT
+><DD
+><P
+>        Specifies a fallback value for the <A
+HREF="runtime-config-logging.html#GUC-APPLICATION-NAME"
+>application_name</A
+> configuration parameter.
+        This value will be used if no value has been given for
+        <TT
+CLASS="LITERAL"
+>application_name</TT
+> via a connection parameter or the
+        <TT
+CLASS="ENVAR"
+>PGAPPNAME</TT
+> environment variable.  Specifying
+        a fallback name is useful in generic utility programs that
+        wish to set a default application name but allow it to be
+        overridden by the user.
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-KEEPALIVES"
+></A
+><TT
+CLASS="LITERAL"
+>keepalives</TT
+></DT
+><DD
+><P
+>        Controls whether client-side TCP keepalives are used. The default
+        value is 1, meaning on, but you can change this to 0, meaning off,
+        if keepalives are not wanted.  This parameter is ignored for
+        connections made via a Unix-domain socket.
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-KEEPALIVES-IDLE"
+></A
+><TT
+CLASS="LITERAL"
+>keepalives_idle</TT
+></DT
+><DD
+><P
+>        Controls the number of seconds of inactivity after which TCP should
+        send a keepalive message to the server.  A value of zero uses the
+        system default. This parameter is ignored for connections made via a
+        Unix-domain socket, or if keepalives are disabled. It is only supported
+        on systems where the <TT
+CLASS="SYMBOL"
+>TCP_KEEPIDLE</TT
+> or <TT
+CLASS="SYMBOL"
+>TCP_KEEPALIVE</TT
+>
+        socket option is available, and on Windows; on other systems, it has no
+        effect.
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-KEEPALIVES-INTERVAL"
+></A
+><TT
+CLASS="LITERAL"
+>keepalives_interval</TT
+></DT
+><DD
+><P
+>        Controls the number of seconds after which a TCP keepalive message
+        that is not acknowledged by the server should be retransmitted.  A
+        value of zero uses the system default. This parameter is ignored for
+        connections made via a Unix-domain socket, or if keepalives are disabled.
+        It is only supported on systems where the <TT
+CLASS="SYMBOL"
+>TCP_KEEPINTVL</TT
+>
+        socket option is available, and on Windows; on other systems, it has no
+        effect.
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-KEEPALIVES-COUNT"
+></A
+><TT
+CLASS="LITERAL"
+>keepalives_count</TT
+></DT
+><DD
+><P
+>        Controls the number of TCP keepalives that can be lost before the
+        client's connection to the server is considered dead.  A value of
+        zero uses the system default. This parameter is ignored for
+        connections made via a Unix-domain socket, or if keepalives are disabled.
+        It is only supported on systems where the <TT
+CLASS="SYMBOL"
+>TCP_KEEPCNT</TT
+>
+        socket option is available; on other systems, it has no effect.
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-TTY"
+></A
+><TT
+CLASS="LITERAL"
+>tty</TT
+></DT
+><DD
+><P
+>       Ignored (formerly, this specified where to send server debug output).
+      </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-SSLMODE"
+></A
+><TT
+CLASS="LITERAL"
+>sslmode</TT
+></DT
+><DD
+><P
+>        This option determines whether or with what priority a secure
+        <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> TCP/IP connection will be negotiated with the
+        server. There are six modes:
+
+        <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>disable</TT
+></DT
+><DD
+><P
+>            only try a non-<ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> connection
+           </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>allow</TT
+></DT
+><DD
+><P
+>            first try a non-<ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> connection; if that
+            fails, try an <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> connection
+           </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>prefer</TT
+> (default)</DT
+><DD
+><P
+>            first try an <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> connection; if that fails,
+            try a non-<ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> connection
+           </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>require</TT
+></DT
+><DD
+><P
+>            only try an <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> connection. If a root CA
+            file is present, verify the certificate in the same way as
+            if <TT
+CLASS="LITERAL"
+>verify-ca</TT
+> was specified
+           </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>verify-ca</TT
+></DT
+><DD
+><P
+>            only try an <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> connection, and verify that
+            the server certificate is issued by a trusted
+            certificate authority (<ACRONYM
+CLASS="ACRONYM"
+>CA</ACRONYM
+>)
+           </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>verify-full</TT
+></DT
+><DD
+><P
+>            only try an <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> connection, verify that the
+            server certificate is issued by a
+            trusted <ACRONYM
+CLASS="ACRONYM"
+>CA</ACRONYM
+> and that the requested server host name
+            matches that in the certificate
+           </P
+></DD
+></DL
+></DIV
+><P>
+
+        See <A
+HREF="libpq-ssl.html"
+>Section 31.18</A
+> for a detailed description of how
+        these options work.
+       </P
+><P
+>        <TT
+CLASS="LITERAL"
+>sslmode</TT
+> is ignored for Unix domain socket
+        communication.
+        If <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> is compiled without SSL support,
+        using options <TT
+CLASS="LITERAL"
+>require</TT
+>, <TT
+CLASS="LITERAL"
+>verify-ca</TT
+>, or
+        <TT
+CLASS="LITERAL"
+>verify-full</TT
+> will cause an error, while
+        options <TT
+CLASS="LITERAL"
+>allow</TT
+> and <TT
+CLASS="LITERAL"
+>prefer</TT
+> will be
+        accepted but <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> will not actually attempt
+        an <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+>
+        connection.
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-REQUIRESSL"
+></A
+><TT
+CLASS="LITERAL"
+>requiressl</TT
+></DT
+><DD
+><P
+>        This option is deprecated in favor of the <TT
+CLASS="LITERAL"
+>sslmode</TT
+>
+        setting.
+       </P
+><P
+>        If set to 1, an <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> connection to the server
+        is required (this is equivalent to <TT
+CLASS="LITERAL"
+>sslmode</TT
+>
+        <TT
+CLASS="LITERAL"
+>require</TT
+>).  <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> will then refuse
+        to connect if the server does not accept an
+        <ACRONYM
+CLASS="ACRONYM"
+>SSL</ACRONYM
+> connection.  If set to 0 (default),
+        <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> will negotiate the connection type with
+        the server (equivalent to <TT
+CLASS="LITERAL"
+>sslmode</TT
+>
+        <TT
+CLASS="LITERAL"
+>prefer</TT
+>).  This option is only available if
+        <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> is compiled with SSL support.
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-SSLCOMPRESSION"
+></A
+><TT
+CLASS="LITERAL"
+>sslcompression</TT
+></DT
+><DD
+><P
+>        If set to 1 (default), data sent over SSL connections will be
+        compressed (this requires <SPAN
+CLASS="PRODUCTNAME"
+>OpenSSL</SPAN
+> version
+        0.9.8 or later).
+        If set to 0, compression will be disabled (this requires
+        <SPAN
+CLASS="PRODUCTNAME"
+>OpenSSL</SPAN
+> 1.0.0 or later).
+        This parameter is ignored if a connection without SSL is made,
+        or if the version of <SPAN
+CLASS="PRODUCTNAME"
+>OpenSSL</SPAN
+> used does not support
+        it.
+       </P
+><P
+>        Compression uses CPU time, but can improve throughput if
+        the network is the bottleneck.
+        Disabling compression can improve response time and throughput
+        if CPU performance is the limiting factor.
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-SSLCERT"
+></A
+><TT
+CLASS="LITERAL"
+>sslcert</TT
+></DT
+><DD
+><P
+>        This parameter specifies the file name of the client SSL
+        certificate, replacing the default
+        <TT
+CLASS="FILENAME"
+>~/.postgresql/postgresql.crt</TT
+>.
+        This parameter is ignored if an SSL connection is not made.
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-SSLKEY"
+></A
+><TT
+CLASS="LITERAL"
+>sslkey</TT
+></DT
+><DD
+><P
+>        This parameter specifies the location for the secret key used for
+        the client certificate. It can either specify a file name that will
+        be used instead of the default
+        <TT
+CLASS="FILENAME"
+>~/.postgresql/postgresql.key</TT
+>, or it can specify a key
+        obtained from an external <SPAN
+CLASS="QUOTE"
+>"engine"</SPAN
+> (engines are
+        <SPAN
+CLASS="PRODUCTNAME"
+>OpenSSL</SPAN
+> loadable modules).  An external engine
+        specification should consist of a colon-separated engine name and
+        an engine-specific key identifier.  This parameter is ignored if an
+        SSL connection is not made.
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-SSLROOTCERT"
+></A
+><TT
+CLASS="LITERAL"
+>sslrootcert</TT
+></DT
+><DD
+><P
+>        This parameter specifies the name of a file containing SSL
+        certificate authority (<ACRONYM
+CLASS="ACRONYM"
+>CA</ACRONYM
+>) certificate(s).
+        If the file exists, the server's certificate will be verified
+        to be signed by one of these authorities.  The default is
+        <TT
+CLASS="FILENAME"
+>~/.postgresql/root.crt</TT
+>.
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-SSLCRL"
+></A
+><TT
+CLASS="LITERAL"
+>sslcrl</TT
+></DT
+><DD
+><P
+>        This parameter specifies the file name of the SSL certificate
+        revocation list (CRL).  Certificates listed in this file, if it
+        exists, will be rejected while attempting to authenticate the
+        server's certificate.  The default is
+        <TT
+CLASS="FILENAME"
+>~/.postgresql/root.crl</TT
+>.
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-REQUIREPEER"
+></A
+><TT
+CLASS="LITERAL"
+>requirepeer</TT
+></DT
+><DD
+><P
+>        This parameter specifies the operating-system user name of the
+        server, for example <TT
+CLASS="LITERAL"
+>requirepeer=postgres</TT
+>.
+        When making a Unix-domain socket connection, if this
+        parameter is set, the client checks at the beginning of the
+        connection that the server process is running under the specified
+        user name; if it is not, the connection is aborted with an error.
+        This parameter can be used to provide server authentication similar
+        to that available with SSL certificates on TCP/IP connections.
+        (Note that if the Unix-domain socket is in
+        <TT
+CLASS="FILENAME"
+>/tmp</TT
+> or another publicly writable location,
+        any user could start a server listening there.  Use this parameter
+        to ensure that you are connected to a server run by a trusted user.)
+        This option is only supported on platforms for which the
+        <TT
+CLASS="LITERAL"
+>peer</TT
+> authentication method is implemented; see
+        <A
+HREF="auth-methods.html#AUTH-PEER"
+>Section 19.3.6</A
+>.
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-KRBSRVNAME"
+></A
+><TT
+CLASS="LITERAL"
+>krbsrvname</TT
+></DT
+><DD
+><P
+>        Kerberos service name to use when authenticating with GSSAPI.
+        This must match the service name specified in the server
+        configuration for Kerberos authentication to succeed. (See also
+        <A
+HREF="auth-methods.html#GSSAPI-AUTH"
+>Section 19.3.3</A
+>.)
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-GSSLIB"
+></A
+><TT
+CLASS="LITERAL"
+>gsslib</TT
+></DT
+><DD
+><P
+>        GSS library to use for GSSAPI authentication. Only used on Windows.
+        Set to <TT
+CLASS="LITERAL"
+>gssapi</TT
+> to force libpq to use the GSSAPI
+        library for authentication instead of the default SSPI.
+       </P
+></DD
+><DT
+><A
+NAME="LIBPQ-CONNECT-SERVICE"
+></A
+><TT
+CLASS="LITERAL"
+>service</TT
+></DT
+><DD
+><P
+>        Service name to use for additional parameters.  It specifies a service
+        name in <TT
+CLASS="FILENAME"
+>pg_service.conf</TT
+> that holds additional connection parameters.
+        This allows applications to specify only a service name so connection parameters
+        can be centrally maintained. See <A
+HREF="libpq-pgservice.html"
+>Section 31.16</A
+>.
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="libpq.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="libpq-status.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+> - C Library</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="libpq.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Connection Status Functions</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

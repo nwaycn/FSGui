@@ -1,0 +1,359 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>dblink_open</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="dblink"
+HREF="dblink.html"><LINK
+REL="PREVIOUS"
+TITLE="dblink_exec"
+HREF="contrib-dblink-exec.html"><LINK
+REL="NEXT"
+TITLE="dblink_fetch"
+HREF="contrib-dblink-fetch.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="dblink_exec"
+HREF="contrib-dblink-exec.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="dblink.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="dblink_fetch"
+HREF="contrib-dblink-fetch.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="CONTRIB-DBLINK-OPEN"
+></A
+>dblink_open</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN169796"
+></A
+><H2
+>Name</H2
+>dblink_open&nbsp;--&nbsp;opens a cursor in a remote database</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN169799"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>dblink_open(text cursorname, text sql [, bool fail_on_error]) returns text
+dblink_open(text connname, text cursorname, text sql [, bool fail_on_error]) returns text</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169801"
+></A
+><H2
+>Description</H2
+><P
+>    <CODE
+CLASS="FUNCTION"
+>dblink_open()</CODE
+> opens a cursor in a remote database.
+    The cursor can subsequently be manipulated with
+    <CODE
+CLASS="FUNCTION"
+>dblink_fetch()</CODE
+> and <CODE
+CLASS="FUNCTION"
+>dblink_close()</CODE
+>.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169807"
+></A
+><H2
+>Arguments</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="PARAMETER"
+>connname</TT
+></DT
+><DD
+><P
+>       Name of the connection to use; omit this parameter to use the
+       unnamed connection.
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>cursorname</TT
+></DT
+><DD
+><P
+>       The name to assign to this cursor.
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>sql</TT
+></DT
+><DD
+><P
+>       The <TT
+CLASS="COMMAND"
+>SELECT</TT
+> statement that you wish to execute in the remote
+       database, for example <TT
+CLASS="LITERAL"
+>select * from pg_class</TT
+>.
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>fail_on_error</TT
+></DT
+><DD
+><P
+>       If true (the default when omitted) then an error thrown on the
+       remote side of the connection causes an error to also be thrown
+       locally. If false, the remote error is locally reported as a NOTICE,
+       and the function's return value is set to <TT
+CLASS="LITERAL"
+>ERROR</TT
+>.
+      </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169833"
+></A
+><H2
+>Return Value</H2
+><P
+>    Returns status, either <TT
+CLASS="LITERAL"
+>OK</TT
+> or <TT
+CLASS="LITERAL"
+>ERROR</TT
+>.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169838"
+></A
+><H2
+>Notes</H2
+><P
+>    Since a cursor can only persist within a transaction,
+    <CODE
+CLASS="FUNCTION"
+>dblink_open</CODE
+> starts an explicit transaction block
+    (<TT
+CLASS="COMMAND"
+>BEGIN</TT
+>) on the remote side, if the remote side was
+    not already within a transaction.  This transaction will be
+    closed again when the matching <CODE
+CLASS="FUNCTION"
+>dblink_close</CODE
+> is
+    executed.  Note that if
+    you use <CODE
+CLASS="FUNCTION"
+>dblink_exec</CODE
+> to change data between
+    <CODE
+CLASS="FUNCTION"
+>dblink_open</CODE
+> and <CODE
+CLASS="FUNCTION"
+>dblink_close</CODE
+>,
+    and then an error occurs or you use <CODE
+CLASS="FUNCTION"
+>dblink_disconnect</CODE
+> before
+    <CODE
+CLASS="FUNCTION"
+>dblink_close</CODE
+>, your change <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>will be
+    lost</I
+></SPAN
+> because the transaction will be aborted.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN169850"
+></A
+><H2
+>Examples</H2
+><PRE
+CLASS="SCREEN"
+>SELECT dblink_connect('dbname=postgres');
+ dblink_connect
+----------------
+ OK
+(1 row)
+
+SELECT dblink_open('foo', 'select proname, prosrc from pg_proc');
+ dblink_open
+-------------
+ OK
+(1 row)</PRE
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib-dblink-exec.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="contrib-dblink-fetch.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>dblink_exec</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="dblink.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>dblink_fetch</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

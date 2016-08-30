@@ -1,0 +1,391 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Standby Server Settings</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Recovery Configuration"
+HREF="recovery-config.html"><LINK
+REL="PREVIOUS"
+TITLE="Recovery Target Settings"
+HREF="recovery-target-settings.html"><LINK
+REL="NEXT"
+TITLE="Monitoring Database Activity"
+HREF="monitoring.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Recovery Target Settings"
+HREF="recovery-target-settings.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="recovery-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 26. Recovery Configuration</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Monitoring Database Activity"
+HREF="monitoring.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="STANDBY-SETTINGS"
+>26.3. Standby Server Settings</A
+></H1
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><A
+NAME="STANDBY-MODE"
+></A
+><TT
+CLASS="VARNAME"
+>standby_mode</TT
+> (<TT
+CLASS="TYPE"
+>boolean</TT
+>)
+        </DT
+><DD
+><P
+>          Specifies whether to start the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> server as
+          a standby. If this parameter is <TT
+CLASS="LITERAL"
+>on</TT
+>, the server will
+          not stop recovery when the end of archived WAL is reached, but
+          will keep trying to continue recovery by fetching new WAL segments
+          using <TT
+CLASS="VARNAME"
+>restore_command</TT
+>
+          and/or by connecting to the primary server as specified by the
+          <TT
+CLASS="VARNAME"
+>primary_conninfo</TT
+> setting.
+         </P
+></DD
+><DT
+><A
+NAME="PRIMARY-CONNINFO"
+></A
+><TT
+CLASS="VARNAME"
+>primary_conninfo</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+        </DT
+><DD
+><P
+>          Specifies a connection string to be used for the standby server
+          to connect with the primary. This string is in the format
+          described in <A
+HREF="libpq-connect.html#LIBPQ-CONNSTRING"
+>Section 31.1.1</A
+>. If any option is
+          unspecified in this string, then the corresponding environment
+          variable (see <A
+HREF="libpq-envars.html"
+>Section 31.14</A
+>) is checked. If the
+          environment variable is not set either, then
+          defaults are used.
+         </P
+><P
+>          The connection string should specify the host name (or address)
+          of the primary server, as well as the port number if it is not
+          the same as the standby server's default.
+          Also specify a user name corresponding to a suitably-privileged role
+          on the primary (see
+          <A
+HREF="warm-standby.html#STREAMING-REPLICATION-AUTHENTICATION"
+>Section 25.2.5.1</A
+>).
+          A password needs to be provided too, if the primary demands password
+          authentication.  It can be provided in the
+          <TT
+CLASS="VARNAME"
+>primary_conninfo</TT
+> string, or in a separate
+          <TT
+CLASS="FILENAME"
+>~/.pgpass</TT
+> file on the standby server (use
+          <TT
+CLASS="LITERAL"
+>replication</TT
+> as the database name).
+          Do not specify a database name in the
+          <TT
+CLASS="VARNAME"
+>primary_conninfo</TT
+> string.
+         </P
+><P
+>          This setting has no effect if <TT
+CLASS="VARNAME"
+>standby_mode</TT
+> is <TT
+CLASS="LITERAL"
+>off</TT
+>.
+         </P
+></DD
+><DT
+><A
+NAME="PRIMARY-SLOT-NAME"
+></A
+><TT
+CLASS="VARNAME"
+>primary_slot_name</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+        </DT
+><DD
+><P
+>          Optionally specifies an existing replication slot to be used when
+          connecting to the primary via streaming replication to control
+          resource removal on the upstream node
+          (see <A
+HREF="warm-standby.html#STREAMING-REPLICATION-SLOTS"
+>Section 25.2.6</A
+>).
+          This setting has no effect if <TT
+CLASS="VARNAME"
+>primary_conninfo</TT
+> is not
+          set.
+         </P
+></DD
+><DT
+><A
+NAME="TRIGGER-FILE"
+></A
+><TT
+CLASS="VARNAME"
+>trigger_file</TT
+> (<TT
+CLASS="TYPE"
+>string</TT
+>)
+        </DT
+><DD
+><P
+>          Specifies a trigger file whose presence ends recovery in the
+          standby.  Even if this value is not set, you can still promote
+          the standby using <TT
+CLASS="COMMAND"
+>pg_ctl promote</TT
+>.
+          This setting has no effect if <TT
+CLASS="VARNAME"
+>standby_mode</TT
+> is <TT
+CLASS="LITERAL"
+>off</TT
+>.
+         </P
+></DD
+><DT
+><A
+NAME="RECOVERY-MIN-APPLY-DELAY"
+></A
+><TT
+CLASS="VARNAME"
+>recovery_min_apply_delay</TT
+> (<TT
+CLASS="TYPE"
+>integer</TT
+>)
+      </DT
+><DD
+><P
+>        By default, a standby server restores WAL records from the
+        primary as soon as possible. It may be useful to have a time-delayed
+        copy of the data, offering opportunities to correct data loss errors.
+        This parameter allows you to delay recovery by a fixed period of time,
+        measured in milliseconds if no unit is specified.  For example, if
+        you set this parameter to <TT
+CLASS="LITERAL"
+>5min</TT
+>, the standby will
+        replay each transaction commit only when the system time on the standby
+        is at least five minutes past the commit time reported by the master.
+       </P
+><P
+>        It is possible that the replication delay between servers exceeds the
+        value of this parameter, in which case no delay is added.
+        Note that the delay is calculated between the WAL time stamp as written
+        on master and the current time on the standby. Delays in transfer
+        because of network lag or cascading replication configurations
+        may reduce the actual wait time significantly. If the system
+        clocks on master and standby are not synchronized, this may lead to
+        recovery applying records earlier than expected; but that is not a
+        major issue because useful settings of this parameter are much larger
+        than typical time deviations between servers.
+       </P
+><P
+>        The delay occurs only on WAL records for transaction commits.
+        Other records are replayed as quickly as possible, which
+        is not a problem because MVCC visibility rules ensure their effects
+        are not visible until the corresponding commit record is applied.
+       </P
+><P
+>        The delay occurs once the database in recovery has reached a consistent
+        state, until the standby is promoted or triggered. After that the standby
+        will end recovery without further waiting.
+       </P
+><P
+>        This parameter is intended for use with streaming replication deployments;
+        however, if the parameter is specified it will be honored in all cases.
+        Synchronous replication is not affected by this setting because there is
+        not yet any setting to request synchronous apply of transaction commits.
+        <TT
+CLASS="VARNAME"
+>hot_standby_feedback</TT
+> will be delayed by use of this feature
+        which could lead to bloat on the master; use both together with care.
+       </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="recovery-target-settings.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="monitoring.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Recovery Target Settings</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="recovery-config.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Monitoring Database Activity</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

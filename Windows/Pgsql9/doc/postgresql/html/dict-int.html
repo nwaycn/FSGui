@@ -1,0 +1,284 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>dict_int</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="dblink_build_sql_update"
+HREF="contrib-dblink-build-sql-update.html"><LINK
+REL="NEXT"
+TITLE="dict_xsyn"
+HREF="dict-xsyn.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="dblink_build_sql_update"
+HREF="contrib-dblink-build-sql-update.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="dict_xsyn"
+HREF="dict-xsyn.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="DICT-INT"
+>F.10. dict_int</A
+></H1
+><P
+>  <TT
+CLASS="FILENAME"
+>dict_int</TT
+> is an example of an add-on dictionary template
+  for full-text search.  The motivation for this example dictionary is to
+  control the indexing of integers (signed and unsigned), allowing such
+  numbers to be indexed while preventing excessive growth in the number of
+  unique words, which greatly affects the performance of searching.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN170410"
+>F.10.1. Configuration</A
+></H2
+><P
+>   The dictionary accepts two options:
+  </P
+><P
+></P
+><UL
+><LI
+><P
+>     The <TT
+CLASS="LITERAL"
+>maxlen</TT
+> parameter specifies the maximum number of
+     digits allowed in an integer word.  The default value is 6.
+    </P
+></LI
+><LI
+><P
+>     The <TT
+CLASS="LITERAL"
+>rejectlong</TT
+> parameter specifies whether an overlength
+     integer should be truncated or ignored.  If <TT
+CLASS="LITERAL"
+>rejectlong</TT
+> is
+     <TT
+CLASS="LITERAL"
+>false</TT
+> (the default), the dictionary returns the first
+     <TT
+CLASS="LITERAL"
+>maxlen</TT
+> digits of the integer. If <TT
+CLASS="LITERAL"
+>rejectlong</TT
+> is
+     <TT
+CLASS="LITERAL"
+>true</TT
+>, the dictionary treats an overlength integer as a stop
+     word, so that it will not be indexed.  Note that this also means that
+     such an integer cannot be searched for.
+    </P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN170425"
+>F.10.2. Usage</A
+></H2
+><P
+>   Installing the <TT
+CLASS="LITERAL"
+>dict_int</TT
+> extension creates a text search
+   template <TT
+CLASS="LITERAL"
+>intdict_template</TT
+> and a dictionary <TT
+CLASS="LITERAL"
+>intdict</TT
+>
+   based on it, with the default parameters.  You can alter the
+   parameters, for example
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>mydb# ALTER TEXT SEARCH DICTIONARY intdict (MAXLEN = 4, REJECTLONG = true);
+ALTER TEXT SEARCH DICTIONARY</PRE
+><P>
+
+   or create new dictionaries based on the template.
+  </P
+><P
+>   To test the dictionary, you can try
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>mydb# select ts_lexize('intdict', '12345678');
+ ts_lexize
+-----------
+ {123456}</PRE
+><P>
+
+   but real-world usage will involve including it in a text search
+   configuration as described in <A
+HREF="textsearch.html"
+>Chapter 12</A
+>.
+   That might look like this:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER TEXT SEARCH CONFIGURATION english
+    ALTER MAPPING FOR int, uint WITH intdict;</PRE
+><P>
+
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib-dblink-build-sql-update.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="dict-xsyn.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>dblink_build_sql_update</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>dict_xsyn</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

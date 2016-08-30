@@ -1,0 +1,674 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Extending SQL</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Server Programming"
+HREF="server-programming.html"><LINK
+REL="PREVIOUS"
+TITLE="Server Programming"
+HREF="server-programming.html"><LINK
+REL="NEXT"
+TITLE="How Extensibility Works"
+HREF="extend-how.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="CHAPTER"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Server Programming"
+HREF="server-programming.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="server-programming.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="How Extensibility Works"
+HREF="extend-how.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="EXTEND"
+></A
+>Chapter 35. Extending <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+></H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+>35.1. <A
+HREF="extend-how.html"
+>How Extensibility Works</A
+></DT
+><DT
+>35.2. <A
+HREF="extend-type-system.html"
+>The <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> Type System</A
+></DT
+><DD
+><DL
+><DT
+>35.2.1. <A
+HREF="extend-type-system.html#AEN56399"
+>Base Types</A
+></DT
+><DT
+>35.2.2. <A
+HREF="extend-type-system.html#AEN56405"
+>Composite Types</A
+></DT
+><DT
+>35.2.3. <A
+HREF="extend-type-system.html#EXTEND-TYPE-SYSTEM-DOMAINS"
+>Domains</A
+></DT
+><DT
+>35.2.4. <A
+HREF="extend-type-system.html#AEN56418"
+>Pseudo-Types</A
+></DT
+><DT
+>35.2.5. <A
+HREF="extend-type-system.html#EXTEND-TYPES-POLYMORPHIC"
+>Polymorphic Types</A
+></DT
+></DL
+></DD
+><DT
+>35.3. <A
+HREF="xfunc.html"
+>User-defined Functions</A
+></DT
+><DT
+>35.4. <A
+HREF="xfunc-sql.html"
+>Query Language (<ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+>) Functions</A
+></DT
+><DD
+><DL
+><DT
+>35.4.1. <A
+HREF="xfunc-sql.html#XFUNC-SQL-FUNCTION-ARGUMENTS"
+>Arguments for <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Functions</A
+></DT
+><DT
+>35.4.2. <A
+HREF="xfunc-sql.html#XFUNC-SQL-BASE-FUNCTIONS"
+><ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Functions on Base Types</A
+></DT
+><DT
+>35.4.3. <A
+HREF="xfunc-sql.html#XFUNC-SQL-COMPOSITE-FUNCTIONS"
+><ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Functions on Composite Types</A
+></DT
+><DT
+>35.4.4. <A
+HREF="xfunc-sql.html#XFUNC-OUTPUT-PARAMETERS"
+><ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Functions with Output Parameters</A
+></DT
+><DT
+>35.4.5. <A
+HREF="xfunc-sql.html#XFUNC-SQL-VARIADIC-FUNCTIONS"
+><ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Functions with Variable Numbers of Arguments</A
+></DT
+><DT
+>35.4.6. <A
+HREF="xfunc-sql.html#XFUNC-SQL-PARAMETER-DEFAULTS"
+><ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Functions with Default Values for Arguments</A
+></DT
+><DT
+>35.4.7. <A
+HREF="xfunc-sql.html#XFUNC-SQL-TABLE-FUNCTIONS"
+><ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Functions as Table Sources</A
+></DT
+><DT
+>35.4.8. <A
+HREF="xfunc-sql.html#XFUNC-SQL-FUNCTIONS-RETURNING-SET"
+><ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Functions Returning Sets</A
+></DT
+><DT
+>35.4.9. <A
+HREF="xfunc-sql.html#XFUNC-SQL-FUNCTIONS-RETURNING-TABLE"
+><ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Functions Returning <TT
+CLASS="LITERAL"
+>TABLE</TT
+></A
+></DT
+><DT
+>35.4.10. <A
+HREF="xfunc-sql.html#AEN56807"
+>Polymorphic <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Functions</A
+></DT
+><DT
+>35.4.11. <A
+HREF="xfunc-sql.html#AEN56833"
+><ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> Functions with Collations</A
+></DT
+></DL
+></DD
+><DT
+>35.5. <A
+HREF="xfunc-overload.html"
+>Function Overloading</A
+></DT
+><DT
+>35.6. <A
+HREF="xfunc-volatility.html"
+>Function Volatility Categories</A
+></DT
+><DT
+>35.7. <A
+HREF="xfunc-pl.html"
+>Procedural Language Functions</A
+></DT
+><DT
+>35.8. <A
+HREF="xfunc-internal.html"
+>Internal Functions</A
+></DT
+><DT
+>35.9. <A
+HREF="xfunc-c.html"
+>C-Language Functions</A
+></DT
+><DD
+><DL
+><DT
+>35.9.1. <A
+HREF="xfunc-c.html#XFUNC-C-DYNLOAD"
+>Dynamic Loading</A
+></DT
+><DT
+>35.9.2. <A
+HREF="xfunc-c.html#XFUNC-C-BASETYPE"
+>Base Types in C-Language Functions</A
+></DT
+><DT
+>35.9.3. <A
+HREF="xfunc-c.html#AEN57361"
+>Version 0 Calling Conventions</A
+></DT
+><DT
+>35.9.4. <A
+HREF="xfunc-c.html#AEN57388"
+>Version 1 Calling Conventions</A
+></DT
+><DT
+>35.9.5. <A
+HREF="xfunc-c.html#AEN57446"
+>Writing Code</A
+></DT
+><DT
+>35.9.6. <A
+HREF="xfunc-c.html#DFUNC"
+>Compiling and Linking Dynamically-loaded Functions</A
+></DT
+><DT
+>35.9.7. <A
+HREF="xfunc-c.html#AEN57647"
+>Composite-type Arguments</A
+></DT
+><DT
+>35.9.8. <A
+HREF="xfunc-c.html#AEN57671"
+>Returning Rows (Composite Types)</A
+></DT
+><DT
+>35.9.9. <A
+HREF="xfunc-c.html#XFUNC-C-RETURN-SET"
+>Returning Sets</A
+></DT
+><DT
+>35.9.10. <A
+HREF="xfunc-c.html#AEN57800"
+>Polymorphic Arguments and Return Types</A
+></DT
+><DT
+>35.9.11. <A
+HREF="xfunc-c.html#XFUNC-TRANSFORM-FUNCTIONS"
+>Transform Functions</A
+></DT
+><DT
+>35.9.12. <A
+HREF="xfunc-c.html#AEN57851"
+>Shared Memory and LWLocks</A
+></DT
+><DT
+>35.9.13. <A
+HREF="xfunc-c.html#EXTEND-CPP"
+>Using C++ for Extensibility</A
+></DT
+></DL
+></DD
+><DT
+>35.10. <A
+HREF="xaggr.html"
+>User-defined Aggregates</A
+></DT
+><DD
+><DL
+><DT
+>35.10.1. <A
+HREF="xaggr.html#XAGGR-MOVING-AGGREGATES"
+>Moving-Aggregate Mode</A
+></DT
+><DT
+>35.10.2. <A
+HREF="xaggr.html#XAGGR-POLYMORPHIC-AGGREGATES"
+>Polymorphic and Variadic Aggregates</A
+></DT
+><DT
+>35.10.3. <A
+HREF="xaggr.html#XAGGR-ORDERED-SET-AGGREGATES"
+>Ordered-Set Aggregates</A
+></DT
+><DT
+>35.10.4. <A
+HREF="xaggr.html#XAGGR-SUPPORT-FUNCTIONS"
+>Support Functions for Aggregates</A
+></DT
+></DL
+></DD
+><DT
+>35.11. <A
+HREF="xtypes.html"
+>User-defined Types</A
+></DT
+><DT
+>35.12. <A
+HREF="xoper.html"
+>User-defined Operators</A
+></DT
+><DT
+>35.13. <A
+HREF="xoper-optimization.html"
+>Operator Optimization Information</A
+></DT
+><DD
+><DL
+><DT
+>35.13.1. <A
+HREF="xoper-optimization.html#AEN58192"
+><TT
+CLASS="LITERAL"
+>COMMUTATOR</TT
+></A
+></DT
+><DT
+>35.13.2. <A
+HREF="xoper-optimization.html#AEN58227"
+><TT
+CLASS="LITERAL"
+>NEGATOR</TT
+></A
+></DT
+><DT
+>35.13.3. <A
+HREF="xoper-optimization.html#AEN58243"
+><TT
+CLASS="LITERAL"
+>RESTRICT</TT
+></A
+></DT
+><DT
+>35.13.4. <A
+HREF="xoper-optimization.html#AEN58293"
+><TT
+CLASS="LITERAL"
+>JOIN</TT
+></A
+></DT
+><DT
+>35.13.5. <A
+HREF="xoper-optimization.html#AEN58325"
+><TT
+CLASS="LITERAL"
+>HASHES</TT
+></A
+></DT
+><DT
+>35.13.6. <A
+HREF="xoper-optimization.html#AEN58347"
+><TT
+CLASS="LITERAL"
+>MERGES</TT
+></A
+></DT
+></DL
+></DD
+><DT
+>35.14. <A
+HREF="xindex.html"
+>Interfacing Extensions To Indexes</A
+></DT
+><DD
+><DL
+><DT
+>35.14.1. <A
+HREF="xindex.html#XINDEX-OPCLASS"
+>Index Methods and Operator Classes</A
+></DT
+><DT
+>35.14.2. <A
+HREF="xindex.html#XINDEX-STRATEGIES"
+>Index Method Strategies</A
+></DT
+><DT
+>35.14.3. <A
+HREF="xindex.html#XINDEX-SUPPORT"
+>Index Method Support Routines</A
+></DT
+><DT
+>35.14.4. <A
+HREF="xindex.html#XINDEX-EXAMPLE"
+>An Example</A
+></DT
+><DT
+>35.14.5. <A
+HREF="xindex.html#XINDEX-OPFAMILY"
+>Operator Classes and Operator Families</A
+></DT
+><DT
+>35.14.6. <A
+HREF="xindex.html#XINDEX-OPCLASS-DEPENDENCIES"
+>System Dependencies on Operator Classes</A
+></DT
+><DT
+>35.14.7. <A
+HREF="xindex.html#XINDEX-ORDERING-OPS"
+>Ordering Operators</A
+></DT
+><DT
+>35.14.8. <A
+HREF="xindex.html#XINDEX-OPCLASS-FEATURES"
+>Special Features of Operator Classes</A
+></DT
+></DL
+></DD
+><DT
+>35.15. <A
+HREF="extend-extensions.html"
+>Packaging Related Objects into an Extension</A
+></DT
+><DD
+><DL
+><DT
+>35.15.1. <A
+HREF="extend-extensions.html#AEN58965"
+>Extension Files</A
+></DT
+><DT
+>35.15.2. <A
+HREF="extend-extensions.html#AEN59083"
+>Extension Relocatability</A
+></DT
+><DT
+>35.15.3. <A
+HREF="extend-extensions.html#AEN59124"
+>Extension Configuration Tables</A
+></DT
+><DT
+>35.15.4. <A
+HREF="extend-extensions.html#AEN59146"
+>Extension Updates</A
+></DT
+><DT
+>35.15.5. <A
+HREF="extend-extensions.html#AEN59201"
+>Extension Example</A
+></DT
+></DL
+></DD
+><DT
+>35.16. <A
+HREF="extend-pgxs.html"
+>Extension Building Infrastructure</A
+></DT
+></DL
+></DIV
+><P
+>   In  the  sections  that follow, we will discuss how you
+   can extend the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+   <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> query language by adding:
+
+   <P
+></P
+></P><UL
+COMPACT="COMPACT"
+><LI
+STYLE="list-style-type: disc"
+><P
+>      functions (starting in <A
+HREF="xfunc.html"
+>Section 35.3</A
+>)
+     </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>      aggregates (starting in <A
+HREF="xaggr.html"
+>Section 35.10</A
+>)
+     </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>      data types (starting in <A
+HREF="xtypes.html"
+>Section 35.11</A
+>)
+     </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>      operators (starting in <A
+HREF="xoper.html"
+>Section 35.12</A
+>)
+     </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>      operator classes for indexes (starting in <A
+HREF="xindex.html"
+>Section 35.14</A
+>)
+     </P
+></LI
+><LI
+STYLE="list-style-type: disc"
+><P
+>      packages of related objects (starting in <A
+HREF="extend-extensions.html"
+>Section 35.15</A
+>)
+     </P
+></LI
+></UL
+><P>
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="server-programming.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="extend-how.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Server Programming</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="server-programming.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>How Extensibility Works</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

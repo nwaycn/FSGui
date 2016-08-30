@@ -1,0 +1,249 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>tsm_system_time</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Additional Supplied Modules"
+HREF="contrib.html"><LINK
+REL="PREVIOUS"
+TITLE="tsm_system_rows"
+HREF="tsm-system-rows.html"><LINK
+REL="NEXT"
+TITLE="unaccent"
+HREF="unaccent.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="tsm_system_rows"
+HREF="tsm-system-rows.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix F. Additional Supplied Modules</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="unaccent"
+HREF="unaccent.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="TSM-SYSTEM-TIME"
+>F.41. tsm_system_time</A
+></H1
+><P
+>  The <TT
+CLASS="FILENAME"
+>tsm_system_time</TT
+> module provides the table sampling method
+  <TT
+CLASS="LITERAL"
+>SYSTEM_TIME</TT
+>, which can be used in
+  the <TT
+CLASS="LITERAL"
+>TABLESAMPLE</TT
+> clause of a <A
+HREF="sql-select.html"
+>SELECT</A
+>
+  command.
+ </P
+><P
+>  This table sampling method accepts a single floating-point argument that
+  is the maximum number of milliseconds to spend reading the table.  This
+  gives you direct control over how long the query takes, at the price that
+  the size of the sample becomes hard to predict.  The resulting sample will
+  contain as many rows as could be read in the specified time, unless the
+  whole table has been read first.
+ </P
+><P
+>  Like the built-in <TT
+CLASS="LITERAL"
+>SYSTEM</TT
+> sampling
+  method, <TT
+CLASS="LITERAL"
+>SYSTEM_TIME</TT
+> performs block-level sampling, so
+  that the sample is not completely random but may be subject to clustering
+  effects, especially if only a small number of rows are selected.
+ </P
+><P
+>  <TT
+CLASS="LITERAL"
+>SYSTEM_TIME</TT
+> does not support
+  the <TT
+CLASS="LITERAL"
+>REPEATABLE</TT
+> clause.
+ </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN176145"
+>F.41.1. Examples</A
+></H2
+><P
+>   Here is an example of selecting a sample of a table with
+   <TT
+CLASS="LITERAL"
+>SYSTEM_TIME</TT
+>.  First install the extension:
+  </P
+><PRE
+CLASS="PROGRAMLISTING"
+>CREATE EXTENSION tsm_system_time;</PRE
+><P
+>   Then you can use it in a <TT
+CLASS="COMMAND"
+>SELECT</TT
+> command, for instance:
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT * FROM my_table TABLESAMPLE SYSTEM_TIME(1000);</PRE
+><P>
+  </P
+><P
+>   This command will return as large a sample of <TT
+CLASS="STRUCTNAME"
+>my_table</TT
+> as
+   it can read in 1 second (1000 milliseconds).  Of course, if the whole
+   table can be read in under 1 second, all its rows will be returned.
+  </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="tsm-system-rows.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="unaccent.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>tsm_system_rows</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="contrib.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>unaccent</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

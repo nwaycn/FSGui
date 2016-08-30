@@ -1,0 +1,412 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Row Locking in Foreign Data Wrappers</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Writing A Foreign Data Wrapper"
+HREF="fdwhandler.html"><LINK
+REL="PREVIOUS"
+TITLE="Foreign Data Wrapper Query Planning"
+HREF="fdw-planning.html"><LINK
+REL="NEXT"
+TITLE="Writing A Table Sampling Method"
+HREF="tablesample-method.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Foreign Data Wrapper Query Planning"
+HREF="fdw-planning.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="fdwhandler.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 54. Writing A Foreign Data Wrapper</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Writing A Table Sampling Method"
+HREF="tablesample-method.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="FDW-ROW-LOCKING"
+>54.5. Row Locking in Foreign Data Wrappers</A
+></H1
+><P
+>     If an FDW's underlying storage mechanism has a concept of locking
+     individual rows to prevent concurrent updates of those rows, it is
+     usually worthwhile for the FDW to perform row-level locking with as
+     close an approximation as practical to the semantics used in
+     ordinary <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> tables.  There are multiple
+     considerations involved in this.
+    </P
+><P
+>     One key decision to be made is whether to perform <I
+CLASS="FIRSTTERM"
+>early
+     locking</I
+> or <I
+CLASS="FIRSTTERM"
+>late locking</I
+>.  In early locking, a row is
+     locked when it is first retrieved from the underlying store, while in
+     late locking, the row is locked only when it is known that it needs to
+     be locked.  (The difference arises because some rows may be discarded by
+     locally-checked restriction or join conditions.)  Early locking is much
+     simpler and avoids extra round trips to a remote store, but it can cause
+     locking of rows that need not have been locked, resulting in reduced
+     concurrency or even unexpected deadlocks.  Also, late locking is only
+     possible if the row to be locked can be uniquely re-identified later.
+     Preferably the row identifier should identify a specific version of the
+     row, as <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> TIDs do.
+    </P
+><P
+>     By default, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> ignores locking considerations
+     when interfacing to FDWs, but an FDW can perform early locking without
+     any explicit support from the core code.  The API functions described
+     in <A
+HREF="fdw-callbacks.html#FDW-CALLBACKS-ROW-LOCKING"
+>Section 54.2.4</A
+>, which were added
+     in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 9.5, allow an FDW to use late locking if
+     it wishes.
+    </P
+><P
+>     An additional consideration is that in <TT
+CLASS="LITERAL"
+>READ COMMITTED</TT
+>
+     isolation mode, <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> may need to re-check
+     restriction and join conditions against an updated version of some
+     target tuple.  Rechecking join conditions requires re-obtaining copies
+     of the non-target rows that were previously joined to the target tuple.
+     When working with standard <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> tables, this is
+     done by including the TIDs of the non-target tables in the column list
+     projected through the join, and then re-fetching non-target rows when
+     required.  This approach keeps the join data set compact, but it
+     requires inexpensive re-fetch capability, as well as a TID that can
+     uniquely identify the row version to be re-fetched.  By default,
+     therefore, the approach used with foreign tables is to include a copy of
+     the entire row fetched from a foreign table in the column list projected
+     through the join.  This puts no special demands on the FDW but can
+     result in reduced performance of merge and hash joins.  An FDW that is
+     capable of meeting the re-fetch requirements can choose to do it the
+     first way.
+    </P
+><P
+>     For an <TT
+CLASS="COMMAND"
+>UPDATE</TT
+> or <TT
+CLASS="COMMAND"
+>DELETE</TT
+> on a foreign table, it
+     is recommended that the <TT
+CLASS="LITERAL"
+>ForeignScan</TT
+> operation on the target
+     table perform early locking on the rows that it fetches, perhaps via the
+     equivalent of <TT
+CLASS="COMMAND"
+>SELECT FOR UPDATE</TT
+>.  An FDW can detect whether
+     a table is an <TT
+CLASS="COMMAND"
+>UPDATE</TT
+>/<TT
+CLASS="COMMAND"
+>DELETE</TT
+> target at plan time
+     by comparing its relid to <TT
+CLASS="LITERAL"
+>root-&gt;parse-&gt;resultRelation</TT
+>,
+     or at execution time by using <CODE
+CLASS="FUNCTION"
+>ExecRelationIsTargetRelation()</CODE
+>.
+     An alternative possibility is to perform late locking within the
+     <CODE
+CLASS="FUNCTION"
+>ExecForeignUpdate</CODE
+> or <CODE
+CLASS="FUNCTION"
+>ExecForeignDelete</CODE
+>
+     callback, but no special support is provided for this.
+    </P
+><P
+>     For foreign tables that are specified to be locked by a <TT
+CLASS="COMMAND"
+>SELECT
+     FOR UPDATE/SHARE</TT
+> command, the <TT
+CLASS="LITERAL"
+>ForeignScan</TT
+> operation can
+     again perform early locking by fetching tuples with the equivalent
+     of <TT
+CLASS="COMMAND"
+>SELECT FOR UPDATE/SHARE</TT
+>.  To perform late locking
+     instead, provide the callback functions defined
+     in <A
+HREF="fdw-callbacks.html#FDW-CALLBACKS-ROW-LOCKING"
+>Section 54.2.4</A
+>.
+     In <CODE
+CLASS="FUNCTION"
+>GetForeignRowMarkType</CODE
+>, select rowmark option
+     <TT
+CLASS="LITERAL"
+>ROW_MARK_EXCLUSIVE</TT
+>, <TT
+CLASS="LITERAL"
+>ROW_MARK_NOKEYEXCLUSIVE</TT
+>,
+     <TT
+CLASS="LITERAL"
+>ROW_MARK_SHARE</TT
+>, or <TT
+CLASS="LITERAL"
+>ROW_MARK_KEYSHARE</TT
+> depending
+     on the requested lock strength.  (The core code will act the same
+     regardless of which of these four options you choose.)
+     Elsewhere, you can detect whether a foreign table was specified to be
+     locked by this type of command by using <CODE
+CLASS="FUNCTION"
+>get_plan_rowmark</CODE
+> at
+     plan time, or <CODE
+CLASS="FUNCTION"
+>ExecFindRowMark</CODE
+> at execution time; you must
+     check not only whether a non-null rowmark struct is returned, but that
+     its <TT
+CLASS="STRUCTFIELD"
+>strength</TT
+> field is not <TT
+CLASS="LITERAL"
+>LCS_NONE</TT
+>.
+    </P
+><P
+>     Lastly, for foreign tables that are used in an <TT
+CLASS="COMMAND"
+>UPDATE</TT
+>,
+     <TT
+CLASS="COMMAND"
+>DELETE</TT
+> or <TT
+CLASS="COMMAND"
+>SELECT FOR UPDATE/SHARE</TT
+> command but
+     are not specified to be row-locked, you can override the default choice
+     to copy entire rows by having <CODE
+CLASS="FUNCTION"
+>GetForeignRowMarkType</CODE
+> select
+     option <TT
+CLASS="LITERAL"
+>ROW_MARK_REFERENCE</TT
+> when it sees lock strength
+     <TT
+CLASS="LITERAL"
+>LCS_NONE</TT
+>.  This will cause <CODE
+CLASS="FUNCTION"
+>RefetchForeignRow</CODE
+> to
+     be called with that value for <TT
+CLASS="STRUCTFIELD"
+>markType</TT
+>; it should then
+     re-fetch the row without acquiring any new lock.  (If you have
+     a <CODE
+CLASS="FUNCTION"
+>GetForeignRowMarkType</CODE
+> function but don't wish to re-fetch
+     unlocked rows, select option <TT
+CLASS="LITERAL"
+>ROW_MARK_COPY</TT
+>
+     for <TT
+CLASS="LITERAL"
+>LCS_NONE</TT
+>.)
+    </P
+><P
+>     See <TT
+CLASS="FILENAME"
+>src/include/nodes/lockoptions.h</TT
+>, the comments
+     for <TT
+CLASS="TYPE"
+>RowMarkType</TT
+> and <TT
+CLASS="TYPE"
+>PlanRowMark</TT
+>
+     in <TT
+CLASS="FILENAME"
+>src/include/nodes/plannodes.h</TT
+>, and the comments for
+     <TT
+CLASS="TYPE"
+>ExecRowMark</TT
+> in <TT
+CLASS="FILENAME"
+>src/include/nodes/execnodes.h</TT
+> for
+     additional information.
+    </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="fdw-planning.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="tablesample-method.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Foreign Data Wrapper Query Planning</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="fdwhandler.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Writing A Table Sampling Method</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

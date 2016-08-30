@@ -1,0 +1,553 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>C++ Applications</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="ECPG - Embedded SQL in C"
+HREF="ecpg.html"><LINK
+REL="PREVIOUS"
+TITLE="Large Objects"
+HREF="ecpg-lo.html"><LINK
+REL="NEXT"
+TITLE="Embedded SQL Commands"
+HREF="ecpg-sql-commands.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Large Objects"
+HREF="ecpg-lo.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ecpg.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 33. <SPAN
+CLASS="APPLICATION"
+>ECPG</SPAN
+> - Embedded <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> in C</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Embedded SQL Commands"
+HREF="ecpg-sql-commands.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="ECPG-CPP"
+>33.13. <ACRONYM
+CLASS="ACRONYM"
+>C++</ACRONYM
+> Applications</A
+></H1
+><P
+>   ECPG has some limited support for C++ applications.  This section
+   describes some caveats.
+  </P
+><P
+>   The <TT
+CLASS="COMMAND"
+>ecpg</TT
+> preprocessor takes an input file
+   written in C (or something like C) and embedded SQL commands,
+   converts the embedded SQL commands into C language chunks, and
+   finally generates a <TT
+CLASS="FILENAME"
+>.c</TT
+> file.  The header file
+   declarations of the library functions used by the C language chunks
+   that <TT
+CLASS="COMMAND"
+>ecpg</TT
+> generates are wrapped
+   in <TT
+CLASS="LITERAL"
+>extern "C" { ... }</TT
+> blocks when used under
+   C++, so they should work seamlessly in C++.
+  </P
+><P
+>   In general, however, the <TT
+CLASS="COMMAND"
+>ecpg</TT
+> preprocessor only
+   understands C; it does not handle the special syntax and reserved
+   words of the C++ language.  So, some embedded SQL code written in
+   C++ application code that uses complicated features specific to C++
+   might fail to be preprocessed correctly or might not work as
+   expected.
+  </P
+><P
+>   A safe way to use the embedded SQL code in a C++ application is
+   hiding the ECPG calls in a C module, which the C++ application code
+   calls into to access the database, and linking that together with
+   the rest of the C++ code.  See <A
+HREF="ecpg-cpp.html#ECPG-CPP-AND-C"
+>Section 33.13.2</A
+>
+   about that.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="ECPG-CPP-SCOPE"
+>33.13.1. Scope for Host Variables</A
+></H2
+><P
+>    The <TT
+CLASS="COMMAND"
+>ecpg</TT
+> preprocessor understands the scope of
+    variables in C.  In the C language, this is rather simple because
+    the scopes of variables is based on their code blocks.  In C++,
+    however, the class member variables are referenced in a different
+    code block from the declared position, so
+    the <TT
+CLASS="COMMAND"
+>ecpg</TT
+> preprocessor will not understand the
+    scope of the class member variables.
+   </P
+><P
+>    For example, in the following case, the <TT
+CLASS="COMMAND"
+>ecpg</TT
+>
+    preprocessor cannot find any declaration for the
+    variable <TT
+CLASS="LITERAL"
+>dbname</TT
+> in the <TT
+CLASS="LITERAL"
+>test</TT
+>
+    method, so an error will occur.
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>class TestCpp
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+    char dbname[1024];
+    EXEC SQL END DECLARE SECTION;
+
+  public:
+    TestCpp();
+    void test();
+    ~TestCpp();
+};
+
+TestCpp::TestCpp()
+{
+    EXEC SQL CONNECT TO testdb1;
+}
+
+void Test::test()
+{
+    EXEC SQL SELECT current_database() INTO :dbname;
+    printf("current_database = %s\n", dbname);
+}
+
+TestCpp::~TestCpp()
+{
+    EXEC SQL DISCONNECT ALL;
+}</PRE
+><P>
+
+    This code will result in an error like this:
+</P><PRE
+CLASS="SCREEN"
+><KBD
+CLASS="USERINPUT"
+>ecpg test_cpp.pgc</KBD
+>
+test_cpp.pgc:28: ERROR: variable "dbname" is not declared</PRE
+><P>
+   </P
+><P
+>    To avoid this scope issue, the <TT
+CLASS="LITERAL"
+>test</TT
+> method
+    could be modified to use a local variable as intermediate storage.
+    But this approach is only a poor workaround, because it uglifies
+    the code and reduces performance.
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>void TestCpp::test()
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+    char tmp[1024];
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT current_database() INTO :tmp;
+    strlcpy(dbname, tmp, sizeof(tmp));
+
+    printf("current_database = %s\n", dbname);
+}</PRE
+><P>
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="ECPG-CPP-AND-C"
+>33.13.2. C++ Application Development with External C Module</A
+></H2
+><P
+>    If you understand these technical limitations of
+    the <TT
+CLASS="COMMAND"
+>ecpg</TT
+> preprocessor in C++, you might come to
+    the conclusion that linking C objects and C++ objects at the link
+    stage to enable C++ applications to use ECPG features could be
+    better than writing some embedded SQL commands in C++ code
+    directly.  This section describes a way to separate some embedded
+    SQL commands from C++ application code with a simple example.  In
+    this example, the application is implemented in C++, while C and
+    ECPG is used to connect to the PostgreSQL server.
+   </P
+><P
+>    Three kinds of files have to be created: a C file
+    (<TT
+CLASS="FILENAME"
+>*.pgc</TT
+>), a header file, and a C++ file:
+
+    <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="FILENAME"
+>test_mod.pgc</TT
+></DT
+><DD
+><P
+>        A sub-routine module to execute SQL commands embedded in C.
+        It is going to be converted
+        into <TT
+CLASS="FILENAME"
+>test_mod.c</TT
+> by the preprocessor.
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>#include "test_mod.h"
+#include &lt;stdio.h&gt;
+
+void
+db_connect()
+{
+    EXEC SQL CONNECT TO testdb1;
+}
+
+void
+db_test()
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+    char dbname[1024];
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT current_database() INTO :dbname;
+    printf("current_database = %s\n", dbname);
+}
+
+void
+db_disconnect()
+{
+    EXEC SQL DISCONNECT ALL;
+}</PRE
+><P>
+       </P
+></DD
+><DT
+><TT
+CLASS="FILENAME"
+>test_mod.h</TT
+></DT
+><DD
+><P
+>        A header file with declarations of the functions in the C
+        module (<TT
+CLASS="FILENAME"
+>test_mod.pgc</TT
+>).  It is included by
+        <TT
+CLASS="FILENAME"
+>test_cpp.cpp</TT
+>.  This file has to have an
+        <TT
+CLASS="LITERAL"
+>extern "C"</TT
+> block around the declarations,
+        because it will be linked from the C++ module.
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>#ifdef __cplusplus
+extern "C" {
+#endif
+
+void db_connect();
+void db_test();
+void db_disconnect();
+
+#ifdef __cplusplus
+}
+#endif</PRE
+><P>
+       </P
+></DD
+><DT
+><TT
+CLASS="FILENAME"
+>test_cpp.cpp</TT
+></DT
+><DD
+><P
+>        The main code for the application, including
+        the <CODE
+CLASS="FUNCTION"
+>main</CODE
+> routine, and in this example a
+        C++ class.
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>#include "test_mod.h"
+
+class TestCpp
+{
+  public:
+    TestCpp();
+    void test();
+    ~TestCpp();
+};
+
+TestCpp::TestCpp()
+{
+    db_connect();
+}
+
+void
+TestCpp::test()
+{
+    db_test();
+}
+
+TestCpp::~TestCpp()
+{
+    db_disconnect();
+}
+
+int
+main(void)
+{
+    TestCpp *t = new TestCpp();
+
+    t-&#62;test();
+    return 0;
+}</PRE
+><P>
+       </P
+></DD
+></DL
+></DIV
+><P>
+   </P
+><P
+>    To build the application, proceed as follows.  Convert
+    <TT
+CLASS="FILENAME"
+>test_mod.pgc</TT
+> into <TT
+CLASS="FILENAME"
+>test_mod.c</TT
+> by
+    running <TT
+CLASS="COMMAND"
+>ecpg</TT
+>, and generate
+    <TT
+CLASS="FILENAME"
+>test_mod.o</TT
+> by compiling
+    <TT
+CLASS="FILENAME"
+>test_mod.c</TT
+> with the C compiler:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ecpg -o test_mod.c test_mod.pgc
+cc -c test_mod.c -o test_mod.o</PRE
+><P>
+   </P
+><P
+>    Next, generate <TT
+CLASS="FILENAME"
+>test_cpp.o</TT
+> by compiling
+    <TT
+CLASS="FILENAME"
+>test_cpp.cpp</TT
+> with the C++ compiler:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>c++ -c test_cpp.cpp -o test_cpp.o</PRE
+><P>
+   </P
+><P
+>    Finally, link these object files, <TT
+CLASS="FILENAME"
+>test_cpp.o</TT
+>
+    and <TT
+CLASS="FILENAME"
+>test_mod.o</TT
+>, into one executable, using the C++
+    compiler driver:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>c++ test_cpp.o test_mod.o -lecpg -o test_cpp</PRE
+><P>
+   </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="ecpg-lo.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="ecpg-sql-commands.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Large Objects</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="ecpg.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Embedded SQL Commands</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

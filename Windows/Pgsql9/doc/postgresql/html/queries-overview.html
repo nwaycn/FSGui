@@ -1,0 +1,299 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Overview</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Queries"
+HREF="queries.html"><LINK
+REL="PREVIOUS"
+TITLE="Queries"
+HREF="queries.html"><LINK
+REL="NEXT"
+TITLE="Table Expressions"
+HREF="queries-table-expressions.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Queries"
+HREF="queries.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="queries.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 7. Queries</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Table Expressions"
+HREF="queries-table-expressions.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="QUERIES-OVERVIEW"
+>7.1. Overview</A
+></H1
+><P
+>   The process of retrieving or the command to retrieve data from a
+   database is called a <I
+CLASS="FIRSTTERM"
+>query</I
+>.  In SQL the
+   <A
+HREF="sql-select.html"
+>SELECT</A
+> command is
+   used to specify queries.  The general syntax of the
+   <TT
+CLASS="COMMAND"
+>SELECT</TT
+> command is
+</P><PRE
+CLASS="SYNOPSIS"
+>[<SPAN
+CLASS="OPTIONAL"
+>WITH <TT
+CLASS="REPLACEABLE"
+><I
+>with_queries</I
+></TT
+></SPAN
+>] SELECT <TT
+CLASS="REPLACEABLE"
+><I
+>select_list</I
+></TT
+> FROM <TT
+CLASS="REPLACEABLE"
+><I
+>table_expression</I
+></TT
+> [<SPAN
+CLASS="OPTIONAL"
+><TT
+CLASS="REPLACEABLE"
+><I
+>sort_specification</I
+></TT
+></SPAN
+>]</PRE
+><P>
+   The following sections describe the details of the select list, the
+   table expression, and the sort specification.  <TT
+CLASS="LITERAL"
+>WITH</TT
+>
+   queries are treated last since they are an advanced feature.
+  </P
+><P
+>   A simple kind of query has the form:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT * FROM table1;</PRE
+><P>
+  Assuming that there is a table called <TT
+CLASS="LITERAL"
+>table1</TT
+>,
+  this command would retrieve all rows and all user-defined columns from
+  <TT
+CLASS="LITERAL"
+>table1</TT
+>.  (The method of retrieval depends on the
+  client application.  For example, the
+  <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> program will display an ASCII-art
+  table on the screen, while client libraries will offer functions to
+  extract individual values from the query result.)  The select list
+  specification <TT
+CLASS="LITERAL"
+>*</TT
+> means all columns that the table
+  expression happens to provide.  A select list can also select a
+  subset of the available columns or make calculations using the
+  columns.  For example, if
+  <TT
+CLASS="LITERAL"
+>table1</TT
+> has columns named <TT
+CLASS="LITERAL"
+>a</TT
+>,
+  <TT
+CLASS="LITERAL"
+>b</TT
+>, and <TT
+CLASS="LITERAL"
+>c</TT
+> (and perhaps others) you can make
+  the following query:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT a, b + c FROM table1;</PRE
+><P>
+  (assuming that <TT
+CLASS="LITERAL"
+>b</TT
+> and <TT
+CLASS="LITERAL"
+>c</TT
+> are of a numerical
+  data type).
+  See <A
+HREF="queries-select-lists.html"
+>Section 7.3</A
+> for more details.
+ </P
+><P
+>  <TT
+CLASS="LITERAL"
+>FROM table1</TT
+> is a simple kind of
+  table expression: it reads just one table.  In general, table
+  expressions can be complex constructs of base tables, joins, and
+  subqueries.  But you can also omit the table expression entirely and
+  use the <TT
+CLASS="COMMAND"
+>SELECT</TT
+> command as a calculator:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT 3 * 4;</PRE
+><P>
+  This is more useful if the expressions in the select list return
+  varying results.  For example, you could call a function this way:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT random();</PRE
+><P>
+  </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="queries.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="queries-table-expressions.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Queries</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="queries.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Table Expressions</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

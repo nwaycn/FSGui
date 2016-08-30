@@ -1,0 +1,330 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>dblink_build_sql_delete</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="dblink"
+HREF="dblink.html"><LINK
+REL="PREVIOUS"
+TITLE="dblink_build_sql_insert"
+HREF="contrib-dblink-build-sql-insert.html"><LINK
+REL="NEXT"
+TITLE="dblink_build_sql_update"
+HREF="contrib-dblink-build-sql-update.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="dblink_build_sql_insert"
+HREF="contrib-dblink-build-sql-insert.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="dblink.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="dblink_build_sql_update"
+HREF="contrib-dblink-build-sql-update.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="CONTRIB-DBLINK-BUILD-SQL-DELETE"
+></A
+>dblink_build_sql_delete</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN170291"
+></A
+><H2
+>Name</H2
+>dblink_build_sql_delete&nbsp;--&nbsp;builds a DELETE statement using supplied values for primary
+    key field values
+   </DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN170294"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>dblink_build_sql_delete(text relname,
+                        int2vector primary_key_attnums,
+                        integer num_primary_key_atts,
+                        text[] tgt_pk_att_vals_array) returns text</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN170296"
+></A
+><H2
+>Description</H2
+><P
+>    <CODE
+CLASS="FUNCTION"
+>dblink_build_sql_delete</CODE
+> can be useful in doing selective
+    replication of a local table to a remote database.  It builds a SQL
+    <TT
+CLASS="COMMAND"
+>DELETE</TT
+> command that will delete the row with the given
+    primary key values.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN170301"
+></A
+><H2
+>Arguments</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="PARAMETER"
+>relname</TT
+></DT
+><DD
+><P
+>       Name of a local relation, for example <TT
+CLASS="LITERAL"
+>foo</TT
+> or
+       <TT
+CLASS="LITERAL"
+>myschema.mytab</TT
+>.  Include double quotes if the
+       name is mixed-case or contains special characters, for
+       example <TT
+CLASS="LITERAL"
+>"FooBar"</TT
+>; without quotes, the string
+       will be folded to lower case.
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>primary_key_attnums</TT
+></DT
+><DD
+><P
+>       Attribute numbers (1-based) of the primary key fields,
+       for example <TT
+CLASS="LITERAL"
+>1 2</TT
+>.
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>num_primary_key_atts</TT
+></DT
+><DD
+><P
+>       The number of primary key fields.
+      </P
+></DD
+><DT
+><TT
+CLASS="PARAMETER"
+>tgt_pk_att_vals_array</TT
+></DT
+><DD
+><P
+>       Values of the primary key fields to be used in the resulting
+       <TT
+CLASS="COMMAND"
+>DELETE</TT
+> command.  Each field is represented in text form.
+      </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN170329"
+></A
+><H2
+>Return Value</H2
+><P
+>Returns the requested SQL statement as text.</P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN170332"
+></A
+><H2
+>Notes</H2
+><P
+>    As of <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 9.0, the attribute numbers in
+    <TT
+CLASS="PARAMETER"
+>primary_key_attnums</TT
+> are interpreted as logical
+    column numbers, corresponding to the column's position in
+    <TT
+CLASS="LITERAL"
+>SELECT * FROM relname</TT
+>.  Previous versions interpreted the
+    numbers as physical column positions.  There is a difference if any
+    column(s) to the left of the indicated column have been dropped during
+    the lifetime of the table.
+   </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN170338"
+></A
+><H2
+>Examples</H2
+><PRE
+CLASS="SCREEN"
+>SELECT dblink_build_sql_delete('"MyFoo"', '1 2', 2, '{"1", "b"}');
+           dblink_build_sql_delete
+---------------------------------------------
+ DELETE FROM "MyFoo" WHERE f1='1' AND f2='b'
+(1 row)</PRE
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="contrib-dblink-build-sql-insert.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="contrib-dblink-build-sql-update.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>dblink_build_sql_insert</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="dblink.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>dblink_build_sql_update</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

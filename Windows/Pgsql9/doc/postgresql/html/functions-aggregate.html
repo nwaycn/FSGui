@@ -1,0 +1,2505 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Aggregate Functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Functions and Operators"
+HREF="functions.html"><LINK
+REL="PREVIOUS"
+TITLE="Range Functions and Operators"
+HREF="functions-range.html"><LINK
+REL="NEXT"
+TITLE="Window Functions"
+HREF="functions-window.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Range Functions and Operators"
+HREF="functions-range.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 9. Functions and Operators</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Window Functions"
+HREF="functions-window.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="FUNCTIONS-AGGREGATE"
+>9.20. Aggregate Functions</A
+></H1
+><P
+>   <I
+CLASS="FIRSTTERM"
+>Aggregate functions</I
+> compute a single result
+   from a set of input values.  The built-in normal aggregate functions
+   are listed in
+   <A
+HREF="functions-aggregate.html#FUNCTIONS-AGGREGATE-TABLE"
+>Table 9-49</A
+> and
+   <A
+HREF="functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE"
+>Table 9-50</A
+>.
+   The built-in ordered-set aggregate functions
+   are listed in <A
+HREF="functions-aggregate.html#FUNCTIONS-ORDEREDSET-TABLE"
+>Table 9-51</A
+> and
+   <A
+HREF="functions-aggregate.html#FUNCTIONS-HYPOTHETICAL-TABLE"
+>Table 9-52</A
+>.  Grouping operations,
+   which are closely related to aggregate functions, are listed in
+   <A
+HREF="functions-aggregate.html#FUNCTIONS-GROUPING-TABLE"
+>Table 9-53</A
+>.
+   The special syntax considerations for aggregate
+   functions are explained in <A
+HREF="sql-expressions.html#SYNTAX-AGGREGATES"
+>Section 4.2.7</A
+>.
+   Consult <A
+HREF="tutorial-agg.html"
+>Section 2.7</A
+> for additional introductory
+   information.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-AGGREGATE-TABLE"
+></A
+><P
+><B
+>Table 9-49. General-Purpose Aggregate Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Argument Type(s)</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>array_agg(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       any non-array type
+      </TD
+><TD
+>       array of the argument type
+      </TD
+><TD
+>input values, including nulls, concatenated into an array</TD
+></TR
+><TR
+><TD
+>       <CODE
+CLASS="FUNCTION"
+>array_agg(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       any array type
+      </TD
+><TD
+>       same as argument data type
+      </TD
+><TD
+>input arrays concatenated into array of one higher dimension
+       (inputs must all have same dimensionality,
+        and cannot be empty or NULL)</TD
+></TR
+><TR
+><TD
+>       
+       
+       <CODE
+CLASS="FUNCTION"
+>avg(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>smallint</TT
+>, <TT
+CLASS="TYPE"
+>int</TT
+>,
+       <TT
+CLASS="TYPE"
+>bigint</TT
+>, <TT
+CLASS="TYPE"
+>real</TT
+>, <TT
+CLASS="TYPE"
+>double
+       precision</TT
+>, <TT
+CLASS="TYPE"
+>numeric</TT
+>, or <TT
+CLASS="TYPE"
+>interval</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>numeric</TT
+> for any integer-type argument,
+       <TT
+CLASS="TYPE"
+>double precision</TT
+> for a floating-point argument,
+       otherwise the same as the argument data type
+      </TD
+><TD
+>the average (arithmetic mean) of all input values</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>bit_and(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>smallint</TT
+>, <TT
+CLASS="TYPE"
+>int</TT
+>, <TT
+CLASS="TYPE"
+>bigint</TT
+>, or
+       <TT
+CLASS="TYPE"
+>bit</TT
+>
+      </TD
+><TD
+>        same as argument data type
+      </TD
+><TD
+>the bitwise AND of all non-null input values, or null if none</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>bit_or(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>smallint</TT
+>, <TT
+CLASS="TYPE"
+>int</TT
+>, <TT
+CLASS="TYPE"
+>bigint</TT
+>, or
+       <TT
+CLASS="TYPE"
+>bit</TT
+>
+      </TD
+><TD
+>        same as argument data type
+      </TD
+><TD
+>the bitwise OR of all non-null input values, or null if none</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>bool_and(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>bool</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>bool</TT
+>
+      </TD
+><TD
+>true if all input values are true, otherwise false</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>bool_or(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>bool</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>bool</TT
+>
+      </TD
+><TD
+>true if at least one input value is true, otherwise false</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>count(*)</CODE
+>
+      </TD
+><TD
+>&nbsp;</TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>number of input rows</TD
+></TR
+><TR
+><TD
+><CODE
+CLASS="FUNCTION"
+>count(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)</CODE
+></TD
+><TD
+>any</TD
+><TD
+><TT
+CLASS="TYPE"
+>bigint</TT
+></TD
+><TD
+>       number of input rows for which the value of <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+> is not null
+      </TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>every(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>bool</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>bool</TT
+>
+      </TD
+><TD
+>equivalent to <CODE
+CLASS="FUNCTION"
+>bool_and</CODE
+></TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>json_agg(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>any</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>json</TT
+>
+      </TD
+><TD
+>aggregates values as a JSON array</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>jsonb_agg(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>any</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>jsonb</TT
+>
+      </TD
+><TD
+>aggregates values as a JSON array</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>json_object_agg(<TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>(any, any)</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>json</TT
+>
+      </TD
+><TD
+>aggregates name/value pairs as a JSON object</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>jsonb_object_agg(<TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>value</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>(any, any)</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>jsonb</TT
+>
+      </TD
+><TD
+>aggregates name/value pairs as a JSON object</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>max(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>any numeric, string, date/time, network, or enum type,
+             or arrays of these types</TD
+><TD
+>same as argument type</TD
+><TD
+>       maximum value of <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+> across all input
+       values
+      </TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>min(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>any numeric, string, date/time, network, or enum type,
+             or arrays of these types</TD
+><TD
+>same as argument type</TD
+><TD
+>       minimum value of <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+> across all input
+       values
+      </TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>         string_agg(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>,
+                    <TT
+CLASS="REPLACEABLE"
+><I
+>delimiter</I
+></TT
+>)
+       </CODE
+>
+      </TD
+><TD
+>       (<TT
+CLASS="TYPE"
+>text</TT
+>, <TT
+CLASS="TYPE"
+>text</TT
+>) or (<TT
+CLASS="TYPE"
+>bytea</TT
+>, <TT
+CLASS="TYPE"
+>bytea</TT
+>)
+      </TD
+><TD
+>       same as argument types
+      </TD
+><TD
+>input values concatenated into a string, separated by delimiter</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>sum(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>smallint</TT
+>, <TT
+CLASS="TYPE"
+>int</TT
+>,
+       <TT
+CLASS="TYPE"
+>bigint</TT
+>, <TT
+CLASS="TYPE"
+>real</TT
+>, <TT
+CLASS="TYPE"
+>double
+       precision</TT
+>, <TT
+CLASS="TYPE"
+>numeric</TT
+>,
+       <TT
+CLASS="TYPE"
+>interval</TT
+>, or <TT
+CLASS="TYPE"
+>money</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>bigint</TT
+> for <TT
+CLASS="TYPE"
+>smallint</TT
+> or
+       <TT
+CLASS="TYPE"
+>int</TT
+> arguments, <TT
+CLASS="TYPE"
+>numeric</TT
+> for
+       <TT
+CLASS="TYPE"
+>bigint</TT
+> arguments, otherwise the same as the
+       argument data type
+      </TD
+><TD
+>sum of <TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+> across all input values</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>xmlagg(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>xml</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>xml</TT
+>
+      </TD
+><TD
+>concatenation of XML values (see also <A
+HREF="functions-xml.html#FUNCTIONS-XML-XMLAGG"
+>Section 9.14.1.7</A
+>)</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   It should be noted that except for <CODE
+CLASS="FUNCTION"
+>count</CODE
+>,
+   these functions return a null value when no rows are selected.  In
+   particular, <CODE
+CLASS="FUNCTION"
+>sum</CODE
+> of no rows returns null, not
+   zero as one might expect, and <CODE
+CLASS="FUNCTION"
+>array_agg</CODE
+>
+   returns null rather than an empty array when there are no input
+   rows.  The <CODE
+CLASS="FUNCTION"
+>coalesce</CODE
+> function can be used to
+   substitute zero or an empty array for null when necessary.
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>      Boolean aggregates <CODE
+CLASS="FUNCTION"
+>bool_and</CODE
+> and
+      <CODE
+CLASS="FUNCTION"
+>bool_or</CODE
+> correspond to standard SQL aggregates
+      <CODE
+CLASS="FUNCTION"
+>every</CODE
+> and <CODE
+CLASS="FUNCTION"
+>any</CODE
+> or
+      <CODE
+CLASS="FUNCTION"
+>some</CODE
+>.
+      As for <CODE
+CLASS="FUNCTION"
+>any</CODE
+> and <CODE
+CLASS="FUNCTION"
+>some</CODE
+>,
+      it seems that there is an ambiguity built into the standard syntax:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT b1 = ANY((SELECT b2 FROM t2 ...)) FROM t1 ...;</PRE
+><P>
+      Here <CODE
+CLASS="FUNCTION"
+>ANY</CODE
+> can be considered either as introducing
+      a subquery, or as being an aggregate function, if the subquery
+      returns one row with a Boolean value.
+      Thus the standard name cannot be given to these aggregates.
+    </P
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>    Users accustomed to working with other SQL database management
+    systems might be disappointed by the performance of the
+    <CODE
+CLASS="FUNCTION"
+>count</CODE
+> aggregate when it is applied to the
+    entire table. A query like:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SELECT count(*) FROM sometable;</PRE
+><P>
+    will require effort proportional to the size of the table:
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> will need to scan either the
+    entire table or the entirety of an index which includes all rows in
+    the table.
+   </P
+></BLOCKQUOTE
+></DIV
+><P
+>   The aggregate functions <CODE
+CLASS="FUNCTION"
+>array_agg</CODE
+>,
+   <CODE
+CLASS="FUNCTION"
+>json_agg</CODE
+>, <CODE
+CLASS="FUNCTION"
+>jsonb_agg</CODE
+>,
+   <CODE
+CLASS="FUNCTION"
+>json_object_agg</CODE
+>, <CODE
+CLASS="FUNCTION"
+>jsonb_object_agg</CODE
+>,
+   <CODE
+CLASS="FUNCTION"
+>string_agg</CODE
+>,
+   and <CODE
+CLASS="FUNCTION"
+>xmlagg</CODE
+>, as well as similar user-defined
+   aggregate functions, produce meaningfully different result values
+   depending on the order of the input values.  This ordering is
+   unspecified by default, but can be controlled by writing an
+   <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> clause within the aggregate call, as shown in
+   <A
+HREF="sql-expressions.html#SYNTAX-AGGREGATES"
+>Section 4.2.7</A
+>.
+   Alternatively, supplying the input values from a sorted subquery
+   will usually work.  For example:
+
+</P><PRE
+CLASS="SCREEN"
+>SELECT xmlagg(x) FROM (SELECT x FROM test ORDER BY y DESC) AS tab;</PRE
+><P>
+
+   But this syntax is not allowed in the SQL standard, and is
+   not portable to other database systems.
+  </P
+><P
+>   <A
+HREF="functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE"
+>Table 9-50</A
+> shows
+   aggregate functions typically used in statistical analysis.
+   (These are separated out merely to avoid cluttering the listing
+   of more-commonly-used aggregates.)  Where the description mentions
+   <TT
+CLASS="REPLACEABLE"
+><I
+>N</I
+></TT
+>, it means the
+   number of input rows for which all the input expressions are non-null.
+   In all cases, null is returned if the computation is meaningless,
+   for example when <TT
+CLASS="REPLACEABLE"
+><I
+>N</I
+></TT
+> is zero.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-AGGREGATE-STATISTICS-TABLE"
+></A
+><P
+><B
+>Table 9-50. Aggregate Functions for Statistics</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Argument Type</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>       
+       
+       <CODE
+CLASS="FUNCTION"
+>corr(<TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>correlation coefficient</TD
+></TR
+><TR
+><TD
+>       
+       
+       <CODE
+CLASS="FUNCTION"
+>covar_pop(<TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>population covariance</TD
+></TR
+><TR
+><TD
+>       
+       
+       <CODE
+CLASS="FUNCTION"
+>covar_samp(<TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>sample covariance</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>regr_avgx(<TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>average of the independent variable
+      (<TT
+CLASS="LITERAL"
+>sum(<TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>)/<TT
+CLASS="REPLACEABLE"
+><I
+>N</I
+></TT
+></TT
+>)</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>regr_avgy(<TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>average of the dependent variable
+      (<TT
+CLASS="LITERAL"
+>sum(<TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+>)/<TT
+CLASS="REPLACEABLE"
+><I
+>N</I
+></TT
+></TT
+>)</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>regr_count(<TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>bigint</TT
+>
+      </TD
+><TD
+>number of input rows in which both expressions are nonnull</TD
+></TR
+><TR
+><TD
+>       
+       
+       <CODE
+CLASS="FUNCTION"
+>regr_intercept(<TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>y-intercept of the least-squares-fit linear equation
+      determined by the (<TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+>) pairs</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>regr_r2(<TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>square of the correlation coefficient</TD
+></TR
+><TR
+><TD
+>       
+       
+       <CODE
+CLASS="FUNCTION"
+>regr_slope(<TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>slope of the least-squares-fit linear equation determined
+      by the (<TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>,
+      <TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+>) pairs</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>regr_sxx(<TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+><TT
+CLASS="LITERAL"
+>sum(<TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>^2) - sum(<TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>)^2/<TT
+CLASS="REPLACEABLE"
+><I
+>N</I
+></TT
+></TT
+> (<SPAN
+CLASS="QUOTE"
+>"sum of
+      squares"</SPAN
+> of the independent variable)</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>regr_sxy(<TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+><TT
+CLASS="LITERAL"
+>sum(<TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>*<TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+>) - sum(<TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>) * sum(<TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+>)/<TT
+CLASS="REPLACEABLE"
+><I
+>N</I
+></TT
+></TT
+> (<SPAN
+CLASS="QUOTE"
+>"sum of
+      products"</SPAN
+> of independent times dependent
+      variable)</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>regr_syy(<TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>X</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+><TT
+CLASS="LITERAL"
+>sum(<TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+>^2) - sum(<TT
+CLASS="REPLACEABLE"
+><I
+>Y</I
+></TT
+>)^2/<TT
+CLASS="REPLACEABLE"
+><I
+>N</I
+></TT
+></TT
+> (<SPAN
+CLASS="QUOTE"
+>"sum of
+      squares"</SPAN
+> of the dependent variable)</TD
+></TR
+><TR
+><TD
+>       
+       
+       <CODE
+CLASS="FUNCTION"
+>stddev(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>smallint</TT
+>, <TT
+CLASS="TYPE"
+>int</TT
+>,
+       <TT
+CLASS="TYPE"
+>bigint</TT
+>, <TT
+CLASS="TYPE"
+>real</TT
+>, <TT
+CLASS="TYPE"
+>double
+       precision</TT
+>, or <TT
+CLASS="TYPE"
+>numeric</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+> for floating-point arguments,
+       otherwise <TT
+CLASS="TYPE"
+>numeric</TT
+>
+      </TD
+><TD
+>historical alias for <CODE
+CLASS="FUNCTION"
+>stddev_samp</CODE
+></TD
+></TR
+><TR
+><TD
+>       
+       
+       <CODE
+CLASS="FUNCTION"
+>stddev_pop(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>smallint</TT
+>, <TT
+CLASS="TYPE"
+>int</TT
+>,
+       <TT
+CLASS="TYPE"
+>bigint</TT
+>, <TT
+CLASS="TYPE"
+>real</TT
+>, <TT
+CLASS="TYPE"
+>double
+       precision</TT
+>, or <TT
+CLASS="TYPE"
+>numeric</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+> for floating-point arguments,
+       otherwise <TT
+CLASS="TYPE"
+>numeric</TT
+>
+      </TD
+><TD
+>population standard deviation of the input values</TD
+></TR
+><TR
+><TD
+>       
+       
+       <CODE
+CLASS="FUNCTION"
+>stddev_samp(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>smallint</TT
+>, <TT
+CLASS="TYPE"
+>int</TT
+>,
+       <TT
+CLASS="TYPE"
+>bigint</TT
+>, <TT
+CLASS="TYPE"
+>real</TT
+>, <TT
+CLASS="TYPE"
+>double
+       precision</TT
+>, or <TT
+CLASS="TYPE"
+>numeric</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+> for floating-point arguments,
+       otherwise <TT
+CLASS="TYPE"
+>numeric</TT
+>
+      </TD
+><TD
+>sample standard deviation of the input values</TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>variance</CODE
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>smallint</TT
+>, <TT
+CLASS="TYPE"
+>int</TT
+>,
+       <TT
+CLASS="TYPE"
+>bigint</TT
+>, <TT
+CLASS="TYPE"
+>real</TT
+>, <TT
+CLASS="TYPE"
+>double
+       precision</TT
+>, or <TT
+CLASS="TYPE"
+>numeric</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+> for floating-point arguments,
+       otherwise <TT
+CLASS="TYPE"
+>numeric</TT
+>
+      </TD
+><TD
+>historical alias for <CODE
+CLASS="FUNCTION"
+>var_samp</CODE
+></TD
+></TR
+><TR
+><TD
+>       
+       
+       <CODE
+CLASS="FUNCTION"
+>var_pop</CODE
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>smallint</TT
+>, <TT
+CLASS="TYPE"
+>int</TT
+>,
+       <TT
+CLASS="TYPE"
+>bigint</TT
+>, <TT
+CLASS="TYPE"
+>real</TT
+>, <TT
+CLASS="TYPE"
+>double
+       precision</TT
+>, or <TT
+CLASS="TYPE"
+>numeric</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+> for floating-point arguments,
+       otherwise <TT
+CLASS="TYPE"
+>numeric</TT
+>
+      </TD
+><TD
+>population variance of the input values (square of the population standard deviation)</TD
+></TR
+><TR
+><TD
+>       
+       
+       <CODE
+CLASS="FUNCTION"
+>var_samp</CODE
+>(<TT
+CLASS="REPLACEABLE"
+><I
+>expression</I
+></TT
+>)
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>smallint</TT
+>, <TT
+CLASS="TYPE"
+>int</TT
+>,
+       <TT
+CLASS="TYPE"
+>bigint</TT
+>, <TT
+CLASS="TYPE"
+>real</TT
+>, <TT
+CLASS="TYPE"
+>double
+       precision</TT
+>, or <TT
+CLASS="TYPE"
+>numeric</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+> for floating-point arguments,
+       otherwise <TT
+CLASS="TYPE"
+>numeric</TT
+>
+      </TD
+><TD
+>sample variance of the input values (square of the sample standard deviation)</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   <A
+HREF="functions-aggregate.html#FUNCTIONS-ORDEREDSET-TABLE"
+>Table 9-51</A
+> shows some
+   aggregate functions that use the <I
+CLASS="FIRSTTERM"
+>ordered-set aggregate</I
+>
+   syntax.  These functions are sometimes referred to as <SPAN
+CLASS="QUOTE"
+>"inverse
+   distribution"</SPAN
+> functions.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-ORDEREDSET-TABLE"
+></A
+><P
+><B
+>Table 9-51. Ordered-Set Aggregate Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Direct Argument Type(s)</TH
+><TH
+>Aggregated Argument Type(s)</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>mode() WITHIN GROUP (ORDER BY <TT
+CLASS="REPLACEABLE"
+><I
+>sort_expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>&nbsp;</TD
+><TD
+>       any sortable type
+      </TD
+><TD
+>       same as sort expression
+      </TD
+><TD
+>       returns the most frequent input value (arbitrarily choosing the first
+       one if there are multiple equally-frequent results)
+      </TD
+></TR
+><TR
+><TD
+>       
+       
+       <CODE
+CLASS="FUNCTION"
+>percentile_cont(<TT
+CLASS="REPLACEABLE"
+><I
+>fraction</I
+></TT
+>) WITHIN GROUP (ORDER BY <TT
+CLASS="REPLACEABLE"
+><I
+>sort_expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+> or <TT
+CLASS="TYPE"
+>interval</TT
+>
+      </TD
+><TD
+>       same as sort expression
+      </TD
+><TD
+>       continuous percentile: returns a value corresponding to the specified
+       fraction in the ordering, interpolating between adjacent input items if
+       needed
+      </TD
+></TR
+><TR
+><TD
+>       <CODE
+CLASS="FUNCTION"
+>percentile_cont(<TT
+CLASS="REPLACEABLE"
+><I
+>fractions</I
+></TT
+>) WITHIN GROUP (ORDER BY <TT
+CLASS="REPLACEABLE"
+><I
+>sort_expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision[]</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+> or <TT
+CLASS="TYPE"
+>interval</TT
+>
+      </TD
+><TD
+>       array of sort expression's type
+      </TD
+><TD
+>       multiple continuous percentile: returns an array of results matching
+       the shape of the <TT
+CLASS="LITERAL"
+>fractions</TT
+> parameter, with each
+       non-null element replaced by the value corresponding to that percentile
+      </TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>percentile_disc(<TT
+CLASS="REPLACEABLE"
+><I
+>fraction</I
+></TT
+>) WITHIN GROUP (ORDER BY <TT
+CLASS="REPLACEABLE"
+><I
+>sort_expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>       any sortable type
+      </TD
+><TD
+>       same as sort expression
+      </TD
+><TD
+>       discrete percentile: returns the first input value whose position in
+       the ordering equals or exceeds the specified fraction
+      </TD
+></TR
+><TR
+><TD
+>       <CODE
+CLASS="FUNCTION"
+>percentile_disc(<TT
+CLASS="REPLACEABLE"
+><I
+>fractions</I
+></TT
+>) WITHIN GROUP (ORDER BY <TT
+CLASS="REPLACEABLE"
+><I
+>sort_expression</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision[]</TT
+>
+      </TD
+><TD
+>       any sortable type
+      </TD
+><TD
+>       array of sort expression's type
+      </TD
+><TD
+>       multiple discrete percentile: returns an array of results matching the
+       shape of the <TT
+CLASS="LITERAL"
+>fractions</TT
+> parameter, with each non-null
+       element replaced by the input value corresponding to that percentile
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   All the aggregates listed in <A
+HREF="functions-aggregate.html#FUNCTIONS-ORDEREDSET-TABLE"
+>Table 9-51</A
+>
+   ignore null values in their sorted input.  For those that take
+   a <TT
+CLASS="REPLACEABLE"
+><I
+>fraction</I
+></TT
+> parameter, the fraction value must be
+   between 0 and 1; an error is thrown if not.  However, a null fraction value
+   simply produces a null result.
+  </P
+><P
+>   Each of the aggregates listed in
+   <A
+HREF="functions-aggregate.html#FUNCTIONS-HYPOTHETICAL-TABLE"
+>Table 9-52</A
+> is associated with a
+   window function of the same name defined in
+   <A
+HREF="functions-window.html"
+>Section 9.21</A
+>.  In each case, the aggregate result
+   is the value that the associated window function would have
+   returned for the <SPAN
+CLASS="QUOTE"
+>"hypothetical"</SPAN
+> row constructed from
+   <TT
+CLASS="REPLACEABLE"
+><I
+>args</I
+></TT
+>, if such a row had been added to the sorted
+   group of rows computed from the <TT
+CLASS="REPLACEABLE"
+><I
+>sorted_args</I
+></TT
+>.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-HYPOTHETICAL-TABLE"
+></A
+><P
+><B
+>Table 9-52. Hypothetical-Set Aggregate Functions</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Direct Argument Type(s)</TH
+><TH
+>Aggregated Argument Type(s)</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>rank(<TT
+CLASS="REPLACEABLE"
+><I
+>args</I
+></TT
+>) WITHIN GROUP (ORDER BY <TT
+CLASS="REPLACEABLE"
+><I
+>sorted_args</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="LITERAL"
+>VARIADIC</TT
+> <TT
+CLASS="TYPE"
+>"any"</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="LITERAL"
+>VARIADIC</TT
+> <TT
+CLASS="TYPE"
+>"any"</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>bigint</TT
+>
+      </TD
+><TD
+>       rank of the hypothetical row, with gaps for duplicate rows
+      </TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>dense_rank(<TT
+CLASS="REPLACEABLE"
+><I
+>args</I
+></TT
+>) WITHIN GROUP (ORDER BY <TT
+CLASS="REPLACEABLE"
+><I
+>sorted_args</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="LITERAL"
+>VARIADIC</TT
+> <TT
+CLASS="TYPE"
+>"any"</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="LITERAL"
+>VARIADIC</TT
+> <TT
+CLASS="TYPE"
+>"any"</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>bigint</TT
+>
+      </TD
+><TD
+>       rank of the hypothetical row, without gaps
+      </TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>percent_rank(<TT
+CLASS="REPLACEABLE"
+><I
+>args</I
+></TT
+>) WITHIN GROUP (ORDER BY <TT
+CLASS="REPLACEABLE"
+><I
+>sorted_args</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="LITERAL"
+>VARIADIC</TT
+> <TT
+CLASS="TYPE"
+>"any"</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="LITERAL"
+>VARIADIC</TT
+> <TT
+CLASS="TYPE"
+>"any"</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>       relative rank of the hypothetical row, ranging from 0 to 1
+      </TD
+></TR
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>cume_dist(<TT
+CLASS="REPLACEABLE"
+><I
+>args</I
+></TT
+>) WITHIN GROUP (ORDER BY <TT
+CLASS="REPLACEABLE"
+><I
+>sorted_args</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="LITERAL"
+>VARIADIC</TT
+> <TT
+CLASS="TYPE"
+>"any"</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="LITERAL"
+>VARIADIC</TT
+> <TT
+CLASS="TYPE"
+>"any"</TT
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>double precision</TT
+>
+      </TD
+><TD
+>       relative rank of the hypothetical row, ranging from
+       1/<TT
+CLASS="REPLACEABLE"
+><I
+>N</I
+></TT
+> to 1
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>   For each of these hypothetical-set aggregates, the list of direct arguments
+   given in <TT
+CLASS="REPLACEABLE"
+><I
+>args</I
+></TT
+> must match the number and types of
+   the aggregated arguments given in <TT
+CLASS="REPLACEABLE"
+><I
+>sorted_args</I
+></TT
+>.
+   Unlike most built-in aggregates, these aggregates are not strict, that is
+   they do not drop input rows containing nulls.  Null values sort according
+   to the rule specified in the <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+> clause.
+  </P
+><DIV
+CLASS="TABLE"
+><A
+NAME="FUNCTIONS-GROUPING-TABLE"
+></A
+><P
+><B
+>Table 9-53. Grouping Operations</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL><COL><COL><THEAD
+><TR
+><TH
+>Function</TH
+><TH
+>Return Type</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>       
+       <CODE
+CLASS="FUNCTION"
+>GROUPING(<TT
+CLASS="REPLACEABLE"
+><I
+>args...</I
+></TT
+>)</CODE
+>
+      </TD
+><TD
+>       <TT
+CLASS="TYPE"
+>integer</TT
+>
+      </TD
+><TD
+>       Integer bit mask indicating which arguments are not being included in the current
+       grouping set
+      </TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>    Grouping operations are used in conjunction with grouping sets (see
+    <A
+HREF="queries-table-expressions.html#QUERIES-GROUPING-SETS"
+>Section 7.2.4</A
+>) to distinguish result rows.  The
+    arguments to the <TT
+CLASS="LITERAL"
+>GROUPING</TT
+> operation are not actually evaluated,
+    but they must match exactly expressions given in the <TT
+CLASS="LITERAL"
+>GROUP BY</TT
+>
+    clause of the associated query level.  Bits are assigned with the rightmost
+    argument being the least-significant bit; each bit is 0 if the corresponding
+    expression is included in the grouping criteria of the grouping set generating
+    the result row, and 1 if it is not.  For example:
+</P><PRE
+CLASS="SCREEN"
+><SAMP
+CLASS="PROMPT"
+>=&gt;</SAMP
+> <KBD
+CLASS="USERINPUT"
+>SELECT * FROM items_sold;</KBD
+>
+ make  | model | sales
+-------+-------+-------
+ Foo   | GT    |  10
+ Foo   | Tour  |  20
+ Bar   | City  |  15
+ Bar   | Sport |  5
+(4 rows)
+
+<SAMP
+CLASS="PROMPT"
+>=&gt;</SAMP
+> <KBD
+CLASS="USERINPUT"
+>SELECT make, model, GROUPING(make,model), sum(sales) FROM items_sold GROUP BY ROLLUP(make,model);</KBD
+>
+ make  | model | grouping | sum
+-------+-------+----------+-----
+ Foo   | GT    |        0 | 10
+ Foo   | Tour  |        0 | 20
+ Bar   | City  |        0 | 15
+ Bar   | Sport |        0 | 5
+ Foo   |       |        1 | 30
+ Bar   |       |        1 | 20
+       |       |        3 | 50
+(7 rows)</PRE
+><P>
+   </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="functions-range.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="functions-window.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Range Functions and Operators</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="functions.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Window Functions</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

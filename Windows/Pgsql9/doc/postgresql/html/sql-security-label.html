@@ -1,0 +1,654 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>SECURITY LABEL</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="SAVEPOINT"
+HREF="sql-savepoint.html"><LINK
+REL="NEXT"
+TITLE="SELECT"
+HREF="sql-select.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="SAVEPOINT"
+HREF="sql-savepoint.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="SELECT"
+HREF="sql-select.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-SECURITY-LABEL"
+></A
+>SECURITY LABEL</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN86469"
+></A
+><H2
+>Name</H2
+>SECURITY LABEL&nbsp;--&nbsp;define or change a security label applied to an object</DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN86472"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>SECURITY LABEL [ FOR <TT
+CLASS="REPLACEABLE"
+><I
+>provider</I
+></TT
+> ] ON
+{
+  TABLE <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  COLUMN <TT
+CLASS="REPLACEABLE"
+><I
+>table_name</I
+></TT
+>.<TT
+CLASS="REPLACEABLE"
+><I
+>column_name</I
+></TT
+> |
+  AGGREGATE <TT
+CLASS="REPLACEABLE"
+><I
+>aggregate_name</I
+></TT
+> ( <TT
+CLASS="REPLACEABLE"
+><I
+>aggregate_signature</I
+></TT
+> ) |
+  DATABASE <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  DOMAIN <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  EVENT TRIGGER <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  FOREIGN TABLE <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+>
+  FUNCTION <TT
+CLASS="REPLACEABLE"
+><I
+>function_name</I
+></TT
+> ( [ [ <TT
+CLASS="REPLACEABLE"
+><I
+>argmode</I
+></TT
+> ] [ <TT
+CLASS="REPLACEABLE"
+><I
+>argname</I
+></TT
+> ] <TT
+CLASS="REPLACEABLE"
+><I
+>argtype</I
+></TT
+> [, ...] ] ) |
+  LARGE OBJECT <TT
+CLASS="REPLACEABLE"
+><I
+>large_object_oid</I
+></TT
+> |
+  MATERIALIZED VIEW <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  [ PROCEDURAL ] LANGUAGE <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  ROLE <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  SCHEMA <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  SEQUENCE <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  TABLESPACE <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  TYPE <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  VIEW <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+>
+} IS '<TT
+CLASS="REPLACEABLE"
+><I
+>label</I
+></TT
+>'
+
+<SPAN
+CLASS="phrase"
+><SPAN
+CLASS="PHRASE"
+>where <TT
+CLASS="REPLACEABLE"
+><I
+>aggregate_signature</I
+></TT
+> is:</SPAN
+></SPAN
+>
+
+* |
+[ <TT
+CLASS="REPLACEABLE"
+><I
+>argmode</I
+></TT
+> ] [ <TT
+CLASS="REPLACEABLE"
+><I
+>argname</I
+></TT
+> ] <TT
+CLASS="REPLACEABLE"
+><I
+>argtype</I
+></TT
+> [ , ... ] |
+[ [ <TT
+CLASS="REPLACEABLE"
+><I
+>argmode</I
+></TT
+> ] [ <TT
+CLASS="REPLACEABLE"
+><I
+>argname</I
+></TT
+> ] <TT
+CLASS="REPLACEABLE"
+><I
+>argtype</I
+></TT
+> [ , ... ] ] ORDER BY [ <TT
+CLASS="REPLACEABLE"
+><I
+>argmode</I
+></TT
+> ] [ <TT
+CLASS="REPLACEABLE"
+><I
+>argname</I
+></TT
+> ] <TT
+CLASS="REPLACEABLE"
+><I
+>argtype</I
+></TT
+> [ , ... ]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN86509"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>SECURITY LABEL</TT
+> applies a security label to a database
+   object.  An arbitrary number of security labels, one per label provider, can
+   be associated with a given database object.  Label providers are loadable
+   modules which register themselves by using the function
+   <CODE
+CLASS="FUNCTION"
+>register_label_provider</CODE
+>.
+  </P
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Note: </B
+>      <CODE
+CLASS="FUNCTION"
+>register_label_provider</CODE
+> is not an SQL function; it can
+      only be called from C code loaded into the backend.
+    </P
+></BLOCKQUOTE
+></DIV
+><P
+>   The label provider determines whether a given label is valid and whether
+   it is permissible to assign that label to a given object.  The meaning of a
+   given label is likewise at the discretion of the label provider.
+   <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> places no restrictions on whether or how a
+   label provider must interpret security labels; it merely provides a
+   mechanism for storing them.  In practice, this facility is intended to allow
+   integration with label-based mandatory access control (MAC) systems such as
+   <SPAN
+CLASS="PRODUCTNAME"
+>SE-Linux</SPAN
+>.  Such systems make all access control decisions
+   based on object labels, rather than traditional discretionary access control
+   (DAC) concepts such as users and groups.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN86520"
+></A
+><H2
+>Parameters</H2
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+><BR><TT
+CLASS="REPLACEABLE"
+><I
+>table_name.column_name</I
+></TT
+><BR><TT
+CLASS="REPLACEABLE"
+><I
+>aggregate_name</I
+></TT
+><BR><TT
+CLASS="REPLACEABLE"
+><I
+>function_name</I
+></TT
+></DT
+><DD
+><P
+>      The name of the object to be labeled.  Names of tables,
+      aggregates, domains, foreign tables, functions, sequences, types, and
+      views can be schema-qualified.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>provider</I
+></TT
+></DT
+><DD
+><P
+>      The name of the provider with which this label is to be associated.  The
+      named provider must be loaded and must consent to the proposed labeling
+      operation.  If exactly one provider is loaded, the provider name may be
+      omitted for brevity.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>argmode</I
+></TT
+></DT
+><DD
+><P
+>      The mode of a function or aggregate
+      argument: <TT
+CLASS="LITERAL"
+>IN</TT
+>, <TT
+CLASS="LITERAL"
+>OUT</TT
+>,
+      <TT
+CLASS="LITERAL"
+>INOUT</TT
+>, or <TT
+CLASS="LITERAL"
+>VARIADIC</TT
+>.
+      If omitted, the default is <TT
+CLASS="LITERAL"
+>IN</TT
+>.
+      Note that <TT
+CLASS="COMMAND"
+>SECURITY LABEL</TT
+> does not actually
+      pay any attention to <TT
+CLASS="LITERAL"
+>OUT</TT
+> arguments, since only the input
+      arguments are needed to determine the function's identity.
+      So it is sufficient to list the <TT
+CLASS="LITERAL"
+>IN</TT
+>, <TT
+CLASS="LITERAL"
+>INOUT</TT
+>,
+      and <TT
+CLASS="LITERAL"
+>VARIADIC</TT
+> arguments.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>argname</I
+></TT
+></DT
+><DD
+><P
+>      The name of a function or aggregate argument.
+      Note that <TT
+CLASS="COMMAND"
+>SECURITY LABEL</TT
+> does not actually
+      pay any attention to argument names, since only the argument data
+      types are needed to determine the function's identity.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>argtype</I
+></TT
+></DT
+><DD
+><P
+>      The data type of a function or aggregate argument.
+     </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>large_object_oid</I
+></TT
+></DT
+><DD
+><P
+>      The OID of the large object.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>PROCEDURAL</TT
+></DT
+><DD
+><P
+>       This is a noise word.
+      </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>label</I
+></TT
+></DT
+><DD
+><P
+>      The new security label, written as a string literal; or <TT
+CLASS="LITERAL"
+>NULL</TT
+>
+      to drop the security label.
+     </P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN86581"
+></A
+><H2
+>Examples</H2
+><P
+>   The following example shows how the security label of a table might
+   be changed.
+
+</P><PRE
+CLASS="PROGRAMLISTING"
+>SECURITY LABEL FOR selinux ON TABLE mytable IS 'system_u:object_r:sepgsql_table_t:s0';</PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN86585"
+></A
+><H2
+>Compatibility</H2
+><P
+>   There is no <TT
+CLASS="COMMAND"
+>SECURITY LABEL</TT
+> command in the SQL standard.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN86589"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sepgsql.html"
+>sepgsql</A
+>, <TT
+CLASS="FILENAME"
+>src/test/modules/dummy_seclabel</TT
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-savepoint.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-select.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>SAVEPOINT</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>SELECT</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

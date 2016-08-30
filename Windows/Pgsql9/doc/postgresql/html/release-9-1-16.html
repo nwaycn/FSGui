@@ -1,0 +1,861 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>Release 9.1.16</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Release Notes"
+HREF="release.html"><LINK
+REL="PREVIOUS"
+TITLE="Release 9.1.17"
+HREF="release-9-1-17.html"><LINK
+REL="NEXT"
+TITLE="Release 9.1.15"
+HREF="release-9-1-15.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Release 9.1.17"
+HREF="release-9-1-17.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix E. Release Notes</TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="Release 9.1.15"
+HREF="release-9-1-15.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="RELEASE-9-1-16"
+>E.57. Release 9.1.16</A
+></H1
+><DIV
+CLASS="NOTE"
+><BLOCKQUOTE
+CLASS="NOTE"
+><P
+><B
+>Release Date: </B
+>2015-05-22</P
+></BLOCKQUOTE
+></DIV
+><P
+>   This release contains a variety of fixes from 9.1.15.
+   For information about new features in the 9.1 major release, see
+   <A
+HREF="release-9-1.html"
+>Section E.73</A
+>.
+  </P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN139047"
+>E.57.1. Migration to Version 9.1.16</A
+></H2
+><P
+>    A dump/restore is not required for those running 9.1.X.
+   </P
+><P
+>    However, if you use <TT
+CLASS="FILENAME"
+>contrib/citext</TT
+>'s
+    <CODE
+CLASS="FUNCTION"
+>regexp_matches()</CODE
+> functions, see the changelog entry below
+    about that.
+   </P
+><P
+>    Also, if you are upgrading from a version earlier than 9.1.14,
+    see <A
+HREF="release-9-1-14.html"
+>Section E.59</A
+>.
+   </P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="AEN139055"
+>E.57.2. Changes</A
+></H2
+><P
+></P
+><UL
+><LI
+><P
+>      Avoid possible crash when client disconnects just before the
+      authentication timeout expires (Benkocs Norbert Attila)
+     </P
+><P
+>      If the timeout interrupt fired partway through the session shutdown
+      sequence, SSL-related state would be freed twice, typically causing a
+      crash and hence denial of service to other sessions.  Experimentation
+      shows that an unauthenticated remote attacker could trigger the bug
+      somewhat consistently, hence treat as security issue.
+      (CVE-2015-3165)
+     </P
+></LI
+><LI
+><P
+>      Improve detection of system-call failures (Noah Misch)
+     </P
+><P
+>      Our replacement implementation of <CODE
+CLASS="FUNCTION"
+>snprintf()</CODE
+> failed to
+      check for errors reported by the underlying system library calls;
+      the main case that might be missed is out-of-memory situations.
+      In the worst case this might lead to information exposure, due to our
+      code assuming that a buffer had been overwritten when it hadn't been.
+      Also, there were a few places in which security-relevant calls of other
+      system library functions did not check for failure.
+     </P
+><P
+>      It remains possible that some calls of the <CODE
+CLASS="FUNCTION"
+>*printf()</CODE
+>
+      family of functions are vulnerable to information disclosure if an
+      out-of-memory error occurs at just the wrong time.  We judge the risk
+      to not be large, but will continue analysis in this area.
+      (CVE-2015-3166)
+     </P
+></LI
+><LI
+><P
+>      In <TT
+CLASS="FILENAME"
+>contrib/pgcrypto</TT
+>, uniformly report decryption failures
+      as <SPAN
+CLASS="QUOTE"
+>"Wrong key or corrupt data"</SPAN
+> (Noah Misch)
+     </P
+><P
+>      Previously, some cases of decryption with an incorrect key could report
+      other error message texts.  It has been shown that such variance in
+      error reports can aid attackers in recovering keys from other systems.
+      While it's unknown whether <TT
+CLASS="FILENAME"
+>pgcrypto</TT
+>'s specific behaviors
+      are likewise exploitable, it seems better to avoid the risk by using a
+      one-size-fits-all message.
+      (CVE-2015-3167)
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect declaration of <TT
+CLASS="FILENAME"
+>contrib/citext</TT
+>'s
+      <CODE
+CLASS="FUNCTION"
+>regexp_matches()</CODE
+> functions (Tom Lane)
+     </P
+><P
+>      These functions should return <TT
+CLASS="TYPE"
+>setof text[]</TT
+>, like the core
+      functions they are wrappers for; but they were incorrectly declared as
+      returning just <TT
+CLASS="TYPE"
+>text[]</TT
+>.  This mistake had two results: first,
+      if there was no match you got a scalar null result, whereas what you
+      should get is an empty set (zero rows).  Second, the <TT
+CLASS="LITERAL"
+>g</TT
+> flag
+      was effectively ignored, since you would get only one result array even
+      if there were multiple matches.
+     </P
+><P
+>      While the latter behavior is clearly a bug, there might be applications
+      depending on the former behavior; therefore the function declarations
+      will not be changed by default until <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 9.5.
+      In pre-9.5 branches, the old behavior exists in version 1.0 of
+      the <TT
+CLASS="LITERAL"
+>citext</TT
+> extension, while we have provided corrected
+      declarations in version 1.1 (which is <SPAN
+CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>not</I
+></SPAN
+> installed by
+      default).  To adopt the fix in pre-9.5 branches, execute
+      <TT
+CLASS="LITERAL"
+>ALTER EXTENSION citext UPDATE TO '1.1'</TT
+> in each database in
+      which <TT
+CLASS="LITERAL"
+>citext</TT
+> is installed.  (You can also <SPAN
+CLASS="QUOTE"
+>"update"</SPAN
+>
+      back to 1.0 if you need to undo that.)  Be aware that either update
+      direction will require dropping and recreating any views or rules that
+      use <TT
+CLASS="FILENAME"
+>citext</TT
+>'s <CODE
+CLASS="FUNCTION"
+>regexp_matches()</CODE
+> functions.
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect checking of deferred exclusion constraints after a HOT
+      update (Tom Lane)
+     </P
+><P
+>      If a new row that potentially violates a deferred exclusion constraint
+      is HOT-updated (that is, no indexed columns change and the row can be
+      stored back onto the same table page) later in the same transaction,
+      the exclusion constraint would be reported as violated when the check
+      finally occurred, even if the row(s) the new row originally conflicted
+      with had been deleted.
+     </P
+></LI
+><LI
+><P
+>      Prevent improper reordering of antijoins (NOT EXISTS joins) versus
+      other outer joins (Tom Lane)
+     </P
+><P
+>      This oversight in the planner has been observed to cause <SPAN
+CLASS="QUOTE"
+>"could
+      not find RelOptInfo for given relids"</SPAN
+> errors, but it seems possible
+      that sometimes an incorrect query plan might get past that consistency
+      check and result in silently-wrong query output.
+     </P
+></LI
+><LI
+><P
+>      Fix incorrect matching of subexpressions in outer-join plan nodes
+      (Tom Lane)
+     </P
+><P
+>      Previously, if textually identical non-strict subexpressions were used
+      both above and below an outer join, the planner might try to re-use
+      the value computed below the join, which would be incorrect because the
+      executor would force the value to NULL in case of an unmatched outer row.
+     </P
+></LI
+><LI
+><P
+>      Fix GEQO planner to cope with failure of its join order heuristic
+      (Tom Lane)
+     </P
+><P
+>      This oversight has been seen to lead to <SPAN
+CLASS="QUOTE"
+>"failed to join all
+      relations together"</SPAN
+> errors in queries involving <TT
+CLASS="LITERAL"
+>LATERAL</TT
+>,
+      and that might happen in other cases as well.
+     </P
+></LI
+><LI
+><P
+>      Fix possible deadlock at startup
+      when <TT
+CLASS="LITERAL"
+>max_prepared_transactions</TT
+> is too small
+      (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Don't archive useless preallocated WAL files after a timeline switch
+      (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Avoid <SPAN
+CLASS="QUOTE"
+>"cannot GetMultiXactIdMembers() during recovery"</SPAN
+> error
+      (&Aacute;lvaro Herrera)
+     </P
+></LI
+><LI
+><P
+>      Recursively <CODE
+CLASS="FUNCTION"
+>fsync()</CODE
+> the data directory after a crash
+      (Abhijit Menon-Sen, Robert Haas)
+     </P
+><P
+>      This ensures consistency if another crash occurs shortly later.  (The
+      second crash would have to be a system-level crash, not just a database
+      crash, for there to be a problem.)
+     </P
+></LI
+><LI
+><P
+>      Fix autovacuum launcher's possible failure to shut down, if an error
+      occurs after it receives SIGTERM (&Aacute;lvaro Herrera)
+     </P
+></LI
+><LI
+><P
+>      Cope with unexpected signals in <CODE
+CLASS="FUNCTION"
+>LockBufferForCleanup()</CODE
+>
+      (Andres Freund)
+     </P
+><P
+>      This oversight could result in spurious errors about <SPAN
+CLASS="QUOTE"
+>"multiple
+      backends attempting to wait for pincount 1"</SPAN
+>.
+     </P
+></LI
+><LI
+><P
+>      Avoid waiting for WAL flush or synchronous replication during commit of
+      a transaction that was read-only so far as the user is concerned
+      (Andres Freund)
+     </P
+><P
+>      Previously, a delay could occur at commit in transactions that had
+      written WAL due to HOT page pruning, leading to undesirable effects
+      such as sessions getting stuck at startup if all synchronous replicas
+      are down.  Sessions have also been observed to get stuck in catchup
+      interrupt processing when using synchronous replication; this will fix
+      that problem as well.
+     </P
+></LI
+><LI
+><P
+>      Fix crash when manipulating hash indexes on temporary tables
+      (Heikki Linnakangas)
+     </P
+></LI
+><LI
+><P
+>      Fix possible failure during hash index bucket split, if other processes
+      are modifying the index concurrently (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Check for interrupts while analyzing index expressions (Jeff Janes)
+     </P
+><P
+>      <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> executes index expressions many times; if there are
+      slow functions in such an expression, it's desirable to be able to
+      cancel the <TT
+CLASS="COMMAND"
+>ANALYZE</TT
+> before that loop finishes.
+     </P
+></LI
+><LI
+><P
+>      Ensure <TT
+CLASS="STRUCTFIELD"
+>tableoid</TT
+> of a foreign table is reported
+      correctly when a <TT
+CLASS="LITERAL"
+>READ COMMITTED</TT
+> recheck occurs after
+      locking rows in <TT
+CLASS="COMMAND"
+>SELECT FOR UPDATE</TT
+>, <TT
+CLASS="COMMAND"
+>UPDATE</TT
+>,
+      or <TT
+CLASS="COMMAND"
+>DELETE</TT
+> (Etsuro Fujita)
+     </P
+></LI
+><LI
+><P
+>      Add the name of the target server to object description strings for
+      foreign-server user mappings (&Aacute;lvaro Herrera)
+     </P
+></LI
+><LI
+><P
+>      Recommend setting <TT
+CLASS="LITERAL"
+>include_realm</TT
+> to 1 when using
+      Kerberos/GSSAPI/SSPI authentication (Stephen Frost)
+     </P
+><P
+>      Without this, identically-named users from different realms cannot be
+      distinguished.  For the moment this is only a documentation change, but
+      it will become the default setting in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> 9.5.
+     </P
+></LI
+><LI
+><P
+>      Remove code for matching IPv4 <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> entries to
+      IPv4-in-IPv6 addresses (Tom Lane)
+     </P
+><P
+>      This hack was added in 2003 in response to a report that some Linux
+      kernels of the time would report IPv4 connections as having
+      IPv4-in-IPv6 addresses.  However, the logic was accidentally broken in
+      9.0.  The lack of any field complaints since then shows that it's not
+      needed anymore.  Now we have reports that the broken code causes
+      crashes on some systems, so let's just remove it rather than fix it.
+      (Had we chosen to fix it, that would make for a subtle and potentially
+      security-sensitive change in the effective meaning of
+      IPv4 <TT
+CLASS="FILENAME"
+>pg_hba.conf</TT
+> entries, which does not seem like a good
+      thing to do in minor releases.)
+     </P
+></LI
+><LI
+><P
+>      Report WAL flush, not insert, position in <TT
+CLASS="LITERAL"
+>IDENTIFY_SYSTEM</TT
+>
+      replication command (Heikki Linnakangas)
+     </P
+><P
+>      This avoids a possible startup failure
+      in <SPAN
+CLASS="APPLICATION"
+>pg_receivexlog</SPAN
+>.
+     </P
+></LI
+><LI
+><P
+>      While shutting down service on Windows, periodically send status
+      updates to the Service Control Manager to prevent it from killing the
+      service too soon; and ensure that <SPAN
+CLASS="APPLICATION"
+>pg_ctl</SPAN
+> will wait for
+      shutdown (Krystian Bigaj)
+     </P
+></LI
+><LI
+><P
+>      Reduce risk of network deadlock when using <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>'s
+      non-blocking mode (Heikki Linnakangas)
+     </P
+><P
+>      When sending large volumes of data, it's important to drain the input
+      buffer every so often, in case the server has sent enough response data
+      to cause it to block on output.  (A typical scenario is that the server
+      is sending a stream of NOTICE messages during <TT
+CLASS="LITERAL"
+>COPY FROM
+      STDIN</TT
+>.)  This worked properly in the normal blocking mode, but not
+      so much in non-blocking mode.  We've modified <SPAN
+CLASS="APPLICATION"
+>libpq</SPAN
+>
+      to opportunistically drain input when it can, but a full defense
+      against this problem requires application cooperation: the application
+      should watch for socket read-ready as well as write-ready conditions,
+      and be sure to call <CODE
+CLASS="FUNCTION"
+>PQconsumeInput()</CODE
+> upon read-ready.
+     </P
+></LI
+><LI
+><P
+>      Fix array handling in <SPAN
+CLASS="APPLICATION"
+>ecpg</SPAN
+> (Michael Meskes)
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> to sanely handle URIs and conninfo strings as
+      the first parameter to <TT
+CLASS="COMMAND"
+>\connect</TT
+>
+      (David Fetter, Andrew Dunstan, &Aacute;lvaro Herrera)
+     </P
+><P
+>      This syntax has been accepted (but undocumented) for a long time, but
+      previously some parameters might be taken from the old connection
+      instead of the given string, which was agreed to be undesirable.
+     </P
+></LI
+><LI
+><P
+>      Suppress incorrect complaints from <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> on some
+      platforms that it failed to write <TT
+CLASS="FILENAME"
+>~/.psql_history</TT
+> at exit
+      (Tom Lane)
+     </P
+><P
+>      This misbehavior was caused by a workaround for a bug in very old
+      (pre-2006) versions of <SPAN
+CLASS="APPLICATION"
+>libedit</SPAN
+>.  We fixed it by
+      removing the workaround, which will cause a similar failure to appear
+      for anyone still using such versions of <SPAN
+CLASS="APPLICATION"
+>libedit</SPAN
+>.
+      Recommendation: upgrade that library, or use <SPAN
+CLASS="APPLICATION"
+>libreadline</SPAN
+>.
+     </P
+></LI
+><LI
+><P
+>      Fix <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>'s rule for deciding which casts are
+      system-provided casts that should not be dumped (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+>, fix failure to honor <TT
+CLASS="LITERAL"
+>-Z</TT
+>
+      compression level option together with <TT
+CLASS="LITERAL"
+>-Fd</TT
+>
+      (Michael Paquier)
+     </P
+></LI
+><LI
+><P
+>      Make <SPAN
+CLASS="APPLICATION"
+>pg_dump</SPAN
+> consider foreign key relationships
+      between extension configuration tables while choosing dump order
+      (Gilles Darold, Michael Paquier, Stephen Frost)
+     </P
+><P
+>      This oversight could result in producing dumps that fail to reload
+      because foreign key constraints are transiently violated.
+     </P
+></LI
+><LI
+><P
+>      Fix dumping of views that are just <TT
+CLASS="LITERAL"
+>VALUES(...)</TT
+> but have
+      column aliases (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>, force timeline 1 in the new cluster
+      (Bruce Momjian)
+     </P
+><P
+>      This change prevents upgrade failures caused by bogus complaints about
+      missing WAL history files.
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>, check for improperly non-connectable
+      databases before proceeding
+      (Bruce Momjian)
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>, quote directory paths
+      properly in the generated <TT
+CLASS="LITERAL"
+>delete_old_cluster</TT
+> script
+      (Bruce Momjian)
+     </P
+></LI
+><LI
+><P
+>      In <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+>, preserve database-level freezing info
+      properly
+      (Bruce Momjian)
+     </P
+><P
+>      This oversight could cause missing-clog-file errors for tables within
+      the <TT
+CLASS="LITERAL"
+>postgres</TT
+> and <TT
+CLASS="LITERAL"
+>template1</TT
+> databases.
+     </P
+></LI
+><LI
+><P
+>      Run <SPAN
+CLASS="APPLICATION"
+>pg_upgrade</SPAN
+> and <SPAN
+CLASS="APPLICATION"
+>pg_resetxlog</SPAN
+> with
+      restricted privileges on Windows, so that they don't fail when run by
+      an administrator (Muhammad Asif Naeem)
+     </P
+></LI
+><LI
+><P
+>      Improve handling of <CODE
+CLASS="FUNCTION"
+>readdir()</CODE
+> failures when scanning
+      directories in <SPAN
+CLASS="APPLICATION"
+>initdb</SPAN
+> and <SPAN
+CLASS="APPLICATION"
+>pg_basebackup</SPAN
+>
+      (Marco Nenciarini)
+     </P
+></LI
+><LI
+><P
+>      Fix slow sorting algorithm in <TT
+CLASS="FILENAME"
+>contrib/intarray</TT
+> (Tom Lane)
+     </P
+></LI
+><LI
+><P
+>      Fix compile failure on Sparc V8 machines (Rob Rowan)
+     </P
+></LI
+><LI
+><P
+>      Update time zone data files to <SPAN
+CLASS="APPLICATION"
+>tzdata</SPAN
+> release 2015d
+      for DST law changes in Egypt, Mongolia, and Palestine, plus historical
+      changes in Canada and Chile.  Also adopt revised zone abbreviations for
+      the America/Adak zone (HST/HDT not HAST/HADT).
+     </P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="release-9-1-17.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="release-9-1-15.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Release 9.1.17</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="release.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Release 9.1.15</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

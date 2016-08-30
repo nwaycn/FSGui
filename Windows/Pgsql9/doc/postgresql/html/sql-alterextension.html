@@ -1,0 +1,928 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>ALTER EXTENSION</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="SQL Commands"
+HREF="sql-commands.html"><LINK
+REL="PREVIOUS"
+TITLE="ALTER EVENT TRIGGER"
+HREF="sql-altereventtrigger.html"><LINK
+REL="NEXT"
+TITLE="ALTER FOREIGN DATA WRAPPER"
+HREF="sql-alterforeigndatawrapper.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="REFENTRY"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="ALTER EVENT TRIGGER"
+HREF="sql-altereventtrigger.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="ALTER FOREIGN DATA WRAPPER"
+HREF="sql-alterforeigndatawrapper.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><H1
+><A
+NAME="SQL-ALTEREXTENSION"
+></A
+>ALTER EXTENSION</H1
+><DIV
+CLASS="REFNAMEDIV"
+><A
+NAME="AEN69641"
+></A
+><H2
+>Name</H2
+>ALTER EXTENSION&nbsp;--&nbsp;   change the definition of an extension
+  </DIV
+><DIV
+CLASS="REFSYNOPSISDIV"
+><A
+NAME="AEN69644"
+></A
+><H2
+>Synopsis</H2
+><PRE
+CLASS="SYNOPSIS"
+>ALTER EXTENSION <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> UPDATE [ TO <TT
+CLASS="REPLACEABLE"
+><I
+>new_version</I
+></TT
+> ]
+ALTER EXTENSION <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> SET SCHEMA <TT
+CLASS="REPLACEABLE"
+><I
+>new_schema</I
+></TT
+>
+ALTER EXTENSION <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> ADD <TT
+CLASS="REPLACEABLE"
+><I
+>member_object</I
+></TT
+>
+ALTER EXTENSION <TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+> DROP <TT
+CLASS="REPLACEABLE"
+><I
+>member_object</I
+></TT
+>
+
+<SPAN
+CLASS="phrase"
+><SPAN
+CLASS="PHRASE"
+>where <TT
+CLASS="REPLACEABLE"
+><I
+>member_object</I
+></TT
+> is:</SPAN
+></SPAN
+>
+
+  AGGREGATE <TT
+CLASS="REPLACEABLE"
+><I
+>aggregate_name</I
+></TT
+> ( <TT
+CLASS="REPLACEABLE"
+><I
+>aggregate_signature</I
+></TT
+> ) |
+  CAST (<TT
+CLASS="REPLACEABLE"
+><I
+>source_type</I
+></TT
+> AS <TT
+CLASS="REPLACEABLE"
+><I
+>target_type</I
+></TT
+>) |
+  COLLATION <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  CONVERSION <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  DOMAIN <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  EVENT TRIGGER <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  FOREIGN DATA WRAPPER <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  FOREIGN TABLE <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  FUNCTION <TT
+CLASS="REPLACEABLE"
+><I
+>function_name</I
+></TT
+> ( [ [ <TT
+CLASS="REPLACEABLE"
+><I
+>argmode</I
+></TT
+> ] [ <TT
+CLASS="REPLACEABLE"
+><I
+>argname</I
+></TT
+> ] <TT
+CLASS="REPLACEABLE"
+><I
+>argtype</I
+></TT
+> [, ...] ] ) |
+  MATERIALIZED VIEW <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  OPERATOR <TT
+CLASS="REPLACEABLE"
+><I
+>operator_name</I
+></TT
+> (<TT
+CLASS="REPLACEABLE"
+><I
+>left_type</I
+></TT
+>, <TT
+CLASS="REPLACEABLE"
+><I
+>right_type</I
+></TT
+>) |
+  OPERATOR CLASS <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> USING <TT
+CLASS="REPLACEABLE"
+><I
+>index_method</I
+></TT
+> |
+  OPERATOR FAMILY <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> USING <TT
+CLASS="REPLACEABLE"
+><I
+>index_method</I
+></TT
+> |
+  [ PROCEDURAL ] LANGUAGE <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  SCHEMA <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  SEQUENCE <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  SERVER <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  TABLE <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  TEXT SEARCH CONFIGURATION <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  TEXT SEARCH DICTIONARY <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  TEXT SEARCH PARSER <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  TEXT SEARCH TEMPLATE <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  TRANSFORM FOR <TT
+CLASS="REPLACEABLE"
+><I
+>type_name</I
+></TT
+> LANGUAGE <TT
+CLASS="REPLACEABLE"
+><I
+>lang_name</I
+></TT
+> |
+  TYPE <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+> |
+  VIEW <TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+>
+
+<SPAN
+CLASS="phrase"
+><SPAN
+CLASS="PHRASE"
+>and <TT
+CLASS="REPLACEABLE"
+><I
+>aggregate_signature</I
+></TT
+> is:</SPAN
+></SPAN
+>
+
+* |
+[ <TT
+CLASS="REPLACEABLE"
+><I
+>argmode</I
+></TT
+> ] [ <TT
+CLASS="REPLACEABLE"
+><I
+>argname</I
+></TT
+> ] <TT
+CLASS="REPLACEABLE"
+><I
+>argtype</I
+></TT
+> [ , ... ] |
+[ [ <TT
+CLASS="REPLACEABLE"
+><I
+>argmode</I
+></TT
+> ] [ <TT
+CLASS="REPLACEABLE"
+><I
+>argname</I
+></TT
+> ] <TT
+CLASS="REPLACEABLE"
+><I
+>argtype</I
+></TT
+> [ , ... ] ] ORDER BY [ <TT
+CLASS="REPLACEABLE"
+><I
+>argmode</I
+></TT
+> ] [ <TT
+CLASS="REPLACEABLE"
+><I
+>argname</I
+></TT
+> ] <TT
+CLASS="REPLACEABLE"
+><I
+>argtype</I
+></TT
+> [ , ... ]</PRE
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN69702"
+></A
+><H2
+>Description</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>ALTER EXTENSION</TT
+> changes the definition of an installed
+   extension.  There are several subforms:
+
+   <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>UPDATE</TT
+></DT
+><DD
+><P
+>      This form updates the extension to a newer version.  The extension
+      must supply a suitable update script (or series of scripts) that can
+      modify the currently-installed version into the requested version.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>SET SCHEMA</TT
+></DT
+><DD
+><P
+>      This form moves the extension's objects into another schema. The
+      extension has to be <I
+CLASS="FIRSTTERM"
+>relocatable</I
+> for this command to
+      succeed.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>ADD <TT
+CLASS="REPLACEABLE"
+><I
+>member_object</I
+></TT
+></TT
+></DT
+><DD
+><P
+>      This form adds an existing object to the extension.  This is mainly
+      useful in extension update scripts.  The object will subsequently
+      be treated as a member of the extension; notably, it can only be
+      dropped by dropping the extension.
+     </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>DROP <TT
+CLASS="REPLACEABLE"
+><I
+>member_object</I
+></TT
+></TT
+></DT
+><DD
+><P
+>      This form removes a member object from the extension.  This is mainly
+      useful in extension update scripts.  The object is not dropped, only
+      disassociated from the extension.
+     </P
+></DD
+></DL
+></DIV
+><P>
+
+   See <A
+HREF="extend-extensions.html"
+>Section 35.15</A
+> for more information about these
+   operations.
+  </P
+><P
+>   You must own the extension to use <TT
+CLASS="COMMAND"
+>ALTER EXTENSION</TT
+>.
+   The <TT
+CLASS="LITERAL"
+>ADD</TT
+>/<TT
+CLASS="LITERAL"
+>DROP</TT
+> forms require ownership of the
+   added/dropped object as well.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN69735"
+></A
+><H2
+>Parameters</H2
+><P
+>   <P
+></P
+></P><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>name</I
+></TT
+></DT
+><DD
+><P
+>       The name of an installed extension.
+      </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_version</I
+></TT
+></DT
+><DD
+><P
+>       The desired new version of the extension.  This can be written as
+       either an identifier or a string literal.  If not specified,
+       <TT
+CLASS="COMMAND"
+>ALTER EXTENSION UPDATE</TT
+> attempts to update to whatever is
+       shown as the default version in the extension's control file.
+      </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>new_schema</I
+></TT
+></DT
+><DD
+><P
+>       The new schema for the extension.
+      </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>object_name</I
+></TT
+><BR><TT
+CLASS="REPLACEABLE"
+><I
+>aggregate_name</I
+></TT
+><BR><TT
+CLASS="REPLACEABLE"
+><I
+>function_name</I
+></TT
+><BR><TT
+CLASS="REPLACEABLE"
+><I
+>operator_name</I
+></TT
+></DT
+><DD
+><P
+>       The name of an object to be added to or removed from the extension.
+       Names of tables,
+       aggregates, domains, foreign tables, functions, operators,
+       operator classes, operator families, sequences, text search objects,
+       types, and views can be schema-qualified.
+      </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>source_type</I
+></TT
+></DT
+><DD
+><P
+>       The name of the source data type of the cast.
+      </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>target_type</I
+></TT
+></DT
+><DD
+><P
+>       The name of the target data type of the cast.
+      </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>argmode</I
+></TT
+></DT
+><DD
+><P
+>       The mode of a function or aggregate
+       argument: <TT
+CLASS="LITERAL"
+>IN</TT
+>, <TT
+CLASS="LITERAL"
+>OUT</TT
+>,
+       <TT
+CLASS="LITERAL"
+>INOUT</TT
+>, or <TT
+CLASS="LITERAL"
+>VARIADIC</TT
+>.
+       If omitted, the default is <TT
+CLASS="LITERAL"
+>IN</TT
+>.
+       Note that <TT
+CLASS="COMMAND"
+>ALTER EXTENSION</TT
+> does not actually pay
+       any attention to <TT
+CLASS="LITERAL"
+>OUT</TT
+> arguments, since only the input
+       arguments are needed to determine the function's identity.
+       So it is sufficient to list the <TT
+CLASS="LITERAL"
+>IN</TT
+>, <TT
+CLASS="LITERAL"
+>INOUT</TT
+>,
+       and <TT
+CLASS="LITERAL"
+>VARIADIC</TT
+> arguments.
+      </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>argname</I
+></TT
+></DT
+><DD
+><P
+>       The name of a function or aggregate argument.
+       Note that <TT
+CLASS="COMMAND"
+>ALTER EXTENSION</TT
+> does not actually pay
+       any attention to argument names, since only the argument data
+       types are needed to determine the function's identity.
+      </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>argtype</I
+></TT
+></DT
+><DD
+><P
+>       The data type of a function or aggregate argument.
+      </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>left_type</I
+></TT
+><BR><TT
+CLASS="REPLACEABLE"
+><I
+>right_type</I
+></TT
+></DT
+><DD
+><P
+>       The data type(s) of the operator's arguments (optionally
+       schema-qualified).  Write <TT
+CLASS="LITERAL"
+>NONE</TT
+> for the missing argument
+       of a prefix or postfix operator.
+      </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>PROCEDURAL</TT
+></DT
+><DD
+><P
+>       This is a noise word.
+      </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>type_name</I
+></TT
+></DT
+><DD
+><P
+>       The name of the data type of the transform.
+      </P
+></DD
+><DT
+><TT
+CLASS="REPLACEABLE"
+><I
+>lang_name</I
+></TT
+></DT
+><DD
+><P
+>       The name of the language of the transform.
+      </P
+></DD
+></DL
+></DIV
+><P>
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN69825"
+></A
+><H2
+>Examples</H2
+><P
+>   To update the <TT
+CLASS="LITERAL"
+>hstore</TT
+> extension to version 2.0:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER EXTENSION hstore UPDATE TO '2.0';</PRE
+><P>
+  </P
+><P
+>   To change the schema of the <TT
+CLASS="LITERAL"
+>hstore</TT
+> extension
+   to <TT
+CLASS="LITERAL"
+>utils</TT
+>:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER EXTENSION hstore SET SCHEMA utils;</PRE
+><P>
+  </P
+><P
+>   To add an existing function to the <TT
+CLASS="LITERAL"
+>hstore</TT
+> extension:
+</P><PRE
+CLASS="PROGRAMLISTING"
+>ALTER EXTENSION hstore ADD FUNCTION populate_record(anyelement, hstore);</PRE
+><P></P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="AEN69837"
+></A
+><H2
+>Compatibility</H2
+><P
+>   <TT
+CLASS="COMMAND"
+>ALTER EXTENSION</TT
+> is a <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>
+   extension.
+  </P
+></DIV
+><DIV
+CLASS="REFSECT1"
+><A
+NAME="SQL-ALTEREXTENSION-SEE-ALSO"
+></A
+><H2
+>See Also</H2
+><A
+HREF="sql-createextension.html"
+>CREATE EXTENSION</A
+>, <A
+HREF="sql-dropextension.html"
+>DROP EXTENSION</A
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sql-altereventtrigger.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-alterforeigndatawrapper.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>ALTER EVENT TRIGGER</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sql-commands.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>ALTER FOREIGN DATA WRAPPER</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

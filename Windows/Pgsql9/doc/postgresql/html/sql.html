@@ -1,0 +1,949 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML
+><HEAD
+><TITLE
+>The SQL Language</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.79"><LINK
+REV="MADE"
+HREF="mailto:pgsql-docs@postgresql.org"><LINK
+REL="HOME"
+TITLE="PostgreSQL 9.5.4 Documentation"
+HREF="index.html"><LINK
+REL="PREVIOUS"
+TITLE="Conclusion"
+HREF="tutorial-conclusion.html"><LINK
+REL="NEXT"
+TITLE="SQL Syntax"
+HREF="sql-syntax.html"><LINK
+REL="STYLESHEET"
+TYPE="text/css"
+HREF="stylesheet.css"><META
+HTTP-EQUIV="Content-Type"
+CONTENT="text/html; charset=ISO-8859-1"><META
+NAME="creation"
+CONTENT="2016-08-08T20:44:24"></HEAD
+><BODY
+CLASS="PART"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="4"
+ALIGN="center"
+VALIGN="bottom"
+><A
+HREF="index.html"
+>PostgreSQL 9.5.4 Documentation</A
+></TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+TITLE="Conclusion"
+HREF="tutorial-conclusion.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="60%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="20%"
+ALIGN="right"
+VALIGN="top"
+><A
+TITLE="SQL Syntax"
+HREF="sql-syntax.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="PART"
+><A
+NAME="SQL"
+></A
+><DIV
+CLASS="TITLEPAGE"
+><H1
+CLASS="TITLE"
+>II. The SQL Language</H1
+><DIV
+CLASS="PARTINTRO"
+><A
+NAME="AEN1130"
+></A
+><P
+>    This part describes the use of the <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> language
+    in <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+>.  We start with
+    describing the general syntax of <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+>, then
+    explain how to create the structures to hold data, how to populate
+    the database, and how to query it.  The middle part lists the
+    available data types and functions for use in
+    <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> commands.  The rest treats several
+    aspects that are important for tuning a database for optimal
+    performance.
+   </P
+><P
+>    The information in this part is arranged so that a novice user can
+    follow it start to end to gain a full understanding of the topics
+    without having to refer forward too many times.  The chapters are
+    intended to be self-contained, so that advanced users can read the
+    chapters individually as they choose.  The information in this
+    part is presented in a narrative fashion in topical units.
+    Readers looking for a complete description of a particular command
+    should see <A
+HREF="reference.html"
+>Part VI</A
+>.
+   </P
+><P
+>    Readers of this part should know how to connect to a
+    <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> database and issue
+    <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> commands.  Readers that are unfamiliar with
+    these issues are encouraged to read <A
+HREF="tutorial.html"
+>Part I</A
+>
+    first.  <ACRONYM
+CLASS="ACRONYM"
+>SQL</ACRONYM
+> commands are typically entered
+    using the <SPAN
+CLASS="PRODUCTNAME"
+>PostgreSQL</SPAN
+> interactive terminal
+    <SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+>, but other programs that have
+    similar functionality can be used as well.
+   </P
+></DIV
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+>4. <A
+HREF="sql-syntax.html"
+>SQL Syntax</A
+></DT
+><DD
+><DL
+><DT
+>4.1. <A
+HREF="sql-syntax-lexical.html"
+>Lexical Structure</A
+></DT
+><DT
+>4.2. <A
+HREF="sql-expressions.html"
+>Value Expressions</A
+></DT
+><DT
+>4.3. <A
+HREF="sql-syntax-calling-funcs.html"
+>Calling Functions</A
+></DT
+></DL
+></DD
+><DT
+>5. <A
+HREF="ddl.html"
+>Data Definition</A
+></DT
+><DD
+><DL
+><DT
+>5.1. <A
+HREF="ddl-basics.html"
+>Table Basics</A
+></DT
+><DT
+>5.2. <A
+HREF="ddl-default.html"
+>Default Values</A
+></DT
+><DT
+>5.3. <A
+HREF="ddl-constraints.html"
+>Constraints</A
+></DT
+><DT
+>5.4. <A
+HREF="ddl-system-columns.html"
+>System Columns</A
+></DT
+><DT
+>5.5. <A
+HREF="ddl-alter.html"
+>Modifying Tables</A
+></DT
+><DT
+>5.6. <A
+HREF="ddl-priv.html"
+>Privileges</A
+></DT
+><DT
+>5.7. <A
+HREF="ddl-rowsecurity.html"
+>Row Security Policies</A
+></DT
+><DT
+>5.8. <A
+HREF="ddl-schemas.html"
+>Schemas</A
+></DT
+><DT
+>5.9. <A
+HREF="ddl-inherit.html"
+>Inheritance</A
+></DT
+><DT
+>5.10. <A
+HREF="ddl-partitioning.html"
+>Partitioning</A
+></DT
+><DT
+>5.11. <A
+HREF="ddl-foreign-data.html"
+>Foreign Data</A
+></DT
+><DT
+>5.12. <A
+HREF="ddl-others.html"
+>Other Database Objects</A
+></DT
+><DT
+>5.13. <A
+HREF="ddl-depend.html"
+>Dependency Tracking</A
+></DT
+></DL
+></DD
+><DT
+>6. <A
+HREF="dml.html"
+>Data Manipulation</A
+></DT
+><DD
+><DL
+><DT
+>6.1. <A
+HREF="dml-insert.html"
+>Inserting Data</A
+></DT
+><DT
+>6.2. <A
+HREF="dml-update.html"
+>Updating Data</A
+></DT
+><DT
+>6.3. <A
+HREF="dml-delete.html"
+>Deleting Data</A
+></DT
+></DL
+></DD
+><DT
+>7. <A
+HREF="queries.html"
+>Queries</A
+></DT
+><DD
+><DL
+><DT
+>7.1. <A
+HREF="queries-overview.html"
+>Overview</A
+></DT
+><DT
+>7.2. <A
+HREF="queries-table-expressions.html"
+>Table Expressions</A
+></DT
+><DT
+>7.3. <A
+HREF="queries-select-lists.html"
+>Select Lists</A
+></DT
+><DT
+>7.4. <A
+HREF="queries-union.html"
+>Combining Queries</A
+></DT
+><DT
+>7.5. <A
+HREF="queries-order.html"
+>Sorting Rows</A
+></DT
+><DT
+>7.6. <A
+HREF="queries-limit.html"
+><TT
+CLASS="LITERAL"
+>LIMIT</TT
+> and <TT
+CLASS="LITERAL"
+>OFFSET</TT
+></A
+></DT
+><DT
+>7.7. <A
+HREF="queries-values.html"
+><TT
+CLASS="LITERAL"
+>VALUES</TT
+> Lists</A
+></DT
+><DT
+>7.8. <A
+HREF="queries-with.html"
+><TT
+CLASS="LITERAL"
+>WITH</TT
+> Queries (Common Table Expressions)</A
+></DT
+></DL
+></DD
+><DT
+>8. <A
+HREF="datatype.html"
+>Data Types</A
+></DT
+><DD
+><DL
+><DT
+>8.1. <A
+HREF="datatype-numeric.html"
+>Numeric Types</A
+></DT
+><DT
+>8.2. <A
+HREF="datatype-money.html"
+>Monetary Types</A
+></DT
+><DT
+>8.3. <A
+HREF="datatype-character.html"
+>Character Types</A
+></DT
+><DT
+>8.4. <A
+HREF="datatype-binary.html"
+>Binary Data Types</A
+></DT
+><DT
+>8.5. <A
+HREF="datatype-datetime.html"
+>Date/Time Types</A
+></DT
+><DT
+>8.6. <A
+HREF="datatype-boolean.html"
+>Boolean Type</A
+></DT
+><DT
+>8.7. <A
+HREF="datatype-enum.html"
+>Enumerated Types</A
+></DT
+><DT
+>8.8. <A
+HREF="datatype-geometric.html"
+>Geometric Types</A
+></DT
+><DT
+>8.9. <A
+HREF="datatype-net-types.html"
+>Network Address Types</A
+></DT
+><DT
+>8.10. <A
+HREF="datatype-bit.html"
+>Bit String Types</A
+></DT
+><DT
+>8.11. <A
+HREF="datatype-textsearch.html"
+>Text Search Types</A
+></DT
+><DT
+>8.12. <A
+HREF="datatype-uuid.html"
+><ACRONYM
+CLASS="ACRONYM"
+>UUID</ACRONYM
+> Type</A
+></DT
+><DT
+>8.13. <A
+HREF="datatype-xml.html"
+><ACRONYM
+CLASS="ACRONYM"
+>XML</ACRONYM
+> Type</A
+></DT
+><DT
+>8.14. <A
+HREF="datatype-json.html"
+><ACRONYM
+CLASS="ACRONYM"
+>JSON</ACRONYM
+> Types</A
+></DT
+><DT
+>8.15. <A
+HREF="arrays.html"
+>Arrays</A
+></DT
+><DT
+>8.16. <A
+HREF="rowtypes.html"
+>Composite Types</A
+></DT
+><DT
+>8.17. <A
+HREF="rangetypes.html"
+>Range Types</A
+></DT
+><DT
+>8.18. <A
+HREF="datatype-oid.html"
+>Object Identifier Types</A
+></DT
+><DT
+>8.19. <A
+HREF="datatype-pg-lsn.html"
+><ACRONYM
+CLASS="ACRONYM"
+>pg_lsn Type</ACRONYM
+></A
+></DT
+><DT
+>8.20. <A
+HREF="datatype-pseudo.html"
+>Pseudo-Types</A
+></DT
+></DL
+></DD
+><DT
+>9. <A
+HREF="functions.html"
+>Functions and Operators</A
+></DT
+><DD
+><DL
+><DT
+>9.1. <A
+HREF="functions-logical.html"
+>Logical Operators</A
+></DT
+><DT
+>9.2. <A
+HREF="functions-comparison.html"
+>Comparison Operators</A
+></DT
+><DT
+>9.3. <A
+HREF="functions-math.html"
+>Mathematical Functions and Operators</A
+></DT
+><DT
+>9.4. <A
+HREF="functions-string.html"
+>String Functions and Operators</A
+></DT
+><DT
+>9.5. <A
+HREF="functions-binarystring.html"
+>Binary String Functions and Operators</A
+></DT
+><DT
+>9.6. <A
+HREF="functions-bitstring.html"
+>Bit String Functions and Operators</A
+></DT
+><DT
+>9.7. <A
+HREF="functions-matching.html"
+>Pattern Matching</A
+></DT
+><DT
+>9.8. <A
+HREF="functions-formatting.html"
+>Data Type Formatting Functions</A
+></DT
+><DT
+>9.9. <A
+HREF="functions-datetime.html"
+>Date/Time Functions and Operators</A
+></DT
+><DT
+>9.10. <A
+HREF="functions-enum.html"
+>Enum Support Functions</A
+></DT
+><DT
+>9.11. <A
+HREF="functions-geometry.html"
+>Geometric Functions and Operators</A
+></DT
+><DT
+>9.12. <A
+HREF="functions-net.html"
+>Network Address Functions and Operators</A
+></DT
+><DT
+>9.13. <A
+HREF="functions-textsearch.html"
+>Text Search Functions and Operators</A
+></DT
+><DT
+>9.14. <A
+HREF="functions-xml.html"
+>XML Functions</A
+></DT
+><DT
+>9.15. <A
+HREF="functions-json.html"
+>JSON Functions and Operators</A
+></DT
+><DT
+>9.16. <A
+HREF="functions-sequence.html"
+>Sequence Manipulation Functions</A
+></DT
+><DT
+>9.17. <A
+HREF="functions-conditional.html"
+>Conditional Expressions</A
+></DT
+><DT
+>9.18. <A
+HREF="functions-array.html"
+>Array Functions and Operators</A
+></DT
+><DT
+>9.19. <A
+HREF="functions-range.html"
+>Range Functions and Operators</A
+></DT
+><DT
+>9.20. <A
+HREF="functions-aggregate.html"
+>Aggregate Functions</A
+></DT
+><DT
+>9.21. <A
+HREF="functions-window.html"
+>Window Functions</A
+></DT
+><DT
+>9.22. <A
+HREF="functions-subquery.html"
+>Subquery Expressions</A
+></DT
+><DT
+>9.23. <A
+HREF="functions-comparisons.html"
+>Row and Array Comparisons</A
+></DT
+><DT
+>9.24. <A
+HREF="functions-srf.html"
+>Set Returning Functions</A
+></DT
+><DT
+>9.25. <A
+HREF="functions-info.html"
+>System Information Functions</A
+></DT
+><DT
+>9.26. <A
+HREF="functions-admin.html"
+>System Administration Functions</A
+></DT
+><DT
+>9.27. <A
+HREF="functions-trigger.html"
+>Trigger Functions</A
+></DT
+><DT
+>9.28. <A
+HREF="functions-event-triggers.html"
+>Event Trigger Functions</A
+></DT
+></DL
+></DD
+><DT
+>10. <A
+HREF="typeconv.html"
+>Type Conversion</A
+></DT
+><DD
+><DL
+><DT
+>10.1. <A
+HREF="typeconv-overview.html"
+>Overview</A
+></DT
+><DT
+>10.2. <A
+HREF="typeconv-oper.html"
+>Operators</A
+></DT
+><DT
+>10.3. <A
+HREF="typeconv-func.html"
+>Functions</A
+></DT
+><DT
+>10.4. <A
+HREF="typeconv-query.html"
+>Value Storage</A
+></DT
+><DT
+>10.5. <A
+HREF="typeconv-union-case.html"
+><TT
+CLASS="LITERAL"
+>UNION</TT
+>, <TT
+CLASS="LITERAL"
+>CASE</TT
+>, and Related Constructs</A
+></DT
+></DL
+></DD
+><DT
+>11. <A
+HREF="indexes.html"
+>Indexes</A
+></DT
+><DD
+><DL
+><DT
+>11.1. <A
+HREF="indexes-intro.html"
+>Introduction</A
+></DT
+><DT
+>11.2. <A
+HREF="indexes-types.html"
+>Index Types</A
+></DT
+><DT
+>11.3. <A
+HREF="indexes-multicolumn.html"
+>Multicolumn Indexes</A
+></DT
+><DT
+>11.4. <A
+HREF="indexes-ordering.html"
+>Indexes and <TT
+CLASS="LITERAL"
+>ORDER BY</TT
+></A
+></DT
+><DT
+>11.5. <A
+HREF="indexes-bitmap-scans.html"
+>Combining Multiple Indexes</A
+></DT
+><DT
+>11.6. <A
+HREF="indexes-unique.html"
+>Unique Indexes</A
+></DT
+><DT
+>11.7. <A
+HREF="indexes-expressional.html"
+>Indexes on Expressions</A
+></DT
+><DT
+>11.8. <A
+HREF="indexes-partial.html"
+>Partial Indexes</A
+></DT
+><DT
+>11.9. <A
+HREF="indexes-opclass.html"
+>Operator Classes and Operator Families</A
+></DT
+><DT
+>11.10. <A
+HREF="indexes-collations.html"
+>Indexes and Collations</A
+></DT
+><DT
+>11.11. <A
+HREF="indexes-examine.html"
+>Examining Index Usage</A
+></DT
+></DL
+></DD
+><DT
+>12. <A
+HREF="textsearch.html"
+>Full Text Search</A
+></DT
+><DD
+><DL
+><DT
+>12.1. <A
+HREF="textsearch-intro.html"
+>Introduction</A
+></DT
+><DT
+>12.2. <A
+HREF="textsearch-tables.html"
+>Tables and Indexes</A
+></DT
+><DT
+>12.3. <A
+HREF="textsearch-controls.html"
+>Controlling Text Search</A
+></DT
+><DT
+>12.4. <A
+HREF="textsearch-features.html"
+>Additional Features</A
+></DT
+><DT
+>12.5. <A
+HREF="textsearch-parsers.html"
+>Parsers</A
+></DT
+><DT
+>12.6. <A
+HREF="textsearch-dictionaries.html"
+>Dictionaries</A
+></DT
+><DT
+>12.7. <A
+HREF="textsearch-configuration.html"
+>Configuration Example</A
+></DT
+><DT
+>12.8. <A
+HREF="textsearch-debugging.html"
+>Testing and Debugging Text Search</A
+></DT
+><DT
+>12.9. <A
+HREF="textsearch-indexes.html"
+>GIN and GiST Index Types</A
+></DT
+><DT
+>12.10. <A
+HREF="textsearch-psql.html"
+><SPAN
+CLASS="APPLICATION"
+>psql</SPAN
+> Support</A
+></DT
+><DT
+>12.11. <A
+HREF="textsearch-limitations.html"
+>Limitations</A
+></DT
+><DT
+>12.12. <A
+HREF="textsearch-migration.html"
+>Migration from Pre-8.3 Text Search</A
+></DT
+></DL
+></DD
+><DT
+>13. <A
+HREF="mvcc.html"
+>Concurrency Control</A
+></DT
+><DD
+><DL
+><DT
+>13.1. <A
+HREF="mvcc-intro.html"
+>Introduction</A
+></DT
+><DT
+>13.2. <A
+HREF="transaction-iso.html"
+>Transaction Isolation</A
+></DT
+><DT
+>13.3. <A
+HREF="explicit-locking.html"
+>Explicit Locking</A
+></DT
+><DT
+>13.4. <A
+HREF="applevel-consistency.html"
+>Data Consistency Checks at the Application Level</A
+></DT
+><DT
+>13.5. <A
+HREF="mvcc-caveats.html"
+>Caveats</A
+></DT
+><DT
+>13.6. <A
+HREF="locking-indexes.html"
+>Locking and Indexes</A
+></DT
+></DL
+></DD
+><DT
+>14. <A
+HREF="performance-tips.html"
+>Performance Tips</A
+></DT
+><DD
+><DL
+><DT
+>14.1. <A
+HREF="using-explain.html"
+>Using <TT
+CLASS="COMMAND"
+>EXPLAIN</TT
+></A
+></DT
+><DT
+>14.2. <A
+HREF="planner-stats.html"
+>Statistics Used by the Planner</A
+></DT
+><DT
+>14.3. <A
+HREF="explicit-joins.html"
+>Controlling the Planner with Explicit <TT
+CLASS="LITERAL"
+>JOIN</TT
+> Clauses</A
+></DT
+><DT
+>14.4. <A
+HREF="populate.html"
+>Populating a Database</A
+></DT
+><DT
+>14.5. <A
+HREF="non-durability.html"
+>Non-Durable Settings</A
+></DT
+></DL
+></DD
+></DL
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="tutorial-conclusion.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sql-syntax.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Conclusion</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>SQL Syntax</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>
