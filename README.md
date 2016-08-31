@@ -39,7 +39,21 @@ QQ群： 293697898 FreeSWITCH+Kamailio+OpenSIPS
  
  https://github.com/nwaycn/FSGui/tree/master/CallInterface
                                               
+-------------------------------------------------------------------------------------------------------------------------------------
 
+Windows下运行：
+
+下载或用git clone windows binary package
+https://github.com/nwaycn/FSGui/tree/master/Windows
+
+web访问地址：
+
+localhost:8080  默认用户名 admin,123456
+
+
+先执行InstallPreService.bat后再执行 Start.bat,已测试windows 2003,2008,win10不可行
+
+正常应会有nway_pbx_web.exe, nway_pbx_auth.exe, nway_pbx.exe三个启动，FreeSwitch和redis及Postgresql已作为服务运行
     
 
 -------------------------------------------------------------------------------------------------------------------------------------
