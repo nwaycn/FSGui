@@ -22,6 +22,7 @@ QQ群： 293697898 FreeSWITCH+Kamailio+OpenSIPS
  
  Redis
  
+ rings/common             用于报工号等通用的一些语音彩铃
  
  使用说明书：
  
