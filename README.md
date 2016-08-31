@@ -40,6 +40,7 @@ QQ群： 293697898 FreeSWITCH+Kamailio+OpenSIPS
  https://github.com/nwaycn/FSGui/tree/master/CallInterface
                                               
 -------------------------------------------------------------------------------------------------------------------------------------
+''特别提醒： 注册防火墙
 
 Windows下运行：
 
@@ -55,6 +56,17 @@ localhost:8080  默认用户名 admin,123456
 
 正常应会有nway_pbx_web.exe, nway_pbx_auth.exe, nway_pbx.exe三个启动，FreeSwitch和redis及Postgresql已作为服务运行
     
+Debian 8 下运行：
+
+暂时需要自行安装 FreeSwitch,Redis,Postgresql
+
+1. 使用pg_dump导入 https://github.com/nwaycn/FSGui/blob/master/Debian8/db.backup 
+2. 使用https://github.com/nwaycn/FSGui/tree/master/Debian8/Freeswitchconf/conf 替换FreeSwitch的默认配置
+3. 启动Redis
+4. 启动freeswitch 
+5. 启动postgresql
+6. 修改nway.conf和conf/app.conf  中的连接字符串及端口等数据
+6. 等待大约1分钟后启动nway_pbx_web   nway_pbx_auth nway_pbx
 
 -------------------------------------------------------------------------------------------------------------------------------------
 
