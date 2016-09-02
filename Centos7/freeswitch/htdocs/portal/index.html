@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<!--
+/*
+ * The FreeSWITCH Portal Project
+ * Copyright (C) 2013-2013, Seven Du <dujinfang@gmail.com>
+ *
+ * Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is The FreeSWITCH Portal Project Software/Application
+ *
+ * The Initial Developer of the Original Code is
+ * Seven Du <dujinfang@gmail.com>
+ * Portions created by the Initial Developer are Copyright (C)
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Seven Du <dujinfang@gmail.com>
+ *
+ *
+ * index.html -- The FreeSWITCH Portal Project
+ *
+ */
+-->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>FreeSWITCH Portal</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<!-- Le styles -->
+	<link href="assets/bootstrap-3.1.1/css/bootstrap.min.css" rel="stylesheet">
+	<link href="assets/bs_for_ember/css/bs-growl-notifications.min.css" rel="stylesheet">
+	<style>
+		body {
+			padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+		}
+		#container {
+			min-height: 500px;
+		}
+		#footer {
+			text-align: center;
+		}
+	</style>
+	<link href="assets/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+
+	<!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+	<!--[if lt IE 9]>
+	<script src="assets/js/html5shiv.js"></script>
+	<![endif]-->
+
+	<!-- Fav and touch icons -->
+	<link rel="apple-touch-icon-precomposed" sizes="144x144" href="assets/ico/apple-touch-icon-144-precomposed.png">
+	<link rel="apple-touch-icon-precomposed" sizes="114x114" href="assets/ico/apple-touch-icon-114-precomposed.png">
+	<link rel="apple-touch-icon-precomposed" sizes="72x72" href="assets/ico/apple-touch-icon-72-precomposed.png">
+	<link rel="apple-touch-icon-precomposed" href="assets/ico/apple-touch-icon-57-precomposed.png">
+	<link rel="shortcut icon" href="assets/ico/favicon.png">
+</head>
+
+<body>
+
+	<header class="navbar navbar-inverse navbar-fixed-top bs-docs-nav" role="banner">
+		<div class="container">
+			<div class="pull-right" id='ws-status' style="padding-top:5px"></div>
+
+			<div class="navbar-header">
+				<button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".bs-navbar-collapse">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<a class="navbar-brand" href="#">FreeSWITCH Portal</a>
+			</div>
+
+			<nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
+				<ul class="nav navbar-nav">
+					<li><a href="#">Home</a></li>
+					<li><a id="menu-users" href="#users">Users</a></li>
+					<li><a id="menu-calls" href="#calls">Calls</a></li>
+					<li><a id="menu-channels" href="#channels">Channels</a></li>
+					<li><a href="#show">Show</a></li>
+					<li><a href="#sofiaStatus">Sofia</a></li>
+					<li><a href="#about">About</a></li>
+				</ul>
+			</nav>
+		</div>
+	</header>
+
+	<div class="container" id="container">
+		<div id="main">
+			<div id="calls" style="display:none"></div>
+			<div id="channels" style="display:none"></div>
+		</div>
+	</div> <!-- /container -->
+
+
+	<div class="container" id="footer">
+		&copy; <a href="http://www.freeswitch.org">FreeSWITCH.org</a>
+		Join us on <a href="http://www.cluecon.com">ClueCon</a>!
+	</div>
+
+	<script type="text/x-handlebars" data-template-name="index">
+		<h1>Welcome to FreeSWITCH !</h1>
+		---- The World's First Cross-Platform Scalable FREE Multi-Protocol Soft Switch
+
+		<br>
+		<br>
+		<br>
+		<br>
+		<div id="serverStatus"></div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="showRegistrations">
+		<h1>Registrations</h1>
+		<div>
+			<table class="table">
+			<tr>
+				<th>Reg User</th>
+				<th>Realm</th>
+				<th>Expires</th>
+				<th>Network IP</th>
+				<th>Network Port</th>
+				<th>Network Proto</th>
+				<th>Hostname</th>
+				<th>Metadata</th>
+				<th>Token / Url</th>
+			</tr>
+			{{#each App.registrationsController.content}}
+			<tr>
+				<td>{{ reg_user }}</td>
+				<td>{{ realm }}</td>
+				<td>{{ expires }}</td>
+				<td>{{ network_ip }}</td>
+				<td>{{ network_port }}</td>
+				<td>{{ network_proto }}</td>
+				<td>{{ hostname }}</td>
+				<td>{{ metadata }}</td>
+				<td>{{ token }}<br>{{ url }}</td>
+			</tr>
+			{{/each}}
+			</table>
+		</div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="showModules">
+		<h1>Modules</h1>
+		<div>
+			<table class="table">
+			<tr>
+				<th>Type</th>
+				<th>Name</th>
+				<th>iKey</th>
+				<th>Fileame</th>
+			</tr>
+			{{#each App.showModulesController.content}}
+			<tr>
+				<td>{{ type }}</td>
+				<td>{{ name }}</td>
+				<td>{{ ikey }}</td>
+				<td>{{ filename }}</td>
+			</tr>
+			{{/each}}
+			</table>
+		</div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="showApplications">
+		<h1>Applications</h1>
+		<div>
+			<table class="table">
+			<tr>
+				<th>Name</th>
+				<th>Description</th>
+				<th>Syntax</th>
+				<th>iKey</th>
+			</tr>
+			{{#each App.applicationsController.content}}
+			<tr>
+				<td>{{ name }}</td>
+				<td>{{ description }}</td>
+				<td>{{ syntax }}</td>
+				<td>{{ ikey }}</td>
+			</tr>
+			{{/each}}
+			</table>
+		</div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="showEndpoints">
+		<h1>Endpoints</h1>
+		<div>
+			<table class="table">
+			<tr>
+				<th>Type</th>
+				<th>Name</th>
+				<th>iKey</th>
+			</tr>
+			{{#each App.showEndpointsController.content}}
+			<tr>
+				<td>{{ type }}</td>
+				<td>{{ name }}</td>
+				<td>{{ ikey }}</td>
+			</tr>
+			{{/each}}
+			</table>
+		</div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="showCodecs">
+		<h1>Codecs</h1>
+		<div>
+			<table class="table">
+			<tr>
+				<th>Type</th>
+				<th>Name</th>
+				<th>iKey</th>
+			</tr>
+			{{#each App.showCodecsController.content}}
+			<tr>
+				<td>{{ type }}</td>
+				<td>{{ name }}</td>
+				<td>{{ ikey }}</td>
+			</tr>
+			{{/each}}
+			</table>
+		</div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="showFiles">
+		<h1>Files</h1>
+		<div>
+			<table class="table">
+			<tr>
+				<th>Type</th>
+				<th>Name</th>
+				<th>iKey</th>
+			</tr>
+			{{#each App.showFilesController.content}}
+			<tr>
+				<td>{{ type }}</td>
+				<td>{{ name }}</td>
+				<td>{{ ikey }}</td>
+			</tr>
+			{{/each}}
+			</table>
+		</div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="showAPIs">
+		<h1>APIs</h1>
+		<div>
+			<table class="table">
+			<tr>
+				<th>Name /<br>Description</th>
+				<th>Syntax</th>
+				<th>iKey</th>
+			</tr>
+			{{#each App.showAPIsController.content}}
+			<tr>
+				<td>
+					<strong>{{ name }}</strong><br>
+					{{ description }}
+				</td>
+				<td><pre>{{ syntax }}</pre></td>
+				<td>{{ ikey }}</td>
+			</tr>
+			{{/each}}
+			</table>
+		</div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="showAliases">
+		<h1>Aliases</h1>
+		<div>
+			<table class="table">
+			<tr>
+				<th>Sticky</th>
+				<th>Alias</th>
+				<th>Command</th>
+				<th>Hostname</th>
+			</tr>
+			{{#each App.showAliasesController.content}}
+			<tr>
+				<td>{{ sticky }}</td>
+				<td>{{ alias }}</td>
+				<td>{{ command }}</td>
+				<td>{{ hostname }}</td>
+			</tr>
+			{{/each}}
+			</table>
+		</div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="showCompletes">
+		<h1>Complete</h1>
+		<div>
+			<table class="table">
+			<tr>
+				<th>Sticky</th>
+				<th>A1</th>
+				<th>A2</th>
+				<th>A3</th>
+				<th>A4</th>
+				<th>A5</th>
+				<th>A6</th>
+				<th>A7</th>
+				<th>A8</th>
+				<th>A9</th>
+				<th>A10</th>
+				<th>Hostname</th>
+			</tr>
+			{{#each App.showCompletesController.content}}
+			<tr>
+				<td>{{ sticky }}</td>
+				<td>{{ a1 }}</td>
+				<td>{{ a2 }}</td>
+				<td>{{ a3 }}</td>
+				<td>{{ a4 }}</td>
+				<td>{{ a5 }}</td>
+				<td>{{ a6 }}</td>
+				<td>{{ a7 }}</td>
+				<td>{{ a8 }}</td>
+				<td>{{ a9 }}</td>
+				<td>{{ a10 }}</td>
+				<td>{{ hostname }}</td>
+			</tr>
+			{{/each}}
+			</table>
+		</div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="showManagements">
+		<h1>Say</h1>
+		<div>
+			<table class="table">
+			<tr>
+				<th>Type</th>
+				<th>Name</th>
+				<th>iKey</th>
+			</tr>
+			{{#each App.showManagementsController.content}}
+			<tr>
+				<td>{{ type }}</td>
+				<td>{{ name }}</td>
+				<td>{{ ikey }}</td>
+			</tr>
+			{{/each}}
+			</table>
+		</div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="showNatMaps">
+		<h1>Nat Maps</h1>
+		<div>
+			<table class="table">
+			<tr>
+				<th>Port</th>
+				<th>Protocol</th>
+				<th>Protocol Number</th>
+				<th>Sticky</th>
+			</tr>
+			{{#each App.showNatMapsController.content}}
+			<tr>
+				<td>{{ port }}</td>
+				<td>{{ proto }}</td>
+				<td>{{ proto_num }}</td>
+				<td>{{ sticky }}</td>
+			</tr>
+			{{/each}}
+			</table>
+		</div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="showSays">
+		<h1>Say</h1>
+		<div>
+			<table class="table">
+			<tr>
+				<th>Type</th>
+				<th>Name</th>
+				<th>iKey</th>
+			</tr>
+			{{#each App.showSaysController.content}}
+			<tr>
+				<td>{{ type }}</td>
+				<td>{{ name }}</td>
+				<td>{{ ikey }}</td>
+			</tr>
+			{{/each}}
+			</table>
+		</div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="showChats">
+		<h1>Chat</h1>
+		<div>
+			<table class="table">
+			<tr>
+				<th>Type</th>
+				<th>Name</th>
+				<th>iKey</th>
+			</tr>
+			{{#each App.showChatsController.content}}
+			<tr>
+				<td>{{ type }}</td>
+				<td>{{ name }}</td>
+				<td>{{ ikey }}</td>
+			</tr>
+			{{/each}}
+			</table>
+		</div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="showInterfaces">
+		<h1>Interfaces</h1>
+		<div>
+			<table class="table">
+			<tr>
+				<th>Type</th>
+				<th>Name</th>
+				<th>iKey</th>
+			</tr>
+			{{#each App.showInterfacesController.content}}
+			<tr>
+				<td>{{ type }}</td>
+				<td>{{ name }}</td>
+				<td>{{ ikey }}</td>
+			</tr>
+			{{/each}}
+			</table>
+		</div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="showInterfaceTypes">
+		<h1>Interface Types</h1>
+		<div>
+			<table class="table">
+			<tr>
+				<th>Type</th>
+				<th>Total</th>
+			</tr>
+			{{#each App.showInterfaceTypesController.content}}
+			<tr>
+				<td>{{ type }}</td>
+				<td>{{ total }}</td>
+			</tr>
+			{{/each}}
+			</table>
+		</div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="showTasks">
+		<h1>Tasks</h1>
+		<div>
+			<table class="table">
+			<tr>
+				<th>ID</th>
+				<th>Description</th>
+				<th>Group</th>
+				<th>SQL Manager</th>
+				<th>Hostname</th>
+			</tr>
+			{{#each App.showTasksController.content}}
+			<tr>
+				<td>{{ task_id }}</td>
+				<td>{{ task_desc }}</td>
+				<td>{{ task_group }}</td>
+				<td>{{ task_sql_manager }}</td>
+				<td>{{ hostname }}</td>
+			</tr>
+			{{/each}}
+			</table>
+		</div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="showLimits">
+		<h1>Limits</h1>
+		<div>
+			<table class="table">
+			<tr>
+				<th>Type</th>
+				<th>Name</th>
+				<th>iKey</th>
+			</tr>
+			{{#each App.showLimitsController.content}}
+			<tr>
+				<td>{{ type }}</td>
+				<td>{{ name }}</td>
+				<td>{{ ikey }}</td>
+			</tr>
+			{{/each}}
+			</table>
+		</div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="show">
+		<h1>Show</h1>
+		{{#linkTo "showRegistrations"}} Registrations {{/linkTo}} |
+		{{#linkTo "showModules"}} Modules {{/linkTo}} |
+		{{#linkTo "showApplications"}} Applications {{/linkTo}} |
+		{{#linkTo "showEndpoints"}} Endpoints {{/linkTo}} |
+		{{#linkTo "showCodecs"}} Codecs {{/linkTo}} |
+		{{#linkTo "showFiles"}} Files {{/linkTo}} |
+		{{#linkTo "showAPIs"}} APIs {{/linkTo}} |
+		{{#linkTo "showAliases"}} Aliases {{/linkTo}} |
+		{{#linkTo "showCompletes"}} Complete {{/linkTo}} |
+		{{#linkTo "showChats"}} Chat {{/linkTo}} |
+		{{#linkTo "showManagements"}} Management {{/linkTo}} |
+		{{#linkTo "showNatMaps"}} Nat Map {{/linkTo}} |
+		{{#linkTo "showSays"}} Say {{/linkTo}} |
+		{{#linkTo "showInterfaces"}} Interfaces {{/linkTo}} |
+		{{#linkTo "showInterfaceTypes"}} InterfaceTypes {{/linkTo}} |
+		{{#linkTo "showTasks"}} Tasks {{/linkTo}} |
+		{{#linkTo "showLimits"}} Limits {{/linkTo}}
+
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="about">
+		<h1>About FreeSWITCH Portal</h1>
+		<p>
+			The FreeSWITCH Portal Project is Created by <a href="http://www.dujinfang.com">Seven Du</a>.
+			Available with MPL1.1 licence - Same as FreeSWITCH.
+		</p>
+
+
+		<p>The FreeSWITCH Portal Project is designed to show an intuitive view of the FreeSWITCH internals. It can be used by FreeSWITCH funs, administrators, developers etc. It does not aims to replace GUIs such as FusionPBX or blue.box. It would be very easy to use and super helpful for new FreeSWITCH users.
+
+		<hr>
+		<h2>Philosophy</h2>
+
+		<p>To provide a GUI out of the box without depends on external resources like PHP or a webserver such as Apache or Nginx.
+
+		<p>Mainly developed with static html and Javascripts, and perhaps some lua scripts can help do some more magic things later.
+
+		<h2>Install</h2>
+
+		<p>If you see this page it means you already installed. Remember it works Out of the Box!
+
+		<h2>Todo</h2>
+
+
+		<li>Modify users: A raw idea to add a new user would be something like below and reloadxml.
+
+		<pre>sed -e 's/1000/new-user/g' 1000.xml > new-user.xml</pre>
+
+		<li>Modify dialplan and/or other XMLs: possible to use some online XML editor and
+			can save the XML with some lua or C code at the backend,
+			although there are security concerns.
+
+		<li>Store information in DB: I guess the Dbh handle in lua should can do something like this.
+
+		<li>Web terminal: With terminal.js like things and websocket we can really build a web version of fs_cli
+
+		<li>rtmp web client support to make and receive calls
+
+		<li>WebRTC?
+
+		<li>Logging, Event Debugging or SIP tracing: Yeah, more magic
+
+		<li>i18n
+
+		<h2>Security</h2>
+
+		<p>The primary goal is to help new users learn and use FreeSWITCH.
+			Please <strong>DON'T</strong> put this on your production server as
+			I haven't think anything about security.
+
+		<p>You can disable this by delete or move the portal directory out of /usr/local/freeswitch/htdocs . e.g.
+
+		<pre>mv /usr/local/freeswitch/htdocs/portal /usr/local/freeswitch/</pre>
+
+		And move back any time you want.
+
+		<h2>Development</h2>
+
+		<li>I started this project to learn how to use bootstrap and ember.js,
+			the latter said it is a framework for <strong>creating ambitious web applications</strong>.
+
+		<li>Contributions and patches are welcome.
+		<br>
+		<br>
+		<br>
+		<br>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="users" id="users/index">
+		<div class="pull-right">
+			{{#bs-button type="primary" clicked="newUser"}}Create User{{/bs-button}}
+		</div>
+
+		{{#bs-modal name="newUserForm" fade="true" footerButtonsBinding="newUserButtons" title="Create User (Experimental)"}}
+			<p>
+				User ID: <input name="user_id" id="user_id"></input><br>
+			</p>
+		{{/bs-modal}}
+
+		<h1>Users</h1>
+
+		<div>
+			<table class="table">
+			<tr>
+				<th>ID</th>
+				<th>Context</th>
+				<th>Domain</th>
+				<th>Group</th>
+				<th>Contact</th>
+				<th>Callgroup</th>
+				<th>Caller ID Name</th>
+				<th>Caller ID Number</th>
+			</tr>
+			{{#each App.usersController.content}}
+			<tr>
+				<td>{{ id }}</td>
+				<td>{{ context }}</td>
+				<td>{{ domain }}</td>
+				<td>{{ group }}</td>
+				<td>{{ contact }}</td>
+				<td>{{ callgroup }}</td>
+				<td>{{ cid_name }}</td>
+				<td>{{ cid_number }}</td>
+			</tr>
+			{{/each}}
+			</table>
+		</div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="sofiaStatus">
+		<div class="pull-right">
+			{{#bs-button type="primary" clicked="addGateway"}}Add Gateway{{/bs-button}}
+		</div>
+
+		{{#bs-modal name="newUserForm" fade="true" footerButtonsBinding="addGatewayButtons" title="Add Gateway"}}
+		<form class="form-horizontal" role="form">
+			<div class="form-group">
+				<label class="col-sm-2 control-label" for="gateway_name">Name</label>
+				<div class="col-sm-10">
+					<input class="form-control" type="text" id="gateway_name" placeholder="gw1">
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label" for="gateway_realm">Realm</label>
+				<div class="col-sm-10">
+					<input class="form-control" type="text" id="gateway_realm" placeholder="example.com">
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label" for="gateway_username">Username</label>
+				<div class="col-sm-10">
+					<input class="form-control" type="text" id="gateway_username" placeholder="username">
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label" for="gateway_password">Password</label>
+				<div class="col-sm-10">
+					<input class="form-control" type="text" id="gateway_password" placeholder="password">
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label" for="gateway_register">Register?</label>
+				<input type="checkbox" checked id="gateway_register"/>
+			</div>
+
+		</form>
+		{{/bs-modal}}
+
+		<h1>Sofia Status</h1>
+
+		<div>
+			<table class="table">
+			<tr>
+				<th>Type</th>
+				<th>Name</th>
+				<th>Data</th>
+				<th>State</th>
+				<th>Action</th>
+			</tr>
+			{{#each App.sofiaStatusController.content}}
+			<tr>
+				<td>{{ type }}</td>
+				<td>{{ name }}</td>
+				<td>{{ data }}</td>
+				<td>{{ state }}</td>
+				<td>{{ actions }}</td>
+			</tr>
+			{{/each}}
+			</table>
+		</div>
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="calls">
+	<div class="pull-right">
+		<label><input type="checkbox" id="auto_update_calls" value="1" onclick="auto_update_calls();">Auto Update</label>
+	</div>
+
+	<h1>Calls</h1>
+
+	<div>
+		<table class="table">
+		<tr>
+			<th>Call UUID</th>
+			<th>CID</th>
+			<th>Dest</th>
+			<th>Call State</th>
+			<th>Direction / Created</th>
+		</tr>
+		{{#each App.callsController.content}}
+		<tr>
+			<td>{{uuid}} <br>{{ b_uuid }}</td>
+			<td>{{ cid_num }}<br>{{ b_cid_num }}</td>
+			<td>{{ dest }}<br>{{ b_dest }}</td>
+			<td>{{ callstate }}<br>{{ b_callstate }}</td>
+			<td>{{ direction }} / {{ b_direction }}<br>
+			<a href='#' {{action "dump" uuid target="App.callsController"}}>{{created}}</a>
+			<!--<a href='#' {{action "raw" uuid target="App.callsController"}}>Raw</a>-->
+			</td>
+		</tr>
+		{{/each}}
+		</table>
+	</div>
+
+	</script>
+
+	<script type="text/x-handlebars" data-template-name="channels">
+
+	<h1>Channels</h1>
+
+	<div>
+
+		<table class="table">
+		<tr>
+			<th>Call UUID</th>
+			<th>CID</th>
+			<th>Dest</th>
+			<th>Call State</th>
+			<th>Direction / Created</th>
+		</tr>
+		{{#each App.channelsController.content}}
+		<tr>
+			<td>{{uuid}}</td>
+			<td>{{ cid_num }}</td>
+			<td>{{ dest }}<br></td>
+			<td>{{ callstate }}</td>
+			<td>{{ direction }}<br>
+			<a href='#' {{action "dump" uuid target="App.channelsController"}}>{{created}}</a>
+			</td>
+		</tr>
+		{{/each}}
+		</table>
+
+	</div>
+
+	</script>
+<!-- Le javascript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="assets/js/ie-console.js"></script>
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/handlebars.min.js"></script>
+<script src="assets/js/ember.min.js"></script>
+<!-- <script src="assets/js/ember-data.min.js"></script> -->
+<script src="assets/bs_for_ember/js/bs-core.min.js"></script>
+<script src="assets/bs_for_ember/js/bs-alert.min.js"></script>
+<script src="assets/bs_for_ember/js/bs-badge.min.js"></script>
+<script src="assets/bs_for_ember/js/bs-basic.min.js"></script>
+<script src="assets/bs_for_ember/js/bs-button.min.js"></script>
+<script src="assets/bs_for_ember/js/bs-growl-notifications.min.js"></script>
+<script src="assets/bs_for_ember/js/bs-items-action-bar.min.js"></script>
+<script src="assets/bs_for_ember/js/bs-label.min.js"></script>
+<script src="assets/bs_for_ember/js/bs-list-group.min.js"></script>
+<script src="assets/bs_for_ember/js/bs-modal.min.js"></script>
+<script src="assets/bs_for_ember/js/bs-nav.min.js"></script>
+<script src="assets/bs_for_ember/js/bs-notifications.min.js"></script>
+<script src="assets/bs_for_ember/js/bs-progressbar.min.js"></script>
+<script src="assets/bs_for_ember/js/bs-wizard.min.js"></script>
+
+
+<script src="assets/js/fsportal.js"></script>
+<!--
+<script src="assets/js/bootstrap-transition.js"></script>
+<script src="assets/js/bootstrap-alert.js"></script>
+<script src="assets/js/bootstrap-modal.js"></script>
+<script src="assets/js/bootstrap-dropdown.js"></script>
+<script src="assets/js/bootstrap-scrollspy.js"></script>
+<script src="assets/js/bootstrap-tab.js"></script>
+<script src="assets/js/bootstrap-tooltip.js"></script>
+<script src="assets/js/bootstrap-popover.js"></script>
+<script src="assets/js/bootstrap-button.js"></script>
+<script src="assets/js/bootstrap-collapse.js"></script>
+<script src="assets/js/bootstrap-carousel.js"></script>
+<script src="assets/js/bootstrap-typeahead.js"></script>
+-->
+<script type="text/javascript">
+
+	$(window).on('beforeunload', function() {
+		if (socket) {
+			socket.close();
+		}
+	});
+
+	function auto_update_calls() {
+		var x = $('#auto_update_calls')[0];
+		if (typeof x != "undefined" && x.checked) {
+			console.log("tick")
+			App.callsController.load();
+			setTimeout(auto_update_calls, 2000);
+		}
+	}
+
+	// $("#menu-channels").click(function(e){
+	// 	e.preventDefault();
+	// 	App.channelsController.load();
+	// 	$('#calls').hide();
+	// 	$('#channels').show();
+	// });
+
+	// $("#menu-calls").click(function(e){
+	// 	e.preventDefault();
+	// 	App.callsController.load();
+	// 	$('#channels').hide();
+	// 	$('#calls').show();
+	// });
+
+	// var callsView = Ember.View.create({
+	// templateName: 'calls',
+	// name: "callsView"
+	// });
+
+	// // $('#container').html('');
+	// callsView.appendTo('#calls');
+
+	// var channelsView = Ember.View.create({
+	// 	templateName: 'channels',
+	// 	name: "channelsView"
+	// });
+	// channelsView.appendTo('#channels');
+
+	function dump_call(uuid) {
+		obj = App.callsController.content.findProperty("uuid", uuid);
+		console.log(obj);
+	}
+
+	</script>
+
+	<script type="text/javascript">
+
+	var port = document.location.port;
+	// var port = 8081; // for test
+	var socket = new WebSocket("ws://" + document.location.hostname + ":" + port + "/socket", "websocket");
+
+	try {
+		socket.onopen = function() {
+			$('#ws-status').html('Socket Connected').css("color", "green");
+			// socket.send("event json all");
+			socket.send("event json CHANNEL_CREATE");
+			socket.send("event json CHANNEL_BRIDGE");
+			socket.send("event json CHANNEL_HANGUP_COMPLETE");
+			socket.send("event json CHANNEL_CALLSTATE");
+		}
+
+		socket.onmessage =function(msg) {
+			// console.log(msg.data);
+			var data = JSON.parse(msg.data);
+
+			eventCallback(data);
+		}
+
+		socket.onclose = function(){
+			$('#ws-status').html('Socket Disconnected!').css("color", "red");
+			console.log("socket disconnected, fallback to event_sink");
+			setInterval("App.channelsController.checkEvent()", 2000);
+			//setInterval("App.channelsController.checkXMLEvent()", 2000);
+		}
+	} catch(exception) {
+		alert('Error' + exception);
+	}
+
+	</script>
+</body>
+</html>
