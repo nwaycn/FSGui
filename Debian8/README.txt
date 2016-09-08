@@ -1,18 +1,22 @@
-ĞèÒª×ÔĞĞ±àÒëFreeSWITCH
+éœ€è¦è‡ªè¡Œç¼–è¯‘FreeSWITCH
 
-ĞèÒª×ÔĞĞ°²×°postgresql,´´½¨Êı¾İ¿ânwaycc,²¢µ¼Èëdb.backup
+éœ€è¦è‡ªè¡Œå®‰è£…postgresql,åˆ›å»ºæ•°æ®åº“nwaycc,å¹¶å¯¼å…¥db.backup
 
-ĞèÒª±àÒëÔËĞĞRedis
+éœ€è¦ç¼–è¯‘è¿è¡ŒRedis
 
-ÓÃÅäÖÃÎÄ¼şÖĞautoload_configs/modules.conf.xmlºÍxml_curl.conf.xmlÖĞÌæ»»ÒÑ°²×°ºÃµÄÍ¬ÃûÎÄ¼ş
-Ìæ»»dialplan/default.xml public.xmlÎÄ¼ş
+ç”¨é…ç½®æ–‡ä»¶ä¸­autoload_configs/modules.conf.xmlå’Œxml_curl.conf.xmlä¸­æ›¿æ¢å·²å®‰è£…å¥½çš„åŒåæ–‡ä»¶
+æ›¿æ¢dialplan/default.xml public.xmlæ–‡ä»¶
 
-ÅäÖÃ autoload_configs/event_socket.conf.xmlÎÄ¼şÖĞ£¬ÈÃÆä¼àÌıÓÚipv4
+é…ç½® autoload_configs/event_socket.conf.xmlæ–‡ä»¶ä¸­ï¼Œè®©å…¶ç›‘å¬äºipv4
 
-È»ºóÏÈÔËĞĞfs,redis,ÔËĞĞ½áÊøºó£¬ĞŞ¸ÄÅäÖÃÎÄ¼şÖĞdbstring,ÒÔ¼°fsºÍredisĞÅÏ¢ºó£¬ÒÀ´ÎÔËĞĞ
+
+
+ç„¶åå…ˆè¿è¡Œfs,redis,è¿è¡Œç»“æŸåï¼Œä¿®æ”¹é…ç½®æ–‡ä»¶ä¸­dbstring,ä»¥åŠfså’Œredisä¿¡æ¯åï¼Œä¾æ¬¡è¿è¡Œ
 
 nway_pbx_auth
 
 nway_pbx_web
 
 nway_pbx
+
+æ³¨ï¼š å°½é‡ä½¿ç”¨æœ€æ–°æ—¥æœŸä¸Šä¼ çš„äºŒè¿›åˆ¶åŒ…å’Œ*.backupçš„æ•°æ®åº“å¯¼å‡ºæ–‡ä»¶
