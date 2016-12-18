@@ -2,6 +2,8 @@
 
 QQ群： 293697898 FreeSWITCH+Kamailio+OpenSIPS
 
+由于是商业应用，二进制包和配置等上传到github也较慢，改用百度云盘存储：详情见： http://freeswitch.net.cn/100.html   ，freeswitch,redis,nwaypbx等的二进制包，下载地址： http://pan.baidu.com/s/1o77qz8Y 
+
  FSGui是由上海宁卫信息技术有限公司自主研发的新一代的呼叫平台，它将云呼叫、VOIP、PSTN、IMS、DID、IVR等集成在一起，实现将IP网络和传统通信通过语音完美结合在一起。并为第三方呼叫及事件查询提供RESTful接口。
      
  针对FreeSWITCH开发的GUI及更底层的PBX功能扩展,小并发免费二进制
