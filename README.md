@@ -60,16 +60,140 @@ localhost:8080  默认用户名 admin,123456
 正常应会有nway_pbx_web.exe, nway_pbx_auth.exe, nway_pbx.exe三个启动，FreeSwitch和redis及Postgresql已作为服务运行
     
 Debian 8 下运行：
+暂时需要自行安装 FreeSwitch,Redis,Postgresql 编译好的基于debian 8 64位的FreeSwitch二进制包可以下载： http://pan.baidu.com/s/1hrMvI0s
 
-暂时需要自行安装 FreeSwitch,Redis,Postgresql
+或者，freeswitch,redis,nwaypbx等的二进制包，下载地址： http://pan.baidu.com/s/1o77qz8Y 需要预先安装一些第三方包,如下：
 
-1. 使用pg_dump导入 https://github.com/nwaycn/FSGui/blob/master/Debian8/db.backup 
-2. 使用https://github.com/nwaycn/FSGui/tree/master/Debian8/Freeswitchconf/conf 替换FreeSwitch的默认配置
-3. 启动Redis
-4. 启动freeswitch 
-5. 启动postgresql
-6. 修改nway.conf和conf/app.conf  中的连接字符串及端口等数据
-6. 等待大约1分钟后启动nway_pbx_web   nway_pbx_auth nway_pbx
+        wget -O - https://files.freeswitch.org/repo/deb/debian/freeswitch_archive_g0.pub | apt-key add -
+
+        echo "deb http://files.freeswitch.org/repo/deb/freeswitch-1.6/ jessie main" >         /etc/apt/sources.list.d/freeswitch.list
+
+        apt-get update && apt-get install -y freeswitch-meta-all
+如果是FSGui-Debian8-20161217.zip,则要如下操作：
+
+解压压缩包到/usr/local下，保证 /usr/local/freeswitch/bin/freeswitch路径、/usr/local/nwaypbx/nway_pbx 、 /usr/local/redis/src/redis-server 是有效的
++---db
++---freeswitch
++---nwaypbx
+|   +---assets
+|   |   +---avatars
+|   |   +---bootstrap-datepicker-1.6.4-dist
+|   |   |   +---css
+|   |   |   +---js
+|   |   |   \---locales
+|   |   +---css
+|   |   |   +---images
+|   |   |   \---img
+|   |   +---examples
+|   |   +---font-awesome
+|   |   |   +---4.1.0
+|   |   |   |   +---css
+|   |   |   |   \---fonts
+|   |   |   \---4.2.0
+|   |   |       +---css
+|   |   |       \---fonts
+|   |   +---fonts
+|   |   +---img
+|   |   +---js
+|   |   \---locales
+|   +---conf
+|   +---controllers
+|   +---entity
+|   +---libs
+|   +---models
+|   +---routers
+|   +---service
+|   +---static
+|   |   +---css
+|   |   +---img
+|   |   \---js
+|   +---tests
+|   \---views
+|       +---agent
+|       +---baseconfig
+|       +---cdr
+|       +---conference
+|       +---dialplan
+|       +---dialplandetail
+|       +---error
+|       +---extension
+|       +---fifo
+|       +---gateway
+|       +---gatewaygroup
+|       +---ivr
+|       +---ivrdetail
+|       +---layout
+|       |   \---sections
+|       +---log
+|       +---main
+|       +---report
+|       +---ring
+|       +---system
+|       +---timeplan
+|       \---user
+\---redis
+ +---deps
+ |   +---geohash-int
+ |   +---hiredis
+ |   |   +---adapters
+ |   |   \---examples
+ |   +---jemalloc
+ |   |   +---bin
+ |   |   +---doc
+ |   |   +---include
+ |   |   |   +---jemalloc
+ |   |   |   |   \---internal
+ |   |   |   \---msvc_compat
+ |   |   |       \---C99
+ |   |   +---lib
+ |   |   +---src
+ |   |   \---test
+ |   |       +---include
+ |   |       |   \---test
+ |   |       +---integration
+ |   |       +---src
+ |   |       +---stress
+ |   |       \---unit
+ |   +---linenoise
+ |   \---lua
+ |       +---doc
+ |       +---etc
+ |       +---src
+ |       \---test
+ +---src
+ +---tests
+ |   +---assets
+ |   +---cluster
+ |   |   +---tests
+ |   |   |   +---helpers
+ |   |   |   \---includes
+ |   |   \---tmp
+ |   +---helpers
+ |   +---integration
+ |   +---sentinel
+ |   |   +---tests
+ |   |   |   \---includes
+ |   |   \---tmp
+ |   +---support
+ |   +---tmp
+ |   \---unit
+ |       \---type
+ \---utils
+     +---create-cluster
+     +---hashtable
+     +---hyperloglog
+     +---lru
+     \---releasetools
+按 http://freeswitch.net.cn/27.html 安装postgresql
+使用pg_dump导入解压包中db/nwaycc161216.backup 确保postgresql已启动
+chmod +x /usr/local/freeswitch/bin/*
+chmod +x /usr/local/nwaypbx/nway_pbx*
+chmod +x /usr/local/redis/src/redis-*
+启动freeswitch # /usr/local/freeswitch/bin/freeswitch -nc
+启动redis # /usr/local/redis/redis-server
+启动nway_pbx相关的 #cd /usr/local/nwaypbx/
+nohup ./nway_pbx & && nohup ./nway_pbx_web & && nohup ./nway_pbx_auth &
+
 
 -------------------------------------------------------------------------------------------------------------------------------------
 
