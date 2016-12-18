@@ -72,6 +72,7 @@ Debian 8 下运行：
 如果是FSGui-Debian8-20161217.zip,则要如下操作：
 
 解压压缩包到/usr/local下，保证 /usr/local/freeswitch/bin/freeswitch路径、/usr/local/nwaypbx/nway_pbx 、 /usr/local/redis/src/redis-server 是有效的
+```
 +---db
 +---freeswitch
 +---nwaypbx
@@ -193,7 +194,7 @@ chmod +x /usr/local/redis/src/redis-*
 启动redis # /usr/local/redis/redis-server
 启动nway_pbx相关的 #cd /usr/local/nwaypbx/
 nohup ./nway_pbx & && nohup ./nway_pbx_web & && nohup ./nway_pbx_auth &
-
+```
 
 -------------------------------------------------------------------------------------------------------------------------------------
 
