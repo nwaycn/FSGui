@@ -1,34 +1,204 @@
+
 # FSGui
+ 
+###QQ群： 293697898 FreeSWITCH+Kamailio+OpenSIPS
 
-QQ群： 293697898 FreeSWITCH+Kamailio+OpenSIPS
+安装手册： [http://www.nway.com.cn/FSGUI%E5%AE%89%E8%A3%85%E6%89%8B%E5%86%8C.pdf](http://www.nway.com.cn/FSGUI%E5%AE%89%E8%A3%85%E6%89%8B%E5%86%8C.pdf  )
 
-由于是商业应用，二进制包和配置等上传到github也较慢，改用百度云盘存储：详情见： http://freeswitch.net.cn/100.html   ，freeswitch,redis,nwaypbx等的二进制包，下载地址： http://pan.baidu.com/s/1o77qz8Y 
+v2.2.1使用手册： [http://www.nway.com.cn/FSGui%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8CV2.2.1.pdf](http://www.nway.com.cn/FSGui%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8CV2.2.1.pdf  )
 
- FSGui是由上海宁卫信息技术有限公司自主研发的新一代的呼叫平台，它将云呼叫、VOIP、PSTN、IMS、DID、IVR等集成在一起，实现将IP网络和传统通信通过语音完美结合在一起。并为第三方呼叫及事件查询提供RESTful接口。
-     
- 针对FreeSWITCH开发的GUI及更底层的PBX功能扩展,小并发免费二进制
+     FSGui是由上海宁卫信息技术有限公司自主研发的新一代的呼叫平台，它将云呼叫、VOIP、PSTN、IMS、DID、IVR等集成在一起，实现将IP网络和传统通信通过语音完美结合在一起。并为第三方呼叫及事件查询提供RESTful接口。
+
+    FSGui 优势是什么？
+    1. 处理能力更强，内存数据库+PG+ GOLang天生的高性能。
+    2. 数据更安全，只要硬件到位，那我们的数据就可以进行实时热备，以及更多的如读写分离等，且数据库是PostgreSQL的，它是开源的。
+    3. 对接设备更丰富，从思科到avaya到华为到其它厂商均可支持。
+    4. 业务流与通信流分离，通信流保证最稳定的媒体能力，业务流来控制媒体内容。
+    5. 扩展更丰富，可以方便的引申出更多通信领域的增值服务。
+    6. 使用更简便，我们可以做到由GUI配置而减少初级工程师或客户人员的工作量。
+    7. 服务更到位，专业的人可以做专业的事。
+
+    针对FreeSWITCH开发的GUI及更底层的PBX功能扩展,小并发免费二进制
+
+###整个系统分为如下的结构
+
+####结构图
+
+![](http://www.freeswitch.net.cn/static/images/20170114225936结构图.jpg)
+
+####应用说明
+
+- WEBServer nway_pbx_web 用于处理所有的web访问，但不包括restful接口
+
+- AUTHServer nway_pbx_auth 用于处理FreeSwitch的Register消息
+
+- PBXServer nway_pbx 业务主应用，用于处理路由，网关，IVR等呼叫业务层
+
+- FreeSwitch
+
+- Postgresql
+
+- Redis
+
+- rings/common 用于报工号等通用的一些语音彩铃
+
+GUI测试登录： http://139.196.40.50:8080/index ,admin 123456
+
+注：FSGui是基于FreeSwitch进行的二次封装，在特大并发时，我们采用各种优秀的其它商业套件或，Opensips、Kamailio作前置，可参考  http://www.6fok.com/topics/2
+
+###功能概要
+ ```   
+1.    路由管理
+2.    录音管理
+3.    分机管理
+4.    分机组管理
+5.    网关管理
+6.    网关组管理
+7.    区域策略管理
+8.    时间策略管理
+9.    报工号
+10.   按键IVR
+11.   自动语音智能IVR
+12.   排队管理
+13.   报表管理
+14.   黑名单管理
+15.   彩铃管理
+16.   电话会议管理
+17.   控制接口，发起呼叫，记录通话过程中的各种状态，并与第三方应用进行交互
+18.   会议控制接口 ，可与第三方应用进行交互
+19.   与第三方CRM等对接接口，支持restful或socket,支持python php java c++ c ruby golang等开发语言
+20.   转码服务(G711,G723,G722,G729,ILBC,OPUS,ARMNB,GSM...)
+21.   IMS接入
+22.   。。。。。。
+```
  
- 整个系统分为如下的结构
  
- 应用说明：
- 
- WEBServer nway_pbx_web    用于处理所有的web访问，但不包括restful接口
- 
- AUTHServer nway_pbx_auth  用于处理FreeSwitch的Register消息
- 
- PBXServer nway_pbx        业务主应用，用于处理路由，网关，IVR等呼叫业务层
- 
- FreeSwitch
- 
- Postgresql
- 
- Redis
- 
- rings/common             用于报工号等通用的一些语音彩铃
- 
- 使用说明书：
+### 使用说明书：
  
  http://freeswitch.net.cn/100.html
+ 
+ 
+ 
+ 来去电，摘机，挂机，响铃等消息，使用代码
+ 
+ https://github.com/nwaycn/FSGui/blob/master/EventOrCDR.py
+ 
+ 
+ 
+ Restful接口调用示例：
+ 
+ https://github.com/nwaycn/FSGui/tree/master/CallInterface
+                                              
+-------------------------------------------------------------------------------------------------------------------------------------
+
+##安装和更新日志
+
+###特别提醒： 注意防火墙
+
+###Centos 6 FSGUI ISO镜像安装  (推荐)
+
+####下载
+
+https://pan.baidu.com/s/1slctYYL
+
+
+ 
+
+####安装
+
+使用光盘刻录机或ultraiso等工具把iso镜像写入u盘，由光盘或u盘引导后启动，进行自动安装。
+
+用户: root, 密码: Nway123
+
+FSGUI主路径：  /opt/fsgui
+
+Postgresql 路径： /usr/pgsql-9.6/
+
+Postgresql data 路径 ： /db/pgsql/data
+
+Postgresql 的超级用户 postgres的密码： Nway2017
+
+如果修改了postgres的相关信息，则需要配置两项： 
+
+/usr/local/FSGUI/conf/app.conf  文件中为web配置
+
+/usr/local/FSGUI/Nway.conf     文件为后台和认证服务应用的配置
+
+
+####配置
+
+这里的配置，主要是网络ip的配置
+
+#####vi /etc/sysconfig/network-scripts/ifcfg-eth0
+
+```
+DEVICE="eth0"
+BOOTPROTO="static"                                        改为static
+HWADDR="08:00:27:28:44:81"
+IPV6INIT="no"
+NM_CONTROLLED="yes"
+ONBOOT="yes"                                             改为yes
+TYPE="Ethernet"
+UUID="7d03dad6-2c06-402a-8e6b-8224764e91d3"
+IPADDR=192.168.1.205                                       改为自己的ip
+GATEWAY=192.168.1.1                                       实际的路由网关
+NETMASK=255.255.255.0                                     子网掩码
+```
+
+接着，就可以重启了，就可以用了
+
+Web管理界面为 : http://ip:8080/index admin  123456
+
+管理控制接口地址 ： http://ip:8085 认证用户在Nway.conf中：
+
+    restuser=admin
+    restpassword=admin
+
+ip:8083为针对 FreeSwitch的OutBound服务
+
+ip:3000为针对 FreeSwitch的认证服务
+
+
+##Windows下运行：
+
+下载或用git clone windows binary package
+https://github.com/nwaycn/FSGui/tree/master/Windows
+
+为了避免下载慢，在百度云盘存储的压缩包在下，以后有更新，直接会列于下方：
+
+2016-12-20更新：
+
+增加来电黑名单管理、呼入电话会议等的GUI配置和功能
+
+[http://pan.baidu.com/s/1nuUZjg1](http://pan.baidu.com/s/1nuUZjg1 "http://pan.baidu.com/s/1nuUZjg1")
+
+2016-10-24更新包：
+
+下载地址：
+http://pan.baidu.com/s/1pLxZmY3
+
+2016-10-3更新包：
+
+第一个英文FSGUI版本压缩包：
+
+[http://pan.baidu.com/s/1jI6oQG2](http://pan.baidu.com/s/1jI6oQG2 "http://pan.baidu.com/s/1jI6oQG2")
+
+2016-09-13更新包：
+[http://pan.baidu.com/s/1c260hsW](http://pan.baidu.com/s/1c260hsW "http://pan.baidu.com/s/1c260hsW")
+
+2016-09-07更新包：
+[http://pan.baidu.com/s/1c23HXPQ](http://pan.baidu.com/s/1c23HXPQ "http://pan.baidu.com/s/1c23HXPQ")
+
+web访问地址：
+
+localhost:8080  默认用户名 admin,123456
+
+
+###先执行InstallPreService.bat后再执行 Start.bat,已测试windows 2003,2008下可以，win8,win10不可行,如有问题可以查看windows的服务中，redis freeswitch,postgresql三个的服务启动是否正常
+
+
+正常应会有nway_pbx_web.exe, nway_pbx_auth.exe, nway_pbx.exe三个启动，FreeSwitch和redis及Postgresql已作为服务运行
+    
  
  
  
