@@ -69,7 +69,10 @@ GUI测试登录： http://139.196.40.50:8080/index ,admin 123456
 19.   与第三方CRM等对接接口，支持restful或socket,支持python php java c++ c ruby golang等开发语言
 20.   转码服务(G711,G723,G722,G729,ILBC,OPUS,ARMNB,GSM...)
 21.   IMS接入
-22.   。。。。。。
+22.   超级ACD排队机
+23.   WEBRTC音频模式，SIP终端，S口设备注册
+24.   FIFO排队，来电队列，座席队列
+25.   。。。。。。
 ```
  
  
@@ -99,8 +102,11 @@ GUI测试登录： http://139.196.40.50:8080/index ,admin 123456
 
 ####下载
 
-https://pan.baidu.com/s/1slctYYL
+V2.3.2.0 alpha：http://pan.baidu.com/s/1mhF6Hza
 
+V2.3.1.3 https://pan.baidu.com/s/1pL0MEmv
+
+V2.3.1.2 https://pan.baidu.com/s/1gePiQY3
 
  
 
