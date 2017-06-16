@@ -5,6 +5,8 @@
 
 安装手册： [http://www.nway.com.cn/FSGUI%E5%AE%89%E8%A3%85%E6%89%8B%E5%86%8C.pdf](http://www.nway.com.cn/FSGUI%E5%AE%89%E8%A3%85%E6%89%8B%E5%86%8C.pdf  )
 
+V2.3.5.2使用手册: http://note.youdao.com/noteshare?id=df9a50e03ebf5d4b82fc2d15e4844efe&sub=0C1EFD748DFB48C495E09DF0296E6C3B
+
 v2.2.1使用手册： [http://www.nway.com.cn/FSGui%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8CV2.2.1.pdf](http://www.nway.com.cn/FSGui%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8CV2.2.1.pdf  )
 
      FSGui是由上海宁卫信息技术有限公司自主研发的新一代的呼叫平台，它将云呼叫、VOIP、PSTN、IMS、DID、IVR等集成在一起，实现将IP网络和传统通信通过语音完美结合在一起。并为第三方呼叫及事件查询提供RESTful接口。
@@ -101,6 +103,7 @@ GUI测试登录： http://139.196.40.50:8080/index ,admin 123456
 ###Centos 6 FSGUI ISO镜像安装  (推荐)
 
 ####下载
+V2.3.5.2 beta ISO: https://pan.baidu.com/s/1jIurnD0
 
 V2.3.2.0 alpha：http://pan.baidu.com/s/1mhF6Hza
 
