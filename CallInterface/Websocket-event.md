@@ -1,10 +1,11 @@
 是呼入呼出都通知，还是只呼入或呼出，在Nway.conf配置文件中有个
-
+```
 #all,caller,callee
 #all 所有 
 #caller 呼出
 #callee 呼入
 event_direction=caller
+```
 在这里我们假设有一个工号为 8000,密码是1234，绑定的坐席是1001
 
 python代码需要 pip install websocket-client
