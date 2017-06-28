@@ -3,6 +3,8 @@
  
 ###QQ群： 293697898 FreeSWITCH+Kamailio+OpenSIPS
 
+###iso安装后默认root密码为Nway123
+
 安装手册： [http://www.nway.com.cn/FSGUI%E5%AE%89%E8%A3%85%E6%89%8B%E5%86%8C.pdf](http://www.nway.com.cn/FSGUI%E5%AE%89%E8%A3%85%E6%89%8B%E5%86%8C.pdf  )
 
 V2.3.5.4使用手册： http://note.youdao.com/noteshare?id=2e1e528374b3bebff038699d30f4feb2&sub=9211BC44FF82444E967280FB8BDFB8B5
