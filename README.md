@@ -5,6 +5,8 @@
 
 安装手册： [http://www.nway.com.cn/FSGUI%E5%AE%89%E8%A3%85%E6%89%8B%E5%86%8C.pdf](http://www.nway.com.cn/FSGUI%E5%AE%89%E8%A3%85%E6%89%8B%E5%86%8C.pdf  )
 
+V2.3.5.4使用手册： http://note.youdao.com/noteshare?id=2e1e528374b3bebff038699d30f4feb2&sub=9211BC44FF82444E967280FB8BDFB8B5
+
 V2.3.5.2使用手册: http://note.youdao.com/noteshare?id=df9a50e03ebf5d4b82fc2d15e4844efe&sub=0C1EFD748DFB48C495E09DF0296E6C3B
 
 v2.2.1使用手册： [http://www.nway.com.cn/FSGui%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8CV2.2.1.pdf](http://www.nway.com.cn/FSGui%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8CV2.2.1.pdf  )
@@ -103,6 +105,9 @@ GUI测试登录： http://139.196.40.50:8080/index ,admin 123456
 ###Centos 6 FSGUI ISO镜像安装  (推荐)
 
 ####下载
+
+V2.3.5.4 beta ISO: https://pan.baidu.com/s/1i4XZegl
+
 V2.3.5.2 beta ISO: https://pan.baidu.com/s/1jIurnD0
 
 V2.3.2.0 alpha：http://pan.baidu.com/s/1mhF6Hza
@@ -167,13 +172,14 @@ ip:8083为针对 FreeSwitch的OutBound服务
 
 ip:3000为针对 FreeSwitch的认证服务
 
+###更新说明
 
-##Windows下运行：
+2.17-6-23 V2.3.5.4 beta 修改一些bug
 
-下载或用git clone windows binary package
-https://github.com/nwaycn/FSGui/tree/master/Windows
+将满意度评价从路由中去除，转而只提供在坐席中，当配置坐席的满意度评价为真时，与之绑定的分机则会在挂机后提示主叫进行满意度评价
 
-为了避免下载慢，在百度云盘存储的压缩包在下，以后有更新，直接会列于下方：
+默认打开FreeSwitch的日志，而之前是关闭大量的日志产生
+
 
 2016-12-20更新：
 
