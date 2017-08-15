@@ -1,0 +1,138 @@
+
+<div class="alert alert-warning alert-dismissible hide" role="alert"></div>
+
+<form class="form-horizontal ajax-form" method="post" action="{{urlfor "UserController.Modify"}}">
+	<div class="form-group">
+		<label for="user_id" class="col-sm-2 control-label">用户编号</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="user_id" name="user_id" readonly value="{{ .User_id}}">
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="username" class="col-sm-2 control-label">用户名</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="username" name="username" readonly value="{{ .data.User_name}}">
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="username" class="col-sm-2 control-label">密码</label>
+		<div class="col-sm-3">
+			<input type="password" class="form-control" id="password" name="password" value="{{.data.User_pwd}}">
+		</div>
+	</div>
+	
+	<div class="form-group">
+				<label for="pub_dir" class="col-sm-2 control-label">角色</label>
+			<div class="col-sm-6">
+				<select name="Dialplan_detail_type_id">
+						<option value="0">请选择</option>
+						{{range $k, $v := .ops}}
+						<option value="{{$v.Id}}">{{$v.Name}}</option>
+						{{end}}
+				</select>
+			</div>
+			<div class="help-block col-sm-8 col-sm-reset inline">选择角色</div>
+	</div>
+
+	<div class="form-group">
+				<label for="pub_dir" class="col-sm-2 control-label">费率</label>
+			<div class="col-sm-6">
+				<select name="Dialplan_detail_type_id">
+						<option value="0">请选择</option>
+						{{range $k, $v := .ops}}
+						<option value="{{$v.Id}}">{{$v.Name}}</option>
+						{{end}}
+				</select>
+			</div>
+			<div class="help-block col-sm-8 col-sm-reset inline">选择费率</div>
+	</div>
+
+	
+	<div class="form-group">
+		<label for="user_balance" class="col-sm-2 control-label">余额</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="user_balance" name="user_balance" value="{{.data.User_balance}}">
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label for="user_phone" class="col-sm-2 control-label">手机号码</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="user_phone" name="user_phone" value="{{.data.User_phone}}">
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label for="email" class="col-sm-2 control-label">Email</label>
+		<div class="col-sm-4">
+			<input type="text" class="form-control" id="email" name="email" value="{{.data.User_email}}">
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label for="user_address" class="col-sm-2 control-label">联系地址</label>
+		<div class="col-sm-4">
+			<input type="text" class="form-control" id="user_address" name="user_address" value="{{.data.User_address}}">
+		</div>
+	</div>
+
+	<div class="form-group">
+				<label for="pub_dir" class="col-sm-2 control-label">组织</label>
+			<div class="col-sm-6">
+				<select name="Dialplan_detail_type_id">
+						<option value="0">请选择</option>
+						{{range $k, $v := .ops}}
+						<option value="{{$v.Id}}">{{$v.Name}}</option>
+						{{end}}
+				</select>
+			</div>
+			<div class="help-block col-sm-8 col-sm-reset inline">选择组织</div>
+	</div>
+	<div class="form-group">
+		<label for="real_name" class="col-sm-2 control-label">真实姓名</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="real_name" name="real_name" value="{{.data.Real_name}}">
+		</div>
+	</div>
+
+
+	<div class="clearfix form-actions">
+		<div class="col-sm-offset-2 col-sm-10">
+			<button type="submit" class="btn btn-info"><i class="ace-icon fa fa-check bigger-110"></i>提交</button>
+			<a href="{{urlfor "UserController.List"}}" class="btn btn-default"><i class="ace-icon fa fa-reply bigger-110"></i>返回</a>
+		</div>
+	</div>
+</form>
+
+<script>
+$(function () {
+	if(!ace.vars['touch']) {
+		$('.chosen-select').chosen({allow_single_deselect:true}); 
+		//resize the chosen on window resize
+	
+		$(window)
+		.off('resize.chosen')
+		.on('resize.chosen', function() {
+			$('.chosen-select').each(function() {
+				 var $this = $(this);
+				 $this.next().css({'width': $this.parent().width()});
+			})
+		}).trigger('resize.chosen');
+		//resize chosen on sidebar collapse/expand
+		$(document).on('settings.ace.chosen', function(e, event_name, event_val) {
+			if(event_name != 'sidebar_collapsed') return;
+			$('.chosen-select').each(function() {
+				 var $this = $(this);
+				 $this.next().css({'width': $this.parent().width()});
+			})
+		});
+	
+		$('#chosen-multiple-style .btn').on('click', function(e){
+			var target = $(this).find('input[type=radio]');
+			var which = parseInt(target.val());
+			if(which == 2) $('#role_ids').addClass('tag-input-style');
+			 else $('#role_ids').removeClass('tag-input-style');
+		});
+	}
+});
+</script>
