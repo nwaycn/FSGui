@@ -108,6 +108,10 @@ GUI测试登录： http://139.196.40.50:8080/index ,admin 123456
 
 ####下载
 
+V2.5.0.6 ISO:https://pan.baidu.com/s/1XZJNVpq5HEWC1Ro1tVImkQ
+
+V2.5.0.1 ISO:https://pan.baidu.com/s/1bpSEcmr
+
 V2.4.0.0 ISO:https://pan.baidu.com/s/1ck6sPo
 
 V2.3.5.8 ISO: https://pan.baidu.com/s/1gf7wgPt
