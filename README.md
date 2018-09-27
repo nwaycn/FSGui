@@ -1,6 +1,18 @@
 
 # FSGui
  
+##带场景变量的电话机器人
+
+![](http://freeswitch.net.cn/static/images/20180919114357TIM%E6%88%AA%E5%9B%BE20180918100533.png)
+
+![](http://freeswitch.net.cn/static/images/20180919114409TIM%E6%88%AA%E5%9B%BE20180918100554.png)
+
+![](http://freeswitch.net.cn/static/images/20180919114419TIM%E6%88%AA%E5%9B%BE20180918100606.png)
+
+![](http://freeswitch.net.cn/static/images/20180919114441TIM%E6%88%AA%E5%9B%BE20180918100633.png)
+
+![](http://freeswitch.net.cn/static/images/20180919114450TIM%E6%88%AA%E5%9B%BE20180918100705.png)
+
 ###QQ群： 293697898 FreeSWITCH+Kamailio+OpenSIPS
 
 ###iso安装后默认root密码为Nway123
