@@ -1,6 +1,13 @@
 
 # FSGui
- 
+
+##智能实时质检
+
+1. 基于FreeSwitch模块进行实时智能质检模块
+
+2. 采用端口镜像进行抓包后进行实时智能质检
+
+
 ##带场景变量的电话机器人
 
 ![](http://freeswitch.net.cn/static/images/20180919114357TIM%E6%88%AA%E5%9B%BE20180918100533.png)
