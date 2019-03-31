@@ -44,7 +44,7 @@ v2.2.1使用手册： [http://www.nway.com.cn/FSGui%E7%94%A8%E6%88%B7%E6%89%8B%E
     7. 服务更到位，专业的人可以做专业的事。
     8. 从2.5.0.1版本开始增加语音识别模块nway_power以及相关接口。
 
-    针对FreeSWITCH开发的GUI及更底层的PBX功能扩展,小并发免费二进制，但nway_power不免费提供
+   #### 针对FreeSWITCH开发的GUI及更底层的PBX功能扩展,小并发免费二进制，但nway_power不免费提供,由于各种原因，windows相关服务，不再提供。
 
 ###整个系统分为如下的结构
 
