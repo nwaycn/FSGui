@@ -1,3 +1,6 @@
+# 新出FreeSwitch培训教材
+
+https://github.com/nwaycn/FreeSwitch-Train-doc.git
 
 # FSGui
 
